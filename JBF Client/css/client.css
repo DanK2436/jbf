@@ -614,120 +614,230 @@ body {
 }
 
 /* ============================================================
-   RESPONSIVE (MOBILE SPECIFICS)
+   RESPONSIVE (MOBILE SPECIFICS & GRIDS)
    ============================================================ */
+.client-charts-grid-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.client-charts-grid-sub {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 992px) {
   .client-sidebar {
     transform: translateX(-100%);
+    width: 280px;
   }
 
   .client-sidebar.open {
     transform: translateX(0);
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-sidebar-close {
+    display: block !important;
+    margin-left: auto;
   }
 
   .client-main {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
   }
 
   .btn-menu-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
+  }
+
+  .client-charts-grid-main,
+  .client-charts-grid-sub {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
   .client-topbar {
-    padding: 0 16px;
+    padding: 0 14px;
+    height: 60px;
   }
 
-  .client-content {
-    padding: 16px;
+  .topbar-left {
+    min-width: 0;
+    flex: 1;
+    gap: 10px;
+  }
+
+  .page-title {
+    min-width: 0;
+    overflow: hidden;
   }
 
   .page-title h1 {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  /* Cacher le sélecteur temporel du topbar sur mobile */
-  .client-topbar .period-selector {
+  .topbar-right {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .topbar-right .period-selector {
     display: none !important;
   }
 
-  /* Réduire le bouton WhatsApp sur mobile */
+  /* Compacter les boutons du topbar sur mobile */
   .btn-whatsapp-direct span {
-    display: none;
+    display: none !important;
   }
   .btn-whatsapp-direct {
-    padding: 7px 10px;
+    padding: 8px 10px !important;
+    border-radius: var(--r-sm) !important;
   }
 
-  /* EXIGENCE UTILISATEUR : Le bouton de devis doit être un simple signe "+" en version mobile */
+  .topbar-right .btn span {
+    display: none;
+  }
+
+  .topbar-right .btn {
+    padding: 8px 12px;
+  }
+
+  .btn-devis-mobile,
   .topbar-right button[onclick*="openNewOrderModal"],
-  .btn-devis-mobile {
-    padding: 7px 12px !important;
-    font-size: 1.1rem !important;
-    border-radius: 50% !important;
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
+  .topbar-right button[onclick*="openModal"] {
+    padding: 8px 12px !important;
+    font-size: 1rem !important;
+    border-radius: var(--r-sm) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
 
-  .topbar-right button[onclick*="openNewOrderModal"] span,
-  .btn-devis-mobile span {
-    display: none !important;
+  .client-content {
+    padding: 16px 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
-  .topbar-right button[onclick*="openNewOrderModal"] i,
-  .btn-devis-mobile i {
-    margin: 0 !important;
-    font-size: 1.2rem !important;
+  .form-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
   }
 
-  /* Sélecteur temporel visible dans le header du 1er graphique sur mobile */
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .table-controls .search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .table-controls .filter-group {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .table-controls .filter-select {
+    flex: 1;
+  }
+
   .mobile-chart-period-selector {
     display: flex !important;
     margin-top: 8px;
     width: 100%;
     justify-content: flex-end;
   }
+
+  .support-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 480px) {
   .client-topbar {
-    padding: 0 12px;
-    height: 56px;
+    padding: 0 10px;
+    height: 54px;
   }
 
   .client-content {
-    padding: 12px 10px;
+    padding: 12px 8px;
   }
 
   .kpi-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .table-card {
-    border-radius: 12px;
+  .kpi-card {
+    padding: 14px 16px;
+  }
+
+  .card-header {
+    padding: 12px 14px;
+  }
+
+  .card-body {
+    padding: 14px 12px;
   }
 
   .table-responsive {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    display: block;
+  }
+
+  .client-table th,
+  .client-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
   }
 
   .modal-content {
     width: 95% !important;
-    margin: 12px auto;
-    padding: 16px !important;
+    margin: 10px auto;
+    padding: 16px 14px !important;
+    border-radius: var(--r-md);
   }
 
-  /* Évite le zoom automatique sur mobile iOS Safari */
   input, select, textarea {
-    font-size: 16px !important;
+    font-size: 16px !important; /* Anti-zoom automatique sur iOS Safari */
   }
 }

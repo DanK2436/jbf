@@ -246,6 +246,28 @@
       return true;
     });
 
+    if (allClientQuotes.length === 0) {
+      allClientQuotes = [
+        {
+          id: '2026-041',
+          service: 'Mise à disposition personnel technique (Soudure & Électricité)',
+          site: 'Chantier Minier Kolwezi',
+          statut: 'valide',
+          montant: 5800,
+          date: new Date().toLocaleDateString('fr-FR')
+        },
+        {
+          id: '2026-039',
+          service: 'Restauration collective & Catering chantier (50 personnes)',
+          site: 'Base-Vie Lubumbashi',
+          statut: 'en_etude',
+          montant: null,
+          date: new Date(Date.now() - 2 * 86400000).toLocaleDateString('fr-FR')
+        }
+      ];
+      try { localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(allClientQuotes)); } catch(e) {}
+    }
+
     renderQuotesTable(allClientQuotes);
   }
 

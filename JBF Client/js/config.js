@@ -8,7 +8,7 @@ const JBF_CLIENT_CONFIG = {
   API_BASE_URL: 'http://localhost:3001/api',
   CLIENT_SESSION_KEY: 'jbf_client_session',
   SUPABASE_URL: window.ENV_SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
-  SUPABASE_ANON_KEY: window.ENV_SUPABASE_ANON_KEY || '',
+  SUPABASE_ANON_KEY: window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
   WHATSAPP_SUPPORT_NUMBER: '+243971306666', // Numéro officiel Service Client JBF RDC
   DEFAULT_CLIENT: null
 };

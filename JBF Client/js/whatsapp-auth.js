@@ -135,7 +135,11 @@ class WhatsAppAuthService {
         token: 'jbf-client-token-' + Math.random().toString(36).substring(2)
       };
 
-      localStorage.setItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY, JSON.stringify(clientSession));
+      clientSession.name = clientSession.contactName;
+      clientSession.role = 'client';
+      const sessionJson = JSON.stringify(clientSession);
+      localStorage.setItem('JBF_CLIENT_SESSION', sessionJson);
+      localStorage.setItem('jbf_client_session', sessionJson);
       return { success: true, session: clientSession };
     } else {
       sessionStorage.setItem(this.sessionKey, JSON.stringify(data));
