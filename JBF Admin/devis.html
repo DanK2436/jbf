@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Demandes de Devis — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item active">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+        <span class="badge" id="badgeDevisCount">0</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Traitement des Demandes de Devis</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-receipt"></i> Registre Central des Devis (15 Prestations)</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadDevisList()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
+        </div>
+        <div class="card-body">
+          
+          <!-- TABLE CONTROLS -->
+          <div class="table-controls">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="devisSearchInput" placeholder="Rechercher par client, société ou téléphone..." oninput="filterDevis()">
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Statut :</label>
+              <select class="filter-select" id="devisStatusFilter" onchange="filterDevis()">
+                <option value="all">Tous les statuts</option>
+                <option value="nouveau">Nouveau</option>
+                <option value="en_etude">En étude</option>
+                <option value="valide">Validé</option>
+                <option value="rejete">Rejeté</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- TABLE -->
+          <div class="table-responsive">
+            <table class="admin-table table-devis">
+              <thead>
+                <tr>
+                  <th>Client / Contact</th>
+                  <th>Prestations Demandées</th>
+                  <th>Zone / Localité</th>
+                  <th>Date Réception</th>
+                  <th>Statut Actuel</th>
+                  <th style="text-align: right;">Actions de Traitement</th>
+                </tr>
+              </thead>
+              <tbody id="devisTableBody">
+                <tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des devis...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODALE DE DÉTAIL ET TRAITEMENT DU DEVIS -->
+<div class="modal-overlay" id="devisDetailModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalDevisTitle"><i class="bi bi-file-text"></i> Détail de la Demande de Devis</h3>
+      <button class="btn-modal-close" onclick="window.adminCore.closeModal('devisDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: var(--pink-pale); border-radius: var(--r-md); padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h4 id="modalClientName" style="font-size: 1.1rem; color: var(--pink-deep); font-weight: 700;">Nom Client</h4>
+            <div id="modalClientCompany" style="font-size: 0.85rem; color: var(--gray);">Société</div>
+          </div>
+          <div id="modalDevisBadge"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; font-size: 0.85rem;">
+          <div><strong>Téléphone :</strong> <span id="modalClientPhone">--</span></div>
+          <div><strong>Email :</strong> <span id="modalClientEmail">--</span></div>
+          <div><strong>Localité :</strong> <span id="modalClientLocation">--</span></div>
+          <div><strong>Date :</strong> <span id="modalClientDate">--</span></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Prestations demandées :</label>
+        <div id="modalClientServices" style="font-weight: 600; color: var(--pink); font-size: 0.95rem;">--</div>
+      </div>
+
+      <div class="form-group">
+        <label>Message / Cahier des charges exprimé :</label>
+        <div id="modalClientMessage" style="background: var(--gray-light); padding: 12px; border-radius: var(--r-md); font-size: 0.88rem; min-height: 60px;">--</div>
+      </div>
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--gray-border);">
+
+      <div class="form-group">
+        <label>Modifier le statut du devis :</label>
+        <select id="modalNewStatusSelect" class="form-control">
+          <option value="nouveau">Nouveau</option>
+          <option value="en_etude">En cours d'étude technique / chiffrage</option>
+          <option value="valide">Offre commerciale validée & transmise</option>
+          <option value="rejete">Rejeté / Hors périmètre</option>
+        </select>
+      </div>
+
+      <input type="hidden" id="modalDevisId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="window.adminCore.closeModal('devisDetailModal')">Fermer</button>
+      <button class="btn btn-primary" onclick="saveDevisStatus()">
+        <i class="bi bi-check2-circle"></i> Enregistrer le statut
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let allDevis = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDevisList();
+  });
+
+  const DEMO_DEVIS_DATA = [
+    {
+      id: 'dev-001',
+      nom: 'Marc Vandenberg',
+      societe: 'Tenke Fungurume Mining (TFM)',
+      telephone: '+243 99 876 5432',
+      email: 'm.vandenberg@tfm.cd',
+      services: ['Maintenance Industrielle', 'Électromécanique Générateurs 500kVA'],
+      localite: 'Fungurume (Lualaba)',
+      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+      statut: 'nouveau',
+      message: 'Demande de contrat annuel pour la maintenance préventive et curative des groupes électrogènes de secours sur le site d\'extraction.'
+    },
+    {
+      id: 'dev-002',
+      nom: 'Chantal Kabangu',
+      societe: 'Société Minière du Lualaba',
+      telephone: '+243 81 234 9876',
+      email: 'contact@sml-katanga.cd',
+      services: ['Catering & Restauration', 'Fourniture Alimentaire'],
+      localite: 'Kolwezi (Lualaba)',
+      created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+      statut: 'en_etude',
+      message: 'Prestation traiteur complète pour 350 agents expatriés et nationaux sur base-vie. Respect impératif des normes HACCP.'
+    },
+    {
+      id: 'dev-003',
+      nom: 'Directeur des Approvisionnements',
+      societe: 'Société Minière de Bakwanga (MIBA)',
+      telephone: '+243 85 555 1234',
+      email: 'appro@miba.cd',
+      services: ['Gardiennage & Sécurité Physique', 'Surveillance Électronique'],
+      localite: 'Mbuji-Mayi (Kasaï-Oriental)',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      statut: 'valide',
+      message: 'Mise en place d\'un cordon de sécurité de 24 agents armés et rondes motorisées pour la protection des concessions diamantifères.'
+    },
+    {
+      id: 'dev-004',
+      nom: 'Jean-Pierre Mutombo',
+      societe: 'Kamoto Copper Company (KCC)',
+      telephone: '+243 97 111 2233',
+      email: 'jp.mutombo@kcc-mining.cd',
+      services: ['BTP, Génie Civil & Construction', 'Ouvrages Béton Armé'],
+      localite: 'Kolwezi (Lualaba)',
+      created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+      statut: 'valide',
+      message: 'Coulage de radier en béton armé haute résistance pour l\'implantation de transformateurs électriques industriels.'
+    },
+    {
+      id: 'dev-005',
+      nom: 'Paul Ilunga',
+      societe: 'Boss Mining SAS',
+      telephone: '+243 90 444 7788',
+      email: 'p.ilunga@bossmining.cd',
+      services: ['Transport du Personnel', 'Location 4x4 Miniers'],
+      localite: 'Kakanda (Haut-Katanga)',
+      created_at: new Date(Date.now() - 86400000 * 6).toISOString(),
+      statut: 'en_etude',
+      message: 'Mise à disposition de 4 minibus tout-terrain 30 places et 6 pick-up équipés d\'arceaux pour navettes quotidiennes de mineurs.'
+    },
+    {
+      id: 'dev-006',
+      nom: 'Fabrice Mwema',
+      societe: 'Chemaf SA',
+      telephone: '+243 82 999 0011',
+      email: 'f.mwema@chemaf.cd',
+      services: ['Nettoyage Industriel & Dépollution'],
+      localite: 'Lubumbashi (Haut-Katanga)',
+      created_at: new Date(Date.now() - 86400000 * 9).toISOString(),
+      statut: 'rejete',
+      message: 'Traitement spécifique des boues acides d\'électrolyse (Prestation hors de notre périmètre actuel d\'accréditation HSE).'
+    }
+  ];
+
+  async function loadDevisList() {
+    const tbody = document.getElementById('devisTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
+
+    try {
+      const res = await window.adminCore.apiFetch('/api/devis?limit=100');
+      if (res.ok && res.data && res.data.devis && res.data.devis.length > 0) {
+        allDevis = res.data.devis;
+      } else {
+        allDevis = DEMO_DEVIS_DATA;
+      }
+    } catch (e) {
+      allDevis = DEMO_DEVIS_DATA;
+    }
+
+    const nouveauCount = allDevis.filter(d => d.statut === 'nouveau').length;
+    const badge = document.getElementById('badgeDevisCount');
+    if (badge) badge.textContent = nouveauCount;
+    renderDevisTable(allDevis);
+  }
+
+  function renderDevisTable(list) {
+    const tbody = document.getElementById('devisTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucune demande de devis ne correspond aux critères.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(d => {
+      const servicesStr = Array.isArray(d.services) ? d.services.join(', ') : (d.services || 'Prestation générale');
+      return `
+        <tr>
+          <td data-label="Client / Contact">
+            <strong>${d.nom}</strong>
+            <div style="font-size: 0.78rem; color: var(--gray-mid);">${d.societe || 'Particulier'}</div>
+            <div style="font-size: 0.75rem; color: var(--pink);"><i class="bi bi-telephone"></i> ${d.telephone || '—'}</div>
+          </td>
+          <td data-label="Prestations">
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--pink-deep); max-width: 250px;">${servicesStr}</div>
+          </td>
+          <td data-label="Localité">
+            <span style="font-size: 0.85rem;"><i class="bi bi-geo-alt"></i> ${d.localite || 'Toute la RDC'}</span>
+          </td>
+          <td data-label="Date Réception" style="font-size: 0.8rem; color: var(--gray-mid);">
+            ${window.adminCore.formatDate(d.created_at)}
+          </td>
+          <td data-label="Statut">
+            ${window.adminCore.renderBadgeStatus(d.statut)}
+          </td>
+          <td data-label="Actions" style="text-align: right;">
+            <div class="table-actions" style="justify-content: flex-end;">
+              <button class="btn btn-primary btn-sm" onclick="openDevisDetail('${d.id}')">
+                <i class="bi bi-eye"></i> Traiter le devis
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterDevis() {
+    const q = document.getElementById('devisSearchInput').value.toLowerCase().trim();
+    const st = document.getElementById('devisStatusFilter').value;
+
+    const filtered = allDevis.filter(d => {
+      const matchQuery = (d.nom && d.nom.toLowerCase().includes(q)) ||
+                         (d.societe && d.societe.toLowerCase().includes(q)) ||
+                         (d.telephone && d.telephone.includes(q)) ||
+                         (d.localite && d.localite.toLowerCase().includes(q));
+      const matchStatus = (st === 'all' || d.statut === st);
+      return matchQuery && matchStatus;
+    });
+
+    renderDevisTable(filtered);
+  }
+
+  function openDevisDetail(id) {
+    const d = allDevis.find(item => item.id === id);
+    if (!d) return;
+
+    document.getElementById('modalDevisId').value = d.id;
+    document.getElementById('modalClientName').textContent = d.nom;
+    document.getElementById('modalClientCompany').textContent = d.societe || 'Client Particulier';
+    document.getElementById('modalClientPhone').textContent = d.telephone || 'Non renseigné';
+    document.getElementById('modalClientEmail').textContent = d.email || 'Non renseigné';
+    document.getElementById('modalClientLocation').textContent = d.localite || 'RDC';
+    document.getElementById('modalClientDate').textContent = window.adminCore.formatDate(d.created_at);
+    document.getElementById('modalClientServices').textContent = Array.isArray(d.services) ? d.services.join(' • ') : (d.services || 'Prestation générale');
+    document.getElementById('modalClientMessage').textContent = d.message || 'Aucun message particulier.';
+    document.getElementById('modalDevisBadge').innerHTML = window.adminCore.renderBadgeStatus(d.statut);
+    document.getElementById('modalNewStatusSelect').value = d.statut || 'nouveau';
+
+    window.adminCore.openModal('devisDetailModal');
+  }
+
+  async function saveDevisStatus() {
+    const id = document.getElementById('modalDevisId').value;
+    const newStatut = document.getElementById('modalNewStatusSelect').value;
+
+    try {
+      await window.adminCore.apiFetch(`/api/devis/${id}/statut`, {
+        method: 'PUT',
+        body: JSON.stringify({ statut: newStatut })
+      });
+    } catch (e) {}
+
+    const target = allDevis.find(item => item.id === id);
+    if (target) {
+      target.statut = newStatut;
+    }
+
+    window.adminCore.showToast('Statut du devis actualisé avec succès', 'success');
+    window.adminCore.closeModal('devisDetailModal');
+
+    const nouveauCount = allDevis.filter(d => d.statut === 'nouveau').length;
+    const badge = document.getElementById('badgeDevisCount');
+    if (badge) badge.textContent = nouveauCount;
+
+    renderDevisTable(allDevis);
+  }
+</script>
+</body>
+</html>

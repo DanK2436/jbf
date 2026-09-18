@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messagerie d'Équipe — JBF SERVICES Membre</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ============================================================
+       WHATSAPP WEB-STYLE CHAT WORKSPACE FOR JBF SERVICES
+       ============================================================ */
+
+    .wa-wrapper {
+      background: #EFEAE2;
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr;
+      height: calc(100vh - 120px);
+      min-height: 580px;
+      max-height: 820px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    @media (min-width: 820px) {
+      .wa-wrapper {
+        grid-template-columns: 340px 1fr;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .wa-wrapper {
+        grid-template-columns: 380px 1fr;
+      }
+    }
+
+    /* ------------------------------------------------------------
+       LEFT SIDEBAR : CONVERSATIONS LIST
+       ------------------------------------------------------------ */
+    .wa-sidebar {
+      background: #FFFFFF;
+      border-right: 1px solid #E2E8F0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Sidebar Top Header */
+    .wa-sidebar-header {
+      background: #F0F2F5;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .wa-sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-width: 0;
+    }
+
+    .wa-user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--grad-primary);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .wa-online-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #10B981;
+      border: 2px solid #FFFFFF;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+
+    .wa-user-details {
+      min-width: 0;
+    }
+
+    .wa-user-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--text-h);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-role-card-section {
+      background: linear-gradient(135deg, #FFF0F7 0%, #FFFFFF 100%);
+      border: 1px solid var(--pink-border);
+      border-radius: 8px;
+      padding: 0.35rem 0.65rem;
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .wa-role-card-section:hover {
+      border-color: var(--pink);
+      background: #FFF5FA;
+      box-shadow: 0 2px 8px rgba(230, 0, 126, 0.1);
+    }
+
+    .wa-role-badge-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--pink-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-role-badge-sub {
+      font-size: 0.62rem;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+
+    /* Scrollbars invisibles tout en restant fonctionnelles */
+    .wa-messages-container,
+    .wa-chat-list,
+    .wa-sidebar,
+    .wa-role-modal,
+    #userRolesList {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .wa-messages-container::-webkit-scrollbar,
+    .wa-chat-list::-webkit-scrollbar,
+    .wa-sidebar::-webkit-scrollbar,
+    .wa-role-modal::-webkit-scrollbar,
+    #userRolesList::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .wa-header-icons {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #54656F;
+    }
+
+    .wa-icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #54656F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .wa-icon-btn:hover {
+      background: rgba(0,0,0,0.06);
+      color: var(--pink);
+    }
+
+    /* Role Switcher Modal / Dropdown Box */
+    .wa-role-modal {
+      display: none;
+      position: absolute;
+      top: 55px;
+      left: 10px;
+      right: 10px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 0.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      z-index: 100;
+    }
+
+    .wa-role-modal.active { display: block; }
+
+    .wa-role-modal-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .wa-role-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-body);
+      transition: background 0.15s;
+    }
+
+    .wa-role-option:hover {
+      background: var(--pink-pale);
+      color: var(--pink);
+    }
+
+    .wa-role-option.selected {
+      background: var(--pink-pale);
+      color: var(--pink);
+      font-weight: 800;
+    }
+
+    /* Search & Filter bar */
+    .wa-search-section {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid #F0F2F5;
+      background: #FFFFFF;
+    }
+
+    .wa-search-input-box {
+      background: #F0F2F5;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .wa-search-input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      width: 100%;
+      color: var(--text-body);
+    }
+
+    .wa-filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid #F0F2F5;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .wa-filter-tabs::-webkit-scrollbar { display: none; }
+
+    .wa-filter-pill {
+      border: none;
+      background: #F0F2F5;
+      color: #54656F;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .wa-filter-pill.active {
+      background: rgba(230,0,126,0.15);
+      color: var(--pink);
+      font-weight: 800;
+    }
+
+    /* Conversations List Scroll */
+    .wa-chat-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .wa-chat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      border-bottom: 1px solid #F5F6F8;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .wa-chat-item:hover {
+      background: #F5F6F8;
+    }
+
+    .wa-chat-item.active {
+      background: #EBECEF;
+    }
+
+    .wa-item-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+    }
+
+    .wa-item-avatar.group {
+      background: linear-gradient(135deg, #E6007E, #C8006E);
+    }
+    .wa-item-avatar.hse {
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+    .wa-item-avatar.dir {
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
+    }
+
+    .wa-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .wa-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.15rem;
+    }
+
+    .wa-item-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-h);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-item-time {
+      font-size: 0.68rem;
+      color: #8696A0;
+      flex-shrink: 0;
+      margin-left: 0.4rem;
+    }
+
+    .wa-item-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .wa-item-msg {
+      font-size: 0.76rem;
+      color: #667781;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .wa-item-badge {
+      background: var(--pink);
+      color: #FFFFFF;
+      font-size: 0.65rem;
+      font-weight: 800;
+      border-radius: 12px;
+      padding: 0.1rem 0.45rem;
+      min-width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .wa-item-role-tag {
+      font-size: 0.64rem;
+      background: #E2E8F0;
+      color: #475569;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-block;
+      margin-right: 0.25rem;
+    }
+
+    /* ------------------------------------------------------------
+       RIGHT MAIN PANEL : CHAT CONVERSATION
+       ------------------------------------------------------------ */
+    .wa-main {
+      background: #EFEAE2;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* WhatsApp Wallpaper Background */
+    .wa-main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(230,0,126,0.03) 1px, transparent 1px), radial-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* Chat Header */
+    .wa-chat-header {
+      background: #F0F2F5;
+      padding: 0.65rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-bottom: 1px solid #E2E8F0;
+      z-index: 10;
+      position: relative;
+    }
+
+    .wa-chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .wa-back-btn {
+      display: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #54656F;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    @media (max-width: 819px) {
+      .wa-back-btn { display: flex; }
+    }
+
+    .wa-chat-header-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: var(--text-h);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-chat-header-status {
+      font-size: 0.71rem;
+      color: #667781;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-chat-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .wa-action-call-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: var(--text-body);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .wa-action-call-btn:hover {
+      background: #F8FAFC;
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+
+    .wa-action-call-btn.primary {
+      background: var(--pink);
+      color: #FFFFFF;
+      border-color: var(--pink);
+    }
+
+    .wa-action-call-btn.primary:hover {
+      background: #C8006E;
+    }
+
+    /* Message Area Canvas */
+    .wa-messages-container {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      z-index: 5;
+      position: relative;
+    }
+
+    /* Date Pill */
+    .wa-date-pill {
+      align-self: center;
+      background: #FFFFFF;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      border-radius: 8px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #54656F;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0.6rem 0;
+    }
+
+    /* WhatsApp Message Bubbles */
+    .wa-bubble-row {
+      display: flex;
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .wa-bubble-row.in {
+      justify-content: flex-start;
+    }
+
+    .wa-bubble-row.out {
+      justify-content: flex-end;
+    }
+
+    .wa-bubble {
+      max-width: 75%;
+      min-width: 120px;
+      padding: 0.45rem 0.65rem 0.35rem;
+      position: relative;
+      box-shadow: 0 1px 1.5px rgba(0,0,0,0.12);
+      font-size: 0.84rem;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .wa-bubble-row.in .wa-bubble {
+      background: #FFFFFF;
+      color: #111B21;
+      border-radius: 0px 8px 8px 8px;
+    }
+
+    .wa-bubble-row.out .wa-bubble {
+      background: #FCE7F3; /* Subtle JBF blush */
+      color: #111B21;
+      border-radius: 8px 0px 8px 8px;
+      border: 1px solid rgba(230,0,126,0.15);
+    }
+
+    /* Sender Info inside Group Bubble */
+    .wa-bubble-sender {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .wa-sender-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--pink);
+    }
+
+    .wa-sender-post-badge {
+      font-size: 0.62rem;
+      background: rgba(0,0,0,0.06);
+      color: #475569;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .wa-bubble-text {
+      color: #111B21;
+      margin-bottom: 0.15rem;
+    }
+
+    .wa-bubble-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.25rem;
+      font-size: 0.62rem;
+      color: #667781;
+      margin-top: 0.15rem;
+    }
+
+    .wa-check-icon {
+      color: var(--pink);
+      display: inline-flex;
+    }
+
+    /* WhatsApp PDF Document Card */
+    .wa-pdf-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-left: 4px solid var(--pink);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin: 0.25rem 0;
+    }
+
+    .wa-pdf-left {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+
+    .wa-pdf-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      background: var(--pink-pale);
+      color: var(--pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* WhatsApp Input Footer */
+    .wa-footer {
+      background: #F0F2F5;
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      border-top: 1px solid #E2E8F0;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* Posting Role Indicator Bar */
+    .wa-post-as-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.71rem;
+      color: #667781;
+      padding: 0 0.2rem;
+    }
+
+    .wa-post-as-select {
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: var(--pink);
+      font-weight: 800;
+      font-size: 0.71rem;
+      border-radius: 12px;
+      padding: 0.15rem 0.55rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .wa-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .wa-text-input-box {
+      flex: 1;
+      background: #FFFFFF;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      padding: 0.45rem 0.85rem;
+    }
+
+    .wa-text-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: #111B21;
+      background: transparent;
+    }
+
+    .wa-text-input::placeholder { color: #8696A0; }
+
+    .wa-send-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--pink);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .wa-send-btn:hover {
+      background: #C8006E;
+      transform: scale(1.05);
+    }
+
+    /* ------------------------------------------------------------
+       CALL OVERLAY & DYNAMIC SCREEN DIVISION
+       ------------------------------------------------------------ */
+    .call-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0B1220;
+      z-index: 1000;
+      flex-direction: column;
+      color: #FFF;
+      overflow: hidden;
+    }
+    .call-overlay.active { display: flex; }
+    .call-topbar {
+      padding: 0.75rem 1.5rem;
+      background: rgba(11,18,32,.96);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      z-index: 20;
+    }
+    .call-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.6rem; }
+    .call-title-badge { width: 8px; height: 8px; border-radius: 50%; background: #E6007E; box-shadow: 0 0 0 2px rgba(230,0,126,.3); animation: pulse-rec 1.5s infinite; }
+    @keyframes pulse-rec { 0%, 100% { box-shadow: 0 0 0 2px rgba(230,0,126,.3); } 50% { box-shadow: 0 0 0 5px rgba(230,0,126,.1); } }
+    .call-timer-badge { background: rgba(230,0,126,.15); border: 1px solid rgba(230,0,126,.4); color: #F472B6; padding: 0.2rem 0.65rem; border-radius: 20px; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; font-family: monospace; }
+    .call-middle-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    
+    /* ------------------------------------------------------------
+       DYNAMIC SCREEN DIVISION: 2D TABLE MATRIX WITH CASES/BOXES
+       ------------------------------------------------------------ */
+    .call-grid-area {
+      flex: 1;
+      padding: 0.75rem;
+      display: grid;
+      gap: 0.65rem;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      align-content: stretch;
+      justify-content: stretch;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    /* 1 Participant (1 Box Full) */
+    .call-grid-area[data-count="1"] {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* 2 Participants (Table 2x1 cases side-by-side) */
+    .call-grid-area[data-count="2"] {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    /* 3 Participants (2 cases top, 1 centered case bottom) */
+    .call-grid-area[data-count="3"] {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .call-grid-area[data-count="3"] .participant-card:last-child {
+      grid-column: 1 / -1;
+      max-width: 55%;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (max-width: 640px) {
+      .call-grid-area[data-count="3"] .participant-card:last-child {
+        max-width: 80%;
+      }
+    }
+
+    /* 4 Participants (Table Matrix 2x2 of 4 boxes on Desktop AND Mobile) */
+    .call-grid-area[data-count="4"] {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    /* 5 or 6 Participants (Table Matrix 3x2 on desktop, 2x3 on mobile) */
+    .call-grid-area[data-count="5"],
+    .call-grid-area[data-count="6"] {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: 1fr 1fr;
+    }
+    @media (max-width: 768px) {
+      .call-grid-area[data-count="5"],
+      .call-grid-area[data-count="6"] {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(3, 1fr);
+      }
+    }
+
+    /* Participant Box / Case Styling */
+    .participant-card {
+      background: #111B27;
+      border: 1.5px solid #1E2D42;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      min-height: 80px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      transition: all 0.25s ease;
+    }
+
+    /* Manual Invite Participant Modal */
+    .invite-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      z-index: 2500;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .invite-modal-overlay.active { display: flex; }
+    .invite-modal-card {
+      background: #1E293B;
+      color: #FFF;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      max-width: 520px;
+      width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .invite-modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #131B2E;
+    }
+    .invite-modal-header h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .invite-modal-search {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: #182235;
+    }
+    .invite-modal-search-input {
+      width: 100%;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #FFF;
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.82rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .invite-modal-search-input:focus { border-color: var(--pink); }
+    .invite-colleagues-list {
+      padding: 0.75rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 380px;
+    }
+    .invite-colleague-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.85rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      transition: background 0.15s;
+    }
+    .invite-colleague-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    .invite-colleague-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+    .invite-colleague-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: #FFF;
+      flex-shrink: 0;
+    }
+    .invite-colleague-name {
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: #F1F5F9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .invite-colleague-role {
+      font-size: 0.7rem;
+      color: #94A3B8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .invite-add-btn {
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      border: none;
+      background: var(--pink);
+      color: #FFF;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .invite-add-btn:hover { background: #C8006E; transform: scale(1.04); }
+    .invite-add-btn.already-in {
+      background: rgba(16,185,129,0.15);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.3);
+      cursor: default;
+      pointer-events: none;
+    }
+    .participant-card.speaking {
+      border-color: #10B981;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.3);
+    }
+    .participant-video { width: 100%; height: 100%; object-fit: cover; display: none; }
+    
+    .participant-avatar-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.55rem;
+      z-index: 2;
+    }
+    .participant-avatar-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#E6007E,#C8006E);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #FFF;
+      box-shadow: 0 4px 16px rgba(230,0,126,.3);
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .participant-card.speaking .participant-avatar-circle {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 4px rgba(16,185,129,0.4), 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .participant-name-tag { font-size: 0.72rem; color: #94A3B8; font-weight: 700; }
+    .participant-role-tag { font-size: 0.65rem; color: #64748B; font-weight: 600; background: rgba(255,255,255,0.06); padding: 0.1rem 0.4rem; border-radius: 4px; }
+    
+    .participant-tag {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(11,18,32,.88);
+      backdrop-filter: blur(6px);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(255,255,255,.08);
+      color: #E2E8F0;
+      z-index: 5;
+    }
+    .speaking-wave { display: inline-flex; align-items: center; gap: 2px; height: 10px; }
+    .speaking-wave span { width: 2.5px; background: #10B981; border-radius: 2px; animation: wave 1s infinite ease-in-out; }
+    .speaking-wave span:nth-child(2) { animation-delay: .2s; }
+    .speaking-wave span:nth-child(3) { animation-delay: .4s; }
+    @keyframes wave { 0%, 100% { height: 3px; } 50% { height: 10px; } }
+    .live-transcription-bar { background: rgba(11,18,32,.92); border-top: 1px solid rgba(255,255,255,.06); padding: 0.55rem 1.25rem; display: flex; align-items: center; gap: 0.65rem; font-size: 0.8rem; color: #94A3B8; z-index: 10; }
+    .live-transcription-badge { background: var(--pink); color: #FFF; font-size: 0.64rem; font-weight: 900; padding: 0.12rem 0.45rem; border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; flex-shrink: 0; }
+    .live-transcription-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
+    .call-controls-bar { padding: 0.85rem 1.5rem; background: rgba(11,18,32,.96); border-top: 1px solid rgba(255,255,255,.07); display: flex; justify-content: center; align-items: center; gap: 0.75rem; flex-wrap: wrap; z-index: 20; }
+    .call-ctrl-group { display: flex; align-items: center; gap: 0.45rem; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 30px; padding: 0.3rem; }
+    .call-btn-circle { width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,.1); color: #FFF; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
+    .call-btn-circle:hover { background: rgba(255,255,255,.18); transform: scale(1.06); }
+    .call-btn-circle.active-off { background: rgba(239,68,68,.2); color: #F87171; border: 1px solid rgba(239,68,68,.28); }
+    .call-btn-hangup { width: 48px; height: 48px; border-radius: 50%; border: none; background: #DC2626; color: #FFF; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; box-shadow: 0 4px 16px rgba(220,38,38,.4); }
+    .call-btn-hangup:hover { background: #B91C1C; transform: scale(1.08); }
+
+    /* Summary Modal */
+    .summary-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 1.5rem; }
+    .summary-modal-overlay.active { display: flex; }
+    .summary-modal-card { background: var(--white); color: var(--text-h); border-radius: 16px; max-width: 660px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 56px rgba(0,0,0,.2); }
+    .summary-modal-header { padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--gray-border); display: flex; justify-content: space-between; align-items: center; background: var(--white); }
+    .summary-modal-title { display: flex; align-items: center; gap: 0.65rem; }
+    .summary-modal-title-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--pink-pale); color: var(--pink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .summary-modal-title strong { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 900; color: var(--text-h); display: block; }
+    .summary-modal-title span { font-size: 0.71rem; color: var(--text-light); }
+    .summary-modal-close-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--white); color: var(--text-light); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1; }
+    .summary-modal-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; }
+    .summary-meta-grid { background: var(--gray-light); border: 1px solid var(--gray-border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1.1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; font-size: 0.82rem; }
+    .summary-meta-item strong { color: var(--text-light); font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: .3px; display: block; margin-bottom: 0.1rem; }
+    .summary-meta-item span { color: var(--text-h); font-weight: 700; }
+    .summary-meta-grid .summary-meta-item:last-child { grid-column: 1/-1; }
+    .summary-field-label { font-size: 0.71rem; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; color: var(--text-light); margin-bottom: 0.4rem; }
+    .summary-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--gray-border); display: flex; justify-content: space-between; align-items: center; background: var(--gray-light); flex-wrap: wrap; gap: 0.6rem; }
+
+    /* Mobile Responsive View (Authentic WhatsApp Mobile) */
+    @media (max-width: 819px) {
+      .wa-wrapper {
+        height: calc(100dvh - 75px);
+        min-height: 460px;
+        max-height: none;
+        border-radius: 10px;
+        margin: -0.25rem -0.25rem 0;
+        grid-template-columns: 1fr;
+      }
+      .wa-sidebar.mobile-hidden {
+        display: none !important;
+      }
+      .wa-main.mobile-hidden {
+        display: none !important;
+      }
+      .wa-bubble {
+        max-width: 88%;
+        font-size: 0.86rem;
+      }
+      .wa-chat-header {
+        padding: 0.5rem 0.75rem;
+      }
+      .wa-chat-header-name {
+        font-size: 0.86rem;
+        max-width: 140px;
+      }
+      .wa-chat-header-status {
+        font-size: 0.67rem;
+        max-width: 140px;
+      }
+      .wa-action-call-btn span {
+        display: none;
+      }
+      .wa-action-call-btn {
+        padding: 0.45rem;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        justify-content: center;
+      }
+      .wa-action-call-btn svg {
+        margin: 0;
+      }
+      .wa-footer {
+        padding: 0.45rem 0.65rem;
+      }
+      .wa-text-input {
+        font-size: 16px; /* Prevents auto-zoom on mobile safari/chrome */
+      }
+      .wa-post-as-bar {
+        font-size: 0.67rem;
+      }
+      .wa-post-as-select {
+        max-width: 160px;
+        font-size: 0.67rem;
+        padding: 0.1rem 0.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="memberHeaderContainer"></div>
+
+  <div class="layout-container">
+    <div id="memberSidebarContainer"></div>
+
+    <main style="padding-top: 0.5rem;">
+
+      <!-- WHATSAPP WEB STYLE WORKSPACE -->
+      <div class="wa-wrapper">
+
+        <!-- 1. LEFT SIDEBAR : CONVERSATIONS & POSTS -->
+        <aside class="wa-sidebar" id="waSidebar">
+
+          <!-- Header : Current User & Executive Post Section -->
+          <div class="wa-sidebar-header" style="flex-direction:column; align-items:stretch; gap:0.5rem; padding:0.75rem 0.9rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;">
+              <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+                <div class="wa-user-avatar" onclick="toggleRoleModal()" title="Changer de poste actif">
+                  <span class="user-avatar" id="myAvatarInitial">DK</span>
+                  <div class="wa-online-dot"></div>
+                </div>
+                <div style="min-width:0;">
+                  <div class="wa-user-name user-meta-name">David Kasongo</div>
+                  <div style="font-size:0.65rem; color:#10B981; font-weight:700; display:flex; align-items:center; gap:0.25rem;">
+                    <span style="width:6px; height:6px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+                    Session Active &amp; Certifiée
+                  </div>
+                </div>
+              </div>
+              <button class="wa-icon-btn" onclick="toggleRoleModal()" title="Changer de poste / fonction">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              </button>
+            </div>
+
+            <!-- EXECUTIVE ROLE CARD SECTION -->
+            <div class="wa-role-card-section" onclick="toggleRoleModal()" title="Cliquer pour changer de poste d'affectation">
+              <div style="min-width:0;">
+                <div class="wa-role-badge-title">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span id="currentActivePostLabel">Superviseur Opérations Minières</span>
+                </div>
+                <div class="wa-role-badge-sub">Département des Opérations Minières &amp; BTP</div>
+              </div>
+              <span style="font-size:0.62rem; font-weight:800; color:var(--pink); background:rgba(230,0,126,0.12); padding:0.15rem 0.4rem; border-radius:4px; flex-shrink:0;">
+                Changer ▾
+              </span>
+            </div>
+          </div>
+
+          <!-- Multiple Positions / Roles Modal Popup -->
+          <div class="wa-role-modal" id="waRoleModal">
+            <div class="wa-role-modal-title">Vos Postes &amp; Fonctions dans l'Entreprise</div>
+            <div id="userRolesList">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="wa-search-section">
+            <div class="wa-search-input-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#54656F" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="waSearchChatInput" class="wa-search-input" placeholder="Rechercher ou démarrer une discussion..." oninput="filterConversations()">
+            </div>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="wa-filter-tabs">
+            <button class="wa-filter-pill active" onclick="setChatFilter('all', this)">Toutes</button>
+            <button class="wa-filter-pill" onclick="setChatFilter('group', this)">Groupes Pôles</button>
+            <button class="wa-filter-pill" onclick="setChatFilter('direct', this)">Directs</button>
+            <button class="wa-filter-pill" onclick="setChatFilter('unread', this)">Non lus</button>
+          </div>
+
+          <!-- Conversations List -->
+          <ul class="wa-chat-list" id="waChatList">
+            <!-- Rendered dynamically -->
+          </ul>
+        </aside>
+
+        <!-- 2. RIGHT MAIN PANEL : WHATSAPP CONVERSATION -->
+        <section class="wa-main" id="waMain">
+
+          <!-- Chat Top Header -->
+          <div class="wa-chat-header">
+            <div class="wa-chat-header-info">
+              <button class="wa-back-btn" onclick="backToSidebar()" aria-label="Retour">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+              </button>
+              <div class="wa-item-avatar group" id="currentChatAvatar">JBF</div>
+              <div style="min-width:0;">
+                <div class="wa-chat-header-name" id="currentChatTitle">Canal Général — JBF SERVICES</div>
+                <div class="wa-chat-header-status" id="currentChatStatus">Tous départements &middot; 48 collaborateurs actifs</div>
+              </div>
+            </div>
+
+            <div class="wa-chat-header-actions">
+              <button class="wa-action-call-btn primary" onclick="startGroupCall('audio')" title="Appel Vocal Collaborateurs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>Appel Vocal</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Container Canvas -->
+          <div class="wa-messages-container" id="waMessagesContainer">
+            <!-- Messages rendered dynamically -->
+          </div>
+
+          <!-- Footer / Composer with Role Posting Selection -->
+          <div class="wa-footer">
+            <div class="wa-post-as-bar">
+              <span>Publier en tant que :</span>
+              <select id="waPostingRoleSelect" class="wa-post-as-select" onchange="changeActiveRole(this.value)">
+                <!-- Options populated dynamically -->
+              </select>
+            </div>
+            <form class="wa-input-row" onsubmit="sendWaMessage(event)">
+              <div class="wa-text-input-box">
+                <input type="text" id="waMessageInput" class="wa-text-input" placeholder="Écrivez un message..." autocomplete="off" required>
+              </div>
+              <button type="submit" class="wa-send-btn" title="Envoyer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </button>
+            </form>
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- GROUP & DIRECT CALL OVERLAY -->
+  <div class="call-overlay" id="groupCallOverlay">
+    <div class="call-topbar">
+      <div class="call-title">
+        <div class="call-title-badge"></div>
+        <span id="callOverlayHeaderTitle">Appel Vocal Collaborateurs</span>
+        <span id="callParticipantCountBadge" style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:0.15rem 0.5rem; border-radius:12px; font-weight:600; color:#E2E8F0;">2 participants</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <button onclick="addCallParticipant()" class="btn btn-outline btn-sm" style="font-size:0.72rem; padding:0.25rem 0.6rem; color:#FFF; border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.06); border-radius:16px;" title="Inviter un collaborateur dans l'appel">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Ajouter
+        </button>
+        <span class="call-timer-badge" id="callDurationTimer">00:00</span>
+        <span style="font-size:.72rem;color:#64748B;display:flex;align-items:center;gap:.35rem;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></svg>
+          Transcription active
+        </span>
+      </div>
+    </div>
+    <div class="call-middle-area">
+      <!-- DYNAMIC PARTICIPANT TILES CONTAINER -->
+      <div class="call-grid-area" id="callParticipantsGrid" data-count="2">
+        <!-- Rendered dynamically by renderCallParticipants() -->
+      </div>
+      <div class="live-transcription-bar">
+        <span class="live-transcription-badge">En Direct</span>
+        <span class="live-transcription-text" id="liveTranscriptionText">Écoute active — Parlez dans votre microphone pour alimenter le procès-verbal.</span>
+      </div>
+    </div>
+    <div class="call-controls-bar">
+      <div class="call-ctrl-group">
+        <button class="call-btn-circle" id="toggleMicBtn" onclick="toggleMicrophone()" title="Micro"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></button>
+        <button class="call-btn-circle" onclick="addCallParticipant()" title="Inviter un participant"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></button>
+      </div>
+      <button class="call-btn-hangup" onclick="endGroupCall()" title="Quitter et générer le compte-rendu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></button>
+    </div>
+  </div>
+
+  <!-- MANUAL INVITE PARTICIPANT MODAL -->
+  <div class="invite-modal-overlay" id="inviteParticipantModalOverlay" onclick="if(event.target===this) closeInviteParticipantModal()">
+    <div class="invite-modal-card">
+      <div class="invite-modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          Inviter un Collaborateur dans l'Appel
+        </h3>
+        <button class="summary-modal-close-btn" onclick="closeInviteParticipantModal()" title="Fermer" style="color:#FFF; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15);">&#x2715;</button>
+      </div>
+      <div class="invite-modal-search">
+        <input type="text" id="inviteColleagueSearch" class="invite-modal-search-input" placeholder="Rechercher par nom, rôle ou département..." oninput="filterInviteColleagues()">
+      </div>
+      <div class="invite-colleagues-list" id="inviteColleaguesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY MODAL -->
+  <div class="summary-modal-overlay" id="summaryModalOverlay">
+    <div class="summary-modal-card">
+      <div class="summary-modal-header">
+        <div class="summary-modal-title">
+          <div class="summary-modal-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+          <div>
+            <strong>Compte-Rendu Officiel de Réunion</strong>
+            <span id="summaryRefDoc">PV-2026-001</span>
+          </div>
+        </div>
+        <button class="summary-modal-close-btn" onclick="closeSummaryModal()" title="Fermer">&#x2715;</button>
+      </div>
+      <div class="summary-modal-body">
+        <div class="summary-meta-grid">
+          <div class="summary-meta-item"><strong>Canal / Pôle</strong><span id="summaryModalChannel">—</span></div>
+          <div class="summary-meta-item"><strong>Durée</strong><span id="summaryModalDuration">00:00</span></div>
+          <div class="summary-meta-item"><strong>Participants</strong><span id="summaryModalParticipants">—</span></div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div class="summary-field-label">Retranscription &amp; Points Abordés</div>
+          <textarea id="summaryModalNotes" class="fc-input" placeholder="Retranscription des échanges capturés au microphone..." style="min-height:110px;font-size:.85rem;line-height:1.5;resize:vertical;"></textarea>
+        </div>
+        <div>
+          <div class="summary-field-label">Décisions &amp; Actions Retenues</div>
+          <input type="text" id="summaryModalActions" class="fc-input" placeholder="Actions et directives décidées lors de la réunion..." style="font-size:.85rem;">
+        </div>
+      </div>
+      <div class="summary-modal-footer">
+        <button class="btn btn-outline btn-sm" onclick="closeSummaryModal()">Fermer</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="downloadPdfDirectly()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Télécharger PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="distributeAndSendPdf()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:.3rem;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Diffuser au Groupe</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    // Multi-Role & Conversations State
+    let currentProfile = null;
+    let userAssignedRoles = [];
+    let activeRoleTitle = 'Superviseur Opérations Minières';
+    let currentChatId = 'general';
+    let currentFilter = 'all';
+    let realtimeSubscription = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let localStream = null;
+    let isMicMuted = false;
+    let isCamMuted = true;
+    let isScreenSharing = false;
+    let speechRecognition = null;
+    let callTranscriptHistory = [];
+    let currentMeetingData = null;
+
+    // Defined enterprise channels & direct discussions
+    const CONVERSATIONS = [
+      {
+        id: 'general',
+        type: 'group',
+        name: 'Canal Général — JBF SERVICES',
+        roleTag: 'Tous Services',
+        avatar: 'JBF',
+        avatarClass: 'group',
+        status: 'Tous départements &middot; 48 collaborateurs actifs',
+        lastMsg: 'Bienvenue sur la messagerie officielle JBF.',
+        lastTime: '10:45',
+        unread: 0
+      },
+      {
+        id: 'section',
+        type: 'group',
+        name: 'Section 4 — Prestations Minières',
+        roleTag: 'Pôle Métier',
+        avatar: 'S4',
+        avatarClass: 'group',
+        status: 'Équipes de terrain Fungurume &amp; Kolwezi',
+        lastMsg: 'Briefing 07h00 validé pour le secteur minier.',
+        lastTime: '08:15',
+        unread: 1
+      },
+      {
+        id: 'hse_comm',
+        type: 'group',
+        name: 'Comité HSE &amp; Sécurité',
+        roleTag: 'HSE',
+        avatar: 'HSE',
+        avatarClass: 'hse',
+        status: 'Superviseurs &amp; Délégués Sécurité',
+        lastMsg: 'Rappel port des EPI coqués sur chantiers.',
+        lastTime: 'Hier',
+        unread: 0
+      },
+      {
+        id: 'direction',
+        type: 'group',
+        name: 'Direction &amp; Superviseurs',
+        roleTag: 'Coordination',
+        avatar: 'DIR',
+        avatarClass: 'dir',
+        status: 'Cadres &amp; Chefs de Pôles',
+        lastMsg: 'Réunion de coordination des plannings.',
+        lastTime: 'Hier',
+        unread: 0
+      },
+      {
+        id: 'marc_mwamba',
+        type: 'direct',
+        name: 'Ing. Marc Mwamba',
+        roleTag: 'Directeur Technique',
+        avatar: 'MM',
+        avatarClass: '',
+        status: 'En ligne &middot; Direction Technique',
+        lastMsg: 'Rapport technique transmis à la direction.',
+        lastTime: '09:30',
+        unread: 0
+      },
+      {
+        id: 'superviseur_hse',
+        type: 'direct',
+        name: 'Superviseur Sécurité HSE',
+        roleTag: 'Coordination HSE',
+        avatar: 'SH',
+        avatarClass: 'hse',
+        status: 'Actif sur site minier',
+        lastMsg: 'Fiches d\'intervention auditées.',
+        lastTime: '07:50',
+        unread: 0
+      },
+      {
+        id: 'rh_admin',
+        type: 'direct',
+        name: 'Secrétariat RH &amp; Paie',
+        roleTag: 'Ressources Humaines',
+        avatar: 'RH',
+        avatarClass: 'dir',
+        status: 'Administration du personnel',
+        lastMsg: 'Attestation de congés traitée.',
+        lastTime: 'Lundi',
+        unread: 0
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavigation('chat');
+      currentProfile = await initMemberSession();
+
+      if (currentProfile) {
+        // Multi-role setup for the employee
+        userAssignedRoles = [
+          { id: 1, title: currentProfile.poste || 'Superviseur Opérations Minières', pole: `Section ${currentProfile.section_id} : ${currentProfile.section_nom}` },
+          { id: 2, title: 'Délégué Sécurité HSE Terrain', pole: 'Comité Hygiène, Sécurité & Environnement' },
+          { id: 3, title: 'Chef d\'Équipe de Relève', pole: 'Direction des Prestations Techniques' }
+        ];
+
+        activeRoleTitle = userAssignedRoles[0].title;
+        renderRolesUI();
+
+        // Update Section conversation name
+        const secChat = CONVERSATIONS.find(c => c.id === 'section');
+        if (secChat) {
+          secChat.name = `Section ${currentProfile.section_id} — ${currentProfile.section_nom}`;
+          secChat.status = `Collaborateurs du pôle ${currentProfile.section_nom}`;
+        }
+      }
+
+      renderConversationsList();
+      if (window.innerWidth < 820) {
+        document.getElementById('waSidebar').classList.remove('mobile-hidden');
+        document.getElementById('waMain').classList.add('mobile-hidden');
+      } else {
+        selectConversation('general');
+      }
+      setupRealtimeChat();
+      initSpeechRecognition();
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 820) {
+        document.getElementById('waSidebar').classList.remove('mobile-hidden');
+        document.getElementById('waMain').classList.remove('mobile-hidden');
+      }
+    });
+
+    function renderRolesUI() {
+      document.getElementById('currentActivePostLabel').textContent = activeRoleTitle;
+      const modalList = document.getElementById('userRolesList');
+      const selectEl = document.getElementById('waPostingRoleSelect');
+
+      modalList.innerHTML = '';
+      selectEl.innerHTML = '';
+
+      userAssignedRoles.forEach(r => {
+        const isSel = r.title === activeRoleTitle;
+
+        // Modal item
+        const item = document.createElement('div');
+        item.className = `wa-role-option ${isSel ? 'selected' : ''}`;
+        item.innerHTML = `
+          <div>
+            <div style="font-weight:800;">${r.title}</div>
+            <div style="font-size:0.68rem; color:#64748B;">${r.pole}</div>
+          </div>
+          ${isSel ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+        `;
+        item.onclick = () => { changeActiveRole(r.title); toggleRoleModal(); };
+        modalList.appendChild(item);
+
+        // Select option in composer
+        const opt = document.createElement('option');
+        opt.value = r.title;
+        opt.textContent = r.title;
+        opt.selected = isSel;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    function toggleRoleModal() {
+      const modal = document.getElementById('waRoleModal');
+      modal.classList.toggle('active');
+    }
+
+    function changeActiveRole(newRole) {
+      activeRoleTitle = newRole;
+      renderRolesUI();
+    }
+
+    function setChatFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.wa-filter-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderConversationsList();
+    }
+
+    function filterConversations() {
+      renderConversationsList();
+    }
+
+    function renderConversationsList() {
+      const listEl = document.getElementById('waChatList');
+      const searchQ = (document.getElementById('waSearchChatInput')?.value || '').toLowerCase().trim();
+
+      listEl.innerHTML = '';
+
+      const filtered = CONVERSATIONS.filter(c => {
+        if (currentFilter === 'group' && c.type !== 'group') return false;
+        if (currentFilter === 'direct' && c.type !== 'direct') return false;
+        if (currentFilter === 'unread' && c.unread <= 0) return false;
+        if (searchQ && !c.name.toLowerCase().includes(searchQ) && !c.roleTag.toLowerCase().includes(searchQ)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<li style="padding:1.5rem; text-align:center; color:#8696A0; font-size:0.8rem;">Aucune discussion trouvée.</li>';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const li = document.createElement('li');
+        li.className = `wa-chat-item ${c.id === currentChatId ? 'active' : ''}`;
+        li.onclick = () => selectConversation(c.id);
+
+        li.innerHTML = `
+          <div class="wa-item-avatar ${c.avatarClass}">${c.avatar}</div>
+          <div class="wa-item-content">
+            <div class="wa-item-top">
+              <div class="wa-item-name">${c.name}</div>
+              <div class="wa-item-time">${c.lastTime}</div>
+            </div>
+            <div class="wa-item-bottom">
+              <div class="wa-item-msg">
+                <span class="wa-item-role-tag">${c.roleTag}</span>
+                <span>${c.lastMsg}</span>
+              </div>
+              ${c.unread > 0 ? `<div class="wa-item-badge">${c.unread}</div>` : ''}
+            </div>
+          </div>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
+    function selectConversation(chatId) {
+      currentChatId = chatId;
+      const conv = CONVERSATIONS.find(c => c.id === chatId) || CONVERSATIONS[0];
+
+      // Mark unread as read
+      conv.unread = 0;
+
+      // Update Header
+      document.getElementById('currentChatTitle').textContent = conv.name;
+      document.getElementById('currentChatStatus').textContent = conv.status;
+      const avatarEl = document.getElementById('currentChatAvatar');
+      avatarEl.textContent = conv.avatar;
+      avatarEl.className = `wa-item-avatar ${conv.avatarClass}`;
+
+      renderConversationsList();
+
+      // Mobile transition to main chat
+      if (window.innerWidth < 820) {
+        document.getElementById('waSidebar').classList.add('mobile-hidden');
+        document.getElementById('waMain').classList.remove('mobile-hidden');
+      }
+
+      loadActiveChatMessages();
+    }
+
+    function backToSidebar() {
+      document.getElementById('waSidebar').classList.remove('mobile-hidden');
+      document.getElementById('waMain').classList.add('mobile-hidden');
+    }
+
+    async function loadActiveChatMessages() {
+      const area = document.getElementById('waMessagesContainer');
+      area.innerHTML = '<div style="text-align:center; padding:2rem; color:#667781; font-size:0.8rem;">Chargement des messages...</div>';
+
+      try {
+        let channelTypeQuery = currentChatId === 'section' ? 'section' : 'general';
+        let query = supabaseClient.from('messages_chat').select('*').eq('canal_type', channelTypeQuery).order('created_at', { ascending: true }).limit(80);
+        if (currentChatId === 'section' && currentProfile) {
+          query = query.eq('section_id', currentProfile.section_id);
+        }
+        const { data: messages, error } = await query;
+        if (error) throw error;
+
+        let displayMsgs = messages;
+        if (!displayMsgs || displayMsgs.length === 0) {
+          displayMsgs = [
+            {
+              id: '1',
+              user_id: 'other1',
+              expediteur_nom: 'Ing. Marc Mwamba',
+              expediteur_avatar: 'MM',
+              expediteur_poste: 'Directeur Technique',
+              canal_type: 'general',
+              message: 'Bonjour à toutes les équipes. Briefing de sécurité opérationnel validé.',
+              created_at: new Date(Date.now() - 7200000).toISOString()
+            },
+            {
+              id: '2',
+              user_id: 'other2',
+              expediteur_nom: 'Superviseur HSE',
+              expediteur_avatar: 'HSE',
+              expediteur_poste: 'Coordination Sécurité',
+              canal_type: 'general',
+              message: 'Rappel à l\'ensemble des agents : inspection hebdomadaire des EPI aujourd\'hui.',
+              created_at: new Date(Date.now() - 3600000).toISOString()
+            }
+          ];
+        }
+
+        renderMessages(displayMsgs);
+
+      } catch (_) {
+        renderMessages([
+          {
+            id: 'demo1',
+            user_id: 'other1',
+            expediteur_nom: 'Direction Opérations',
+            expediteur_avatar: 'DO',
+            expediteur_poste: 'Direction Générale',
+            canal_type: 'general',
+            message: 'Canal actif — Communication interne sécurisée JBF SERVICES.',
+            created_at: new Date().toISOString()
+          }
+        ]);
+      }
+    }
+
+    function formatDateSeparator(dateStr) {
+      const d = new Date(dateStr);
+      const today = new Date();
+      const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+      if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
+      if (d.toDateString() === yesterday.toDateString()) return 'Hier';
+      return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+    function escapeForJs(s) { if (!s) return ''; return s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$'); }
+
+    function renderMessages(messages) {
+      const area = document.getElementById('waMessagesContainer');
+      area.innerHTML = '';
+      let lastDate = null;
+
+      messages.forEach(m => {
+        const msgDate = m.created_at ? new Date(m.created_at).toDateString() : null;
+        if (msgDate && msgDate !== lastDate) {
+          lastDate = msgDate;
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'wa-date-pill';
+          dateDiv.textContent = formatDateSeparator(m.created_at);
+          area.appendChild(dateDiv);
+        }
+
+        const isMe = currentProfile && m.user_id === currentProfile.id;
+        const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+        const posteSender = m.expediteur_poste || (isMe ? activeRoleTitle : 'Collaborateur JBF');
+
+        // Check if PDF Report
+        if (m.message && m.message.includes('[COMPTE_RENDU_PDF]')) {
+          const p = m.message.split('||');
+          const ref = p[1] || 'PV-JBF';
+          const ch = p[2] || 'Canal';
+          const dur = p[3] || '00:00';
+          const dat = p[4] || new Date().toLocaleDateString('fr-FR');
+          const nd = p[5] ? decodeURIComponent(p[5]) : '';
+          const ad = p[6] ? decodeURIComponent(p[6]) : '';
+
+          const row = document.createElement('div');
+          row.className = `wa-bubble-row ${isMe ? 'out' : 'in'}`;
+          row.innerHTML = `
+            <div class="wa-bubble">
+              <div class="wa-bubble-sender">
+                <span class="wa-sender-name">${isMe ? 'Vous' : escapeHtml(m.expediteur_nom)}</span>
+                <span class="wa-sender-post-badge">${escapeHtml(posteSender)}</span>
+              </div>
+              <div class="wa-pdf-card">
+                <div class="wa-pdf-left">
+                  <div class="wa-pdf-icon-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:800; font-size:0.82rem; color:var(--text-h);">${ref}</div>
+                    <div style="font-size:0.68rem; color:#64748B;">Compte-Rendu &middot; ${dur}</div>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="generateAndDownloadReportPdf('${ref}','${ch}','${dur}','${dat}',\`${escapeForJs(nd)}\`,\`${escapeForJs(ad)}\`)" style="font-size:0.72rem; padding:0.25rem 0.55rem;">PDF</button>
+              </div>
+              <div class="wa-bubble-meta">
+                <span>${timeStr}</span>
+                ${isMe ? '<span class="wa-check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 6 7 17 2 12"></polyline><polyline points="22 10 13 21 11 19"></polyline></svg></span>' : ''}
+              </div>
+            </div>
+          `;
+          area.appendChild(row);
+          return;
+        }
+
+        // Regular Text Message
+        const row = document.createElement('div');
+        row.className = `wa-bubble-row ${isMe ? 'out' : 'in'}`;
+        row.innerHTML = `
+          <div class="wa-bubble">
+            <div class="wa-bubble-sender">
+              <span class="wa-sender-name">${isMe ? 'Vous' : escapeHtml(m.expediteur_nom)}</span>
+              <span class="wa-sender-post-badge">${escapeHtml(posteSender)}</span>
+            </div>
+            <div class="wa-bubble-text">${escapeHtml(m.message)}</div>
+            <div class="wa-bubble-meta">
+              <span>${timeStr}</span>
+              ${isMe ? '<span class="wa-check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 6 7 17 2 12"></polyline><polyline points="22 10 13 21 11 19"></polyline></svg></span>' : ''}
+            </div>
+          </div>
+        `;
+        area.appendChild(row);
+      });
+
+      area.scrollTop = area.scrollHeight;
+    }
+
+    async function sendWaMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('waMessageInput');
+      const text = input.value.trim();
+      if (!text || !currentProfile) return;
+
+      const newMsg = {
+        user_id: currentProfile.id,
+        expediteur_nom: currentProfile.full_name,
+        expediteur_avatar: currentProfile.initials || 'DK',
+        expediteur_poste: activeRoleTitle, // Employee's active company post!
+        canal_type: currentChatId === 'section' ? 'section' : 'general',
+        section_id: currentChatId === 'section' ? currentProfile.section_id : null,
+        message: text,
+        created_at: new Date().toISOString()
+      };
+
+      input.value = '';
+
+      // Update current conversation last message
+      const conv = CONVERSATIONS.find(c => c.id === currentChatId);
+      if (conv) {
+        conv.lastMsg = text;
+        conv.lastTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        renderConversationsList();
+      }
+
+      appendMessageToUI(newMsg);
+
+      try {
+        if (supabaseClient) {
+          await supabaseClient.from('messages_chat').insert([newMsg]);
+        }
+      } catch (err) {
+        console.error('Erreur Supabase send:', err);
+      }
+    }
+
+    function appendMessageToUI(m) {
+      const area = document.getElementById('waMessagesContainer');
+      const isMe = currentProfile && m.user_id === currentProfile.id;
+      const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const posteSender = m.expediteur_poste || (isMe ? activeRoleTitle : 'Collaborateur JBF');
+
+      const row = document.createElement('div');
+      row.className = `wa-bubble-row ${isMe ? 'out' : 'in'}`;
+      row.innerHTML = `
+        <div class="wa-bubble">
+          <div class="wa-bubble-sender">
+            <span class="wa-sender-name">${isMe ? 'Vous' : escapeHtml(m.expediteur_nom)}</span>
+            <span class="wa-sender-post-badge">${escapeHtml(posteSender)}</span>
+          </div>
+          <div class="wa-bubble-text">${escapeHtml(m.message)}</div>
+          <div class="wa-bubble-meta">
+            <span>${timeStr}</span>
+            ${isMe ? '<span class="wa-check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 6 7 17 2 12"></polyline><polyline points="22 10 13 21 11 19"></polyline></svg></span>' : ''}
+          </div>
+        </div>
+      `;
+      area.appendChild(row);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function setupRealtimeChat() {
+      if (!supabaseClient) return;
+      realtimeSubscription = supabaseClient.channel('public:messages_chat')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages_chat' }, payload => {
+          const nm = payload.new;
+          if (!nm) return;
+          const isG = currentChatId === 'general' && nm.canal_type === 'general';
+          const isS = currentChatId === 'section' && nm.canal_type === 'section' && currentProfile && nm.section_id === currentProfile.section_id;
+          if (isG || isS) {
+            if (currentProfile && nm.user_id !== currentProfile.id) {
+              appendMessageToUI(nm);
+            }
+          }
+        })
+        .subscribe();
+    }
+
+    /* ------------------------------------------------------------
+       REAL WEBRTC CALLS & CONTINUOUS TRANSCRIPTION
+       ------------------------------------------------------------ */
+    function initSpeechRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      speechRecognition = new SR();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = 'fr-FR';
+
+      speechRecognition.onresult = (event) => {
+        let cur = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const t = event.results[i][0].transcript;
+          cur += t;
+          if (event.results[i].isFinal && t.trim()) {
+            const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            callTranscriptHistory.push(`[${ts}] ${currentProfile ? currentProfile.full_name : 'Collaborateur'} (${activeRoleTitle}) : « ${t.trim()} »`);
+          }
+        }
+        if (cur.trim()) document.getElementById('liveTranscriptionText').textContent = `« ${cur.trim()} »`;
+      };
+
+      speechRecognition.onend = () => {
+        if (callTimerInterval) { try { speechRecognition.start(); } catch (_) {} }
+      };
+
+      speechRecognition.onerror = (e) => console.warn('SR:', e.error);
+    }
+
+    let activeCallParticipants = [];
+    let currentCallMode = 'video';
+
+    const ALL_TEAM_MEMBERS = [
+      { id: 'marc', name: 'Ing. Marc Mwamba', role: 'Directeur Technique', pole: 'Direction Technique', avatar: 'MM', grad: 'linear-gradient(135deg,#2563EB,#1D4ED8)' },
+      { id: 'hse', name: 'Superviseur Sécurité HSE', role: 'Coordination Sécurité & Prévention', pole: 'Comité HSE', avatar: 'SH', grad: 'linear-gradient(135deg,#059669,#047857)' },
+      { id: 'rh', name: 'Secrétariat RH & Paie', role: 'Administration du Personnel', pole: 'Ressources Humaines', avatar: 'RH', grad: 'linear-gradient(135deg,#7C3AED,#6D28D9)' },
+      { id: 'fungurume', name: 'Chef d\'Équipe Fungurume', role: 'Supervision Chantier Minier', pole: 'Section 4 Mines', avatar: 'CF', grad: 'linear-gradient(135deg,#D97706,#B45309)' },
+      { id: 'maintenance', name: 'Technicien Maintenance Site', role: 'Maintenance Engins Lourds', pole: 'Section 5 Maintenance', avatar: 'TM', grad: 'linear-gradient(135deg,#0891B2,#0E7490)' },
+      { id: 'medecin', name: 'Médecin du Travail', role: 'Secours & Santé au Travail', pole: 'Service Médical', avatar: 'MT', grad: 'linear-gradient(135deg,#DC2626,#991B1B)' },
+      { id: 'electromec', name: 'Superviseur Électromécanique', role: 'Installations Industrielles', pole: 'Section 6 Soudure & Élec', avatar: 'SE', grad: 'linear-gradient(135deg,#4F46E5,#4338CA)' },
+      { id: 'logistique', name: 'Coordinateur Logistique', role: 'Gestion Flotte & Dépôt', pole: 'Section 12 Logistique', avatar: 'CL', grad: 'linear-gradient(135deg,#0D9488,#0F766E)' },
+      { id: 'qualite', name: 'Inspecteur Contrôle Qualité', role: 'Normes & Audits Opérationnels', pole: 'Direction Qualité', avatar: 'CQ', grad: 'linear-gradient(135deg,#9333EA,#7E22CE)' }
+    ];
+
+    function addCallParticipant() {
+      openInviteParticipantModal();
+    }
+
+    function openInviteParticipantModal() {
+      const modal = document.getElementById('inviteParticipantModalOverlay');
+      if (modal) {
+        modal.classList.add('active');
+        const s = document.getElementById('inviteColleagueSearch');
+        if (s) s.value = '';
+        renderInviteColleaguesList();
+      }
+    }
+
+    function closeInviteParticipantModal() {
+      const modal = document.getElementById('inviteParticipantModalOverlay');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function filterInviteColleagues() {
+      renderInviteColleaguesList();
+    }
+
+    function renderInviteColleaguesList() {
+      const listEl = document.getElementById('inviteColleaguesList');
+      if (!listEl) return;
+      const searchQ = (document.getElementById('inviteColleagueSearch')?.value || '').toLowerCase().trim();
+      listEl.innerHTML = '';
+
+      const filtered = ALL_TEAM_MEMBERS.filter(m => {
+        if (!searchQ) return true;
+        return m.name.toLowerCase().includes(searchQ) || m.role.toLowerCase().includes(searchQ) || m.pole.toLowerCase().includes(searchQ);
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:#94A3B8; font-size:0.8rem;">Aucun collaborateur trouvé.</div>';
+        return;
+      }
+
+      filtered.forEach(m => {
+        const isAlreadyIn = activeCallParticipants.some(p => p.id === m.id);
+        const item = document.createElement('div');
+        item.className = 'invite-colleague-item';
+        item.innerHTML = `
+          <div class="invite-colleague-info">
+            <div class="invite-colleague-avatar" style="background:${m.grad}">${m.avatar}</div>
+            <div style="min-width:0;">
+              <div class="invite-colleague-name">${escapeHtml(m.name)}</div>
+              <div class="invite-colleague-role">${escapeHtml(m.role)} &middot; <span style="color:#CBD5E1;">${escapeHtml(m.pole)}</span></div>
+            </div>
+          </div>
+          <div>
+            ${isAlreadyIn ? `
+              <span class="invite-add-btn already-in">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Dans l'appel
+              </span>
+            ` : `
+              <button class="invite-add-btn" onclick="inviteColleagueManually('${m.id}')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Ajouter
+              </button>
+            `}
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    function inviteColleagueManually(memberId) {
+      const colleague = ALL_TEAM_MEMBERS.find(m => m.id === memberId);
+      if (!colleague) return;
+      if (activeCallParticipants.some(p => p.id === memberId)) return;
+
+      activeCallParticipants.push(colleague);
+      renderCallParticipants(currentCallMode);
+      renderInviteColleaguesList();
+      closeInviteParticipantModal();
+    }
+
+    async function startGroupCall(mode) {
+      currentCallMode = mode;
+      const conv = CONVERSATIONS.find(c => c.id === currentChatId) || CONVERSATIONS[0];
+      document.getElementById('callOverlayHeaderTitle').textContent = `Appel Vocal — ${conv.name}`;
+      document.getElementById('groupCallOverlay').classList.add('active');
+
+      callTranscriptHistory = [];
+      callSeconds = 0; updateCallTimer();
+      clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => { callSeconds++; updateCallTimer(); }, 1000);
+
+      if (speechRecognition) { try { speechRecognition.start(); } catch (_) {} }
+
+      // Build initial participant list based on the active conversation
+      const myName = currentProfile ? currentProfile.full_name : 'David Kasongo';
+      const myInit = currentProfile ? currentProfile.initials : 'DK';
+      
+      activeCallParticipants = [
+        { id: 'me', name: myName, role: activeRoleTitle, avatar: myInit, isMe: true, grad: 'linear-gradient(135deg,#E6007E,#C8006E)' }
+      ];
+
+      if (currentChatId === 'marc_mwamba') {
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[0]); // 2 participants (1-on-1)
+      } else if (currentChatId === 'superviseur_hse') {
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[1]); // 2 participants (1-on-1)
+      } else if (currentChatId === 'rh_admin') {
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[2]); // 2 participants (1-on-1)
+      } else if (currentChatId === 'section') {
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[3], ALL_TEAM_MEMBERS[4], ALL_TEAM_MEMBERS[1]); // 4 participants
+      } else if (currentChatId === 'hse_comm') {
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[1], ALL_TEAM_MEMBERS[5], ALL_TEAM_MEMBERS[4]); // 4 participants
+      } else {
+        // general / direction
+        activeCallParticipants.push(ALL_TEAM_MEMBERS[0], ALL_TEAM_MEMBERS[1], ALL_TEAM_MEMBERS[2]); // 4 participants
+      }
+
+      await renderCallParticipants(mode);
+
+      if (mode === 'video') {
+        isCamMuted = false;
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          const ve = document.getElementById('localCameraVideo');
+          if (ve) { ve.srcObject = localStream; ve.style.display = 'block'; }
+          const ab = document.getElementById('myAvatarBox');
+          if (ab) ab.style.display = 'none';
+          document.getElementById('toggleCamBtn').classList.remove('active-off');
+        } catch {
+          isCamMuted = true;
+          document.getElementById('toggleCamBtn').classList.add('active-off');
+        }
+      } else {
+        isCamMuted = true;
+        document.getElementById('toggleCamBtn').classList.add('active-off');
+      }
+    }
+
+    async function renderCallParticipants(mode) {
+      const grid = document.getElementById('callParticipantsGrid');
+      const count = activeCallParticipants.length;
+      grid.setAttribute('data-count', count.toString());
+      document.getElementById('callParticipantCountBadge').textContent = `${count} participant${count > 1 ? 's' : ''}`;
+
+      grid.innerHTML = '';
+
+      activeCallParticipants.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = `participant-card ${idx === 0 || idx === 1 ? 'speaking' : ''}`;
+        card.id = p.isMe ? 'myParticipantTile' : `participant_${p.id}`;
+
+        if (p.isMe) {
+          card.innerHTML = `
+            <video class="participant-video" id="localCameraVideo" autoplay playsinline muted></video>
+            <div class="participant-avatar-box" id="myAvatarBox" style="display:${mode === 'video' && !isCamMuted ? 'none' : 'flex'};">
+              <div class="participant-avatar-circle" style="background:${p.grad}">${p.avatar}</div>
+              <div class="participant-name-tag">Vous</div>
+              <div class="participant-role-tag">${escapeHtml(p.role)}</div>
+            </div>
+            <div class="participant-tag">
+              <div class="speaking-wave"><span></span><span></span><span></span></div>
+              <span id="myCallName">${escapeHtml(p.name)}</span>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="participant-avatar-box">
+              <div class="participant-avatar-circle" style="background:${p.grad};">${p.avatar}</div>
+              <div class="participant-name-tag">${escapeHtml(p.name)}</div>
+              <div class="participant-role-tag">${escapeHtml(p.role)}</div>
+            </div>
+            <div class="participant-tag">
+              <div class="speaking-wave"><span></span><span></span><span></span></div>
+              <span>${escapeHtml(p.name)}</span>
+            </div>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+    }
+
+    function addCallParticipant() {
+      const available = ALL_TEAM_MEMBERS.find(m => !activeCallParticipants.some(p => p.id === m.id));
+      if (!available) {
+        alert('Tous les collaborateurs disponibles participent déjà à cet appel.');
+        return;
+      }
+      activeCallParticipants.push(available);
+      renderCallParticipants(currentCallMode);
+    }
+
+    function updateCallTimer() {
+      const m = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+      const s = (callSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('callDurationTimer').textContent = `${m}:${s}`;
+    }
+
+    function toggleMicrophone() {
+      isMicMuted = !isMicMuted;
+      document.getElementById('toggleMicBtn').classList.toggle('active-off', isMicMuted);
+      if (localStream) localStream.getAudioTracks().forEach(t => { t.enabled = !isMicMuted; });
+    }
+
+    async function toggleCamera() {
+      isCamMuted = !isCamMuted;
+      const btn = document.getElementById('toggleCamBtn');
+      const ve = document.getElementById('localCameraVideo');
+      const av = document.getElementById('myAvatarBox');
+      btn.classList.toggle('active-off', isCamMuted);
+      if (isCamMuted) {
+        if (localStream) localStream.getVideoTracks().forEach(t => t.stop());
+        ve.style.display = 'none'; av.style.display = 'flex';
+      } else {
+        try {
+          const vs = await navigator.mediaDevices.getUserMedia({ video: true });
+          ve.srcObject = vs; ve.style.display = 'block'; av.style.display = 'none';
+        } catch {
+          isCamMuted = true; btn.classList.add('active-off');
+        }
+      }
+    }
+
+    async function toggleScreenShare() {
+      const btn = document.getElementById('toggleScreenBtn');
+      const ve = document.getElementById('localCameraVideo');
+      const av = document.getElementById('myAvatarBox');
+      if (!isScreenSharing) {
+        try {
+          const ss = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          ve.srcObject = ss; ve.style.display = 'block'; av.style.display = 'none';
+          isScreenSharing = true; btn.style.background = 'rgba(16,185,129,.25)'; btn.style.color = '#10B981';
+          ss.getVideoTracks()[0].onended = () => {
+            isScreenSharing = false; btn.style.background = ''; btn.style.color = '';
+            ve.style.display = 'none'; av.style.display = 'flex';
+          };
+        } catch {}
+      } else {
+        isScreenSharing = false; btn.style.background = ''; btn.style.color = '';
+        ve.style.display = 'none'; av.style.display = 'flex';
+      }
+    }
+
+    function endGroupCall() {
+      document.getElementById('groupCallOverlay').classList.remove('active');
+      clearInterval(callTimerInterval); callTimerInterval = null;
+      if (speechRecognition) { try { speechRecognition.stop(); } catch (_) {} }
+      if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+      const ve = document.getElementById('localCameraVideo'); if (ve) ve.srcObject = null;
+
+      const dur = document.getElementById('callDurationTimer').textContent;
+      const ref = 'PV-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(1000 + Math.random() * 9000);
+      const conv = CONVERSATIONS.find(c => c.id === currentChatId) || CONVERSATIONS[0];
+      const notes = callTranscriptHistory.length > 0 ? callTranscriptHistory.join('\n') : 'Aucune retranscription vocale détectée. Saisissez les notes ci-dessous.';
+
+      const participantsStr = activeCallParticipants.map(p => `${p.name} (${p.role})`).join(', ');
+
+      currentMeetingData = {
+        refDoc: ref,
+        channel: conv.name,
+        duration: dur,
+        date: new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        participants: participantsStr,
+        transcription: notes
+      };
+
+      document.getElementById('summaryRefDoc').textContent = ref;
+      document.getElementById('summaryModalChannel').textContent = conv.name;
+      document.getElementById('summaryModalDuration').textContent = dur;
+      document.getElementById('summaryModalParticipants').textContent = currentMeetingData.participants;
+      document.getElementById('summaryModalNotes').value = notes;
+      document.getElementById('summaryModalActions').value = '';
+      document.getElementById('summaryModalOverlay').classList.add('active');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModalOverlay').classList.remove('active');
+    }
+
+    function createPdfDocument(refDoc, channel, duration, dateStr, notes, actions) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      doc.setFillColor(230,0,126); doc.rect(0,0,595,40,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+      doc.text("JBF SERVICES SARL — PROCÈS-VERBAL DE RÉUNION D'ÉQUIPE", 40, 26);
+      doc.setTextColor(30,41,59); doc.setFontSize(16); doc.text('COMPTE-RENDU OFFICIEL DE RÉUNION', 40, 75);
+      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(100,116,139);
+      doc.text(`Réf. Document : ${refDoc}`, 40, 95); doc.text(`Date : ${dateStr}`, 40, 110);
+      doc.text(`Durée : ${duration}`, 320, 95); doc.text(`Canal : ${channel}`, 320, 110);
+      doc.setDrawColor(226,232,240); doc.line(40,125,555,125);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(230,0,126);
+      doc.text('1. PARTICIPANTS CONNECTÉS & POSTES', 40, 148);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+      doc.text(doc.splitTextToSize(currentMeetingData ? currentMeetingData.participants : 'David Kasongo (Superviseur Opérations), Ing. Marc Mwamba, Superviseur HSE', 510), 40, 168);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(230,0,126);
+      doc.text('2. SYNTHÈSE DES DISCUSSIONS & RETRANSCRIPTION VOCALE', 40, 215);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+      const nc = notes || (document.getElementById('summaryModalNotes') ? document.getElementById('summaryModalNotes').value : 'Aucune note.');
+      const nl = doc.splitTextToSize(nc, 510); doc.text(nl, 40, 235);
+      const ya = 250 + (nl.length * 14);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(230,0,126);
+      doc.text('3. DÉCISIONS & ACTIONS RETENUES', 40, ya);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(30,41,59);
+      const ac = actions || (document.getElementById('summaryModalActions') ? document.getElementById('summaryModalActions').value : 'Aucune action.');
+      doc.text(doc.splitTextToSize(ac, 510), 40, ya + 20);
+      const yf = 720; doc.setDrawColor(226,232,240); doc.line(40,yf-15,555,yf-15);
+      doc.setFontSize(9); doc.setTextColor(148,163,184);
+      doc.text("JBF SERVICES SARL • République Démocratique du Congo • Document authentifié & archivé sur l'intranet", 40, yf);
+      doc.text('Secrétariat Opérationnel & Direction RH', 40, yf + 14);
+      return doc;
+    }
+
+    function downloadPdfDirectly() {
+      if (!currentMeetingData) return;
+      createPdfDocument(currentMeetingData.refDoc, currentMeetingData.channel, currentMeetingData.duration, currentMeetingData.date, document.getElementById('summaryModalNotes').value, document.getElementById('summaryModalActions').value).save(`${currentMeetingData.refDoc}_Compte_Rendu_JBF.pdf`);
+    }
+
+    function generateAndDownloadReportPdf(r, c, d, ds, n, a) {
+      createPdfDocument(r, c, d, ds, n, a).save(`${r}_Compte_Rendu_JBF.pdf`);
+    }
+
+    async function distributeAndSendPdf() {
+      document.getElementById('summaryModalOverlay').classList.remove('active');
+      if (!currentMeetingData) return;
+      const n = document.getElementById('summaryModalNotes').value.trim();
+      const a = document.getElementById('summaryModalActions').value.trim();
+      const payload = `[COMPTE_RENDU_PDF]||${currentMeetingData.refDoc}||${currentMeetingData.channel}||${currentMeetingData.duration}||${currentMeetingData.date}||${encodeURIComponent(n || 'Compte-rendu validé.')}||${encodeURIComponent(a || 'Aucune action.')}`;
+      const msg = {
+        user_id: currentProfile ? currentProfile.id : 'user',
+        expediteur_nom: currentProfile ? currentProfile.full_name : 'David Kasongo',
+        expediteur_avatar: currentProfile ? currentProfile.initials : 'DK',
+        expediteur_poste: activeRoleTitle,
+        canal_type: currentChatId === 'section' ? 'section' : 'general',
+        section_id: currentChatId === 'section' ? (currentProfile ? currentProfile.section_id : 4) : null,
+        message: payload,
+        created_at: new Date().toISOString()
+      };
+      appendMessageToUI(msg);
+      try { if (supabaseClient) await supabaseClient.from('messages_chat').insert([msg]); } catch (err) { console.error(err); }
+      downloadPdfDirectly();
+    }
+  </script>
+</body>
+</html>

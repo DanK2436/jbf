@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validation des Congés & Absences — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item active">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+        <span class="badge" id="badgeCongesCount">0</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Validation des Congés & Absences</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-calendar-check"></i> Demandes d'Absence des Collaborateurs</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadCongesList()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
+        </div>
+        <div class="card-body">
+          
+          <div class="table-controls">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="congesSearchInput" placeholder="Rechercher par nom de l'agent..." oninput="filterConges()">
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Statut :</label>
+              <select class="filter-select" id="congesStatusFilter" onchange="filterConges()">
+                <option value="all">Toutes les demandes</option>
+                <option value="en_attente">En attente de validation</option>
+                <option value="approuve">Approuvées</option>
+                <option value="rejete">Refusées</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- TABLE -->
+          <div class="table-responsive">
+            <table class="admin-table table-conges">
+              <thead>
+                <tr>
+                  <th>Collaborateur</th>
+                  <th>Type de Congé</th>
+                  <th>Période Demandée</th>
+                  <th>Motif / Justificatif</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Décision RH / Direction</th>
+                </tr>
+              </thead>
+              <tbody id="congesTableBody">
+                <tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des demandes...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-admin.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let allConges = [];
+
+  const DEMO_FALLBACK_CONGES = [
+    { id: 'cg-101', agent_nom: 'Alain Tshisekedi', type_conge: 'Congé Annuel', date_debut: '2026-09-15', date_fin: '2026-09-29', motif: 'Congé de détente annuel après mission de maintenance sur site minier Kolwezi.', statut: 'en_attente', created_at: new Date().toISOString() },
+    { id: 'cg-102', agent_nom: 'Grace Mwamba', type_conge: 'Congé Maternité', date_debut: '2026-10-01', date_fin: '2026-12-24', motif: 'Congé légal de maternité avec justificatif médical transmis aux RH.', statut: 'en_attente', created_at: new Date().toISOString() },
+    { id: 'cg-103', agent_nom: 'Patrick Kalala', type_conge: 'Récupération', date_debut: '2026-09-10', date_fin: '2026-09-14', motif: 'Récupération des astreintes et interventions nocturnes de week-end.', statut: 'approuve', created_at: new Date().toISOString() },
+    { id: 'cg-104', agent_nom: 'Eric Mukendi', type_conge: 'Circonstance Exceptionnelle', date_debut: '2026-09-08', date_fin: '2026-09-10', motif: 'Événement familial justifié conformément au code du travail RDC.', statut: 'approuve', created_at: new Date().toISOString() }
+  ];
+
+  document.addEventListener('DOMContentLoaded', () => { loadCongesList(); });
+
+  async function loadCongesList() {
+    document.getElementById('congesTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Chargement...</td></tr>';
+    try {
+      let data = null;
+      if (window.jbfSupabase && window.jbfSupabase.isConnected()) {
+        const res = await window.jbfSupabase.getConges(200);
+        if (!res.error && res.data && res.data.length > 0) data = res.data;
+      }
+      allConges = data || DEMO_FALLBACK_CONGES;
+    } catch(e) { allConges = DEMO_FALLBACK_CONGES; }
+    const badge = document.getElementById('badgeCongesCount');
+    if (badge) badge.textContent = allConges.filter(c => c.statut === 'en_attente').length;
+    renderCongesTable(allConges);
+  }
+
+  function renderCongesTable(list) {
+    const tbody = document.getElementById('congesTableBody');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray-mid);">Aucune demande de congé enregistrée.</td></tr>'; return; }
+    tbody.innerHTML = list.map(c => {
+      const isPending = c.statut === 'en_attente';
+      const ab = isPending ? `<div class="table-actions" style="justify-content:flex-end;"><button class="btn btn-success btn-sm" onclick="decideConge('${c.id}','approuve')"><i class="bi bi-check-lg"></i> Approuver</button><button class="btn btn-danger btn-sm" onclick="decideConge('${c.id}','rejete')"><i class="bi bi-x-lg"></i> Refuser</button></div>` : '<span style="font-size:0.8rem;color:var(--gray-mid);"><i class="bi bi-check2-all"></i> Traité</span>';
+      return `<tr>
+        <td data-label="Collaborateur"><strong>${c.agent_nom}</strong></td>
+        <td data-label="Type de Congé"><span class="badge-status nouveau">${c.type_conge||'Annuel'}</span></td>
+        <td data-label="Période Demandée" style="font-size:0.84rem;white-space:nowrap;"><strong>${c.date_debut||'—'}</strong> au <strong>${c.date_fin||'—'}</strong></td>
+        <td data-label="Motif" style="font-size:0.82rem;color:var(--gray);max-width:250px;">${c.motif||'Aucun motif précisé'}</td>
+        <td data-label="Statut">${window.adminCore.renderBadgeStatus(c.statut||'en_attente')}</td>
+        <td data-label="Décision" style="text-align:right;">${ab}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterConges() {
+    const q = document.getElementById('congesSearchInput').value.toLowerCase().trim();
+    const st = document.getElementById('congesStatusFilter').value;
+    renderCongesTable(allConges.filter(c => {
+      const mQ = (c.agent_nom&&c.agent_nom.toLowerCase().includes(q))||(c.type_conge&&c.type_conge.toLowerCase().includes(q));
+      return mQ && (st==='all'||(c.statut||'en_attente')===st);
+    }));
+  }
+
+  async function decideConge(id, statut) {
+    const btn = event.target;
+    if (btn) { btn.disabled = true; }
+    try {
+      if (window.jbfSupabase && window.jbfSupabase.isConnected()) {
+        await window.jbfSupabase.updateCongeStatut(id, statut, '');
+      }
+    } catch(err) {}
+    const target = allConges.find(c => c.id === id);
+    if (target) target.statut = statut;
+    const actionText = statut === 'approuve' ? 'approuvée avec succès' : 'refusée';
+    window.adminCore.showToast(`Demande de congé ${actionText}`, statut==='approuve'?'success':'info');
+    const countEl = document.getElementById('badgeCongesCount');
+    if (countEl) countEl.textContent = allConges.filter(c => c.statut==='en_attente').length;
+    renderCongesTable(allConges);
+    if (btn) btn.disabled = false;
+  }
+</script>
+</body>
+</html>

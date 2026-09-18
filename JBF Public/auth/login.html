@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Connexion Espace Client &amp; Devis — JBF SERVICES SARL</title>
+  <meta name="description" content="Connectez-vous à votre espace client pour gérer et suivre vos devis et prestations JBF SERVICES SARL en RDC.">
+  <link rel="stylesheet" href="../css/main.css">
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--gray-light);
+    }
+    .auth-header-bar {
+      padding: 1.25rem 2rem;
+      background: #fff;
+      border-bottom: 1px solid var(--gray-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .auth-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      flex-grow: 1;
+    }
+    .auth-box {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh-card-h);
+      max-width: 460px;
+      width: 100%;
+      padding: 2.5rem;
+    }
+    .auth-box-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.4rem;
+    }
+    .auth-box-sub {
+      color: var(--text-light);
+      font-size: 0.88rem;
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+    .auth-switch {
+      display: flex;
+      background: var(--gray-light);
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 1.75rem;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.55rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-light);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--t-fast);
+      text-decoration: none;
+    }
+    .auth-tab.active {
+      background: #fff;
+      color: var(--pink);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    /* Alert Banners */
+    .alert-box-error {
+      background: #fef2f2;
+      border: 1.5px solid #ef4444;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      color: #991b1b;
+      margin-bottom: 1.25rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert-box-error.visible { display: block; }
+
+    .alert-box-success {
+      background: #f0fdf4;
+      border: 1.5px solid #22c55e;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      color: #166534;
+      margin-bottom: 1.25rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert-box-success.visible { display: block; }
+
+    .auth-footer-bar {
+      padding: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--gray-border);
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .auth-footer-bar a { color: var(--text-light); margin: 0 0.5rem; text-decoration: none; }
+    .auth-footer-bar a:hover { color: var(--pink); }
+
+    @media (max-width: 600px) {
+      .auth-box { padding: 1.5rem 1.25rem; }
+      .auth-header-bar { padding: 0.75rem 1.25rem; }
+      .auth-footer-bar { padding: 1rem 1.25rem; }
+    }
+  </style>
+</head>
+<body class="auth-container">
+
+  <!-- Header -->
+  <header class="auth-header-bar">
+    <a href="../index.html" class="nav-brand">
+      <img src="../assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <a href="../index.html" class="btn btn-outline-pink btn-sm">← Retour au site</a>
+  </header>
+
+  <!-- Login Form -->
+  <main class="auth-center">
+    <div class="auth-box reveal visible">
+      <div class="auth-switch">
+        <a href="login.html" class="auth-tab active">Connexion Client</a>
+        <a href="register.html" class="auth-tab">Créer un compte</a>
+      </div>
+
+      <h1 class="auth-box-title">Espace Client &amp; Devis</h1>
+      <p class="auth-box-sub">Connectez-vous pour transmettre, personnaliser et suivre vos demandes de cotation.</p>
+
+      <!-- Alert Banners -->
+      <div class="alert-box-success" id="loginSuccessBanner"></div>
+      <div class="alert-box-error" id="loginErrorBanner"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="fg">
+          <label class="fl" for="email">Adresse Email Professionnelle</label>
+          <input type="email" id="email" class="fc-input" placeholder="nom@entreprise.com" required autocomplete="email">
+        </div>
+        <div class="fg">
+          <label class="fl" for="password">Mot de passe</label>
+          <input type="password" id="password" class="fc-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.82rem;">
+          <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-body);">
+            <input type="checkbox" id="rememberMe" style="accent-color: var(--pink);"> Mémoriser mes identifiants
+          </label>
+          <a href="#" onclick="handleForgotPassword(event)" style="color: var(--pink); font-weight: 600; text-decoration: none;">Mot de passe oublié ?</a>
+        </div>
+
+        <button type="submit" class="btn btn-pink" id="loginBtn" style="width: 100%; padding: 0.9rem;">
+          Accéder à mon Espace Client →
+        </button>
+      </form>
+
+      <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--gray-border); text-align: center;">
+        <p style="font-size: 0.84rem; color: var(--text-light);">
+          Vous n'avez pas encore de compte entreprise ?
+        </p>
+        <a href="register.html" style="color: var(--pink); font-weight: 700; font-size: 0.88rem; display: inline-block; margin-top: 0.35rem; text-decoration: none;">
+          Créer un Compte Partenaire (4 étapes) →
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="auth-footer-bar">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+      <span>&copy; 2026 JBF SERVICES SARL. Lubumbashi, RDC.</span>
+      <div>
+        <a href="../mentions-legales.html">Mentions légales</a>
+        <a href="../politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="../cgu.html">CGU</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Redirection automatique immédiate vers le portail client dédié
+    const clientLoginTarget = '../../JBF Client/auth/login.html' + (window.location.search || '') + (window.location.hash || '');
+    window.location.replace(clientLoginTarget);
+
+    let supabaseClient = null;
+    if (typeof supabase !== 'undefined') {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const hash = window.location.hash || '';
+
+      // Gestion du retour de validation de lien Supabase (Hash ou Search params)
+      if (params.get('verified') === 'true' || hash.includes('access_token') || hash.includes('type=signup')) {
+        const succBox = document.getElementById('loginSuccessBanner');
+        succBox.innerHTML = "<strong>Félicitations !</strong> Votre adresse email a été confirmée avec succès. Vous pouvez vous connecter.";
+        succBox.classList.add('visible');
+      }
+
+      if (hash.includes('error=')) {
+        const errBox = document.getElementById('loginErrorBanner');
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const errorDesc = hashParams.get('error_description') || 'Lien de confirmation invalide ou expiré.';
+        errBox.innerHTML = `<strong>Attention :</strong> ${errorDesc.replace(/\+/g, ' ')}`;
+        errBox.classList.add('visible');
+      }
+
+      if (supabaseClient) {
+        // Écoute automatique de la session
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+          if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+            localStorage.setItem('jbf_client_session', JSON.stringify(session));
+            localStorage.setItem('jbf_client_user', JSON.stringify(session.user));
+            const succBox = document.getElementById('loginSuccessBanner');
+            succBox.innerHTML = `<strong>Compte validé &amp; connecté !</strong> Bienvenue <strong>${session.user.email}</strong>. Redirection en cours...`;
+            succBox.classList.add('visible');
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1500);
+          }
+        });
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          const succBox = document.getElementById('loginSuccessBanner');
+          succBox.innerHTML = `<strong>Session active :</strong> Connecté en tant que <strong>${session.user.email}</strong>.`;
+          succBox.classList.add('visible');
+        }
+      }
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const errBox = document.getElementById('loginErrorBanner');
+      const succBox = document.getElementById('loginSuccessBanner');
+
+      errBox.classList.remove('visible');
+      succBox.classList.remove('visible');
+      btn.disabled = true;
+      btn.textContent = "Connexion en cours...";
+
+      try {
+        if (!supabaseClient) throw new Error("Client Supabase indisponible.");
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) throw error;
+
+        localStorage.setItem('jbf_client_session', JSON.stringify(data.session));
+        localStorage.setItem('jbf_client_user', JSON.stringify(data.user));
+
+        succBox.innerHTML = `<strong>Connexion réussie !</strong> Redirection en cours...`;
+        succBox.classList.add('visible');
+
+        setTimeout(() => {
+          window.location.href = "../index.html";
+        }, 1200);
+
+      } catch (err) {
+        console.error("Erreur connexion Supabase:", err);
+        let msg = err.message || "Email ou mot de passe incorrect.";
+        if (msg.includes("Invalid login credentials")) {
+          msg = "Identifiants incorrects. Vérifiez votre adresse email et votre mot de passe.";
+        } else if (msg.includes("Email not confirmed")) {
+          msg = "Votre adresse email n'a pas encore été confirmée. Veuillez vérifier votre boîte de réception ou vous réinscrire pour recevoir un code.";
+        }
+        errBox.textContent = msg;
+        errBox.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Accéder à mon Espace Client →";
+      }
+    }
+
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('email');
+      const email = emailInput.value.trim();
+      const errBox = document.getElementById('loginErrorBanner');
+      const succBox = document.getElementById('loginSuccessBanner');
+      errBox.classList.remove('visible');
+      succBox.classList.remove('visible');
+
+      if (!email) {
+        errBox.textContent = "Veuillez entrer votre adresse email dans le champ ci-dessus avant de cliquer sur 'Mot de passe oublié'.";
+        errBox.classList.add('visible');
+        emailInput.focus();
+        return;
+      }
+
+      try {
+        if (!supabaseClient) throw new Error("Client Supabase indisponible.");
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.href
+        });
+        if (error) throw error;
+        succBox.innerHTML = `Un lien de réinitialisation a été envoyé à <strong>${email}</strong>. Vérifiez vos emails et spams.`;
+        succBox.classList.add('visible');
+      } catch(err) {
+        errBox.textContent = err.message || "Impossible d'envoyer l'email de réinitialisation.";
+        errBox.classList.add('visible');
+      }
+    }
+  </script>
+</body>
+</html>

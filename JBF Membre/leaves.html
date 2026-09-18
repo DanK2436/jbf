@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demandes de Congés &amp; Permissions — JBF SERVICES Membre</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* HISTOGRAM & CHARTS SPECIFIC STYLES */
+    .histogram-card {
+      background: var(--white);
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+      padding: 1.35rem 1.5rem;
+      box-shadow: var(--sh-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .histogram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .histogram-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--text-h);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .histogram-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* HISTOGRAMME DE RÉPARTITION (BARRES HORIZONTALES) */
+    .histo-row {
+      margin-bottom: 0.85rem;
+    }
+
+    .histo-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.76rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .histo-name {
+      font-weight: 700;
+      color: var(--text-h);
+    }
+
+    .histo-count {
+      font-weight: 800;
+      color: var(--pink);
+    }
+
+    .histo-track {
+      height: 10px;
+      background: #F1F5F9;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .histo-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* HISTOGRAMME MENSUEL (COLONNES VERTICALES) */
+    .monthly-chart-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 130px;
+      padding-top: 1rem;
+      border-bottom: 1.5px solid var(--gray-border);
+      gap: 0.4rem;
+    }
+
+    .monthly-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 0.3rem;
+    }
+
+    .monthly-bar-pill {
+      width: 100%;
+      max-width: 24px;
+      border-radius: 5px 5px 0 0;
+      background: #E2E8F0;
+      transition: all 0.5s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .monthly-bar-pill:hover {
+      background: var(--pink) !important;
+      transform: scaleY(1.05);
+    }
+
+    .monthly-bar-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    /* ANIMATED FORM STYLING */
+    .pro-form-card {
+      background: var(--white);
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+      box-shadow: var(--sh-card);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER CONTAINER -->
+  <div id="memberHeaderContainer"></div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout-container">
+    <div id="memberSidebarContainer"></div>
+
+    <main>
+
+      <!-- TOP BANNER -->
+      <div style="background:var(--white); border-radius:var(--r-card); border:1px solid var(--gray-border); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; box-shadow:var(--sh-card);">
+        <div>
+          <h1 style="font-family:'Poppins',sans-serif; font-size:1.35rem; font-weight:900; color:var(--text-h); margin-bottom:0.25rem;">
+            Gestion des Congés &amp; Permissions
+          </h1>
+          <p style="font-size:0.85rem; color:var(--text-light);">
+            Suivi des soldes légaux, historique analytique et transmission directe aux Ressources Humaines.
+          </p>
+        </div>
+        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+          <div style="background:var(--pink-pale); border:1px solid var(--pink-blush); border-radius:10px; padding:0.45rem 1rem; text-align:center;">
+            <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; color:var(--pink); letter-spacing:0.5px;">Solde Annuel Restant</div>
+            <div style="font-size:1.2rem; font-weight:900; color:var(--text-h);"><span id="leavesBalanceDisplay">18</span> / 30 j</div>
+          </div>
+          <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:0.45rem 1rem; text-align:center;">
+            <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; color:#16A34A; letter-spacing:0.5px;">Jours Pris (2026)</div>
+            <div style="font-size:1.2rem; font-weight:900; color:#166534;">12 j</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION ANALYTIQUE : HISTOGRAMMES & GRAPHIQUES -->
+      <div class="histogram-card">
+        <div class="histogram-header">
+          <div class="histogram-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><rect x="3" y="12" width="4" height="8" rx="1"></rect><rect x="10" y="8" width="4" height="12" rx="1"></rect><rect x="17" y="4" width="4" height="16" rx="1"></rect></svg>
+            Analyse Graphique de Consommation des Congés
+          </div>
+          <span style="font-size:0.75rem; font-weight:700; color:#0369A1; background:#E0F2FE; border:1px solid #BAE6FD; padding:0.2rem 0.55rem; border-radius:4px;">
+            Année en cours 2026
+          </span>
+        </div>
+
+        <div class="histogram-grid">
+          
+          <!-- HISTOGRAMME 1 : RÉPARTITION PAR CATÉGORIE -->
+          <div>
+            <div style="font-size:0.8rem; font-weight:800; color:var(--text-h); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem;">
+              <span>Répartition par Typologie d'Absence</span>
+            </div>
+
+            <div class="histo-row">
+              <div class="histo-labels">
+                <span class="histo-name">Congés Annuels Payés</span>
+                <span class="histo-count">18 j restants (60%)</span>
+              </div>
+              <div class="histo-track">
+                <div class="histo-fill" style="width: 60%; background: linear-gradient(90deg, #E6007E, #FF2E99);"></div>
+              </div>
+            </div>
+
+            <div class="histo-row">
+              <div class="histo-labels">
+                <span class="histo-name">Permissions de Circonstance</span>
+                <span class="histo-count">3 j pris (10%)</span>
+              </div>
+              <div class="histo-track">
+                <div class="histo-fill" style="width: 25%; background: #3B82F6;"></div>
+              </div>
+            </div>
+
+            <div class="histo-row">
+              <div class="histo-labels">
+                <span class="histo-name">Arrêts Maladie / Médical</span>
+                <span class="histo-count">2 j pris (6%)</span>
+              </div>
+              <div class="histo-track">
+                <div class="histo-fill" style="width: 15%; background: #F59E0B;"></div>
+              </div>
+            </div>
+
+            <div class="histo-row">
+              <div class="histo-labels">
+                <span class="histo-name">Récupération / RTT Chantier</span>
+                <span class="histo-count">7 j pris (24%)</span>
+              </div>
+              <div class="histo-track">
+                <div class="histo-fill" style="width: 45%; background: #10B981;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTOGRAMME 2 : TIMELINE MENSUELLE DE PRISE DES CONGÉS -->
+          <div>
+            <div style="font-size:0.8rem; font-weight:800; color:var(--text-h); margin-bottom:0.4rem;">
+              Histogramme Mensuel des Jours d'Absence (2026)
+            </div>
+            
+            <div class="monthly-chart-container">
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 25%;" title="Janvier : 2 jours"></div>
+                <div class="monthly-bar-label">Jan</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Février : 0 jour"></div>
+                <div class="monthly-bar-label">Fév</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 40%;" title="Mars : 3 jours"></div>
+                <div class="monthly-bar-label">Mar</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 15%;" title="Avril : 1 jour"></div>
+                <div class="monthly-bar-label">Avr</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Mai : 0 jour"></div>
+                <div class="monthly-bar-label">Mai</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 65%;" title="Juin : 5 jours"></div>
+                <div class="monthly-bar-label">Juin</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 15%;" title="Juil : 1 jour"></div>
+                <div class="monthly-bar-label">Juil</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 90%; background:var(--pink);" title="Août : 7 jours (En cours)"></div>
+                <div class="monthly-bar-label" style="color:var(--pink); font-weight:900;">Août</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Septembre : 0 jour"></div>
+                <div class="monthly-bar-label">Sep</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Octobre : 0 jour"></div>
+                <div class="monthly-bar-label">Oct</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Novembre : 0 jour"></div>
+                <div class="monthly-bar-label">Nov</div>
+              </div>
+              <div class="monthly-bar-col">
+                <div class="monthly-bar-pill" style="height: 0%;" title="Décembre : 0 jour"></div>
+                <div class="monthly-bar-label">Déc</div>
+              </div>
+            </div>
+            <div style="font-size:0.68rem; color:var(--text-light); text-align:center; margin-top:0.4rem;">
+              Pic d'utilisation : Août (Rotation minière &amp; congés annuels)
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FORMULAIRE & HISTORIQUE -->
+      <div style="display:grid; grid-template-columns:1fr; gap:1.5rem; align-items:start;">
+        
+        <!-- NOUVELLE DEMANDE (ANIMATED FORM) -->
+        <div class="pro-form-card">
+          <div class="panel-card-header">
+            <div class="panel-card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
+              Soumettre une Demande de Congé / Absence
+            </div>
+          </div>
+          <div class="panel-card-body">
+            <div id="congeAlert" style="display:none; padding:0.75rem 1rem; border-radius:8px; font-size:0.85rem; font-weight:700; margin-bottom:1.25rem;"></div>
+
+            <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
+              
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem;">
+                
+                <div class="fc-group">
+                  <label class="fc-label" for="typeConge">Type d'Absence *</label>
+                  <select id="typeConge" class="fc-input" required>
+                    <option value="Annuel">Congé Annuel Payé</option>
+                    <option value="Maladie">Congé Maladie / Médical</option>
+                    <option value="Circonstance">Permission Circonstance (Mariage, Naissance...)</option>
+                    <option value="Sans solde">Congé Sans Solde</option>
+                    <option value="Recuperation">Récupération / RTT Chantier</option>
+                  </select>
+                </div>
+
+                <div class="fc-group">
+                  <label class="fc-label" for="nbJours">Durée Calculée (Jours Ouvrés)</label>
+                  <input type="number" id="nbJours" class="fc-input" value="1" min="1" readonly style="background:#F8FAFC; font-weight:800; color:var(--pink); font-size:1rem;">
+                </div>
+
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem;">
+                
+                <div class="fc-group">
+                  <label class="fc-label" for="dateDebut">Date de Début *</label>
+                  <input type="date" id="dateDebut" class="fc-input" required onchange="calculateDays()">
+                </div>
+
+                <div class="fc-group">
+                  <label class="fc-label" for="dateFin">Date de Fin / Reprise *</label>
+                  <input type="date" id="dateFin" class="fc-input" required onchange="calculateDays()">
+                </div>
+
+              </div>
+
+              <div class="fc-group">
+                <label class="fc-label" for="motifConge">Motif / Justification Détaillée *</label>
+                <textarea id="motifConge" class="fc-input" placeholder="Précisez la raison de votre demande, le site d'affectation et les coordonnées de contact..." required></textarea>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+                <span style="font-size:0.75rem; color:var(--text-light);">
+                  Validation sous 48h par la Direction des Ressources Humaines.
+                </span>
+                <button type="submit" id="submitCongeBtn" class="btn btn-primary">
+                  <span>Transmettre la Demande à la DRH</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    let currentUserId = null;
+    let currentUserProfile = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavigation('leaves');
+      currentUserProfile = await initMemberSession();
+
+      if (currentUserProfile) {
+        currentUserId = currentUserProfile.id;
+        document.getElementById('leavesBalanceDisplay').textContent = currentUserProfile.solde_conges;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateDebut').min = today;
+        document.getElementById('dateFin').min = today;
+      }
+    });
+
+    function calculateDays() {
+      const d1 = document.getElementById('dateDebut').value;
+      const d2 = document.getElementById('dateFin').value;
+      if (d1 && d2) {
+        const start = new Date(d1);
+        const end = new Date(d2);
+        if (end >= start) {
+          const diffTime = Math.abs(end - start);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          document.getElementById('nbJours').value = diffDays;
+        } else {
+          document.getElementById('nbJours').value = 1;
+        }
+      }
+    }
+
+    async function submitLeaveRequest(event) {
+      event.preventDefault();
+      const btn = document.getElementById('submitCongeBtn');
+      const alertBox = document.getElementById('congeAlert');
+
+      const typeConge = document.getElementById('typeConge').value;
+      const nbJours = parseInt(document.getElementById('nbJours').value) || 1;
+      const dateDebut = document.getElementById('dateDebut').value;
+      const dateFin = document.getElementById('dateFin').value;
+      const motif = document.getElementById('motifConge').value.trim();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Transmission à la DRH...</span>';
+
+      const newLeave = {
+        id: 'conge-' + Date.now(),
+        user_id: currentUserId || 'demo-user',
+        type_conge: typeConge,
+        nombre_jours: nbJours,
+        date_debut: dateDebut,
+        date_fin: dateFin,
+        motif: motif,
+        statut: 'en_attente',
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        if (supabaseClient && currentUserId && !currentUserId.startsWith('demo-')) {
+          await supabaseClient.from('demandes_conges').insert([newLeave]);
+        }
+      } catch (err) {
+        console.warn("Supabase offline, enregistrement local");
+      }
+
+      // Sauvegarde locale
+      const localConges = JSON.parse(localStorage.getItem('jbf_local_conges') || '[]');
+      localConges.unshift(newLeave);
+      localStorage.setItem('jbf_local_conges', JSON.stringify(localConges));
+
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#DCFCE7';
+      alertBox.style.color = '#166534';
+      alertBox.style.border = '1px solid #BBF7D0';
+      alertBox.textContent = `Votre demande de congé (${nbJours} jours) a été transmise avec succès à la Direction des Ressources Humaines.`;
+
+      document.getElementById('leaveRequestForm').reset();
+      document.getElementById('nbJours').value = 1;
+      btn.disabled = false;
+      btn.innerHTML = '<span>Transmettre la Demande à la DRH</span>';
+    }
+  </script>
+</body>
+</html>

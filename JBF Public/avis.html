@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avis &amp; Évaluations Clients — JBF SERVICES SARL</title>
+  <meta name="description" content="Consultez les retours d'expérience vérifiés de nos partenaires industriels, miniers et commerciaux en RDC. Déposez votre avis en ligne.">
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .avis-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+    }
+    .avis-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .avis-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .score-banner {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 2.25rem 2.5rem;
+      margin-top: -3rem;
+      margin-bottom: 3.5rem;
+      box-shadow: var(--sh-card-h);
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 1.2fr;
+      gap: 2rem;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+    .score-big {
+      text-align: center;
+      border-right: 1px solid var(--gray-border);
+      padding-right: 1.5rem;
+    }
+    .score-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: var(--pink);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .score-stars {
+      color: #f59e0b;
+      font-size: 1.35rem;
+      margin-bottom: 0.25rem;
+      letter-spacing: 2px;
+    }
+    .score-label { font-size: 0.82rem; color: var(--text-light); font-weight: 600; }
+    .rating-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--gray-border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill { height: 100%; background: var(--pink); border-radius: 4px; }
+    .leave-review-cta {
+      text-align: center;
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--gray-border);
+    }
+    .reviews-masonry {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .review-box {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.75rem;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .review-box:hover {
+      border-color: var(--pink-blush);
+      box-shadow: var(--sh-card-h);
+      transform: translateY(-4px);
+    }
+    .review-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+    .review-stars {
+      color: #f59e0b;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+    }
+    .review-cat-tag {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--pink);
+      background: var(--pink-pale);
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .review-quote {
+      font-size: 0.88rem;
+      color: var(--text-body);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      font-style: normal;
+    }
+    .reviewer-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      border-top: 1px solid var(--gray-border);
+      padding-top: 1rem;
+    }
+    .reviewer-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--pink-pale);
+      color: var(--pink);
+      font-weight: 800;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--pink-blush);
+      flex-shrink: 0;
+    }
+    .reviewer-name {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-h);
+      line-height: 1.2;
+      margin-bottom: 0.15rem;
+    }
+    .reviewer-company {
+      font-size: 0.76rem;
+      color: var(--text-light);
+    }
+
+    /* Modal Form Dépôt d'Avis avec Sélecteur 5 Étoiles */
+    .avis-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .avis-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .avis-modal-card {
+      background: #fff;
+      border-radius: var(--r-lg);
+      max-width: 540px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .avis-modal-overlay.open .avis-modal-card { transform: scale(1); }
+    .avis-modal-header {
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+      color: #fff;
+      padding: 1.75rem 2rem;
+      position: relative;
+    }
+    .avis-modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--t-fast);
+    }
+    .avis-modal-close:hover { background: #fff; color: var(--pink); }
+    .avis-modal-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+    .avis-modal-body {
+      padding: 2rem;
+    }
+
+    /* Sélecteur d'Étoiles Interactif (1 à 5 étoiles) */
+    .star-picker-wrap {
+      background: var(--gray-light);
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.25rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .star-picker-label {
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-light);
+      margin-bottom: 0.6rem;
+    }
+    .star-picker-stars {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      transition: transform 0.15s ease;
+    }
+    .star-btn:hover { transform: scale(1.25); }
+    .star-btn svg {
+      width: 32px;
+      height: 32px;
+      fill: #e5e7eb;
+      stroke: #d1d5db;
+      stroke-width: 1;
+      transition: fill 0.15s, stroke 0.15s;
+    }
+    .star-btn.active svg,
+    .star-btn.hovered svg {
+      fill: #f59e0b;
+      stroke: #d97706;
+    }
+    .star-feedback-text {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--pink);
+      min-height: 1.2rem;
+    }
+
+    @media (max-width: 900px) {
+      .score-banner { grid-template-columns: 1fr; gap: 1.5rem; }
+      .score-big { border-right: none; border-bottom: 1px solid var(--gray-border); padding-right: 0; padding-bottom: 1.2rem; }
+      .leave-review-cta { border-left: none; border-top: 1px solid var(--gray-border); padding-left: 0; padding-top: 1.2rem; }
+      .reviews-masonry { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .reviews-masonry { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link active">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- AVIS HERO -->
+<section class="avis-hero">
+  <div class="container">
+    <h1 class="avis-hero-title">Avis &amp; Évaluations Clients</h1>
+    <p class="avis-hero-sub">
+      Consultez les témoignages certifiés de directeurs des opérations, chefs de projets miniers et acheteurs industriels ayant fait confiance à JBF SERVICES en RDC.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding-bottom: 6rem;">
+  <div class="container">
+
+    <!-- Score Summary Banner -->
+    <div class="score-banner reveal visible">
+      <div class="score-big">
+        <div class="score-num">4.9</div>
+        <div class="score-stars">★★★★★</div>
+        <div class="score-label">Note globale sur 148 évaluations</div>
+      </div>
+
+      <div class="rating-bars">
+        <div class="bar-row">
+          <span>5 ★</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div>
+          <span>88%</span>
+        </div>
+        <div class="bar-row">
+          <span>4 ★</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 10%;"></div></div>
+          <span>10%</span>
+        </div>
+        <div class="bar-row">
+          <span>3 ★</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 2%;"></div></div>
+          <span>2%</span>
+        </div>
+        <div class="bar-row">
+          <span>2 ★</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+          <span>0%</span>
+        </div>
+        <div class="bar-row">
+          <span>1 ★</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+          <span>0%</span>
+        </div>
+      </div>
+
+      <div class="leave-review-cta">
+        <button class="btn btn-pink" onclick="openAvisModal()">
+          Déposer une Évaluation →
+        </button>
+        <p style="font-size: 0.74rem; color: var(--text-light); margin-top: 0.6rem;">Évaluation certifiée et vérifiée</p>
+      </div>
+    </div>
+
+    <!-- Reviews Grid -->
+    <div class="reviews-masonry" id="reviewsGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- MODAL DÉPÔT D'AVIS AVEC SÉLECTEUR 5 ÉTOILES -->
+<div class="avis-modal-overlay" id="avisModalOverlay" onclick="closeAvisModal()">
+  <div class="avis-modal-card" onclick="event.stopPropagation()">
+    <div class="avis-modal-header">
+      <button class="avis-modal-close" onclick="closeAvisModal()" aria-label="Fermer">&times;</button>
+      <h2 class="avis-modal-title">Déposer votre Évaluation Client</h2>
+    </div>
+    <div class="avis-modal-body">
+      <form id="avisForm" onsubmit="submitAvis(event)">
+
+        <!-- Star Picker Component -->
+        <div class="star-picker-wrap">
+          <div class="star-picker-label">Votre Note Globale (Sélectionnez de 1 à 5 étoiles)</div>
+          <div class="star-picker-stars" id="starPicker">
+            <button type="button" class="star-btn" data-star="1" onclick="selectStar(1)" onmouseenter="hoverStar(1)" onmouseleave="resetStarHover()" aria-label="1 étoile">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button type="button" class="star-btn" data-star="2" onclick="selectStar(2)" onmouseenter="hoverStar(2)" onmouseleave="resetStarHover()" aria-label="2 étoiles">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button type="button" class="star-btn" data-star="3" onclick="selectStar(3)" onmouseenter="hoverStar(3)" onmouseleave="resetStarHover()" aria-label="3 étoiles">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button type="button" class="star-btn" data-star="4" onclick="selectStar(4)" onmouseenter="hoverStar(4)" onmouseleave="resetStarHover()" aria-label="4 étoiles">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button type="button" class="star-btn" data-star="5" onclick="selectStar(5)" onmouseenter="hoverStar(5)" onmouseleave="resetStarHover()" aria-label="5 étoiles">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+          </div>
+          <div class="star-feedback-text" id="starFeedbackText">Cliquez sur une étoile pour noter</div>
+        </div>
+
+        <div class="row-2">
+          <div class="fg">
+            <label class="fl" for="avisNom">Nom &amp; Prénom</label>
+            <input type="text" id="avisNom" class="fc-input" placeholder="Ex: Patrick Mwamba" required>
+          </div>
+          <div class="fg">
+            <label class="fl" for="avisSociete">Entreprise &amp; Fonction</label>
+            <input type="text" id="avisSociete" class="fc-input" placeholder="Ex: Directeur QHSE, Mining SARL" required>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="fg">
+            <label class="fl" for="avisDomaine">Domaine concerné</label>
+            <select id="avisDomaine" class="fc-input" required>
+              <option value="">Sélectionnez un domaine</option>
+              <option value="Catering &amp; Restauration">Catering &amp; Restauration</option>
+              <option value="Sous-traitance Minière">Sous-traitance Minière</option>
+              <option value="BTP &amp; Génie Civil">BTP &amp; Génie Civil</option>
+              <option value="Maintenance Industrielle">Maintenance Industrielle</option>
+              <option value="Sécurité &amp; Gardiennage">Sécurité &amp; Gardiennage</option>
+              <option value="Logistique &amp; Transport">Logistique &amp; Transport</option>
+              <option value="Facilities Management">Facilities Management</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl" for="avisVille">Ville / Province (RDC)</label>
+            <input type="text" id="avisVille" class="fc-input" placeholder="Ex: Kolwezi, Lualaba" required>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="avisComment">Votre Témoignage &amp; Retour d'Expérience</label>
+          <textarea id="avisComment" class="fc-input" rows="4" placeholder="Décrivez la qualité de la prestation, la réactivité des équipes et la conformité des livrables..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-pink" style="width: 100%; padding: 0.9rem;">
+          Publier mon Évaluation →
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST MESSAGE -->
+<div class="toast-msg" id="toastMsg">Votre évaluation a été enregistrée avec succès. Merci pour votre confiance !</div>
+
+<!-- FOOTER UNIFIÉ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const REVIEWS_DATA = [
+  {
+    id: 1,
+    name: "Jean-Marc Kabengele",
+    role: "Directeur des Achats & Sous-traitance",
+    company: "Société Minière du Lualaba",
+    loc: "Kolwezi",
+    stars: 5,
+    category: "Sous-traitance Minière",
+    text: "Nous collaborons avec JBF SERVICES depuis plus de 2 ans sur nos sites d'extraction. La conformité ARSP est irréprochable et la qualification des opérateurs d'engins a permis de fluidifier nos rotations sans aucun temps mort."
+  },
+  {
+    id: 2,
+    name: "Aurore Tshisekedi",
+    role: "Responsable HSE & Camp Management",
+    company: "Katanga Copper Processing",
+    loc: "Lubumbashi",
+    stars: 5,
+    category: "Catering & Restauration",
+    text: "Le service de restauration collective assuré pour nos 400 agents sur base de vie est exemplaire. Les normes HACCP sont scrupuleusement respectées et la variété des menus est très appréciée des équipes."
+  },
+  {
+    id: 3,
+    name: "Michel Vanderberg",
+    role: "Chef de Projet Infrastructures",
+    company: "Consortium BTP Congo",
+    loc: "Kinshasa",
+    stars: 5,
+    category: "BTP & Génie Civil",
+    text: "Pour le coulage de dalles industrielles et le terrassement de nos hangars logistiques, JBF SERVICES a fait preuve d'une rigueur technique remarquable et d'un strict respect du planning."
+  },
+  {
+    id: 4,
+    name: "David Mukendi",
+    role: "Directeur d'Usine",
+    company: "Metals & Minerals Processing",
+    loc: "Likasi",
+    stars: 5,
+    category: "Maintenance Industrielle",
+    text: "Leur équipe de soudeurs haute pression est intervenue en urgence lors d'un arrêt technique critique. Le travail a été réalisé et testé par radiographie en moins de 48 heures."
+  },
+  {
+    id: 5,
+    name: "Éric Kalombo",
+    role: "Directeur de la Sécurité Générale",
+    company: "Logistics Hub RDC",
+    loc: "Kasumbalesa",
+    stars: 5,
+    category: "Sécurité & Gardiennage",
+    text: "Le filtrage des accès et le gardiennage de notre plateforme frontière sont gérés avec un grand professionnalisme. Aucun incident à déplorer et reporting quotidien irréprochable."
+  },
+  {
+    id: 6,
+    name: "Sophie Kasongo",
+    role: "Responsable Chaîne d'Approvisionnement",
+    company: "Agri-Industry RDC",
+    loc: "Lubumbashi",
+    stars: 5,
+    category: "Logistique & Transport",
+    text: "L'acheminement de nos convois de fret lourd à travers le pays est sécurisé et suivi par GPS en temps réel. Une vraie tranquillité d'esprit pour notre direction."
+  },
+  {
+    id: 7,
+    name: "Alain Ngoy",
+    role: "Directeur des Ressources Humaines",
+    company: "Industrial Construction Ltd",
+    loc: "Kolwezi",
+    stars: 4,
+    category: "Mise à disposition Main-d'œuvre",
+    text: "JBF SERVICES a mobilisé 75 ouvriers qualifiés en un temps record pour un pic d'activité de 6 mois. La gestion administrative et contractuelle était 100% conforme à la loi."
+  },
+  {
+    id: 8,
+    name: "Benoît Ilunga",
+    role: "Superviseur Énergie & Utilités",
+    company: "Kipushi Mining Camp",
+    loc: "Kipushi",
+    stars: 5,
+    category: "Installations Électriques",
+    text: "L'installation du parc solaire hybride sur notre camp isolé a fonctionné du premier coup. Excellente maîtrise des armoires de distribution et du stockage lithium."
+  },
+  {
+    id: 9,
+    name: "Clarisse Mbuyi",
+    role: "Gestionnaire de Site Administratif",
+    company: "Banque & Services Corp",
+    loc: "Kinshasa",
+    stars: 5,
+    category: "Nettoyage & Entretien",
+    text: "Housekeeping et hygiène impeccables dans nos bureaux de direction. Les produits utilisés sont professionnels et les agents sont très discrets et courtois."
+  }
+];
+
+let selectedRating = 5;
+const ratingLabels = {
+  1: "1/5 — Insuffisant",
+  2: "2/5 — Passable",
+  3: "3/5 — Satisfaisant",
+  4: "4/5 — Très Bon",
+  5: "5/5 — Prestation Exceptionnelle"
+};
+
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+function renderReviews() {
+  const grid = document.getElementById('reviewsGrid');
+  grid.innerHTML = REVIEWS_DATA.map(r => `
+    <div class="review-box reveal visible">
+      <div>
+        <div class="review-top">
+          <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</div>
+          <span class="review-cat-tag">${r.category}</span>
+        </div>
+        <p class="review-quote">« ${r.text} »</p>
+      </div>
+      <div class="reviewer-info">
+        <div class="reviewer-avatar">${r.name.split(' ').map(n => n[0]).join('').substring(0,2)}</div>
+        <div>
+          <div class="reviewer-name">${r.name}</div>
+          <div class="reviewer-company">${r.role} &bull; <strong>${r.company}</strong> (${r.loc})</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStarDisplay(val) {
+  const btns = document.querySelectorAll('#starPicker .star-btn');
+  btns.forEach(btn => {
+    const s = parseInt(btn.getAttribute('data-star'));
+    btn.classList.toggle('active', s <= val);
+  });
+  document.getElementById('starFeedbackText').textContent = ratingLabels[val] || '';
+}
+
+function selectStar(val) {
+  selectedRating = val;
+  updateStarDisplay(val);
+}
+
+function hoverStar(val) {
+  const btns = document.querySelectorAll('#starPicker .star-btn');
+  btns.forEach(btn => {
+    const s = parseInt(btn.getAttribute('data-star'));
+    btn.classList.toggle('hovered', s <= val);
+  });
+  document.getElementById('starFeedbackText').textContent = ratingLabels[val] || '';
+}
+
+function resetStarHover() {
+  const btns = document.querySelectorAll('#starPicker .star-btn');
+  btns.forEach(btn => btn.classList.remove('hovered'));
+  updateStarDisplay(selectedRating);
+}
+
+<script>
+const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
+
+let supabaseClient = null;
+if (typeof supabase !== 'undefined') {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+function openAvisModal() {
+  selectStar(5);
+  document.getElementById('avisModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAvisModal() {
+  document.getElementById('avisModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function submitAvis(e) {
+  e.preventDefault();
+  const nom = document.getElementById('avisNom').value.trim();
+  const societe = document.getElementById('avisSociete').value.trim();
+  const domaine = document.getElementById('avisDomaine').value;
+  const ville = document.getElementById('avisVille').value.trim();
+  const comment = document.getElementById('avisComment').value.trim();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  if (!nom || !societe || !domaine || !comment) return;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Publication en cours...";
+  }
+
+  const newReview = {
+    id: Date.now(),
+    name: nom,
+    role: societe,
+    company: "Client Partenaire",
+    loc: ville || "RDC",
+    stars: selectedRating,
+    category: domaine,
+    text: comment
+  };
+
+  try {
+    if (supabaseClient) {
+      await supabaseClient
+        .from('avis_clients')
+        .insert([{
+          nom: nom,
+          entreprise: societe + (ville ? ` (${ville})` : ''),
+          service: domaine,
+          note: selectedRating,
+          commentaire: comment,
+          approuve: true
+        }]);
+    }
+  } catch(err) {
+    console.warn("Supabase avis save:", err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Publier mon Avis Client Vérifié →";
+    }
+  }
+
+  REVIEWS_DATA.unshift(newReview);
+  renderReviews();
+  closeAvisModal();
+  document.getElementById('avisForm').reset();
+
+  const toast = document.getElementById('toastMsg');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+async function loadSupabaseReviews() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('avis_clients')
+      .select('*')
+      .eq('approuve', true)
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      const dynamicReviews = data.map(d => ({
+        id: d.id,
+        name: d.nom,
+        role: d.entreprise || 'Partenaire',
+        company: 'Client JBF',
+        loc: 'RDC',
+        stars: d.note || 5,
+        category: d.service || 'Multi-Services',
+        text: d.commentaire
+      }));
+      // Merge with static
+      REVIEWS_DATA = [...dynamicReviews, ...REVIEWS_DATA];
+      renderReviews();
+    }
+  } catch(err) {
+    console.warn("Erreur chargement avis Supabase:", err);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAvisModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderReviews();
+  loadSupabaseReviews();
+  selectStar(5);
+});
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

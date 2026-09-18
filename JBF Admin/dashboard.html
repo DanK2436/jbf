@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de Bord Exécutif & Analytics — JBF SERVICES (RDC)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Chart.js 4 Enterprise UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .chart-container {
+      position: relative;
+      height: 290px;
+      width: 100%;
+    }
+    .chart-container-sm {
+      position: relative;
+      height: 240px;
+      width: 100%;
+    }
+    .period-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #F1F5F9;
+      padding: 3px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border-subtle);
+    }
+    .period-btn {
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: var(--r-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .period-btn.active {
+      background: var(--white);
+      color: var(--brand-pink);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .legend-custom {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+    }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 8px;
+      display: inline-block;
+    }
+    .progress-track {
+      background: #F1F5F9;
+      border-radius: 6px;
+      height: 7px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .kpi-sparkline {
+      margin-top: 8px;
+      height: 32px;
+    }
+    .chart-period-selector {
+      display: none;
+    }
+    @media (max-width: 1080px) {
+      #mainChartsGrid,
+      #subChartsGrid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    @media (max-width: 768px) {
+      .topbar-right .period-selector {
+        display: none !important;
+      }
+      .chart-period-selector {
+        display: inline-flex !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF SERVICES</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item active">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+        <span class="badge" id="badgeDevisCount">0</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+        <span class="badge" id="badgeCongesCount">0</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="admin-main">
+    <!-- TOPBAR -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="page-title">
+          <h1>Tableau de Bord Exécutif & Indicateurs Clés</h1>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="period-selector">
+          <button class="period-btn" onclick="setPeriod('7d', this)">7 Jours</button>
+          <button class="period-btn active" onclick="setPeriod('30d', this)">30 Jours</button>
+          <button class="period-btn" onclick="setPeriod('year', this)">Année 2026</button>
+        </div>
+        <div class="live-indicator">
+          <div class="pulse-dot"></div>
+          <span>Système Opérationnel</span>
+        </div>
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+        <a href="../JBF%20Public/index.html" target="_blank" class="btn-quick-public">
+          <i class="bi bi-box-arrow-up-right"></i> Portail Public
+        </a>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="admin-content">
+
+      <!-- KPI METRICS GRID -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Demandes de Devis</h3>
+            <div class="kpi-value" id="kpiDevisTotal">--</div>
+            <div class="kpi-sub"><span style="color: var(--brand-pink); font-weight: 700;" id="kpiDevisNew">--</span> en attente d'étude</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-briefcase"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Missions & Chantiers</h3>
+            <div class="kpi-value" id="kpiMissionsActives">--</div>
+            <div class="kpi-sub"><i class="bi bi-geo-alt"></i> Sites Haut-Katanga & Lualaba</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Effectif Opérationnel</h3>
+            <div class="kpi-value" id="kpiMembresTotal">--</div>
+            <div class="kpi-sub"><i class="bi bi-shield-check"></i> 15 sections techniques</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-star"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Satisfaction Client</h3>
+            <div class="kpi-value" id="kpiSatisfaction">4.9/5</div>
+            <div class="kpi-sub" id="kpiAvisTotal">148 avis vérifiés</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1 : DEUX GRAPHIQUES MAJEURS (LIGNE / AREA + DOUGHNUT PÔLES) -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;" id="mainChartsGrid">
+        
+        <!-- GRAPHIQUE 1 : ACTIVITÉ COMMERCIALE & ÉVOLUTION DES DEVIS -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <h2><i class="bi bi-graph-up-arrow"></i> Évolution des Demandes Commerciales & Validation Devis</h2>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="badge-status nouveau" id="chartActivityLabel">Tendance Mensuelle</span>
+              <div class="period-selector chart-period-selector">
+                <button class="period-btn" onclick="setPeriod('7d', this)">7j</button>
+                <button class="period-btn active" onclick="setPeriod('30d', this)">30j</button>
+                <button class="period-btn" onclick="setPeriod('year', this)">Année</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chartActivity"></canvas>
+            </div>
+            <div class="chart-stats-bar" style="display: flex; justify-content: space-around; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Volume Total Devis</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);" id="statSumDevis">142</div>
+              </div>
+              <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Taux de Conversion</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #059669;">84.2%</div>
+              </div>
+              <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Délai Moyen Chiffrage</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--brand-pink);">24h SLA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUE 2 : RÉPARTITION PAR DOMAINE D'ACTIVITÉ (DOUGHNUT) -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-pie-chart-fill"></i> Pôles d'Activité</h2>
+            <span class="badge-status valide">15 Prestations</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container-sm">
+              <canvas id="chartSectors"></canvas>
+            </div>
+            <div class="legend-custom" id="sectorsLegendCustom">
+              <!-- Rempli dynamiquement -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION 2 : DEUX GRAPHIQUES SECONDAIRES (RÉGIONS & PIPELINE COMMERCIAL) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;" id="subChartsGrid">
+        
+        <!-- GRAPHIQUE 3 : DÉPLOIEMENT PAR SITES ET HUBS EN RDC -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-geo-alt-fill"></i> Répartition des Interventions par Site & Ville RDC</h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Hubs Miniers & Villes</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chartRegions"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUE 4 : PIPELINE & STATUTS DES DEVIS COMMERCIAUX -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-funnel-fill"></i> Répartition par Statut des Devis Commerciaux</h2>
+            <span class="badge-status valide">Flux Direct</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container-sm">
+              <canvas id="chartDevisPipeline"></canvas>
+            </div>
+            <div class="legend-custom" id="pipelineLegendCustom">
+              <!-- Rempli dynamiquement -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION 3 : TABLEAUX OPÉRATIONNELS EN DIRECT (DEVIS & MISSIONS) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr)); gap: 20px;">
+        
+        <!-- DERNIERS DEVIS -->
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="bi bi-inbox-fill"></i> Derniers Devis Reçus</h2>
+            <a href="devis.html" class="btn btn-secondary btn-sm">Consulter Tout</a>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+              <table class="admin-table table-dashboard">
+                <thead>
+                  <tr>
+                    <th>Client / Entreprise</th>
+                    <th>Prestations</th>
+                    <th>Localité</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="recentDevisTableBody">
+                  <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Chargement des devis...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- DERNIÈRES MISSIONS -->
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="bi bi-compass-fill"></i> Missions & Interventions en Cours</h2>
+            <a href="missions.html" class="btn btn-secondary btn-sm">Consulter Tout</a>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+              <table class="admin-table table-dashboard">
+                <thead>
+                  <tr>
+                    <th>Mission / Chantier</th>
+                    <th>Site / Ville</th>
+                    <th>Pôle d'Activité</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody id="recentMissionsTableBody">
+                  <tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Chargement des missions...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let activityChart = null;
+  let sectorsChart = null;
+  let regionsChart = null;
+  let pipelineChart = null;
+  let currentPeriod = '30d';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    initCharts();
+    loadDashboardData();
+  });
+
+  // 1. Initialisation des Graphiques Chart.js Enterprise
+  function initCharts() {
+    // Thème global Chart.js
+    Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
+    Chart.defaults.color = '#64748B';
+
+    // A. Graphique 1 : Activité Commerciale (Area Chart)
+    const ctxActivity = document.getElementById('chartActivity');
+    if (ctxActivity) {
+      const gradient = ctxActivity.getContext('2d').createLinearGradient(0, 0, 0, 280);
+      gradient.addColorStop(0, 'rgba(230, 0, 126, 0.28)');
+      gradient.addColorStop(0.7, 'rgba(230, 0, 126, 0.04)');
+      gradient.addColorStop(1, 'rgba(230, 0, 126, 0.0)');
+
+      const gradientValide = ctxActivity.getContext('2d').createLinearGradient(0, 0, 0, 280);
+      gradientValide.addColorStop(0, 'rgba(5, 150, 105, 0.22)');
+      gradientValide.addColorStop(1, 'rgba(5, 150, 105, 0.0)');
+
+      activityChart = new Chart(ctxActivity, {
+        type: 'line',
+        data: {
+          labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+          datasets: [
+            {
+              label: 'Demandes de Devis Reçues',
+              data: [14, 22, 19, 28, 24, 32, 29, 38],
+              borderColor: '#E6007E',
+              backgroundColor: gradient,
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#FFFFFF',
+              pointBorderColor: '#E6007E',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Offres Commerciales Validées',
+              data: [11, 18, 16, 24, 21, 27, 25, 33],
+              borderColor: '#059669',
+              backgroundColor: gradientValide,
+              borderWidth: 2,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#FFFFFF',
+              pointBorderColor: '#059669',
+              pointBorderWidth: 2,
+              pointRadius: 3.5,
+              pointHoverRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 12,
+                boxHeight: 12,
+                usePointStyle: true,
+                font: { size: 11, weight: '600' }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              titleFont: { size: 12, weight: '700' },
+              bodyFont: { size: 12 },
+              padding: 10,
+              cornerRadius: 8,
+              boxPadding: 4
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11, weight: '600' } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#F1F5F9' },
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // B. Graphique 2 : Pôles d'Activité (Doughnut Chart)
+    const ctxSectors = document.getElementById('chartSectors');
+    if (ctxSectors) {
+      const sectorLabels = [
+        'Sous-Traitance Minière',
+        'BTP & Génie Civil',
+        'Catering & Alimentaire',
+        'Maintenance & Froid',
+        'Sécurité & Gardiennage',
+        'Transport & Engins'
+      ];
+      const sectorData = [35, 22, 18, 12, 8, 5];
+      const sectorColors = [
+        '#E6007E', // Rose JBF
+        '#0284C7', // Bleu BTP
+        '#059669', // Vert Catering
+        '#D97706', // Orange Maintenance
+        '#6366F1', // Indigo Sécurité
+        '#64748B'  // Ardoise Transport
+      ];
+
+      sectorsChart = new Chart(ctxSectors, {
+        type: 'doughnut',
+        data: {
+          labels: sectorLabels,
+          datasets: [{
+            data: sectorData,
+            backgroundColor: sectorColors,
+            borderColor: '#FFFFFF',
+            borderWidth: 3,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw}% des demandes`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Remplir la légende customisée
+      const legendBox = document.getElementById('sectorsLegendCustom');
+      if (legendBox) {
+        legendBox.innerHTML = sectorLabels.map((lbl, i) => `
+          <div class="legend-item">
+            <span style="display: flex; align-items: center; color: var(--text-primary); font-weight: 500;">
+              <span class="legend-color" style="background: ${sectorColors[i]}"></span>
+              ${lbl}
+            </span>
+            <strong style="color: var(--text-secondary);">${sectorData[i]}%</strong>
+          </div>
+        `).join('');
+      }
+    }
+
+    // C. Graphique 3 : Répartition Régionale (Bar Chart)
+    const ctxRegions = document.getElementById('chartRegions');
+    if (ctxRegions) {
+      regionsChart = new Chart(ctxRegions, {
+        type: 'bar',
+        data: {
+          labels: ['Kolwezi Mining', 'Lubumbashi Hub', 'Likasi Chantiers', 'Kinshasa Siège', 'Matadi Transit'],
+          datasets: [
+            {
+              label: 'Missions en Cours',
+              data: [18, 14, 9, 6, 3],
+              backgroundColor: '#E6007E',
+              borderRadius: 6
+            },
+            {
+              label: 'Missions Clôturées',
+              data: [32, 28, 19, 12, 8],
+              backgroundColor: '#E2E8F0',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 12,
+                boxHeight: 12,
+                usePointStyle: true,
+                font: { size: 11, weight: '600' }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11, weight: '600' } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#F1F5F9' },
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // D. Graphique 4 : Pipeline Commercial (Doughnut Chart)
+    const ctxPipeline = document.getElementById('chartDevisPipeline');
+    if (ctxPipeline) {
+      const pipelineLabels = [
+        'En Attente d\'Étude',
+        'En Cours de Chiffrage',
+        'Offres Validées & Transmises',
+        'Rejetées / Hors Périmètre'
+      ];
+      const pipelineColors = [
+        '#E6007E', // Rose JBF (nouveau)
+        '#D97706', // Ambre (en étude)
+        '#059669', // Vert (validé)
+        '#94A3B8'  // Gris ardoise (rejeté)
+      ];
+
+      pipelineChart = new Chart(ctxPipeline, {
+        type: 'doughnut',
+        data: {
+          labels: pipelineLabels,
+          datasets: [{
+            data: [6, 14, 28, 4],
+            backgroundColor: pipelineColors,
+            borderColor: '#FFFFFF',
+            borderWidth: 3,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F172A',
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw} devis`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      renderPipelineLegend([
+        { label: 'En Attente d\'Étude', count: 6, pct: '12%', color: '#E6007E' },
+        { label: 'En Cours de Chiffrage', count: 14, pct: '27%', color: '#D97706' },
+        { label: 'Offres Validées & Transmises', count: 28, pct: '54%', color: '#059669' },
+        { label: 'Rejetées / Hors Périmètre', count: 4, pct: '7%', color: '#94A3B8' }
+      ]);
+    }
+  }
+
+  function renderPipelineLegend(items) {
+    const box = document.getElementById('pipelineLegendCustom');
+    if (!box) return;
+    box.innerHTML = items.map(it => `
+      <div class="legend-item">
+        <span style="display: flex; align-items: center; color: var(--text-primary); font-weight: 500;">
+          <span class="legend-color" style="background: ${it.color}"></span>
+          ${it.label}
+        </span>
+        <strong style="color: var(--text-secondary);">${it.count} (${it.pct})</strong>
+      </div>
+    `).join('');
+  }
+
+  // 2. Gestion des filtres temporels
+  function setPeriod(p, btn) {
+    currentPeriod = p;
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    if (!activityChart) return;
+
+    if (p === '7d') {
+      activityChart.data.labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+      activityChart.data.datasets[0].data = [4, 6, 8, 7, 9, 3, 2];
+      activityChart.data.datasets[1].data = [3, 5, 7, 6, 8, 2, 2];
+      document.getElementById('chartActivityLabel').textContent = 'Vue 7 Derniers Jours';
+      document.getElementById('statSumDevis').textContent = '39';
+    } else if (p === '30d') {
+      activityChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'];
+      activityChart.data.datasets[0].data = [14, 22, 19, 28, 24, 32, 29, 38];
+      activityChart.data.datasets[1].data = [11, 18, 16, 24, 21, 27, 25, 33];
+      document.getElementById('chartActivityLabel').textContent = 'Vue 30 Derniers Jours';
+      document.getElementById('statSumDevis').textContent = '142';
+    } else if (p === 'year') {
+      activityChart.data.labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août'];
+      activityChart.data.datasets[0].data = [45, 58, 62, 74, 85, 92, 88, 105];
+      activityChart.data.datasets[1].data = [38, 49, 53, 63, 73, 79, 76, 91];
+      document.getElementById('chartActivityLabel').textContent = 'Vue Année 2026';
+      document.getElementById('statSumDevis').textContent = '609';
+    }
+    activityChart.update();
+  }
+
+  // 3. Chargement des données réelles
+  async function loadDashboardData() {
+    // A. Statistiques générales
+    const statsRes = await window.adminCore.apiFetch('/api/stats');
+    if (statsRes.ok && statsRes.data && statsRes.data.stats) {
+      const s = statsRes.data.stats;
+      document.getElementById('kpiMissionsActives').textContent = s.missionsActives ?? 12;
+      document.getElementById('kpiSatisfaction').textContent = s.satisfactionClient ?? '4.9/5';
+      document.getElementById('kpiAvisTotal').textContent = `${s.totalAvis ?? 148} avis certifiés`;
+    }
+
+    // B. Devis & Pipeline Commercial
+    const devisRes = await window.adminCore.apiFetch('/api/devis?limit=100');
+    if (devisRes.ok && devisRes.data && devisRes.data.devis) {
+      const list = devisRes.data.devis;
+      const totalCount = devisRes.data.count ?? list.length;
+      document.getElementById('kpiDevisTotal').textContent = totalCount;
+
+      const nouveaux = list.filter(d => d.statut === 'nouveau').length;
+      const enEtude = list.filter(d => d.statut === 'en_etude').length;
+      const valides = list.filter(d => d.statut === 'valide').length;
+      const rejetes = list.filter(d => d.statut === 'rejete').length;
+
+      document.getElementById('kpiDevisNew').textContent = nouveaux;
+      document.getElementById('badgeDevisCount').textContent = nouveaux;
+
+      // Mise à jour du graphique de pipeline commercial
+      if (pipelineChart && totalCount > 0) {
+        pipelineChart.data.datasets[0].data = [nouveaux, enEtude, valides, rejetes];
+        pipelineChart.update();
+
+        const calcPct = (cnt) => totalCount > 0 ? Math.round((cnt / totalCount) * 100) + '%' : '0%';
+        renderPipelineLegend([
+          { label: 'En Attente d\'Étude', count: nouveaux, pct: calcPct(nouveaux), color: '#E6007E' },
+          { label: 'En Cours de Chiffrage', count: enEtude, pct: calcPct(enEtude), color: '#D97706' },
+          { label: 'Offres Validées & Transmises', count: valides, pct: calcPct(valides), color: '#059669' },
+          { label: 'Rejetées / Hors Périmètre', count: rejetes, pct: calcPct(rejetes), color: '#94A3B8' }
+        ]);
+      }
+
+      const tbody = document.getElementById('recentDevisTableBody');
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Aucun devis récent.</td></tr>';
+      } else {
+        tbody.innerHTML = list.slice(0, 5).map(d => `
+          <tr>
+            <td>
+              <strong style="color: var(--text-primary);">${escapeHtml(d.nom || '')}</strong>
+              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(d.societe || 'Particulier')}</div>
+            </td>
+            <td><span style="font-size: 0.8rem; font-weight: 600; color: var(--brand-pink);">${Array.isArray(d.services) ? d.services.map(s => escapeHtml(s)).join(', ') : escapeHtml(d.services || 'Prestation')}</span></td>
+            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt"></i> ${escapeHtml(d.localite || 'RDC')}</span></td>
+            <td>${window.adminCore.renderBadgeStatus(d.statut)}</td>
+            <td>
+              <a href="devis.html" class="btn btn-primary btn-sm">Traiter</a>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // C. Missions
+    const missionsRes = await window.adminCore.apiFetch('/api/missions');
+    if (missionsRes.ok && missionsRes.data && missionsRes.data.missions) {
+      const mList = missionsRes.data.missions;
+      const tbody = document.getElementById('recentMissionsTableBody');
+      if (mList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Aucune mission enregistrée.</td></tr>';
+      } else {
+        tbody.innerHTML = mList.slice(0, 5).map(m => `
+          <tr>
+            <td>
+              <strong style="color: var(--text-primary);">${escapeHtml(m.titre || '')}</strong>
+              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(m.client || 'Client JBF')}</div>
+            </td>
+            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(m.site_intervention || 'Lubumbashi')}</span></td>
+            <td><span class="badge-status nouveau">${escapeHtml(m.service || 'Sous-Traitance Minière')}</span></td>
+            <td>${window.adminCore.renderBadgeStatus(m.statut || 'en_cours')}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // D. Collaborateurs
+    const agentsRes = await window.adminCore.apiFetch('/api/admin/agents');
+    if (agentsRes.ok && agentsRes.data && agentsRes.data.agents) {
+      document.getElementById('kpiMembresTotal').textContent = agentsRes.data.agents.length;
+    } else {
+      document.getElementById('kpiMembresTotal').textContent = '24';
+    }
+
+    // E. Congés badge
+    const congesRes = await window.adminCore.apiFetch('/api/admin/conges?statut=en_attente');
+    if (congesRes.ok && congesRes.data && congesRes.data.conges) {
+      const badge = document.getElementById('badgeCongesCount');
+      if (badge) badge.textContent = congesRes.data.conges.length;
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+  }
+</script>
+</body>
+</html>

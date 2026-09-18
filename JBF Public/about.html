@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>À Propos de JBF SERVICES SARL | RDC</title>
+  <meta name="description" content="Découvrez l'histoire, la gouvernance, les valeurs, les certifications ARSP et l'ancrage national de JBF SERVICES SARL sur les 26 provinces de la RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .about-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+    }
+    .about-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .about-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.9);
+      max-width: 680px;
+      line-height: 1.7;
+    }
+
+    /* History Split Grid */
+    .about-split {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 3.5rem;
+      align-items: center;
+      margin-bottom: 5rem;
+    }
+    .about-lead-text {
+      font-size: 1.05rem;
+      color: var(--text-h);
+      font-weight: 600;
+      line-height: 1.8;
+      margin-bottom: 1.25rem;
+    }
+    .about-body-text {
+      font-size: 0.95rem;
+      color: var(--text-body);
+      line-height: 1.8;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Key Numbers Card — Rose Vif & Blanc (Zéro Magenta) */
+    .about-kpi-card {
+      background: var(--pink);
+      border-radius: var(--r-card);
+      padding: 2.5rem 2rem;
+      color: #fff;
+      box-shadow: 0 10px 40px rgba(230,0,126,0.3);
+    }
+    .about-kpi-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 1.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1.5px solid rgba(255,255,255,0.3);
+      color: #fff;
+    }
+    .about-kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .about-kpi-item {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: var(--r-card);
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: var(--t-fast);
+    }
+    .about-kpi-item:hover {
+      background: #fff;
+    }
+    .about-kpi-item:hover .about-kpi-num,
+    .about-kpi-item:hover .about-kpi-lbl {
+      color: var(--pink);
+    }
+    .about-kpi-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+      transition: color 0.2s;
+    }
+    .about-kpi-lbl {
+      font-size: 0.76rem;
+      color: #fff;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+
+    /* Values Grid */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .val-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.75rem 1.5rem;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+    }
+    .val-card:hover {
+      border-color: var(--pink);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(230,0,126,0.15);
+    }
+    .val-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--pink);
+      margin-bottom: 0.5rem;
+    }
+    .val-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.6rem;
+    }
+    .val-desc {
+      font-size: 0.86rem;
+      color: var(--text-body);
+      line-height: 1.65;
+    }
+
+    /* National Presence Map Card */
+    .presence-map-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 2.75rem 2.5rem;
+      box-shadow: var(--sh-card);
+      margin-top: 3.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .presence-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.75rem;
+    }
+    .presence-desc {
+      font-size: 0.92rem;
+      color: var(--text-body);
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+    }
+    .prov-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+    .prov-chip {
+      background: var(--pink-pale);
+      color: var(--pink);
+      border: 1px solid var(--pink-blush);
+      font-size: 0.76rem;
+      font-weight: 800;
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      transition: var(--t-fast);
+    }
+    .prov-chip:hover {
+      background: var(--pink);
+      color: #fff;
+      border-color: var(--pink);
+    }
+
+    /* Team Grid */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .t-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.75rem 1.25rem;
+      text-align: center;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+    }
+    .t-card:hover {
+      border-color: var(--pink);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(230,0,126,0.15);
+    }
+    .t-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--pink);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.2rem;
+      font-weight: 900;
+      font-family: 'Poppins', sans-serif;
+      box-shadow: 0 4px 14px rgba(230,0,126,0.3);
+    }
+    .t-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.25rem;
+    }
+    .t-role {
+      font-size: 0.8rem;
+      color: var(--pink);
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .t-exp {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    /* RSE Box — Rose Vif & Blanc (Zéro Magenta) */
+    .rse-box {
+      background: var(--pink);
+      border-radius: var(--r-card);
+      padding: 3rem 2.5rem;
+      color: #fff;
+      margin-top: 4.5rem;
+      box-shadow: 0 10px 40px rgba(230,0,126,0.25);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    /* Harmonisation Footer Rose & Blanc pour la page À Propos */
+    .footer {
+      background: var(--pink) !important;
+      color: #fff;
+    }
+    .footer-col-title {
+      color: #fff !important;
+      border-bottom: 2px solid rgba(255,255,255,0.3) !important;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.88) !important;
+    }
+    .footer-links a:hover {
+      color: #fff !important;
+      text-decoration: underline;
+    }
+    .footer-about {
+      color: rgba(255,255,255,0.9) !important;
+    }
+    .footer-contact-icon {
+      background: rgba(255,255,255,0.2) !important;
+      color: #fff !important;
+    }
+    .footer-contact-icon svg {
+      stroke: #fff !important;
+    }
+    .footer-contact-text {
+      color: #fff !important;
+    }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.25) !important;
+      color: rgba(255,255,255,0.85) !important;
+    }
+    .footer-legal-links a {
+      color: rgba(255,255,255,0.85) !important;
+    }
+    .footer-legal-links a:hover {
+      color: #fff !important;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 960px) {
+      .about-split { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: repeat(2, 1fr); }
+      .presence-map-card { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: repeat(2, 1fr); }
+      .rse-box { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .values-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr; }
+      .about-kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link active">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ABOUT HERO -->
+<section class="about-hero">
+  <div class="container">
+    <h1 class="about-hero-title">À Propos de JBF SERVICES SARL</h1>
+    <p class="about-hero-sub">
+      Leader congolais de la sous-traitance industrielle, minière, du catering, du BTP, de la maintenance et de la logistique sur l'ensemble des 26 provinces de la RDC.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding: 5rem 0 6rem;">
+  <div class="container">
+
+    <!-- Split History & Mission -->
+    <div class="about-split">
+      <div>
+        <div class="s-tag">NOTRE HISTOIRE &amp; MISSION</div>
+        <h2 class="s-title" style="margin-bottom: 1.25rem;">L'Excellence Opérationnelle au Cœur du Développement Congolais</h2>
+        
+        <p class="about-lead-text">
+          Fondée avec la volonté d'offrir aux multinationales et entreprises locales un niveau d'exécution aux standards internationaux, <strong>JBF SERVICES SARL</strong> s'est imposée comme un partenaire stratégique de premier plan en République Démocratique du Congo.
+        </p>
+        
+        <p class="about-body-text">
+          Sous l'impulsion de sa direction générale et de ses cadres techniques, l'entreprise a développé une offre multiservice intégrée couvrant <strong>15 domaines d'expertise</strong> : de l'exploitation minière et la construction industrielle à la gestion complète de bases de vie, la restauration collective HACCP, la sécurité physique et la logistique de fret lourd.
+        </p>
+
+        <p class="about-body-text">
+          Notre engagement repose sur une conformité sans compromis avec la <strong>Loi n° 17/001 sur la sous-traitance privée (ARSP)</strong>, garantissant à nos donneurs d'ordres une régularité juridique absolue, une politique QHSE exemplaire et un impact économique positif sur les communautés locales.
+        </p>
+
+        <div style="margin-top: 1.75rem;">
+          <a href="services.html" class="btn btn-pink">Découvrir nos 15 Prestations →</a>
+        </div>
+      </div>
+
+      <!-- Right KPI Card -->
+      <div class="about-kpi-card">
+        <h3 class="about-kpi-title">JBF SERVICES en Chiffres Clés</h3>
+        <div class="about-kpi-grid">
+          <div class="about-kpi-item">
+            <div class="about-kpi-num">15</div>
+            <div class="about-kpi-lbl">Pôles d'Expertise Métiers</div>
+          </div>
+          <div class="about-kpi-item">
+            <div class="about-kpi-num">26</div>
+            <div class="about-kpi-lbl">Provinces RDC Couvertes</div>
+          </div>
+          <div class="about-kpi-item">
+            <div class="about-kpi-num">100%</div>
+            <div class="about-kpi-lbl">Conformité ARSP &amp; QHSE</div>
+          </div>
+          <div class="about-kpi-item">
+            <div class="about-kpi-num">24/7</div>
+            <div class="about-kpi-lbl">Permanence Opérationnelle</div>
+          </div>
+        </div>
+        <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.25); font-size: 0.82rem; color: rgba(255,255,255,0.9); text-align: center;">
+          Déploiements certifiés pour les secteurs Minier, BTP, Énergie &amp; Tertiaire en RDC.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Pillars Section -->
+    <div style="margin-top: 5rem;">
+      <div class="s-tag">VALEURS &amp; CULTURE D'ENTREPRISE</div>
+      <h2 class="s-title">Les 4 Piliers Fondamentaux de notre Engagement</h2>
+      <p class="s-desc">Ces principes directeurs guident chaque décision opérationnelle et managériale de JBF SERVICES.</p>
+
+      <div class="values-grid">
+        <div class="val-card">
+          <div class="val-num">01</div>
+          <h3 class="val-name">Régularité &amp; Conformité ARSP</h3>
+          <p class="val-desc">
+            Respect intégral de la législation congolaise sur la sous-traitance, déclarations fiscales et sociales à jour (DGI, CNSS), et transparence contractuelle totale.
+          </p>
+        </div>
+
+        <div class="val-card">
+          <div class="val-num">02</div>
+          <h3 class="val-name">QHSE Zéro Compromis</h3>
+          <p class="val-desc">
+            Management de la santé et de la sécurité aligné sur ISO 45001, maîtrise sanitaire HACCP en restauration et dotation d'EPI certifiés pour l'ensemble des agents.
+          </p>
+        </div>
+
+        <div class="val-card">
+          <div class="val-num">03</div>
+          <h3 class="val-name">Réactivité &amp; Projection</h3>
+          <p class="val-desc">
+            Mobilisation d'équipes d'intervention sous 12h à 48h, stocks déportés et logistique rodée pour sécuriser la continuité de service sur les chantiers isolés.
+          </p>
+        </div>
+
+        <div class="val-card">
+          <div class="val-num">04</div>
+          <h3 class="val-name">Contenu Local &amp; Transfert</h3>
+          <p class="val-desc">
+            Recrutement prioritaire dans les zones d'opération, programmes de formation continue et transfert de compétences pour valoriser le capital humain congolais.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- National Presence Card -->
+    <div class="presence-map-card">
+      <div>
+        <div class="s-tag">MAILLAGE GÉOGRAPHIQUE NATIONAL</div>
+        <h3 class="presence-title">Déploiement Opérationnel dans les 26 Provinces</h3>
+        <p class="presence-desc">
+          Avec un siège stratégique à <strong>Lubumbashi</strong> au cœur de la Copperbelt, des bases avancées à <strong>Kolwezi</strong> et des bureaux de liaison à <strong>Kinshasa</strong>, JBF SERVICES assure le pilotage fluide de vos projets partout en RDC :
+        </p>
+        <ul style="list-style: disc; padding-left: 1.25rem; font-size: 0.88rem; color: var(--text-body); line-height: 1.7;">
+          <li><strong>Haut-Katanga &amp; Lualaba :</strong> Chantiers miniers, usines hydrométallurgiques, génie civil lourd et camps de vie.</li>
+          <li><strong>Kinshasa &amp; Kongo-Central :</strong> Tertiaire, logistique portuaire (Matadi/Boma), télécoms et gardiennage.</li>
+          <li><strong>Grand Kivu &amp; Nord/Est :</strong> Projets énergétiques, maintenance et catering de chantiers enclavés (Kibali, etc.).</li>
+        </ul>
+      </div>
+
+      <div style="background: var(--gray-light); padding: 1.75rem; border-radius: var(--r-card); border: 1px solid var(--gray-border);">
+        <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--pink); letter-spacing: 0.08em; margin-bottom: 0.75rem;">
+          Territoires Desservis en RDC (26 Provinces) :
+        </div>
+        <div class="prov-chips">
+          <span class="prov-chip">Haut-Katanga</span>
+          <span class="prov-chip">Lualaba</span>
+          <span class="prov-chip">Kinshasa</span>
+          <span class="prov-chip">Kongo-Central</span>
+          <span class="prov-chip">Haut-Uélé</span>
+          <span class="prov-chip">Nord-Kivu</span>
+          <span class="prov-chip">Sud-Kivu</span>
+          <span class="prov-chip">Ituri</span>
+          <span class="prov-chip">Tshopo</span>
+          <span class="prov-chip">Kasaï-Oriental</span>
+          <span class="prov-chip">Kasaï-Central</span>
+          <span class="prov-chip">Kasaï</span>
+          <span class="prov-chip">Tanganyika</span>
+          <span class="prov-chip">Haut-Lomami</span>
+          <span class="prov-chip">Lualaba</span>
+          <span class="prov-chip">Maniema</span>
+          <span class="prov-chip">Sankuru</span>
+          <span class="prov-chip">Lomami</span>
+          <span class="prov-chip">Équateur</span>
+          <span class="prov-chip">Mongala</span>
+          <span class="prov-chip">Nord-Ubangi</span>
+          <span class="prov-chip">Sud-Ubangi</span>
+          <span class="prov-chip">Bas-Uélé</span>
+          <span class="prov-chip">Tshuapa</span>
+          <span class="prov-chip">Mai-Ndombe</span>
+          <span class="prov-chip">Kwilu</span>
+          <span class="prov-chip">Kwango</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Governance & Leadership -->
+    <div style="margin-top: 5rem;">
+      <div class="s-tag">GOUVERNANCE &amp; DIRECTION</div>
+      <h2 class="s-title">Une Équipe Dirigeante Expérimentée</h2>
+      <p class="s-desc">Des professionnels chevronnés dédiés à la supervision et à l'excellence de vos chantiers.</p>
+
+      <div class="team-grid">
+        <div class="t-card">
+          <div class="t-avatar">JB</div>
+          <h3 class="t-name">Judith Binti</h3>
+          <div class="t-role">Direction Générale</div>
+          <div class="t-exp">Leadership Stratégique &amp; Développement National</div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-avatar">DO</div>
+          <h3 class="t-name">Direction des Opérations</h3>
+          <div class="t-role">Pôle Mines, BTP &amp; Maintenance</div>
+          <div class="t-exp">Ingénierie Industrielle &amp; Pilotage de Chantiers</div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-avatar">QH</div>
+          <h3 class="t-name">Département QHSE</h3>
+          <div class="t-role">Sécurité &amp; Conformité ARSP</div>
+          <div class="t-exp">Normes ISO 45001, HACCP &amp; Audit Risques</div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-avatar">LG</div>
+          <h3 class="t-name">Direction Logistique</h3>
+          <div class="t-role">Catering &amp; Flotte Fret</div>
+          <div class="t-exp">Supply Chain &amp; Camp Management</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RSE Box -->
+    <div class="rse-box">
+      <div>
+        <div class="s-tag" style="background: rgba(255,255,255,0.25); color: #fff;">RESPONSABILITÉ SOCIÉTALE (RSE)</div>
+        <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff;">Bâtir un Avenir Industriel Durable et Inclusif</h3>
+        <p style="color: rgba(255,255,255,0.92); font-size: 0.92rem; line-height: 1.75;">
+          Chez JBF SERVICES, la performance économique est indissociable de notre devoir envers les communautés hôtes et l'environnement en RDC.
+        </p>
+      </div>
+
+      <div style="border-left: 1.5px solid rgba(255,255,255,0.3); padding-left: 2rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <h4 style="font-family: 'Poppins', sans-serif; font-size: 1rem; color: #fff; font-weight: 800; margin-bottom: 0.3rem;">Emploi &amp; Formation Locale</h4>
+          <p style="font-size: 0.84rem; color: rgba(255,255,255,0.9); line-height: 1.6;">Recrutement prioritaire au sein des communautés riveraines et sessions d'apprentissage technique certifiantes.</p>
+        </div>
+        <div style="margin-bottom: 1.25rem;">
+          <h4 style="font-family: 'Poppins', sans-serif; font-size: 1rem; color: #fff; font-weight: 800; margin-bottom: 0.3rem;">Gestion Environnementale</h4>
+          <p style="font-size: 0.84rem; color: rgba(255,255,255,0.9); line-height: 1.6;">Tri et recyclage des déchets de chantier, optimisation des consommations de carburant et solutions solaires propres.</p>
+        </div>
+        <div>
+          <h4 style="font-family: 'Poppins', sans-serif; font-size: 1rem; color: #fff; font-weight: 800; margin-bottom: 0.3rem;">Éthique &amp; Anti-Corruption</h4>
+          <p style="font-size: 0.84rem; color: rgba(255,255,255,0.9); line-height: 1.6;">Politique de tolérance zéro, conformité aux standards internationaux et équité salariale stricte.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final CTA -->
+    <div style="text-align: center; margin-top: 4.5rem;">
+      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.45rem; font-weight: 800; color: var(--text-h); margin-bottom: 0.5rem;">Vous souhaitez collaborer avec JBF SERVICES ?</h3>
+      <p style="color: var(--text-light); font-size: 0.92rem; margin-bottom: 1.5rem;">Nos chargés de projets sont disponibles pour étudier votre besoin et vous transmettre une cotation sous 24h.</p>
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-lg">Demander un Devis Commercial →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER UNIFIÉ (Rose Vif & Blanc) -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

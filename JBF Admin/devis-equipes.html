@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devis Chiffrés des Chefs d'Équipe — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item active">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+        <span class="badge" id="badgeDevisEquipesCount" style="background: var(--brand-pink); color: white;">0</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Chiffrages Techniques des Chefs d'Équipe</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>À Valider Direction</h3>
+            <div class="kpi-value" id="kpiDevisAttente">--</div>
+            <div class="kpi-sub">Transmis par chefs d'équipe</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-send-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Transmis au Client</h3>
+            <div class="kpi-value" id="kpiDevisEnvoyes">--</div>
+            <div class="kpi-sub">Offres commerciales envoyées</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-check-all"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Acceptés par le Client</h3>
+            <div class="kpi-value" id="kpiDevisAcceptes">--</div>
+            <div class="kpi-sub">Financement & acompte versé</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-currency-dollar"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Volume Estimé Total</h3>
+            <div class="kpi-value" id="kpiMontantTotal">$0</div>
+            <div class="kpi-sub">Budget global chiffré</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-receipt-cutoff"></i> Registre des Chiffrages d'Équipes Terrain</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadDevisEquipes()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center;">
+            <div style="flex: 1; min-width: 260px;">
+              <input type="text" id="searchDevisEquipe" class="form-control" placeholder="Rechercher par chef d'équipe, client ou titre..." oninput="filterDevisEquipes()">
+            </div>
+            <div style="width: 220px;">
+              <select class="form-select" id="filterStatutDevis" onchange="filterDevisEquipes()">
+                <option value="all">Tous les statuts</option>
+                <option value="transmis_admin">Transmis à l'admin (En attente)</option>
+                <option value="envoye_client">Envoyé au client</option>
+                <option value="valide_client">Validé par le client</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Projet & Titre</th>
+                  <th>Chef d'Équipe Émetteur</th>
+                  <th>Client Bénéficiaire</th>
+                  <th>Montant Chiffré</th>
+                  <th>Document Joint</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="devisEquipesTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL TRAITEMENT DEVIS ÉQUIPE -->
+<div class="modal-backdrop-custom" id="modalDevisEquipe">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.05rem; font-weight: 700;">Validation Commerciale du Chiffrage</h3>
+      <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" onclick="closeModalDevisEquipe()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <input type="hidden" id="modalId">
+
+      <div style="margin-bottom: 16px;">
+        <label class="form-label">Titre du Chiffrage</label>
+        <div id="modalTitre" style="font-weight: 700; font-size: 1.05rem;"></div>
+        <div id="modalDomaine" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div style="background: var(--bg-main); padding: 10px 14px; border-radius: var(--r-sm);">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted);">Chef d'Équipe</div>
+          <div id="modalChefNom" style="font-weight: 700;"></div>
+        </div>
+        <div style="background: var(--bg-main); padding: 10px 14px; border-radius: var(--r-sm);">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted);">Client Destinataire</div>
+          <div id="modalClientNom" style="font-weight: 700;"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Montant Estimé Chiffré ($ USD)</label>
+        <input type="number" id="modalMontant" class="form-control" style="font-size: 1.1rem; font-weight: 800; color: var(--brand-pink);">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Statut du Chiffrage</label>
+        <select id="modalStatutSelect" class="form-select">
+          <option value="transmis_admin">Transmis à la Direction JBF (En revue)</option>
+          <option value="envoye_client">Validé et Envoyé au Client</option>
+          <option value="valide_client">Accepté par le client & Paiement versé</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Commentaires du Chef d'Équipe</label>
+        <div id="modalCommentaires" style="background: var(--bg-main); padding: 10px 14px; border-radius: var(--r-sm); font-size: 0.84rem; line-height: 1.4;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button class="btn btn-secondary" onclick="closeModalDevisEquipe()">Fermer</button>
+        <button class="btn btn-primary" onclick="saveDevisEquipe()">
+          <i class="bi bi-check2"></i> Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let devisList = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDevisEquipes();
+  });
+
+  async function loadDevisEquipes() {
+    const tbody = document.getElementById('devisEquipesTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des devis d\'équipes...</td></tr>';
+
+    let loaded = [];
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await client.from('devis_equipes').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          loaded = data;
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase devis_equipes:', e);
+    }
+
+    if (loaded.length === 0) {
+      const stored = localStorage.getItem('JBF_DEVIS_EQUIPES_LOCAL');
+      if (stored) {
+        try { loaded = JSON.parse(stored); } catch (e) {}
+      }
+    }
+
+    devisList = loaded || [];
+    updateKPIs();
+    renderDevisEquipesTable(devisList);
+  }
+
+  function updateKPIs() {
+    const attente = devisList.filter(d => d.statut === 'transmis_admin').length;
+    const envoyes = devisList.filter(d => d.statut === 'envoye_client').length;
+    const acceptes = devisList.filter(d => d.statut === 'valide_client').length;
+    const totalMontant = devisList.reduce((sum, d) => sum + (Number(d.montant_estime) || 0), 0);
+
+    document.getElementById('kpiDevisAttente').textContent = attente;
+    document.getElementById('kpiDevisEnvoyes').textContent = envoyes;
+    document.getElementById('kpiDevisAcceptes').textContent = acceptes;
+    document.getElementById('kpiMontantTotal').textContent = '$' + totalMontant.toLocaleString() + ' USD';
+    document.getElementById('badgeDevisEquipesCount').textContent = attente;
+  }
+
+  function renderDevisEquipesTable(list) {
+    const tbody = document.getElementById('devisEquipesTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucun chiffrage trouvé.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(d => {
+      let statusBadge = '';
+      if (d.statut === 'transmis_admin') statusBadge = '<span class="badge-status nouveau">Reçu Chef d\'Équipe</span>';
+      else if (d.statut === 'envoye_client') statusBadge = '<span class="badge-status en_cours">Transmis Client</span>';
+      else if (d.statut === 'valide_client') statusBadge = '<span class="badge-status valide">Validé & Acompte Versé</span>';
+      else statusBadge = '<span class="badge-status archive">Clôturé</span>';
+
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(d.titre)}</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(d.domaine || 'Prestation')}</div>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: var(--brand-pink);">${escapeHtml(d.chef_equipe_nom)}</div>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: var(--text-secondary);">${escapeHtml(d.client_nom)}</div>
+          </td>
+          <td>
+            <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">$${(Number(d.montant_estime) || 0).toLocaleString()} USD</div>
+          </td>
+          <td>
+            <a href="${d.document_url || '#'}" class="btn btn-secondary btn-sm" style="font-size: 0.76rem;" onclick="if(this.getAttribute('href')==='#'){alert('Document archivé : ' + '${d.document_nom}'); return false;}">
+              <i class="bi bi-file-earmark-arrow-down"></i> ${escapeHtml(d.document_nom || 'Document.pdf')}
+            </a>
+          </td>
+          <td>${statusBadge}</td>
+          <td style="text-align: right;">
+            <button class="btn btn-primary btn-sm" onclick="openDevisEquipeModal('${d.id}')">
+              <i class="bi bi-pencil-square"></i> Traiter
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterDevisEquipes() {
+    const q = document.getElementById('searchDevisEquipe').value.toLowerCase().trim();
+    const st = document.getElementById('filterStatutDevis').value;
+
+    const filtered = devisList.filter(d => {
+      const matchQ = (d.titre && d.titre.toLowerCase().includes(q)) ||
+                     (d.chef_equipe_nom && d.chef_equipe_nom.toLowerCase().includes(q)) ||
+                     (d.client_nom && d.client_nom.toLowerCase().includes(q)) ||
+                     (d.domaine && d.domaine.toLowerCase().includes(q));
+      const matchSt = (st === 'all' || d.statut === st);
+      return matchQ && matchSt;
+    });
+
+    renderDevisEquipesTable(filtered);
+  }
+
+  function openDevisEquipeModal(id) {
+    const d = devisList.find(item => item.id === id);
+    if (!d) return;
+
+    document.getElementById('modalId').value = d.id;
+    document.getElementById('modalTitre').textContent = d.titre;
+    document.getElementById('modalDomaine').textContent = d.domaine || 'Prestation générale';
+    document.getElementById('modalChefNom').textContent = d.chef_equipe_nom;
+    document.getElementById('modalClientNom').textContent = d.client_nom;
+    document.getElementById('modalMontant').value = d.montant_estime || 0;
+    document.getElementById('modalStatutSelect').value = d.statut || 'transmis_admin';
+    document.getElementById('modalCommentaires').textContent = d.commentaires || 'Aucun commentaire.';
+
+    document.getElementById('modalDevisEquipe').style.display = 'flex';
+  }
+
+  function closeModalDevisEquipe() {
+    document.getElementById('modalDevisEquipe').style.display = 'none';
+  }
+
+  async function saveDevisEquipe() {
+    const id = document.getElementById('modalId').value;
+    const montant = Number(document.getElementById('modalMontant').value) || 0;
+    const statut = document.getElementById('modalStatutSelect').value;
+
+    const target = devisList.find(d => d.id === id);
+    if (target) {
+      target.montant_estime = montant;
+      target.statut = statut;
+      target.updated_at = new Date().toISOString();
+    }
+
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        await client.from('devis_equipes').update({
+          montant_estime: montant,
+          statut: statut,
+          updated_at: new Date().toISOString()
+        }).eq('id', id);
+      }
+    } catch (e) {
+      console.warn('Erreur update devis_equipes:', e);
+    }
+
+    localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(devisList));
+    closeModalDevisEquipe();
+    updateKPIs();
+    renderDevisEquipesTable(devisList);
+
+    if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+      window.adminCore.showToast('Chiffrage mis à jour avec succès', 'success');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

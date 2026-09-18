@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi des Interventions & Chantiers — JBF Client</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/client.css">
+</head>
+<body>
+
+<div class="client-layout">
+  <aside class="client-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="brand-text">
+        <h2>JBF CLIENT</h2>
+        <span>Espace Partenaire RDC</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Compte</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de Bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Mes Devis & Commandes</span>
+      </a>
+      <a href="missions.html" class="nav-item active">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Suivi des Chantiers</span>
+      </a>
+      <div class="nav-section-title">Comptabilité & Documents</div>
+      <a href="factures.html" class="nav-item">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Factures & Devis Validés</span>
+      </a>
+      <div class="nav-section-title">Relation Client</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service Client & Support</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Mes Évaluations</span>
+      </a>
+      <div class="nav-section-title">Configuration</div>
+      <a href="profil.html" class="nav-item">
+        <i class="bi bi-building"></i>
+        <span>Profil Entreprise</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="client-user-pill">
+        <div class="user-avatar client-user-avatar">CL</div>
+        <div class="user-info">
+          <div class="name client-company-name">Mon Entreprise</div>
+          <div class="role client-user-name">Responsable Client</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.clientCore.logoutClient()"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </aside>
+
+  <div class="client-main">
+    <header class="client-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title"><h1>Suivi Opérationnel des Interventions sur Site</h1></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Supervision des chantiers')">
+          <i class="bi bi-whatsapp"></i> <span>Contact Supervision</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="client-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-compass"></i> Ordres de Mission Exécutés par JBF SERVICES</h2>
+          <button class="btn btn-secondary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+        </div>
+        <div class="card-body">
+          
+          <div class="table-responsive">
+            <table class="client-table table-missions-client">
+              <thead>
+                <tr>
+                  <th>N° Mission</th>
+                  <th>Intitulé Intervention</th>
+                  <th>Chantier / Emplacement</th>
+                  <th>Chef d'Équipe JBF</th>
+                  <th>Effectif Déployé</th>
+                  <th>Avancement</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Rapport & Contact</th>
+                </tr>
+              </thead>
+              <tbody id="missionsTableBody">
+                <tr><td colspan="8" style="text-align: center; padding: 24px;">Chargement des chantiers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/whatsapp-config.js"></script>
+<script src="js/whatsapp-auth.js"></script>
+<script src="js/client-core.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const supabase = createClient(
+    JBF_CLIENT_CONFIG.SUPABASE_URL,
+    JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
+  );
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadClientMissions();
+  });
+
+  async function loadClientMissions() {
+    const tbody = document.getElementById('missionsTableBody');
+
+    // Récupérer la session client
+    let session = null;
+    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
+    if (!session || !session.id) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Veuillez vous connecter pour voir vos missions.</td></tr>';
+      return;
+    }
+
+    let list = [];
+    let fromSupabase = false;
+
+    // --- Tentative Supabase ---
+    try {
+      const { data, error } = await supabase
+        .from('missions')
+        .select('*')
+        .eq('client_id', session.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        list = data;
+        fromSupabase = true;
+        // Mise en cache locale
+        try { localStorage.setItem('JBF_MISSIONS_LOCAL', JSON.stringify(list)); } catch(e) {}
+      }
+    } catch(e) {}
+
+    // --- Fallback localStorage ---
+    if (!fromSupabase) {
+      try {
+        const stored = localStorage.getItem('JBF_MISSIONS_LOCAL');
+        if (stored) list = JSON.parse(stored);
+      } catch(e) {}
+    }
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Aucun ordre de mission ou chantier en cours pour votre société.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(m => {
+      const pct = m.avancement || (m.statut === 'termine' ? 100 : 0);
+      const isDone = m.statut === 'termine';
+      const statusClass = isDone ? 'termine' : 'en_cours';
+      const statusLabel = isDone ? 'Mission Terminée' : "En cours d'exécution";
+      const barColor = isDone ? 'var(--success)' : 'var(--brand-pink)';
+
+      return `
+        <tr>
+          <td><strong>#MSN-${(m.id || '').toString().slice(-4).toUpperCase()}</strong></td>
+          <td>${escapeHtml(m.titre || m.service || 'Intervention')}</td>
+          <td>${escapeHtml(m.site || 'RDC')}</td>
+          <td>${escapeHtml(m.chef || 'Superviseur JBF')}</td>
+          <td>${escapeHtml(m.effectif ? String(m.effectif) : 'Équipe JBF')}</td>
+          <td>
+            <div style="font-size:0.75rem;margin-bottom:3px;font-weight:700;">${pct}% Réalisé</div>
+            <div style="background:#F1F5F9;height:7px;border-radius:4px;overflow:hidden;width:140px;">
+              <div style="background:${barColor};width:${pct}%;height:100%;"></div>
+            </div>
+          </td>
+          <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+          <td style="text-align:right;">
+            <div class="table-actions">
+              <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Point d\\'avancement mission ${m.id}')">
+                <i class="bi bi-whatsapp"></i> Chef d'Équipe
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+
+</body>
+</html>

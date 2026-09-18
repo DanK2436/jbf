@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Contact &amp; Demande de Devis — JBF SERVICES SARL | RDC</title>
+  <meta name="description" content="Contactez la direction et les équipes de JBF SERVICES pour vos devis de sous-traitance, catering, BTP, maintenance et gardiennage sur toute la RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Hero */
+    .contact-hero {
+      background: var(--pink);
+      padding: 8.5rem 0 4rem;
+      color: #fff;
+    }
+    .contact-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(1.85rem, 4.5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.18;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.02em;
+    }
+    .contact-hero-sub {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.9);
+      max-width: 640px;
+      line-height: 1.65;
+    }
+
+    /* Main Container & Grid */
+    .contact-main-section {
+      background: var(--gray-light);
+      padding: 3.5rem 0 5rem;
+    }
+    .contact-split-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.35fr;
+      gap: 2.25rem;
+      align-items: start;
+    }
+
+    /* Info Panel — Rose Vif & Blanc */
+    .contact-info-panel {
+      background: var(--pink);
+      border-radius: var(--r-card);
+      padding: 2.25rem 2rem;
+      color: #fff;
+      box-shadow: 0 10px 40px rgba(230,0,126,0.25);
+    }
+    .contact-info-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+      color: #fff;
+      line-height: 1.25;
+    }
+    .contact-info-desc {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Contact Cards */
+    .contact-card-box {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: var(--r-card);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0.85rem;
+      transition: var(--t-fast);
+    }
+    .contact-card-box:last-of-type {
+      margin-bottom: 0;
+    }
+    .contact-card-box:hover {
+      background: #fff;
+      border-color: #fff;
+      transform: translateY(-2px);
+    }
+    .contact-card-box:hover .contact-svg-badge {
+      background: var(--pink);
+      color: #fff;
+    }
+    .contact-card-box:hover .contact-svg-badge svg {
+      stroke: #fff;
+    }
+    .contact-card-box:hover .contact-card-type {
+      color: var(--pink);
+    }
+    .contact-card-box:hover .contact-val-text,
+    .contact-card-box:hover .contact-val-text a,
+    .contact-card-box:hover .contact-val-text p,
+    .contact-card-box:hover .contact-val-text p strong {
+      color: var(--text-h);
+    }
+    .contact-card-head {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.45rem;
+    }
+    .contact-svg-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+      transition: var(--t-fast);
+    }
+    .contact-svg-badge svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 2; }
+    .contact-card-type {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.85);
+      transition: color 0.2s;
+    }
+    .contact-val-text {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.5;
+      word-break: break-word;
+      transition: color 0.2s;
+    }
+    .contact-val-text a { color: #fff; }
+    .contact-val-text a:hover { color: #fff; text-decoration: underline; }
+
+    /* Form Panel */
+    .contact-form-panel {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--sh-card);
+    }
+    .contact-form-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.35rem;
+      line-height: 1.25;
+    }
+    .contact-form-sub {
+      color: var(--text-light);
+      font-size: 0.88rem;
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+
+    /* Form Inputs */
+    .contact-form-panel .fg {
+      margin-bottom: 1.15rem;
+    }
+    .contact-form-panel .fl {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-h);
+      margin-bottom: 0.4rem;
+    }
+    .contact-form-panel .fc-input {
+      width: 100%;
+      padding: 0.8rem 0.95rem;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-btn);
+      font-size: 16px; /* Prevents auto-zoom on mobile Safari */
+      color: var(--text-h);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .contact-form-panel .fc-input:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(230,0,126,0.12);
+    }
+    .contact-form-panel textarea.fc-input {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Submit Button */
+    .contact-submit-btn {
+      width: 100%;
+      padding: 0.95rem 1.25rem;
+      font-size: 0.92rem;
+      font-weight: 800;
+      white-space: normal;
+      text-align: center;
+      line-height: 1.35;
+      display: block;
+      border-radius: var(--r-btn);
+      cursor: pointer;
+    }
+
+    /* Harmonisation Footer */
+    .footer {
+      background: var(--pink) !important;
+      color: #fff;
+    }
+    .footer-col-title {
+      color: #fff !important;
+      border-bottom: 2px solid rgba(255,255,255,0.3) !important;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.88) !important;
+    }
+    .footer-links a:hover {
+      color: #fff !important;
+      text-decoration: underline;
+    }
+    .footer-about {
+      color: rgba(255,255,255,0.9) !important;
+    }
+    .footer-contact-icon {
+      background: rgba(255,255,255,0.2) !important;
+      color: #fff !important;
+    }
+    .footer-contact-icon svg {
+      stroke: #fff !important;
+    }
+    .footer-contact-text {
+      color: #fff !important;
+    }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.25) !important;
+      color: rgba(255,255,255,0.85) !important;
+    }
+    .footer-legal-links a {
+      color: rgba(255,255,255,0.85) !important;
+    }
+    .footer-legal-links a:hover {
+      color: #fff !important;
+      text-decoration: underline;
+    }
+
+    /* ============================================================
+       RESPONSIVE DESIGN ADAPTATIF POUR MOBILE & TABLETTE
+       ============================================================ */
+    @media (max-width: 960px) {
+      .contact-hero {
+        padding: 7.5rem 0 3rem;
+      }
+      .contact-split-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      .contact-info-panel {
+        padding: 2rem 1.5rem;
+      }
+      .contact-form-panel {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .contact-hero {
+        padding: 6.25rem 0 2.25rem;
+      }
+      .contact-hero-title {
+        font-size: 1.65rem;
+        line-height: 1.2;
+      }
+      .contact-hero-sub {
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+      .contact-main-section {
+        padding: 2.25rem 0 4rem;
+      }
+      .contact-split-grid {
+        gap: 1.5rem;
+      }
+      .contact-info-panel {
+        padding: 1.5rem 1.2rem;
+        border-radius: var(--r-card);
+      }
+      .contact-info-title {
+        font-size: 1.2rem;
+      }
+      .contact-info-desc {
+        font-size: 0.84rem;
+        margin-bottom: 1.25rem;
+      }
+      .contact-card-box {
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.75rem;
+      }
+      .contact-card-type {
+        font-size: 0.68rem;
+      }
+      .contact-val-text {
+        font-size: 0.85rem;
+      }
+      .contact-form-panel {
+        padding: 1.5rem 1.2rem;
+        border-radius: var(--r-card);
+      }
+      .contact-form-title {
+        font-size: 1.2rem;
+      }
+      .contact-form-sub {
+        font-size: 0.84rem;
+        margin-bottom: 1.35rem;
+      }
+      .row-2 {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+      }
+      .contact-submit-btn {
+        font-size: 0.88rem;
+        padding: 0.9rem 1rem;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .contact-info-panel,
+      .contact-form-panel {
+        padding: 1.25rem 1rem;
+      }
+      .contact-card-head {
+        gap: 0.5rem;
+      }
+      .contact-svg-badge {
+        width: 30px;
+        height: 30px;
+      }
+      .contact-svg-badge svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link active">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- CONTACT HERO -->
+<section class="contact-hero">
+  <div class="container">
+    <h1 class="contact-hero-title">Direction &amp; Service Commercial</h1>
+    <p class="contact-hero-sub">
+      Pour vos projets industriels, chantiers miniers ou besoins multi-services sur toute l'étendue de la République Démocratique du Congo.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section class="contact-main-section">
+  <div class="container">
+
+    <!-- Split Grid -->
+    <div class="contact-split-grid">
+
+      <!-- Left Info Panel (Rose Vif & Blanc) -->
+      <div class="contact-info-panel">
+        <div>
+          <h2 class="contact-info-title">Nos Coordonnées Officielles</h2>
+          <p class="contact-info-desc">
+            Nos directeurs de comptes et équipes techniques sont mobilisables pour vos opérations partout en RDC.
+          </p>
+
+          <!-- Email Card -->
+          <div class="contact-card-box">
+            <div class="contact-card-head">
+              <div class="contact-svg-badge">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <span class="contact-card-type">Adresses Emails Professionnelles</span>
+            </div>
+            <div class="contact-val-text">
+              <div><a href="mailto:contact@jbf-services.com">contact@jbf-services.com</a></div>
+              <div style="font-size:0.84rem; opacity:0.9; margin-top:2px;"><a href="mailto:direction@jbf-services.com">direction@jbf-services.com</a></div>
+            </div>
+          </div>
+
+          <!-- Phone Card -->
+          <div class="contact-card-box">
+            <div class="contact-card-head">
+              <div class="contact-svg-badge">
+                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <span class="contact-card-type">Lignes Directes &amp; Hotline 24/7</span>
+            </div>
+            <div class="contact-val-text">
+              <div><a href="tel:+2430822357053">+243 0822 357 053</a></div>
+              <div style="font-size:0.84rem; opacity:0.9; margin-top:2px;"><a href="tel:+2430970349724">+243 0970 349 724</a></div>
+            </div>
+          </div>
+
+          <!-- HQ Location Card -->
+          <div class="contact-card-box">
+            <div class="contact-card-head">
+              <div class="contact-svg-badge">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <span class="contact-card-type">Implantations &amp; Siège Social</span>
+            </div>
+            <div class="contact-val-text" style="font-size: 0.85rem; font-weight: 500;">
+              <p><strong style="color: #fff;">Siège Social :</strong> Lubumbashi, Haut-Katanga, RDC</p>
+              <p style="margin-top: 3px;"><strong style="color: #fff;">Agence Lualaba :</strong> Kolwezi</p>
+              <p style="margin-top: 3px;"><strong style="color: #fff;">Bureau de Liaison :</strong> Kinshasa, Gombe</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.15rem; border-top: 1px solid rgba(255,255,255,0.25); font-size: 0.82rem; color: rgba(255,255,255,0.85);">
+          Permanence technique et interventions d'urgence mobilisables 24h/24 et 7j/7.
+        </div>
+      </div>
+
+      <!-- Right Form Panel -->
+      <div class="contact-form-panel">
+        <h2 class="contact-form-title">Demande de Cotation &amp; Devis</h2>
+        <p class="contact-form-sub">Transmettez vos besoins techniques. Nos ingénieurs vous répondent avec une proposition chiffrée sous 24h.</p>
+
+        <form id="contactForm" onsubmit="submitContact(event)">
+          <div class="row-2">
+            <div class="fg">
+              <label class="fl" for="contactNom">Nom &amp; Prénom *</label>
+              <input type="text" id="contactNom" class="fc-input" placeholder="Ex: Jean Mukendi" required>
+            </div>
+            <div class="fg">
+              <label class="fl" for="contactEntreprise">Entreprise / Organisation *</label>
+              <input type="text" id="contactEntreprise" class="fc-input" placeholder="Ex: Mining SARL" required>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="fg">
+              <label class="fl" for="contactEmail">Email Professionnel *</label>
+              <input type="email" id="contactEmail" class="fc-input" placeholder="contact@entreprise.com" required>
+            </div>
+            <div class="fg">
+              <label class="fl" for="contactTel">Numéro de Téléphone *</label>
+              <input type="tel" id="contactTel" class="fc-input" placeholder="+243 ..." required>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="fg">
+              <label class="fl" for="contactService">Prestation Souhaitée *</label>
+              <select id="contactService" class="fc-input" required>
+                <option value="">Sélectionnez parmi nos 15 prestations</option>
+                <option value="Alimentaire &amp; Catering de Chantier">01. Alimentaire &amp; Catering de Chantier</option>
+                <option value="Sous-Traitance Minière &amp; Extraction">02. Sous-Traitance Minière &amp; Extraction</option>
+                <option value="BTP, Génie Civil &amp; Construction">03. BTP, Génie Civil &amp; Construction</option>
+                <option value="Maintenance Industrielle &amp; Soudure">04. Maintenance Industrielle &amp; Soudure</option>
+                <option value="Gardiennage &amp; Sécurité Physique">05. Gardiennage &amp; Sécurité Physique</option>
+                <option value="Nettoyage Industriel &amp; Housekeeping">06. Nettoyage Industriel &amp; Housekeeping</option>
+                <option value="Logistique, Fret &amp; Transport Dédié">07. Logistique, Fret &amp; Transport Dédié</option>
+                <option value="Gestion Intégrale de Bases de Vie">08. Gestion Intégrale de Bases de Vie</option>
+                <option value="Mise à Disposition de Main-d'œuvre">09. Mise à Disposition de Main-d'œuvre</option>
+                <option value="Fourniture d'Équipements EPI">10. Fourniture d'Équipements EPI</option>
+                <option value="Location &amp; Maintenance d'Engins">11. Location &amp; Maintenance d'Engins</option>
+                <option value="Services Informatiques &amp; Télécoms">12. Services Informatiques &amp; Télécoms</option>
+                <option value="Gestion RH &amp; Recrutement Spécialisé">13. Gestion RH &amp; Recrutement Spécialisé</option>
+                <option value="Aménagement Paysager &amp; Espaces Verts">14. Aménagement Paysager &amp; Espaces Verts</option>
+                <option value="Installations Électriques &amp; Solaire">15. Installations Électriques &amp; Solaire</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl" for="contactProvince">Province de Déploiement (RDC) *</label>
+              <select id="contactProvince" class="fc-input" required>
+                <option value="">Sélectionnez la province</option>
+                <option value="Haut-Katanga">Haut-Katanga (Lubumbashi, Likasi)</option>
+                <option value="Lualaba">Lualaba (Kolwezi, Tenke)</option>
+                <option value="Kinshasa">Kinshasa</option>
+                <option value="Kongo-Central">Kongo-Central (Matadi, Boma)</option>
+                <option value="Nord-Kivu">Nord-Kivu (Goma)</option>
+                <option value="Sud-Kivu">Sud-Kivu (Bukavu)</option>
+                <option value="Haut-Uélé">Haut-Uélé (Kibali)</option>
+                <option value="Kasaï-Oriental">Kasaï-Oriental</option>
+                <option value="Kasaï-Central">Kasaï-Central</option>
+                <option value="Tanganyika">Tanganyika</option>
+                <option value="Maniema">Maniema</option>
+                <option value="Autre province">Autre des 26 provinces</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="contactMessage">Cahier des charges &amp; Description du besoin *</label>
+            <textarea id="contactMessage" class="fc-input" rows="4" placeholder="Précisez les volumes, les effectifs requis, les dates souhaitées et toute spécification technique..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-pink contact-submit-btn">
+            Envoyer ma Demande de Devis (Réponse sous 24h) →
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- TOAST MESSAGE -->
+<div class="toast-msg" id="contactToast">Votre demande de devis a été transmise avec succès à notre direction commerciale. Un chargé d'affaires vous contactera sous 24 heures.</div>
+
+<!-- FOOTER UNIFIÉ (Rose Vif & Blanc) -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
+
+let supabaseClient = null;
+if (typeof supabase !== 'undefined') {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+async function submitContact(e) {
+  e.preventDefault();
+  const nom = document.getElementById('contactNom').value.trim();
+  const entreprise = document.getElementById('contactEntreprise').value.trim();
+  const email = document.getElementById('contactEmail').value.trim();
+  const tel = document.getElementById('contactTel').value.trim();
+  const service = document.getElementById('contactService').value;
+  const province = document.getElementById('contactProvince').value;
+  const msg = document.getElementById('contactMessage').value.trim();
+  const submitBtn = document.querySelector('.contact-submit-btn');
+
+  if (!nom || !entreprise || !email || !tel || !service || !province || !msg) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Envoi de votre demande en cours...";
+
+  try {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient
+        .from('demandes_devis')
+        .insert([{
+          nom: nom,
+          societe: entreprise,
+          email: email,
+          telephone: tel,
+          services: [service],
+          localite: province,
+          message: msg,
+          statut: 'nouveau'
+        }]);
+
+      if (error) throw error;
+    }
+
+    const toast = document.getElementById('contactToast');
+    toast.textContent = "Votre demande de devis a été transmise avec succès à notre direction commerciale. Un chargé d'affaires vous contactera sous 24 heures.";
+    toast.classList.add('show');
+    document.getElementById('contactForm').reset();
+    setTimeout(() => toast.classList.remove('show'), 5500);
+
+  } catch (err) {
+    console.error("Erreur enregistrement devis:", err);
+    const toast = document.getElementById('contactToast');
+    toast.textContent = "Votre demande a été enregistrée. Notre équipe commerciale vous répondra sous 24h.";
+    toast.classList.add('show');
+    document.getElementById('contactForm').reset();
+    setTimeout(() => toast.classList.remove('show'), 5500);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Envoyer ma Demande de Devis (Réponse sous 24h) →";
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const serviceParam = params.get('service');
+  if (serviceParam) {
+    const select = document.getElementById('contactService');
+    for (let opt of select.options) {
+      if (opt.value.toLowerCase().includes(serviceParam.toLowerCase()) || serviceParam.toLowerCase().includes(opt.value.toLowerCase())) {
+        opt.selected = true;
+        break;
+      }
+    }
+  }
+});
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

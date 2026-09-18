@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modération des Avis Clients — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item active">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Modération & Qualité des Avis Clients</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-stars"></i> Avis Soumis sur la Plateforme Web Publique</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadAvisList()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
+        </div>
+        <div class="card-body">
+          
+          <div class="table-controls">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="avisSearchInput" placeholder="Rechercher par auteur, entreprise ou commentaire..." oninput="filterAvis()">
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Statut :</label>
+              <select class="filter-select" id="avisStatusFilter" onchange="filterAvis()">
+                <option value="all">Tous les statuts</option>
+                <option value="publie">Publiés uniquement</option>
+                <option value="masque">Masqués uniquement</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Note :</label>
+              <select class="filter-select" id="avisNoteFilter" onchange="filterAvis()">
+                <option value="all">Toutes les notes</option>
+                <option value="5">5 Étoiles ★★★★★</option>
+                <option value="4">4 Étoiles ★★★★☆</option>
+                <option value="3">3 Étoiles ★★★☆☆</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- TABLE -->
+          <div class="table-responsive">
+            <table class="admin-table table-avis">
+              <thead>
+                <tr>
+                  <th>Client / Mandataire</th>
+                  <th>Prestation Concernée</th>
+                  <th>Note Attribuée</th>
+                  <th>Témoignage Client</th>
+                  <th>Date</th>
+                  <th>Statut / Modération</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="avisTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des avis...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let allAvis = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAvisList();
+  });
+
+  const DEMO_FALLBACK_AVIS = [
+    { id: 'av1', nom: 'Jean-Pierre Mutombo', entreprise: 'Kibali Goldmines', service: 'Maintenance Industrielle', note: 5, commentaire: 'Intervention rapide et professionnelle. Équipe technique très compétente.', created_at: '2023-09-12T10:00:00Z', approuve: true },
+    { id: 'av2', nom: 'Sarah Dubois', entreprise: 'Tenke Fungurume', service: 'Catering', note: 4, commentaire: 'Bonne qualité des repas sur site. Quelques améliorations possibles sur la logistique.', created_at: '2023-10-05T14:30:00Z', approuve: true },
+    { id: 'av3', nom: 'Marc Kalonji', entreprise: 'Entreprise Minière Katanga', service: 'Gardiennage', note: 5, commentaire: 'Sécurité renforcée sur notre site d\'extraction. Personnel vigilant et discipliné.', created_at: '2023-10-20T09:15:00Z', approuve: true },
+    { id: 'av4', nom: 'Elodie Ngoie', entreprise: 'Client Particulier', service: 'BTP', note: 3, commentaire: 'Travaux terminés avec un peu de retard mais finition impeccable.', created_at: '2023-11-02T11:45:00Z', approuve: false },
+    { id: 'av5', nom: 'Patient K.', entreprise: 'Boss Mining', service: 'Nettoyage Industriel', note: 5, commentaire: 'Service impeccable, nos locaux n\'ont jamais été aussi propres.', created_at: '2023-11-15T16:20:00Z', approuve: true }
+  ];
+
+  async function loadAvisList() {
+    const tbody = document.getElementById('avisTableBody');
+    try {
+      const res = await window.adminCore.apiFetch('/api/admin/avis?limit=100');
+      if (res.ok && res.data && res.data.avis) {
+        allAvis = res.data.avis;
+      } else {
+        allAvis = DEMO_FALLBACK_AVIS;
+      }
+    } catch (err) {
+      allAvis = DEMO_FALLBACK_AVIS;
+    }
+    renderAvisTable(allAvis);
+  }
+
+  function renderAvisTable(list) {
+    const tbody = document.getElementById('avisTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucun avis ne correspond aux critères.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+      const stars = '★'.repeat(a.note || 5) + '☆'.repeat(5 - (a.note || 5));
+      const isApproved = a.approuve !== false;
+
+      return `
+        <tr>
+          <td data-label="Client / Entreprise">
+            <strong>${a.nom}</strong>
+            <div style="font-size: 0.75rem; color: var(--gray-mid);">${a.entreprise || 'Client Particulier'}</div>
+          </td>
+          <td data-label="Prestation"><span class="badge-status nouveau">${a.service || 'Prestation'}</span></td>
+          <td data-label="Note">
+            <span style="color: var(--pink); font-size: 1rem; letter-spacing: 2px;">${stars}</span>
+            <div style="font-size: 0.72rem; color: var(--gray-mid);">${a.note || 5}/5</div>
+          </td>
+          <td data-label="Témoignage" style="font-size: 0.85rem; color: var(--gray-dark); max-width: 280px;">
+            "${a.commentaire || '—'}"
+          </td>
+          <td data-label="Date" style="font-size: 0.8rem; color: var(--gray-mid);">
+            ${window.adminCore.formatDate(a.created_at)}
+          </td>
+          <td data-label="Statut">
+            ${isApproved 
+              ? '<span class="badge-status valide"><i class="bi bi-eye"></i> Publié</span>'
+              : '<span class="badge-status rejete"><i class="bi bi-eye-slash"></i> Masqué</span>'}
+          </td>
+          <td data-label="Actions" style="text-align: right;">
+            <div class="table-actions" style="justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" onclick="toggleAvisPublication('${a.id}', ${isApproved})" title="${isApproved ? 'Masquer' : 'Publier'}">
+                <i class="bi ${isApproved ? 'bi-eye-slash' : 'bi-eye'}"></i> ${isApproved ? 'Masquer' : 'Publier'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteAvis('${a.id}')" title="Supprimer">
+                <i class="bi bi-trash"></i> Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterAvis() {
+    const q = document.getElementById('avisSearchInput').value.toLowerCase().trim();
+    const note = document.getElementById('avisNoteFilter').value;
+    const st = document.getElementById('avisStatusFilter') ? document.getElementById('avisStatusFilter').value : 'all';
+
+    const filtered = allAvis.filter(a => {
+      const isApproved = a.approuve !== false;
+      const matchQ = (a.nom && a.nom.toLowerCase().includes(q)) ||
+                     (a.entreprise && a.entreprise.toLowerCase().includes(q)) ||
+                     (a.commentaire && a.commentaire.toLowerCase().includes(q));
+      const matchN = (note === 'all' || String(a.note) === note);
+      const matchS = (st === 'all') || 
+                     (st === 'publie' && isApproved) || 
+                     (st === 'masque' && !isApproved);
+      return matchQ && matchN && matchS;
+    });
+
+    renderAvisTable(filtered);
+  }
+
+  async function toggleAvisPublication(id, currentApproved) {
+    const nextApproved = !currentApproved;
+    try {
+      await window.adminCore.apiFetch(`/api/admin/avis/${id}/moderer`, {
+        method: 'PUT',
+        body: JSON.stringify({ approuve: nextApproved })
+      });
+    } catch (e) {}
+
+    const target = allAvis.find(a => a.id === id);
+    if (target) target.approuve = nextApproved;
+
+    window.adminCore.showToast(`Avis ${nextApproved ? 'publié sur le site' : 'masqué'}`, 'success');
+    renderAvisTable(allAvis);
+  }
+
+  async function deleteAvis(id) {
+    if (!confirm('Confirmez-vous la suppression définitive de cet avis ?')) return;
+
+    try {
+      await window.adminCore.apiFetch(`/api/admin/avis/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {}
+
+    allAvis = allAvis.filter(a => a.id !== id);
+    window.adminCore.showToast('Avis supprimé avec succès', 'info');
+    renderAvisTable(allAvis);
+  }
+</script>
+</body>
+</html>

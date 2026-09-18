@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes Missions Opérationnelles — JBF SERVICES Membre</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- HEADER CONTAINER (Injected by shared.js) -->
+  <div id="memberHeaderContainer"></div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout-container">
+    
+    <!-- SIDEBAR CONTAINER (Injected by shared.js) -->
+    <div id="memberSidebarContainer"></div>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      
+      <div style="background:var(--white); border-radius:var(--r-card); border:1px solid var(--gray-border); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h1 style="font-family:'Poppins',sans-serif; font-size:1.35rem; font-weight:900; color:var(--text-h); margin-bottom:0.25rem;">
+            Mes Missions Opérationnelles
+          </h1>
+          <p style="font-size:0.85rem; color:var(--text-light);">
+            Consultez les missions de terrain qui vous sont directement assignées par l'administration.
+          </p>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="openChefDevisModal()" id="btnChefDevis">
+            + Établir un Devis Technique (Chef d'équipe)
+          </button>
+          <div class="filter-scroll-wrapper">
+            <button class="btn btn-outline btn-sm active" id="filterAll" onclick="filterMissions('all')">Toutes</button>
+            <button class="btn btn-outline btn-sm" id="filterEnCours" onclick="filterMissions('en_cours')">En Cours</button>
+            <button class="btn btn-outline btn-sm" id="filterPlanifiee" onclick="filterMissions('planifiee')">Planifiées</button>
+            <button class="btn btn-outline btn-sm" id="filterTerminee" onclick="filterMissions('terminee')">Terminées</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MISSIONS LIST / GRID -->
+      <div id="missionsContainer">
+        <div class="panel-card">
+          <div class="panel-card-body" style="text-align:center; padding:3rem; color:var(--text-light);">
+            Chargement de vos missions...
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL DÉTAILS MISSION -->
+  <div id="missionModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(2px);">
+    <div style="background:var(--white); border-radius:var(--r-card); max-width:550px; width:100%; border:1px solid var(--gray-border); box-shadow:var(--sh-lg); overflow:hidden;">
+      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--gray-border); display:flex; justify-content:space-between; align-items:center; background:var(--pink-pale);">
+        <h3 id="modalMissionTitle" style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:900; color:var(--text-h);">Détails de la mission</h3>
+        <button onclick="closeMissionModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-light);">×</button>
+      </div>
+      <div style="padding:1.5rem;" id="modalMissionBody">
+        <!-- Rempli dynamiquement -->
+      </div>
+      <div style="padding:1rem 1.5rem; border-top:1px solid var(--gray-border); text-align:right; background:var(--gray-light);">
+        <button onclick="closeMissionModal()" class="btn btn-outline btn-sm">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ÉTABLIR UN DEVIS PAR LE CHEF D'ÉQUIPE -->
+  <div id="chefDevisModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(2px);">
+    <div style="background:var(--white); border-radius:var(--r-card); max-width:580px; width:100%; border:1px solid var(--gray-border); box-shadow:var(--sh-lg); overflow:hidden; max-height:90vh; display:flex; flex-direction:column;">
+      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--gray-border); display:flex; justify-content:space-between; align-items:center; background:var(--pink-pale);">
+        <h3 style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:900; color:var(--text-h);">
+          Transmission Chiffrage Technique & Devis
+        </h3>
+        <button onclick="closeChefDevisModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-light);">&times;</button>
+      </div>
+      <div style="padding:1.5rem; overflow-y:auto; flex:1;">
+        <form id="chefDevisForm" onsubmit="submitChefDevis(event)">
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Intitulé du chiffrage *</label>
+            <input type="text" id="cdTitre" required class="input-field" placeholder="Ex: Devis Chiffré Maintenance Groupes Électrogènes" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem;">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Client Destinataire *</label>
+              <input type="text" id="cdClient" required class="input-field" placeholder="Ex: Tenke Fungurume Mining" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Domaine Technique</label>
+              <select id="cdDomaine" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem; background:#FFF;">
+                <option value="Sous-traitance minière">Sous-traitance minière</option>
+                <option value="Maintenance industrielle">Maintenance industrielle</option>
+                <option value="Catering & Restauration">Catering & Restauration</option>
+                <option value="BTP & Construction">BTP & Construction</option>
+                <option value="Gardiennage & Sécurité">Gardiennage & Sécurité</option>
+                <option value="Transport & Logistique">Transport & Logistique</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Montant estimé chiffré ($ USD) *</label>
+              <input type="number" id="cdMontant" required min="1" step="0.01" class="input-field" placeholder="Ex: 18500" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem; font-weight:700; color:var(--pink);">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Format du document joint</label>
+              <select id="cdDocType" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem; background:#FFF;">
+                <option value="PDF">Fichier PDF (.pdf)</option>
+                <option value="XLSX">Tableur Excel (.xlsx, .xls)</option>
+                <option value="DOCX">Document Word (.docx)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Nom du document ou lien fichier *</label>
+            <input type="text" id="cdDocNom" required class="input-field" placeholder="Ex: Chiffrage_Technique_TFM_v1.pdf" style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem;">
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.8rem; font-weight:700; color:var(--text-h); margin-bottom:0.35rem;">Commentaires & Détails pour la Direction JBF</label>
+            <textarea id="cdCommentaires" rows="3" placeholder="Précisez la composition de l'équipe, pièces et contraintes logistiques..." style="width:100%; padding:0.65rem; border:1px solid var(--gray-border); border-radius:8px; font-size:0.86rem; resize:vertical;"></textarea>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+            <button type="button" onclick="closeChefDevisModal()" class="btn btn-outline btn-sm">Annuler</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitChefDevis">
+              Transmettre le Chiffrage à l'Admin
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    let allUserMissions = [];
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavigation('missions');
+      const profile = await initMemberSession();
+      if (profile) {
+        loadUserMissions(profile.id);
+      }
+    });
+
+    async function loadUserMissions(userId) {
+      const container = document.getElementById('missionsContainer');
+      try {
+        if (!supabaseClient) throw new Error('Supabase indisponible');
+
+        const { data: missions, error } = await supabaseClient
+          .from('missions')
+          .select('*')
+          .eq('assigned_to', userId)
+          .order('created_at', { ascending: false });
+
+        if (!missions || missions.length === 0) {
+          allUserMissions = [];
+        } else {
+          allUserMissions = missions;
+        }
+        renderMissionsList();
+
+      } catch (err) {
+        console.warn('Erreur chargement missions membre:', err);
+        allUserMissions = [];
+        renderMissionsList();
+      }
+    }
+
+    function filterMissions(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('[id^="filter"]').forEach(btn => btn.classList.remove('btn-primary'));
+      document.querySelectorAll('[id^="filter"]').forEach(btn => btn.classList.add('btn-outline'));
+      
+      const activeBtnId = filter === 'all' ? 'filterAll' 
+                        : (filter === 'en_cours' ? 'filterEnCours' 
+                        : (filter === 'planifiee' ? 'filterPlanifiee' : 'filterTerminee'));
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) {
+        activeBtn.classList.remove('btn-outline');
+        activeBtn.classList.add('btn-primary');
+      }
+
+      renderMissionsList();
+    }
+
+    function renderMissionsList() {
+      const container = document.getElementById('missionsContainer');
+      let filtered = allUserMissions;
+
+      if (currentFilter !== 'all') {
+        filtered = allUserMissions.filter(m => m.statut === currentFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="panel-card">
+            <div class="empty-state-box">
+              <div class="empty-state-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              </div>
+              <div class="empty-state-title">Aucune mission trouvée</div>
+              <div class="empty-state-desc">Vous n'avez pas de mission enregistrée dans cette catégorie pour le moment.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1.25rem;">
+          ${filtered.map((m, idx) => {
+            const statusClass = m.statut === 'en_cours' ? 'status-en_cours' 
+                              : (m.statut === 'terminee' ? 'status-terminee' : 'status-planifiee');
+            const statusLabel = m.statut === 'en_cours' ? 'En Cours' 
+                              : (m.statut === 'terminee' ? 'Terminée' : 'Planifiée');
+
+            return `
+              <div class="panel-card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
+                <div class="panel-card-body">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; margin-bottom:0.75rem;">
+                    <span class="status-pill ${statusClass}">${statusLabel}</span>
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--pink); background:var(--pink-pale); padding:0.2rem 0.6rem; border-radius:4px;">
+                      ${m.service_nom || 'Section ' + (m.service_id || '1')}
+                    </span>
+                  </div>
+                  <h3 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:800; color:var(--text-h); margin-bottom:0.5rem;">
+                    ${m.titre}
+                  </h3>
+                  <div style="font-size:0.82rem; color:var(--text-light); margin-bottom:0.5rem;">
+                    <strong>Client :</strong> ${m.client || 'JBF SERVICES Client'}
+                  </div>
+                  <div style="font-size:0.82rem; color:var(--text-light); margin-bottom:0.75rem;">
+                    <strong>Site :</strong> ${m.site_intervention || 'Non spécifié'}
+                  </div>
+                  <p style="font-size:0.85rem; color:var(--text-body); line-height:1.45; margin-bottom:1rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+                    ${m.description || 'Pas de description supplémentaire fournie pour cette mission.'}
+                  </p>
+                </div>
+                <div style="padding:0.75rem 1.25rem; border-top:1px solid var(--gray-border); background:var(--gray-light); text-align:right;">
+                  <button class="btn btn-outline btn-sm" onclick="openMissionModal(${idx})">Détails de la mission →</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function openMissionModal(idx) {
+      const m = allUserMissions[idx];
+      if (!m) return;
+
+      document.getElementById('modalMissionTitle').textContent = m.titre;
+      document.getElementById('modalMissionBody').innerHTML = `
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--text-light); margin-bottom:0.25rem;">Client &amp; Partenaire</div>
+          <div style="font-size:0.95rem; font-weight:700; color:var(--text-h);">${m.client || 'Client Partenaire'}</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--text-light); margin-bottom:0.25rem;">Site d'intervention</div>
+          <div style="font-size:0.95rem; font-weight:700; color:var(--text-h);">${m.site_intervention || 'Terrain'}</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--text-light); margin-bottom:0.25rem;">Section JBF</div>
+          <div style="font-size:0.9rem; font-weight:800; color:var(--pink);">${m.service_nom || 'Section ' + (m.service_id || '1')}</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--text-light); margin-bottom:0.25rem;">Description des travaux</div>
+          <div style="font-size:0.88rem; color:var(--text-body); line-height:1.6; background:var(--gray-light); padding:0.85rem; border-radius:8px; border:1px solid var(--gray-border);">
+            ${m.description || 'Aucun détail technique spécifique.'}
+          </div>
+        </div>
+      `;
+
+      const modal = document.getElementById('missionModal');
+      modal.style.display = 'flex';
+    }
+
+    function closeMissionModal() {
+      document.getElementById('missionModal').style.display = 'none';
+    }
+
+    function openChefDevisModal() {
+      document.getElementById('chefDevisModal').style.display = 'flex';
+    }
+
+    function closeChefDevisModal() {
+      document.getElementById('chefDevisModal').style.display = 'none';
+    }
+
+    async function submitChefDevis(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitChefDevis');
+      btn.disabled = true;
+      btn.textContent = 'Transmission en cours...';
+
+      const titre = document.getElementById('cdTitre').value.trim();
+      const client = document.getElementById('cdClient').value.trim();
+      const domaine = document.getElementById('cdDomaine').value;
+      const montant = Number(document.getElementById('cdMontant').value) || 0;
+      const docType = document.getElementById('cdDocType').value;
+      const docNom = document.getElementById('cdDocNom').value.trim();
+      const comm = document.getElementById('cdCommentaires').value.trim();
+
+      const profile = currentMemberProfile || {};
+      const chefNom = profile.full_name || 'Marc Mwamba (Chef d\'équipe)';
+      const chefId = profile.id || null;
+
+      const newDevis = {
+        id: 'dve-' + Date.now(),
+        titre: titre,
+        domaine: domaine,
+        chef_equipe_id: chefId,
+        chef_equipe_nom: chefNom,
+        client_nom: client,
+        montant_estime: montant,
+        monnaie: 'USD',
+        document_nom: docNom,
+        document_type: docType,
+        document_url: '#',
+        commentaires: comm,
+        statut: 'transmis_admin',
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Sauvegarde locale partagée avec l'administration
+      let localList = [];
+      try {
+        const stored = localStorage.getItem('JBF_DEVIS_EQUIPES_LOCAL');
+        if (stored) localList = JSON.parse(stored);
+      } catch (_) {}
+      localList.unshift(newDevis);
+      localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(localList));
+
+      // 2. Synchronisation Supabase si disponible
+      try {
+        if (supabaseClient) {
+          await supabaseClient.from('devis_equipes').insert([{
+            titre: newDevis.titre,
+            domaine: newDevis.domaine,
+            chef_equipe_id: newDevis.chef_equipe_id,
+            chef_equipe_nom: newDevis.chef_equipe_nom,
+            client_nom: newDevis.client_nom,
+            montant_estime: newDevis.montant_estime,
+            monnaie: 'USD',
+            document_nom: newDevis.document_nom,
+            document_type: newDevis.document_type,
+            document_url: newDevis.document_url,
+            commentaires: newDevis.commentaires,
+            statut: 'transmis_admin'
+          }]);
+        }
+      } catch (err) {
+        console.warn('[JBF Membre] Erreur Supabase devis_equipes:', err);
+      }
+
+      closeChefDevisModal();
+      document.getElementById('chefDevisForm').reset();
+      btn.disabled = false;
+      btn.textContent = 'Transmettre le Chiffrage à l\'Admin';
+
+      alert('Votre chiffrage technique a été transmis avec succès à l\'Administration JBF pour validation commerciale.');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centre de Ressources &amp; Formations — JBF SERVICES Membre</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .resources-search-hero {
+      background: #FFFFFF;
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--sh-card);
+    }
+
+    .search-hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--text-h);
+      margin-bottom: 0.35rem;
+    }
+
+    .search-hero-subtitle {
+      font-size: 0.84rem;
+      color: var(--text-light);
+      margin-bottom: 1.25rem;
+    }
+
+    .search-bar-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .search-bar-input {
+      width: 100%;
+      padding: 0.95rem 1.25rem 0.95rem 3rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      outline: none;
+      background: #F8FAFC;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-sizing: border-box;
+    }
+
+    .search-bar-input:focus {
+      border-color: var(--pink);
+      background: #FFFFFF;
+      box-shadow: 0 0 0 4px rgba(230, 0, 126, 0.12), 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+
+    .search-bar-icon {
+      position: absolute;
+      left: 1.1rem;
+      color: #64748B;
+      pointer-events: none;
+    }
+
+    .search-tags-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .search-tag-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-light);
+    }
+
+    .search-tag-chip {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .search-tag-chip:hover {
+      background: var(--pink-pale);
+      border-color: var(--pink-blush);
+      color: var(--pink);
+    }
+
+    .search-tag-chip.active {
+      background: var(--pink);
+      color: #FFFFFF;
+      border-color: var(--pink);
+    }
+
+    .resources-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .resources-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .resources-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .resource-card {
+      background: var(--white);
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+      box-shadow: var(--sh-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      overflow: hidden;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(230, 0, 126, 0.1);
+      border-color: var(--pink-blush);
+    }
+
+    .resource-card-body {
+      padding: 1.35rem;
+    }
+
+    .resource-card-footer {
+      padding: 0.85rem 1.35rem;
+      border-top: 1px solid var(--gray-border);
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div id="memberHeaderContainer"></div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout-container">
+    <div id="memberSidebarContainer"></div>
+
+    <main>
+
+      <!-- SEARCH HERO BANNER -->
+      <div class="resources-search-hero">
+        <div class="search-hero-title">
+          Centre de Documentation &amp; Ressources Métiers
+        </div>
+        <div class="search-hero-subtitle">
+          Recherchez instantanément tous les protocoles HSE, guides techniques, fiches de sécurité et règlements de vos domaines d'intervention.
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-bar-wrapper">
+          <svg class="search-bar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="searchResourceInput"
+            class="search-bar-input"
+            placeholder="Tapez un domaine, mot-clé ou titre (ex: Mines, Sécurité, Soudure, HACCP, Catering, EPI, BTP...)"
+            oninput="handleSearchResource()"
+            autofocus
+          >
+        </div>
+
+        <!-- SUGGESTION CHIPS -->
+        <div class="search-tags-row">
+          <span class="search-tag-label">Recherches fréquentes :</span>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('Mines')">Prestations Minières</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('HSE')">HSE &amp; Sécurité</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('Soudure')">Soudure Industrielle</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('Catering')">Catering &amp; HACCP</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('BTP')">Génie Civil &amp; BTP</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('Règlement')">Règlements</button>
+          <button type="button" class="search-tag-chip" onclick="setSearchTag('')">Tout afficher</button>
+        </div>
+      </div>
+
+      <!-- RESULTS HEADER -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 0.25rem;">
+        <div style="font-size:0.85rem; font-weight:800; color:var(--text-h);" id="resultsCountLabel">
+          Ressources Disponibles
+        </div>
+      </div>
+
+      <!-- RESOURCES GRID -->
+      <div id="resourcesContainer">
+        <div class="panel-card">
+          <div class="panel-card-body" style="text-align:center; padding:3rem 1.5rem; color:var(--text-light);">
+            Chargement des ressources...
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    // Liste complète et officielle des ressources par domaines JBF
+    const defaultResources = [
+      {
+        id: 1,
+        titre: "Manuel des Normes de Sécurité sur Chantiers Miniers",
+        categorie: "HSE & Sécurité",
+        section_nom: "Prestations Minières (Section 4)",
+        type_fichier: "PDF",
+        taille: "4.2 MB",
+        description: "Directives obligatoires sur le port des EPI coqués, isolation des convoyeurs et protocoles d'urgence en fosse minière."
+      },
+      {
+        id: 2,
+        titre: "Protocole HACCP & Chaîne du Froid Alimentaire",
+        categorie: "Qualité & Hygiène",
+        section_nom: "Catering & Restauration (Section 9)",
+        type_fichier: "PDF",
+        taille: "2.8 MB",
+        description: "Règles strictes de traçabilité, désinfection et conservation des denrées pour bases-vie et cantines industrielles."
+      },
+      {
+        id: 3,
+        titre: "Standard Technique Soudure TIG/MIG & Métallurgie",
+        categorie: "Technique",
+        section_nom: "Soudure & Tuyauterie (Section 6)",
+        type_fichier: "PDF",
+        taille: "5.1 MB",
+        description: "Fiches d'instructions pour soudage haute pression, contrôle non destructif et sécurité des travaux à chaud."
+      },
+      {
+        id: 4,
+        titre: "Guide de Prévention & Plan d'Évacuation Médicale",
+        categorie: "HSE & Sécurité",
+        section_nom: "Tous Services JBF",
+        type_fichier: "PDF",
+        taille: "1.9 MB",
+        description: "Procédure d'évacuation rapide, coordination avec les ambulances du site et premiers secours d'urgence."
+      },
+      {
+        id: 5,
+        titre: "Cahier des Charges Génie Civil & Béton Armé",
+        categorie: "BTP & Construction",
+        section_nom: "Construction (Section 8)",
+        type_fichier: "PDF",
+        taille: "6.4 MB",
+        description: "Spécifications des dosages de béton, coffrage lourd et terrassement pour infrastructures industrielles."
+      },
+      {
+        id: 6,
+        titre: "Charte de Ponctualité & Pointage Certifié",
+        categorie: "Règlement",
+        section_nom: "Ressources Humaines (Section 2)",
+        type_fichier: "PDF",
+        taille: "1.2 MB",
+        description: "Modalités d'enregistrement des heures, relevés biométriques et politique d'intégrité anti-fraude."
+      }
+    ];
+
+    let allResources = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavigation('resources');
+      await initMemberSession();
+      loadHseResources();
+    });
+
+    async function loadHseResources() {
+      try {
+        if (supabaseClient) {
+          const { data, error } = await supabaseClient
+            .from('ressources_hse')
+            .select('*')
+            .eq('publie', true)
+            .order('created_at', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            allResources = data;
+          } else {
+            allResources = defaultResources;
+          }
+        } else {
+          allResources = defaultResources;
+        }
+      } catch (e) {
+        allResources = defaultResources;
+      }
+      renderResources();
+    }
+
+    function setSearchTag(tag) {
+      document.getElementById('searchResourceInput').value = tag;
+      renderResources();
+    }
+
+    function handleSearchResource() {
+      renderResources();
+    }
+
+    function renderResources() {
+      const container = document.getElementById('resourcesContainer');
+      const countLabel = document.getElementById('resultsCountLabel');
+      const searchVal = document.getElementById('searchResourceInput').value.trim().toLowerCase();
+
+      let filtered = allResources;
+
+      if (searchVal) {
+        filtered = filtered.filter(r => 
+          (r.titre || '').toLowerCase().includes(searchVal) ||
+          (r.description || '').toLowerCase().includes(searchVal) ||
+          (r.categorie || '').toLowerCase().includes(searchVal) ||
+          (r.section_nom || '').toLowerCase().includes(searchVal)
+        );
+      }
+
+      countLabel.textContent = `${filtered.length} document${filtered.length > 1 ? 's' : ''} trouvé${filtered.length > 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="panel-card">
+            <div style="text-align:center; padding:3.5rem 1.5rem;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="margin-bottom:0.75rem;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <div style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; color:var(--text-h); margin-bottom:0.35rem;">
+                Aucune ressource trouvée pour "${searchVal}"
+              </div>
+              <div style="font-size:0.85rem; color:var(--text-light); max-width:420px; margin:0 auto 1.25rem;">
+                Essayez d'utiliser des termes plus généraux ou cliquez sur l'un des domaines suggérés ci-dessus.
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="setSearchTag('')">
+                Réinitialiser la recherche
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="resources-grid">
+          ${filtered.map(r => {
+            const fileType = r.type_fichier || 'PDF';
+            const fileSize = r.taille || 'Documentation';
+
+            return `
+              <div class="resource-card">
+                <div class="resource-card-body">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="font-size:0.72rem; font-weight:900; text-transform:uppercase; color:var(--pink); background:var(--pink-pale); border:1px solid var(--pink-blush); padding:0.2rem 0.6rem; border-radius:4px;">
+                      ${r.categorie || 'HSE'}
+                    </span>
+                    <span style="font-size:0.74rem; font-weight:800; color:var(--text-light);">
+                      ${fileType} • ${fileSize}
+                    </span>
+                  </div>
+                  <h3 style="font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--text-h); margin-bottom:0.45rem; line-height:1.35;">
+                    ${r.titre}
+                  </h3>
+                  <p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">
+                    ${r.description || 'Protocole officiel de conformité et directives techniques certifiées.'}
+                  </p>
+                </div>
+                <div class="resource-card-footer">
+                  <span style="font-size:0.72rem; color:var(--text-light); font-weight:700;">
+                    ${r.section_nom || 'Tous Services JBF'}
+                  </span>
+                  <a href="#" onclick="event.preventDefault(); alert('Téléchargement du document certifié : ' + '${r.titre.replace(/'/g, "\\'")}');" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Télécharger
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

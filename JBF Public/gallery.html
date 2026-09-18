@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galerie de Réalisations &amp; Projets Terrain — JBF SERVICES SARL</title>
+  <meta name="description" content="Découvrez nos interventions concrètes en sous-traitance miniére, catering d'entreprise, chantiers BTP, maintenance et sécurité en RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .gallery-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+    }
+    .gallery-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .gallery-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .gallery-masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .g-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .g-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--sh-card-h);
+      border-color: var(--pink-blush);
+    }
+    .g-img-wrap {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--pink-pale) 0%, var(--gray-border) 100%);
+    }
+    .g-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .g-card:hover .g-img { transform: scale(1.06); }
+    .g-tag {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: var(--pink);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+      z-index: 2;
+    }
+    .g-badge-loc {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .g-body {
+      padding: 1.25rem 1.4rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .g-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.35rem;
+      line-height: 1.35;
+    }
+    .g-desc {
+      font-size: 0.84rem;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .g-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--pink);
+      font-weight: 700;
+      border-top: 1px solid var(--gray-border);
+      padding-top: 0.8rem;
+    }
+
+    /* Modal Lightbox Détaillé */
+    .g-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .g-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .g-modal-card {
+      background: #fff;
+      border-radius: var(--r-lg);
+      max-width: 780px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .g-modal-overlay.open .g-modal-card { transform: scale(1); }
+    .g-modal-img-wrap {
+      width: 100%;
+      height: 320px;
+      position: relative;
+      background: var(--gray-border);
+    }
+    .g-modal-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .g-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--t-fast);
+      z-index: 10;
+    }
+    .g-modal-close:hover { background: var(--pink); }
+    .g-modal-body {
+      padding: 1.75rem 2rem;
+      overflow-y: auto;
+    }
+    .g-modal-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.5rem;
+    }
+    .g-modal-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--gray-border);
+    }
+    .g-modal-meta-item strong { color: var(--text-h); }
+    .g-modal-text {
+      font-size: 0.92rem;
+      color: var(--text-body);
+      line-height: 1.75;
+      margin-bottom: 1.5rem;
+    }
+    .g-modal-highlights {
+      background: var(--pink-pale);
+      border-left: 4px solid var(--pink);
+      padding: 1rem 1.25rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .g-modal-hl-title { font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: var(--pink); margin-bottom: 0.35rem; }
+    .g-modal-hl-desc { font-size: 0.86rem; color: var(--text-body); }
+    .g-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .gallery-masonry-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .gallery-masonry-grid { grid-template-columns: 1fr; }
+      .g-modal-img-wrap { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link active">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- GALLERY HERO -->
+<section class="gallery-hero">
+  <div class="container">
+    <h1 class="gallery-hero-title">Nos Réalisations sur le Terrain</h1>
+    <p class="gallery-hero-sub">
+      Explorez nos chantiers majeurs, prestations de catering, sécurisation de sites industriels et projets de génie civil menés à bien à travers la République Démocratique du Congo.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding: 4.5rem 0 6rem;">
+  <div class="container">
+
+    <!-- Filter Buttons -->
+    <div class="filter-bar" id="galleryFilterBar" style="margin-bottom: 2.5rem;">
+      <button class="fc active" onclick="filterGallery('all')">Toutes les réalisations (12)</button>
+      <button class="fc" onclick="filterGallery('mines')">Mines &amp; Industrie</button>
+      <button class="fc" onclick="filterGallery('btp')">BTP &amp; Génie Civil</button>
+      <button class="fc" onclick="filterGallery('catering')">Catering &amp; Bases de Vie</button>
+      <button class="fc" onclick="filterGallery('securite')">Sécurité &amp; Gardiennage</button>
+      <button class="fc" onclick="filterGallery('logistique')">Logistique &amp; Flotte</button>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="gallery-masonry-grid" id="galleryGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- GALLERY LIGHTBOX MODAL -->
+<div class="g-modal-overlay" id="galleryModalOverlay" onclick="closeGalleryModal()">
+  <div class="g-modal-card" onclick="event.stopPropagation()">
+    <div class="g-modal-img-wrap">
+      <button class="g-modal-close" onclick="closeGalleryModal()" aria-label="Fermer">&times;</button>
+      <img src="" alt="" class="g-modal-img" id="gModalImg">
+    </div>
+    <div class="g-modal-body">
+      <h2 class="g-modal-title" id="gModalTitle">Titre du Projet</h2>
+      <div class="g-modal-meta">
+        <div class="g-modal-meta-item">Pôle : <strong id="gModalCat">Catering</strong></div>
+        <div class="g-modal-meta-item">Localisation : <strong id="gModalLoc">Kolwezi, Lualaba</strong></div>
+        <div class="g-modal-meta-item">Cadre : <strong id="gModalPeriod">Contrat Annuel</strong></div>
+      </div>
+      <p class="g-modal-text" id="gModalDesc">Description détaillée du projet...</p>
+      <div class="g-modal-highlights">
+        <div class="g-modal-hl-title">Impact &amp; Livrables Clés</div>
+        <div class="g-modal-hl-desc" id="gModalHL">100% de conformité aux normes HSE et satisfaction client.</div>
+      </div>
+      <div class="g-modal-actions">
+        <button class="btn btn-outline-pink" onclick="closeGalleryModal()">Fermer</button>
+        <a href="../JBF Client/auth/login.html" class="btn btn-pink" id="gModalCta">Demander une prestation similaire →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER UNIFIÉ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, miniére, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let GALLERY_DATA = [];
+let activeGalleryCat = 'all';
+
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const filtered = GALLERY_DATA.filter(item => {
+    return (activeGalleryCat === 'all') || (item.catId === activeGalleryCat);
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; background:#fff; border-radius:12px; border:1.5px solid var(--gray-border);">
+        <div style="font-size:2.5rem; margin-bottom:1rem;">🖼️</div>
+        <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-h); margin-bottom:0.5rem;">Galerie en cours de mise à jour</h3>
+        <p style="color:var(--text-light); font-size:0.9rem;">Nos réalisations seront bientôt disponibles. Revenez prochainement !</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => `
+    <div class="g-card reveal visible" onclick="openGalleryModal(${item.id})">
+      <div class="g-img-wrap">
+        <img src="${item.img_url || item.img || ''}" alt="${item.title}" class="g-img" loading="lazy"
+             onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
+        <span class="g-tag">${item.catName || item.categorie || 'Réalisation'}</span>
+        <span class="g-badge-loc">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${item.loc || item.localite || ''}
+        </span>
+      </div>
+      <div class="g-body">
+        <div>
+          <h3 class="g-title">${item.title || item.titre}</h3>
+          <p class="g-desc">${item.desc || item.description || ''}</p>
+        </div>
+        <div class="g-footer">
+          <span>${item.period || item.periode || ''}</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;">Voir le dossier →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterGallery(cat) {
+  activeGalleryCat = cat;
+  document.querySelectorAll('#galleryFilterBar .fc').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${cat}'`));
+  });
+  renderGallery();
+}
+
+function openGalleryModal(id) {
+  const project = GALLERY_DATA.find(p => p.id === id);
+  if (!project) return;
+
+  document.getElementById('gModalImg').src = project.img_url || project.img || '';
+  document.getElementById('gModalImg').alt = project.title || project.titre;
+  document.getElementById('gModalTitle').textContent = project.title || project.titre;
+  document.getElementById('gModalCat').textContent = project.catName || project.categorie || '';
+  document.getElementById('gModalLoc').textContent = project.loc || project.localite || '';
+  document.getElementById('gModalPeriod').textContent = project.period || project.periode || '';
+  document.getElementById('gModalDesc').textContent = project.desc || project.description || '';
+  document.getElementById('gModalHL').textContent = project.highlights || project.impact || '';
+  document.getElementById('gModalCta').href = `../JBF Client/auth/login.html?service=${encodeURIComponent(project.catName || project.categorie || '')}`;
+
+  document.getElementById('galleryModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGalleryModal() {
+  document.getElementById('galleryModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeGalleryModal();
+});
+
+async function loadGalleryFromDB() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des réalisations…</div>`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('gallery_images')
+      .select('*')
+      .eq('publie', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      GALLERY_DATA = data.map(row => ({
+        id: row.id,
+        catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+        catName: row.categorie || 'Réalisation',
+        title: row.titre || row.title,
+        loc: row.localite || row.loc || '',
+        img: row.img_url || row.image_url || '',
+        img_url: row.img_url || row.image_url || '',
+        desc: row.description || row.desc || '',
+        period: row.periode || row.period || '',
+        highlights: row.impact || row.highlights || '',
+        ...row
+      }));
+    } else {
+      GALLERY_DATA = [];
+    }
+  } catch (err) {
+    console.warn('Galerie : impossible de charger depuis la base de données.', err.message);
+    GALLERY_DATA = [];
+  }
+
+  renderGallery();
+}
+
+document.addEventListener('DOMContentLoaded', loadGalleryFromDB);
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

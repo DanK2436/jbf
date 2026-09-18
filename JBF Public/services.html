@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogue 15 Prestations Intégrées — JBF SERVICES SARL</title>
+  <meta name="description" content="Catalogue complet des 15 prestations de sous-traitance industrielle, minière, BTP, catering, maintenance et logistique de JBF SERVICES en RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .services-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+    }
+    .services-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .services-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 640px;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+    .search-bar-wrap {
+      position: relative;
+      max-width: 540px;
+    }
+    .search-bar-input {
+      width: 100%;
+      padding: 0.95rem 1.25rem 0.95rem 3rem;
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: var(--r-btn);
+      font-size: 0.92rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      color: var(--text-h);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      transition: var(--t-fast);
+    }
+    .search-bar-input:focus { border-color: var(--pink-deep); }
+    .search-bar-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      pointer-events: none;
+      display: flex;
+    }
+
+    /* Service Drawer (Bande détaillée latérale coulissante) */
+    .service-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(5px);
+      z-index: 2500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .service-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .service-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 580px;
+      background: #fff;
+      box-shadow: -12px 0 50px rgba(0,0,0,0.3);
+      z-index: 2600;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .service-drawer-overlay.open .service-drawer {
+      transform: translateX(0);
+    }
+    .drawer-header {
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+      color: #fff;
+      padding: 2.25rem 2rem 1.75rem;
+      position: relative;
+    }
+    .drawer-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--t-fast);
+    }
+    .drawer-close:hover { background: #fff; color: var(--pink); }
+    .drawer-code-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 0.6rem;
+    }
+    .drawer-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 0.3rem;
+    }
+    .drawer-category-tag {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+    }
+    .drawer-body {
+      padding: 2rem;
+      flex-grow: 1;
+      color: var(--text-body);
+    }
+    .drawer-section-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--pink);
+      margin: 1.6rem 0 0.6rem;
+    }
+    .drawer-section-label:first-of-type { margin-top: 0; }
+    .drawer-desc { font-size: 0.94rem; line-height: 1.75; color: var(--text-body); }
+    .drawer-feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .drawer-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-body);
+      line-height: 1.5;
+    }
+    .drawer-feature-bullet {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--pink);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .drawer-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      background: var(--gray-light);
+      padding: 1.2rem;
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+    }
+    .drawer-meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .drawer-meta-lbl { font-size: 0.7rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; }
+    .drawer-meta-val { font-size: 0.88rem; font-weight: 700; color: var(--text-h); }
+    .drawer-footer {
+      padding: 1.5rem 2rem;
+      background: #fff;
+      border-top: 1px solid var(--gray-border);
+      display: flex;
+      gap: 1rem;
+    }
+    .drawer-footer .btn { flex: 1; text-align: center; }
+
+    /* Service Cards Grid */
+    .services-grid-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .svc-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .svc-card:hover {
+      border-color: var(--pink-blush);
+      box-shadow: var(--sh-card-h);
+      transform: translateY(-5px);
+    }
+    .svc-card-top {
+      padding: 1.5rem 1.5rem 1.1rem;
+      border-bottom: 1px solid var(--gray-border);
+    }
+    .svc-cat-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--pink);
+      background: var(--pink-pale);
+      padding: 0.2rem 0.65rem;
+      border-radius: 4px;
+      margin-bottom: 0.65rem;
+    }
+    .svc-card-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text-h);
+      line-height: 1.35;
+    }
+    .svc-card-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .svc-desc {
+      font-size: 0.88rem;
+      color: var(--text-body);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .svc-feats {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .svc-feat {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .svc-feat-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--pink);
+      flex-shrink: 0;
+    }
+    .svc-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-border);
+    }
+
+    @media (max-width: 1024px) {
+      .services-grid-layout { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .services-grid-layout { grid-template-columns: 1fr; }
+      .service-drawer { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link active">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- SERVICES HERO -->
+<section class="services-hero">
+  <div class="container">
+    <h1 class="services-hero-title">Nos Prestations &amp; Solutions Industrielles</h1>
+    <p class="services-hero-sub">
+      Découvrez le catalogue complet de nos 15 domaines d'intervention. Cliquez sur un service pour afficher sa fiche technique détaillée, ses livrables et demander une cotation personnalisée.
+    </p>
+
+    <!-- Search Input -->
+    <div class="search-bar-wrap">
+      <span class="search-bar-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </span>
+      <input type="text" id="serviceSearch" class="search-bar-input" placeholder="Rechercher un service, mot-clé, compétence..." oninput="filterServices()">
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding: 4.5rem 0 6rem;">
+  <div class="container">
+
+    <!-- Filter Buttons -->
+    <div class="filter-bar" id="categoryFilterBar" style="margin-bottom: 2.5rem;">
+      <button class="fc active" onclick="setCategory('all')">Tous les 15 services</button>
+      <button class="fc" onclick="setCategory('Mines & Industrie')">Mines &amp; Industrie</button>
+      <button class="fc" onclick="setCategory('Alimentaire')">Catering &amp; Alimentaire</button>
+      <button class="fc" onclick="setCategory('Construction')">BTP &amp; Électricité</button>
+      <button class="fc" onclick="setCategory('Maintenance')">Maintenance &amp; Nettoyage</button>
+      <button class="fc" onclick="setCategory('Sécurité')">Sécurité &amp; Gardiennage</button>
+      <button class="fc" onclick="setCategory('Logistique')">Logistique &amp; Transport</button>
+      <button class="fc" onclick="setCategory('Services Généraux')">Facilities &amp; RH</button>
+    </div>
+
+    <!-- Active Filter Counter -->
+    <div style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-light); font-weight: 600;" id="resultsCount">
+      Affichage des 15 prestations disponibles
+    </div>
+
+    <!-- Services Grid -->
+    <div class="services-grid-layout" id="servicesGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- SERVICE DRAWER (Bande coulissante latérale détaillée) -->
+<div class="service-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()">
+  <div class="service-drawer" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Fermer">&times;</button>
+      <div class="drawer-code-badge" id="drawerCode">PRESTATION 01</div>
+      <h2 class="drawer-title" id="drawerTitle">Titre de la prestation</h2>
+      <div class="drawer-category-tag" id="drawerCategory">Catégorie</div>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section-label">Description &amp; Périmètre Opérationnel</div>
+      <p class="drawer-desc" id="drawerDesc">Description complète de la prestation...</p>
+
+      <div class="drawer-section-label">Compétences Techniques &amp; Livrables Clés</div>
+      <ul class="drawer-feature-list" id="drawerFeatures">
+        <!-- Injected -->
+      </ul>
+
+      <div class="drawer-section-label">Garanties &amp; Délais de Mobilisation</div>
+      <div class="drawer-meta-grid">
+        <div class="drawer-meta-item">
+          <span class="drawer-meta-lbl">Conformité / Certifications</span>
+          <span class="drawer-meta-val" id="drawerCert">Standards ARSP &amp; QHSE</span>
+        </div>
+        <div class="drawer-meta-item">
+          <span class="drawer-meta-lbl">Délai moyen de déploiement</span>
+          <span class="drawer-meta-val" id="drawerDelay">24h à 48h ouvrables</span>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn btn-outline-pink" onclick="closeDrawer()">Fermer</button>
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink" id="drawerQuoteBtn">Demander un Devis (Espace Client) →</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER UNIFIÉ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const JBF_SERVICES_DATA = [
+  {
+    id: 1,
+    code: "01",
+    title: "Alimentaire & Catering de Chantier",
+    category: "Alimentaire",
+    summary: "Restauration collective, gestion de cantines et conformité HACCP stricte.",
+    description: "Prise en charge intégrale de la chaîne alimentaire pour bases de vie industrielles, camps miniers et événements professionnels en RDC. Menus équilibrés, respect rigoureux des règles d'hygiène et approvisionnement en circuit court.",
+    features: [
+      "Production et service de repas chauds 24/7 (3 services par jour)",
+      "Gestion d'économats, chaîne du froid et traçabilité des denrées",
+      "Équipes de chefs formés aux standards internationaux HACCP",
+      "Approvisionnement sécurisé en zones isolées et camps miniers"
+    ],
+    cert: "Normes HACCP & Standards Sanitaires Internationaux",
+    delay: "Mobilisation sous 24 à 48 heures"
+  },
+  {
+    id: 2,
+    code: "02",
+    title: "Sous-Traitance Minière & Extraction",
+    category: "Mines & Industrie",
+    summary: "Main-d'œuvre qualifiée, extraction, convoyage et sécurité minière.",
+    description: "Accompagnement opérationnel des compagnies minières dans les provinces du Haut-Katanga et du Lualaba. Mise à disposition de personnel hautement qualifié, gestion d'équipes de fosse et maintenance d'équipements sous agrément ARSP.",
+    features: [
+      "Opérateurs d'engins miniers certifiés (dumpers, pelles, chargeuses)",
+      "Supervision HSE de chantier et prévention des risques d'accident",
+      "Équipes d'échantillonnage, concassage et contrôle qualité minerai",
+      "Conformité intégrale à la loi sur la sous-traitance privée (ARSP)"
+    ],
+    cert: "Agrément ARSP & Certification HSE Mines",
+    delay: "Déploiement d'équipes sous 48 heures"
+  },
+  {
+    id: 3,
+    code: "03",
+    title: "BTP, Génie Civil & Construction",
+    category: "Construction",
+    summary: "Terrassement, gros œuvre, voiries et bâtiments industriels.",
+    description: "Conception, exécution et réhabilitation d'infrastructures de génie civil, plateformes logistiques, routes d'accès et bâtiments administratifs ou techniques sur l'ensemble du territoire congolais.",
+    features: [
+      "Travaux de terrassement, nivellement et stabilisation de sols",
+      "Coulage de dalles béton armé et fondations industrielles lourdes",
+      "Construction de hangars métalliques et entrepôts de stockage",
+      "Aménagement de voiries intérieures et réseaux d'évacuation pluviale"
+    ],
+    cert: "Normes Eurocodes & Cahiers des charges BTP",
+    delay: "Étude sous 24h / Début travaux sous 3 jours"
+  },
+  {
+    id: 4,
+    code: "04",
+    title: "Maintenance Industrielle & Soudure",
+    category: "Maintenance",
+    summary: "Soudure haute pression, tuyauterie industrielle et maintenance mécanique.",
+    description: "Interventions curatives et contrats de maintenance préventive sur installations industrielles, usines de traitement minier, réseaux de tuyauterie et structures métalliques lourdes.",
+    features: [
+      "Soudeurs homologués TIG/MIG/Arc sur conduites haute pression",
+      "Maintenance préventive de broyeurs, convoyeurs et pompes",
+      "Usinage, rectification de pièces mécaniques et chaudronnerie",
+      "Diagnostics vibratoires et thermographiques sur équipements tournants"
+    ],
+    cert: "Homologation Soudeurs ASME / ISO 9606",
+    delay: "Équipe d'urgence disponible sous 12 heures"
+  },
+  {
+    id: 5,
+    code: "05",
+    title: "Gardiennage, Sécurité Physique & Surveillance",
+    category: "Sécurité",
+    summary: "Agents de sécurité formés, contrôle d'accès et sécurisation périmétrique.",
+    description: "Protection des personnes, des biens et des installations stratégiques contre les intrusions, le vol et le vandalisme. Déploiement d'agents cynophiles et rondes 24/7.",
+    features: [
+      "Agents de sécurité formés aux protocoles de dissuasion et filtrage",
+      "Contrôle d'accès par badges électroniques et registres informatisés",
+      "Maitres-chiens et patrouilles mobiles de surveillance nocturne",
+      "Coordination directe avec les forces de sécurité et secours"
+    ],
+    cert: "Agrément Ministère de l'Intérieur RDC",
+    delay: "Postes pourvus sous 24 heures"
+  },
+  {
+    id: 6,
+    code: "06",
+    title: "Nettoyage Industriel, Décontamination & Housekeeping",
+    category: "Maintenance",
+    summary: "Nettoyage haute pression, assainissement et entretien de bases de vie.",
+    description: "Prestations d'hygiène et de salubrité pour environnements industriels exigeants, ateliers de production, bureaux d'entreprise et logements sur bases de vie.",
+    features: [
+      "Nettoyage et dégraissage haute pression de sols et machines",
+      "Entretien hôtelier (housekeeping) et blanchisserie industrielle",
+      "Gestion des déchets, tri sélectif et évacuation conforme",
+      "Dératisation, désinsectisation et désinfection sanitaire périodique"
+    ],
+    cert: "Protocoles d'hygiène hospitalière et industrielle",
+    delay: "Mise en place d'équipes sous 24 heures"
+  },
+  {
+    id: 7,
+    code: "07",
+    title: "Logistique, Fret & Transport Dédié",
+    category: "Logistique",
+    summary: "Flotte de camions, acheminement sécurisé et traçabilité GPS en RDC.",
+    description: "Solutions complètes de transport de fret lourd, matériel de chantier, denrées alimentaires et produits manufacturés à travers les corridors nationaux de la RDC.",
+    features: [
+      "Flotte de camions plateaux, bennes et fourgons frigorifiques",
+      "Système de géolocalisation GPS en temps réel pour chaque convoi",
+      "Gestion des formalités douanières et autorisations de transport",
+      "Escorte sécurisée pour le fret à haute valeur ajoutée"
+    ],
+    cert: "Assurance fret marchandise & Chauffeurs défensifs",
+    delay: "Planning de chargement sous 24 heures"
+  },
+  {
+    id: 8,
+    code: "08",
+    title: "Gestion Intégrale de Bases de Vie & Camps",
+    category: "Services Généraux",
+    summary: "Facilities management complet pour camps miniers et chantiers isolés.",
+    description: "Prise en charge globale de l'exploitation de bases de vie : hébergement, restauration, énergie, eau potable, sécurité, buanderie et espaces de vie commune.",
+    features: [
+      "Administration générale et conciergerie des hébergements",
+      "Maintenance technique multi-technique des modules de vie",
+      "Alimentation autonome en eau potable et gestion des eaux usées",
+      "Animations, espaces sportifs et bien-être des résidents"
+    ],
+    cert: "Standards Internationaux de Camp Management",
+    delay: "Audit et reprise de camp sous 7 jours"
+  },
+  {
+    id: 9,
+    code: "09",
+    title: "Mise à Disposition de Main-d'œuvre & Régie",
+    category: "Services Généraux",
+    summary: "Fourniture de personnel technique et ouvriers qualifiés en régie.",
+    description: "Délégation d'équipes opérationnelles pour vos besoins ponctuels ou de long terme dans les secteurs minier, industriel et tertiaire.",
+    features: [
+      "Manœuvres qualifiés, électriciens, coffreurs, maçons et ferrailleurs",
+      "Gestion administrative complète (contrats, CNSS, paie, transport)",
+      "Visites médicales préalables et tests d'aptitude professionnelle",
+      "Remplacement immédiat en cas d'absence ou d'indisponibilité"
+    ],
+    cert: "Conformité Code du Travail & ONEM RDC",
+    delay: "Sélection et déploiement sous 48 heures"
+  },
+  {
+    id: 10,
+    code: "10",
+    title: "Fourniture d'Équipements de Protection (EPI)",
+    category: "Mines & Industrie",
+    summary: "Équipements de sécurité certifiés CE/ANSI pour sites à risques.",
+    description: "Approvisionnement et distribution d'équipements de protection individuelle et collective adaptés aux contraintes extrêmes des sites industriels et miniers.",
+    features: [
+      "Casques de sécurité, lunettes balistiques, gants anticoupure",
+      "Chaussures de sécurité coquées S3 et bottes anti-perforation",
+      "Tenues haute visibilité ignifugées et combinaisons de travail",
+      "Harnais de sécurité, masques respiratoires et protections auditives"
+    ],
+    cert: "Certifications européennes CE & américaines ANSI",
+    delay: "Livraison sur stock sous 24 à 48 heures"
+  },
+  {
+    id: 11,
+    code: "11",
+    title: "Location & Maintenance d'Engins de Chantier",
+    category: "Construction",
+    summary: "Grues, compacteurs, pelles, générateurs et outillage lourd.",
+    description: "Mise à disposition avec ou sans opérateur d'engins de chantier récents et entretenus pour vos travaux de terrassement, levage et génie civil.",
+    features: [
+      "Pelles hydrauliques de 20t à 50t, chargeuses et bulldozers",
+      "Niveleuses, rouleaux compacteurs et camions bennes 6x4 et 8x4",
+      "Contrat de maintenance préventive et mécanicien dédié sur site",
+      "Remplacement immédiat de l'engin en cas de panne majeure"
+    ],
+    cert: "Contrôles techniques périodiques à jour",
+    delay: "Mise à disposition sous 48 heures"
+  },
+  {
+    id: 12,
+    code: "12",
+    title: "Services Informatiques & Réseaux Télécoms",
+    category: "Services Généraux",
+    summary: "Câblage réseau, vidéosurveillance IP, serveurs et télécoms.",
+    description: "Installation et infogérance des infrastructures numériques pour sites industriels, bureaux et camps miniers distants en RDC.",
+    features: [
+      "Déploiement de réseaux locaux (LAN/Wi-Fi professionnel)",
+      "Installation de caméras IP haute résolution et serveurs NVR",
+      "Maintenance de parcs informatiques, imprimantes et onduleurs",
+      "Liaisons sécurisées VPN et solutions de connectivité satellite"
+    ],
+    cert: "Standards Réseaux & Cybersécurité",
+    delay: "Intervention sous 24 heures ouvrables"
+  },
+  {
+    id: 13,
+    code: "13",
+    title: "Gestion des Ressources Humaines & Recrutement",
+    category: "Services Généraux",
+    summary: "Chasse de talents, gestion de paie et conformité droit du travail.",
+    description: "Recrutement, gestion administrative et mise à disposition de personnel qualifié pour vos pics d'activité ou contrats longue durée.",
+    features: [
+      "Sourcing et sélection rigoureuse de profils techniques et tertiaires",
+      "Gestion complète des contrats de travail, déclarations CNSS et fiscalité",
+      "Contrôle médical d'embauche et formation sécurité d'accueil",
+      "Suivi rigoureux des présences et feuilles de temps certifiées"
+    ],
+    cert: "Conformité Code du Travail RDC & ONEM",
+    delay: "Présélection de profils sous 48 à 72 heures"
+  },
+  {
+    id: 14,
+    code: "14",
+    title: "Aménagement Paysager & Espaces Verts",
+    category: "Services Généraux",
+    summary: "Entretien d'espaces verts, reboisement et réhabilitation écologique.",
+    description: "Création et maintenance d'espaces verts pour embellir vos sites administratifs et répondre aux engagements de réhabilitation environnementale minière.",
+    features: [
+      "Tonte, désherbage et entretien régulier des pelouses et massifs",
+      "Plantation d'arbres d'alignement et haies de clôture naturelle",
+      "Systèmes d'arrosage automatique et fertilisation raisonnée",
+      "Nettoyage et défrichage de pare-feux et zones tampons"
+    ],
+    cert: "Pratiques écologiques et durables",
+    delay: "Intervention programmée sous 48 heures"
+  },
+  {
+    id: 15,
+    code: "15",
+    title: "Installation Électrique & Énergies Renouvelables",
+    category: "Construction",
+    summary: "Électricité industrielle, groupes électrogènes et centrales solaires.",
+    description: "Étude et réalisation d'installations électriques basse et moyenne tension, armoires de distribution et parcs solaires autonomes pour sites isolés.",
+    features: [
+      "Pose de tableaux électriques industriels et armoires d'inverseurs",
+      "Installation et maintenance de groupes électrogènes forte puissance",
+      "Systèmes solaires photovoltaïques avec stockage batteries lithium",
+      "Contrôles de conformité et mise à la terre sécurisée des installations"
+    ],
+    cert: "Normes de sécurité électrique NF C 15-100",
+    delay: "Diagnostic et début de travaux sous 48 heures"
+  }
+];
+
+let currentCat = 'all';
+let currentQuery = '';
+
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+function renderServices() {
+  const grid = document.getElementById('servicesGrid');
+  const countLbl = document.getElementById('resultsCount');
+
+  const filtered = JBF_SERVICES_DATA.filter(s => {
+    const matchCat = (currentCat === 'all') ||
+      (s.category.toLowerCase().includes(currentCat.toLowerCase())) ||
+      (currentCat === 'Mines & Industrie' && (s.category.includes('Mines') || s.title.includes('Mines') || s.title.includes('Engins') || s.title.includes('Protection'))) ||
+      (currentCat === 'Alimentaire' && (s.category.includes('Alimentaire') || s.title.includes('Catering') || s.title.includes('Restauration'))) ||
+      (currentCat === 'Construction' && (s.category.includes('Construction') || s.title.includes('BTP') || s.title.includes('Électrique'))) ||
+      (currentCat === 'Maintenance' && (s.category.includes('Maintenance') || s.title.includes('Nettoyage') || s.title.includes('Soudure'))) ||
+      (currentCat === 'Sécurité' && (s.category.includes('Sécurité') || s.title.includes('Gardiennage'))) ||
+      (currentCat === 'Logistique' && (s.category.includes('Logistique') || s.title.includes('Transport'))) ||
+      (currentCat === 'Services Généraux' && (s.category.includes('Services') || s.title.includes('Informatiques') || s.title.includes('Ressources') || s.title.includes('Bases de Vie') || s.title.includes('Paysager') || s.title.includes('Main-d\'œuvre')));
+
+    const matchQuery = !currentQuery ||
+      s.title.toLowerCase().includes(currentQuery.toLowerCase()) ||
+      s.description.toLowerCase().includes(currentQuery.toLowerCase()) ||
+      s.summary.toLowerCase().includes(currentQuery.toLowerCase()) ||
+      s.features.some(f => f.toLowerCase().includes(currentQuery.toLowerCase()));
+
+    return matchCat && matchQuery;
+  });
+
+  countLbl.textContent = `Affichage de ${filtered.length} prestation${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; background: #fff; border: 1.5px solid var(--gray-border); border-radius: var(--r-card); padding: 3.5rem 2rem; text-align: center;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-h); margin-bottom: 0.5rem;">Aucun service ne correspond à votre recherche</h3>
+        <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 1.5rem;">Essayez un autre mot-clé ou réinitialisez les filtres.</p>
+        <button class="btn btn-pink" onclick="setCategory('all'); document.getElementById('serviceSearch').value=''; currentQuery=''; renderServices();">Réinitialiser les filtres</button>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(s => `
+    <div class="svc-card reveal visible" onclick="openServiceDrawer(${s.id})">
+      <div class="svc-card-top">
+        <span class="svc-cat-tag">${s.category}</span>
+        <h3 class="svc-card-name">${s.title}</h3>
+      </div>
+      <div class="svc-card-body">
+        <p class="svc-desc">${s.summary}</p>
+        <ul class="svc-feats">
+          ${s.features.slice(0, 3).map(f => `<li class="svc-feat"><span class="svc-feat-dot"></span>${f}</li>`).join('')}
+        </ul>
+        <div class="svc-card-footer">
+          <span style="color:var(--pink); font-size:0.82rem; font-weight:700;">Détails &amp; Spécifications →</span>
+          <button class="btn btn-pink btn-sm" onclick="event.stopPropagation(); openServiceDrawer(${s.id});">En savoir plus</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setCategory(cat) {
+  currentCat = cat;
+  document.querySelectorAll('#categoryFilterBar .fc').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${cat}'`));
+  });
+  renderServices();
+}
+
+function filterServices() {
+  currentQuery = document.getElementById('serviceSearch').value.trim();
+  renderServices();
+}
+
+function openServiceDrawer(id) {
+  const service = JBF_SERVICES_DATA.find(s => s.id === id);
+  if (!service) return;
+
+  document.getElementById('drawerCode').textContent = `PRESTATION ${service.code}`;
+  document.getElementById('drawerTitle').textContent = service.title;
+  document.getElementById('drawerCategory').textContent = service.category;
+  document.getElementById('drawerDesc').textContent = service.description;
+
+  const featContainer = document.getElementById('drawerFeatures');
+  featContainer.innerHTML = service.features.map(f => `
+    <li class="drawer-feature-item">
+      <span class="drawer-feature-bullet"></span>
+      <span>${f}</span>
+    </li>
+  `).join('');
+
+  document.getElementById('drawerCert').textContent = service.cert;
+  document.getElementById('drawerDelay').textContent = service.delay;
+  document.getElementById('drawerQuoteBtn').href = `../JBF Client/auth/login.html?service=${encodeURIComponent(service.title)}`;
+
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDrawer();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderServices();
+  const urlParams = new URLSearchParams(window.location.search);
+  const serviceParam = urlParams.get('service');
+  if (serviceParam) {
+    const sId = parseInt(serviceParam);
+    if (!isNaN(sId)) {
+      setTimeout(() => openServiceDrawer(sId), 300);
+    }
+  }
+});
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

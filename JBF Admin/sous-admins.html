@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Sous-Administrateurs — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item active">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Gestion des Comptes & Droits d'Accès</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-person-badge-fill"></i> Administrateurs et Sous-Administrateurs</h2>
+          <button class="btn btn-primary btn-sm" onclick="openCreateAdminModal()">
+            <i class="bi bi-plus-lg"></i> Ajouter un sous-admin
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Nom & Prénom</th>
+                  <th>Email & Téléphone</th>
+                  <th>Rôle</th>
+                  <th>Sections Autorisées</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminsTableBody">
+                <tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL CREATION / MODIFICATION SOUS-ADMIN -->
+<div class="modal-backdrop-custom" id="adminModal">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 id="adminModalTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
+        Ajouter un sous-administrateur
+      </h3>
+      <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" onclick="closeAdminModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <input type="hidden" id="modalAdminId">
+
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input type="text" id="adminFullName" class="form-control" placeholder="ex: Jean-Luc Kalala">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Adresse Email officielle</label>
+        <input type="email" id="adminEmail" class="form-control" placeholder="ex: j.kalala@jbf-services.cd">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Numéro de Téléphone</label>
+        <input type="tel" id="adminPhone" class="form-control" placeholder="ex: +243 81 234 5678">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <select class="form-select" id="adminRole">
+          <option value="sous_admin">Sous-Administrateur</option>
+          <option value="super_admin">Super Administrateur (Accès Total)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Permissions d'accès aux modules</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; font-size: 0.82rem;">
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="dashboard" class="perm-check"> Tableau de bord
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="devis" class="perm-check"> Devis & Chiffrage
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="missions" class="perm-check"> Missions Terrain
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="conges" class="perm-check"> Congés RH
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="membres" class="perm-check"> Collaborateurs
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="ressources" class="perm-check"> Ressources HSE
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="service_client" class="perm-check"> Service Client
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" value="avis" class="perm-check"> Avis & Retours
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; font-weight: 600;">
+          <input type="checkbox" id="adminIsActive" checked> Compte actif (Autorisé à se connecter)
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button class="btn btn-secondary" onclick="closeAdminModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveAdminAccount()">
+          <i class="bi bi-check2"></i> Enregistrer le compte
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let adminAccounts = [];
+
+  const currentAdminSession = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('JBF_ADMIN_USER') || localStorage.getItem('jbf_admin_session') || '{}');
+    } catch(e) { return {}; }
+  })();
+
+  const INITIAL_ADMINS = [
+    {
+      id: 'adm-001',
+      full_name: currentAdminSession.full_name || currentAdminSession.nom || 'Direction Générale JBF',
+      email: currentAdminSession.email || 'services@admin.jbf',
+      phone: currentAdminSession.phone || '+243 971 306 666',
+      role: 'super_admin',
+      permissions: ['*'],
+      is_active: true
+    }
+  ];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAdminAccounts();
+  });
+
+  async function loadAdminAccounts() {
+    const tbody = document.getElementById('adminsTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
+
+    let loaded = [];
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await client.from('admin_accounts').select('*');
+        if (!error && data && data.length > 0) {
+          loaded = data;
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase admin_accounts:', e);
+    }
+
+    if (loaded.length === 0) {
+      const stored = localStorage.getItem('JBF_ADMIN_ACCOUNTS_LOCAL');
+      if (stored) {
+        try { loaded = JSON.parse(stored); } catch (e) {}
+      }
+    }
+
+    if (!loaded || loaded.length === 0) {
+      loaded = INITIAL_ADMINS;
+      localStorage.setItem('JBF_ADMIN_ACCOUNTS_LOCAL', JSON.stringify(INITIAL_ADMINS));
+    }
+
+    adminAccounts = loaded;
+    renderAdminsTable(adminAccounts);
+  }
+
+  function renderAdminsTable(list) {
+    const tbody = document.getElementById('adminsTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucun compte administrateur.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+      const isSuper = a.role === 'super_admin' || (a.permissions && a.permissions.includes('*'));
+      let permsBadges = '';
+
+      if (isSuper) {
+        permsBadges = '<span class="badge-status valide">Accès Complet (*)</span>';
+      } else if (Array.isArray(a.permissions)) {
+        permsBadges = a.permissions.map(p => `<span class="badge-status" style="background: var(--bg-main); font-size: 0.7rem; margin-right: 4px;">${p}</span>`).join('');
+      } else {
+        permsBadges = '<span class="badge-status archive">Aucune</span>';
+      }
+
+      const statusBadge = a.is_active 
+        ? '<span class="badge-status valide">Actif</span>' 
+        : '<span class="badge-status rejete">Désactivé</span>';
+
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(a.full_name)}</div>
+          </td>
+          <td>
+            <div style="font-weight: 500;">${escapeHtml(a.email)}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(a.phone || 'Non renseigné')}</div>
+          </td>
+          <td>
+            <span class="badge-status ${isSuper ? 'nouveau' : 'en_cours'}">
+              ${isSuper ? 'Super Administrateur' : 'Sous-Administrateur'}
+            </span>
+          </td>
+          <td>${permsBadges}</td>
+          <td>${statusBadge}</td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn btn-secondary btn-sm" onclick="editAdminAccount('${a.id}')" title="Modifier">
+                <i class="bi bi-pencil"></i>
+              </button>
+              ${!isSuper ? `
+                <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteAdminAccount('${a.id}')" title="Supprimer">
+                  <i class="bi bi-trash"></i>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openCreateAdminModal() {
+    document.getElementById('adminModalTitle').textContent = 'Ajouter un sous-administrateur';
+    document.getElementById('modalAdminId').value = '';
+    document.getElementById('adminFullName').value = '';
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminPhone').value = '';
+    document.getElementById('adminRole').value = 'sous_admin';
+    document.getElementById('adminIsActive').checked = true;
+
+    document.querySelectorAll('.perm-check').forEach(c => c.checked = false);
+    document.getElementById('adminModal').style.display = 'flex';
+  }
+
+  function editAdminAccount(id) {
+    const a = adminAccounts.find(item => item.id === id);
+    if (!a) return;
+
+    document.getElementById('adminModalTitle').textContent = 'Modifier le compte administrateur';
+    document.getElementById('modalAdminId').value = a.id;
+    document.getElementById('adminFullName').value = a.full_name || '';
+    document.getElementById('adminEmail').value = a.email || '';
+    document.getElementById('adminPhone').value = a.phone || '';
+    document.getElementById('adminRole').value = a.role || 'sous_admin';
+    document.getElementById('adminIsActive').checked = !!a.is_active;
+
+    const perms = Array.isArray(a.permissions) ? a.permissions : [];
+    document.querySelectorAll('.perm-check').forEach(c => {
+      c.checked = perms.includes('*') || perms.includes(c.value);
+    });
+
+    document.getElementById('adminModal').style.display = 'flex';
+  }
+
+  function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+  }
+
+  async function saveAdminAccount() {
+    const id = document.getElementById('modalAdminId').value;
+    const fullName = document.getElementById('adminFullName').value.trim();
+    const email = document.getElementById('adminEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('adminPhone').value.trim();
+    const role = document.getElementById('adminRole').value;
+    const isActive = document.getElementById('adminIsActive').checked;
+
+    if (!fullName || !email) {
+      alert('Veuillez remplir le nom et l adresse email.');
+      return;
+    }
+
+    let permissions = [];
+    if (role === 'super_admin') {
+      permissions = ['*'];
+    } else {
+      document.querySelectorAll('.perm-check:checked').forEach(c => {
+        permissions.push(c.value);
+      });
+      if (permissions.length === 0) {
+        permissions = ['dashboard'];
+      }
+    }
+
+    if (id) {
+      const target = adminAccounts.find(item => item.id === id);
+      if (target) {
+        target.full_name = fullName;
+        target.email = email;
+        target.phone = phone;
+        target.role = role;
+        target.permissions = permissions;
+        target.is_active = isActive;
+        target.updated_at = new Date().toISOString();
+      }
+    } else {
+      const newAcc = {
+        id: 'adm-' + Date.now(),
+        full_name: fullName,
+        email: email,
+        phone: phone,
+        role: role,
+        permissions: permissions,
+        is_active: isActive,
+        created_at: new Date().toISOString()
+      };
+      adminAccounts.push(newAcc);
+    }
+
+    localStorage.setItem('JBF_ADMIN_ACCOUNTS_LOCAL', JSON.stringify(adminAccounts));
+    closeAdminModal();
+    renderAdminsTable(adminAccounts);
+
+    if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+      window.adminCore.showToast('Compte enregistré avec succès', 'success');
+    }
+  }
+
+  function deleteAdminAccount(id) {
+    const a = adminAccounts.find(item => item.id === id);
+    if (!a) return;
+    if (a.role === 'super_admin' || a.id === 'adm-001') {
+      alert('Le compte Super Admin principal ne peut pas être supprimé.');
+      return;
+    }
+
+    if (confirm(`Confirmez-vous la suppression du compte ${a.full_name} ?`)) {
+      adminAccounts = adminAccounts.filter(item => item.id !== id);
+      localStorage.setItem('JBF_ADMIN_ACCOUNTS_LOCAL', JSON.stringify(adminAccounts));
+      renderAdminsTable(adminAccounts);
+      if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+        window.adminCore.showToast('Compte supprimé', 'success');
+      }
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Règlement d'Ordre Intérieur (R.O.I) — JBF SERVICES</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ROI Specific Styles */
+    .roi-banner {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: var(--sh-card);
+    }
+    .roi-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .roi-banner-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--pink-pale);
+      color: var(--pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .roi-banner h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--text-h);
+      margin-bottom: 0.15rem;
+    }
+    .roi-banner p {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      max-width: 680px;
+      line-height: 1.4;
+    }
+
+    /* Emargement / Signature Card */
+    .roi-sign-card {
+      background: var(--white);
+      border: 1.5px solid var(--pink-blush);
+      border-radius: var(--r-card);
+      padding: 1rem 1.35rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: var(--sh-card);
+    }
+    .roi-sign-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .roi-sign-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .roi-sign-badge.pending {
+      background: rgba(245,158,11,0.1);
+      color: #D97706;
+      border-color: rgba(245,158,11,0.25);
+    }
+
+    /* ROI Layout Grid */
+    .roi-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (min-width: 1024px) {
+      .roi-layout {
+        grid-template-columns: 280px 1fr;
+      }
+    }
+
+    /* ROI Sidebar Table of Contents */
+    .roi-toc-card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.1rem;
+      box-shadow: var(--sh-card);
+      position: sticky;
+      top: calc(var(--header-h) + 1.25rem);
+    }
+    .roi-toc-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-light);
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--gray-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .roi-toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+    .roi-toc-item a {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.45rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-body);
+      text-decoration: none;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+    .roi-toc-item a:hover {
+      background: var(--pink-pale);
+      color: var(--pink);
+    }
+    .roi-toc-item a.active {
+      background: var(--pink);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+    .roi-toc-num {
+      font-family: monospace;
+      font-size: 0.72rem;
+      opacity: 0.75;
+      flex-shrink: 0;
+    }
+
+    /* ROI Content Area */
+    .roi-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Search & Filter Bar */
+    .roi-search-box {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: var(--sh-card);
+    }
+    .roi-search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text-body);
+    }
+
+    /* Chapter Card */
+    .roi-chapter-card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      scroll-margin-top: calc(var(--header-h) + 1.5rem);
+    }
+    .roi-chapter-header {
+      background: #FAFAF9;
+      border-bottom: 1px solid var(--gray-border);
+      padding: 1rem 1.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .roi-chapter-tag {
+      font-size: 0.68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--pink);
+      background: var(--pink-pale);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.25rem;
+    }
+    .roi-chapter-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-h);
+    }
+    .roi-chapter-body {
+      padding: 1.25rem 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    /* Article Box */
+    .roi-article {
+      border-left: 3px solid var(--pink-blush);
+      padding-left: 1rem;
+    }
+    .roi-article:hover {
+      border-left-color: var(--pink);
+    }
+    .roi-article-num {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 0.84rem;
+      color: var(--pink);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .roi-article-title {
+      font-weight: 700;
+      color: var(--text-h);
+      font-size: 0.88rem;
+      margin-bottom: 0.35rem;
+    }
+    .roi-article-text {
+      font-size: 0.83rem;
+      color: var(--text-body);
+      line-height: 1.6;
+    }
+    .roi-article-list {
+      margin: 0.4rem 0 0;
+      padding-left: 1.25rem;
+      font-size: 0.83rem;
+      color: var(--text-body);
+      line-height: 1.6;
+    }
+    .roi-article-list li {
+      margin-bottom: 0.25rem;
+    }
+
+    /* Alert Boxes inside ROI */
+    .roi-alert-danger {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-left: 4px solid #EF4444;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: #991B1B;
+      line-height: 1.5;
+      margin-top: 0.5rem;
+    }
+    .roi-alert-warning {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-left: 4px solid #F59E0B;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: #92400E;
+      line-height: 1.5;
+      margin-top: 0.5rem;
+    }
+    .roi-alert-info {
+      background: var(--pink-pale);
+      border: 1px solid var(--pink-blush);
+      border-left: 4px solid var(--pink);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: var(--text-h);
+      line-height: 1.5;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 767px) {
+      .roi-banner { padding: 1rem; }
+      .roi-sign-card { padding: 1rem; }
+      .roi-toc-card { position: static; max-height: none; }
+      .roi-toc-list { max-height: 200px; }
+      .roi-chapter-header, .roi-chapter-body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="memberHeaderContainer"></div>
+
+  <div class="layout-container">
+    <div id="memberSidebarContainer"></div>
+
+    <main>
+
+      <!-- EXECUTIVE LEGAL BANNER -->
+      <div class="roi-banner" style="background:linear-gradient(135deg, #FFFFFF 0%, #FFF5FA 100%); border:1.5px solid var(--pink-border); padding:1.5rem 1.75rem;">
+        <div class="roi-banner-left">
+          <div class="roi-banner-icon" style="width:50px; height:50px; background:linear-gradient(135deg,#E6007E,#C8006E); color:#FFF; box-shadow:0 4px 14px rgba(230,0,126,0.25);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
+              <h1 style="font-size:1.25rem; font-weight:900; color:var(--text-h); margin:0;">
+                Règlement d'Ordre Intérieur (R.O.I)
+              </h1>
+              <span style="font-size:0.68rem; font-weight:800; color:#166534; background:#DCFCE7; border:1px solid #BBF7D0; padding:0.2rem 0.55rem; border-radius:4px;">
+                Dépôt Légal Ministère du Travail RDC
+              </span>
+              <span style="font-size:0.68rem; font-weight:700; color:#475569; background:#F1F5F9; border:1px solid #E2E8F0; padding:0.2rem 0.55rem; border-radius:4px;">
+                Réf : R.O.I / JBF / 2026-REV-04
+              </span>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-body); line-height:1.45; margin:0;">
+              Cadre juridique, éthique, obligations professionnelles et règles de sécurité applicables à l'ensemble du personnel de <strong>JBF SERVICES S.A.R.L</strong> conformément au Code du Travail de la RDC.
+            </p>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="downloadRoiPdf()" style="box-shadow:0 4px 14px rgba(230,0,126,0.3);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:0.35rem;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Télécharger le R.O.I Officiel (PDF)
+          </button>
+        </div>
+      </div>
+
+      <!-- COLLABORATOR ACKNOWLEDGMENT / CERTIFICAT D'ÉMARGEMENT -->
+      <div class="roi-sign-card" style="background:#FFFFFF; border:1.5px solid #E2E8F0; padding:1.15rem 1.5rem;">
+        <div class="roi-sign-info">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            R.O.I Lu et Approuvé
+          </span>
+        </div>
+      </div>
+
+      <!-- SEARCH BAR -->
+      <div class="roi-search-box" style="margin-bottom:1.25rem;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="roiSearchInput" class="roi-search-input" placeholder="Rechercher un article, un mot-clé (ex: EPI, retard, congés, secret professionnel, sanctions)..." oninput="filterRoiArticles()">
+        <span id="roiSearchResultCount" style="font-size:0.75rem; color:var(--text-light); white-space:nowrap;">42 articles</span>
+      </div>
+
+      <!-- ROI MAIN LAYOUT -->
+      <div class="roi-layout">
+
+        <!-- TABLE OF CONTENTS (TOC) -->
+        <aside class="roi-toc-card">
+          <div class="roi-toc-title">
+            <span>Sommaire</span>
+            <span style="font-size:0.7rem; font-weight:700; color:var(--pink);">10 Chapitres</span>
+          </div>
+          <ul class="roi-toc-list" id="roiTocList">
+            <li class="roi-toc-item"><a href="#chap1" class="active"><span class="roi-toc-num">01.</span> Dispositions Générales</a></li>
+            <li class="roi-toc-item"><a href="#chap2"><span class="roi-toc-num">02.</span> Recrutement &amp; Affectation</a></li>
+            <li class="roi-toc-item"><a href="#chap3"><span class="roi-toc-num">03.</span> Horaires &amp; Modalités Terrain</a></li>
+            <li class="roi-toc-item"><a href="#chap4"><span class="roi-toc-num">04.</span> Hygiène, Sécurité &amp; HSE</a></li>
+            <li class="roi-toc-item"><a href="#chap5"><span class="roi-toc-num">05.</span> Obligations &amp; Déontologie</a></li>
+            <li class="roi-toc-item"><a href="#chap6"><span class="roi-toc-num">06.</span> Matériels &amp; Équipements EPI</a></li>
+            <li class="roi-toc-item"><a href="#chap7"><span class="roi-toc-num">07.</span> Absences, Permissions &amp; Congés</a></li>
+            <li class="roi-toc-item"><a href="#chap8"><span class="roi-toc-num">08.</span> Rémunération &amp; Avantages</a></li>
+            <li class="roi-toc-item"><a href="#chap9"><span class="roi-toc-num">09.</span> Discipline &amp; Sanctions</a></li>
+            <li class="roi-toc-item"><a href="#chap10"><span class="roi-toc-num">10.</span> Dispositions Finales</a></li>
+          </ul>
+        </aside>
+
+        <!-- ARTICLES CONTENT -->
+        <div class="roi-content" id="roiContentArea">
+
+          <!-- CHAPITRE I -->
+          <section class="roi-chapter-card" id="chap1">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre I</span>
+                <div class="roi-chapter-title">Dispositions Générales &amp; Champ d'Application</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 1 &middot; Objet et Champ d'Application</div>
+                <div class="roi-article-text">
+                  Le présent Règlement d'Ordre Intérieur fixe l'organisation générale du travail, les règles de discipline, les normes d'hygiène et de sécurité, ainsi que les droits et obligations réciproques de la société <strong>JBF SERVICES SARL</strong> et de l'ensemble de ses collaborateurs. Il s'applique de plein droit à tous les employés, qu'ils soient sous contrat à durée déterminée (CDD), à durée indéterminée (CDI), stagiaires ou personnel de sous-traitance détaché sur sites clients et chantiers miniers.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 2 &middot; Adhésion Obligatoire</div>
+                <div class="roi-article-text">
+                  Tout collaborateur engagé par JBF SERVICES SARL reçoit un exemplaire numérique ou physique du présent règlement dès la signature de son contrat. Nul ne peut se prévaloir de l'ignorance des dispositions qui y sont contenues.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 3 &middot; Conformité Légale</div>
+                <div class="roi-article-text">
+                  Le présent règlement est établi en stricte conformité avec les dispositions du Code du Travail de la République Démocratique du Congo (Loi n° 015/2002 du 16 octobre 2002 telle que modifiée) et les conventions collectives applicables aux secteurs des services, de l'industrie et de la sous-traitance minière.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE II -->
+          <section class="roi-chapter-card" id="chap2">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre II</span>
+                <div class="roi-chapter-title">Recrutement, Période d'Essai &amp; Affectation aux Pôles Métiers</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 4 &middot; Conditions d'Engagement</div>
+                <div class="roi-article-text">
+                  L'engagement d'un collaborateur est subordonné à la présentation d'un dossier complet (pièce d'identité valide, attestations de qualification, extrait de casier judiciaire, certificat d'aptitude médicale) et à la réussite des tests d'aptitude technique et sécuritaire requis pour le poste.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 5 &middot; Période d'Essai</div>
+                <div class="roi-article-text">
+                  Tout engagement peut être précédé d'une période d'essai stipulée par écrit. Durant cette période, chacune des parties peut rompre le contrat conformément aux dispositions du Code du Travail, sans indemnité sous réserve du respect du préavis légal.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 6 &middot; Affectation aux 15 Sections Officielles</div>
+                <div class="roi-article-text">
+                  Chaque collaborateur est formellement affecté à l'un des 15 pôles de sous-traitance et de prestations de JBF SERVICES (Mines, BTP, Maintenance, Soudure, RH, Alimentaire, Transport, Sécurité, etc.). L'employé peut faire l'objet de mobilités temporaires ou de détachements opérationnels selon les exigences des contrats clients.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE III -->
+          <section class="roi-chapter-card" id="chap3">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre III</span>
+                <div class="roi-chapter-title">Horaires, Organisation du Travail &amp; Modalités Terrain</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 7 &middot; Durée Légale &amp; Horaires de Travail</div>
+                <div class="roi-article-text">
+                  La durée légale du travail est fixée à 45 heures par semaine pour les régimes normaux. Pour les équipes opérationnelles détachées sur sites miniers ou industriels fonctionnant en continu, des régimes de rotation (shifts de jour/nuit) ou de travail posté sont appliqués selon les plannings émis par la Direction des Opérations.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 8 &middot; Ponctualité &amp; Présence aux Briefings</div>
+                <div class="roi-article-text">
+                  La ponctualité est impérative. Les collaborateurs de terrain doivent obligatoirement assister aux briefings sécuritaires quotidiens (Toolbox Talk / causeries de sécurité) avant la prise de poste effective.
+                </div>
+              </div>
+              <div class="roi-alert-warning">
+                <strong>Règle Opérationnelle :</strong> Tout retard non justifié de plus de 15 minutes perturbe la relève des équipes et fait l'objet d'un signalement au Superviseur de pôle.
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE IV -->
+          <section class="roi-chapter-card" id="chap4">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre IV</span>
+                <div class="roi-chapter-title">Hygiène, Sécurité au Travail &amp; Normes HSE</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 9 &middot; Engagement Zéro Accident</div>
+                <div class="roi-article-text">
+                  JBF SERVICES applique une politique stricte de sécurité « Zéro Accident ». Chaque collaborateur est acteur de sa propre sécurité et de celle de ses collègues. Il a l'obligation de respecter scrupuleusement les consignes de sécurité, les balisages de chantier et les procédures d'urgence.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 10 &middot; Port Obligatoire des EPI</div>
+                <div class="roi-article-text">
+                  Le port des Équipements de Protection Individuelle (EPI) est obligatoire sur tous les chantiers, ateliers et sites clients sans exception :
+                  <ul class="roi-article-list">
+                    <li>Casque de protection avec jugulaire ;</li>
+                    <li>Chaussures de sécurité coquées aux normes minières ;</li>
+                    <li>Gilet haute visibilité fluorescent ;</li>
+                    <li>Lunettes de protection et protections auditives sur zones bruyantes ;</li>
+                    <li>Gants adaptés à la manipulation technique ou mécanique.</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 11 &middot; Droit de Retrait &amp; Alerte Danger Immédiat</div>
+                <div class="roi-article-text">
+                  Tout travailleur ayant un motif raisonnable de penser qu'une situation de travail présente un danger grave et imminent pour sa vie ou sa santé a le devoir d'alerter immédiatement son superviseur et d'exercer son droit de retrait dans l'attente de la mise en sécurité de la zone.
+                </div>
+              </div>
+              <div class="roi-alert-danger">
+                <strong>Tolérance Zéro — Alcool &amp; Stupéfiants :</strong> L'introduction, la détention ou la consommation d'alcool, de drogues ou de substances illicites sur les lieux de travail et chantiers est strictement interdite. Tout état d'ébriété entraîne une exclusion immédiate du site et une faute lourde.
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE V -->
+          <section class="roi-chapter-card" id="chap5">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre V</span>
+                <div class="roi-chapter-title">Obligations Professionnelles, Déontologie &amp; Confidentialité</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 12 &middot; Devoir de Loyauté &amp; Secret Professionnel</div>
+                <div class="roi-article-text">
+                  Tout collaborateur est tenu au secret professionnel absolu concernant les méthodes de travail, les données techniques, les contrats commerciaux et les informations confidentielles de JBF SERVICES et de ses clients partenaires.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 13 &middot; Intégrité &amp; Lutte Contre la Corruption</div>
+                <div class="roi-article-text">
+                  Il est formellement interdit de solliciter, d'accepter ou de verser des pots-de-vin, gratifications ou avantages indus dans l'exercice de ses fonctions. Tout acte de corruption avéré entraîne des poursuites disciplinaires et pénales.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 14 &middot; Respect Mutuel &amp; Non-Discrimination</div>
+                <div class="roi-article-text">
+                  JBF SERVICES garantit un environnement de travail exempt de toute discrimination fondée sur l'origine, le genre, la religion, l'ethnie ou le statut social. Le harcèlement sous toutes ses formes (moral, sexuel, verbal) est formellement proscrit.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE VI -->
+          <section class="roi-chapter-card" id="chap6">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre VI</span>
+                <div class="roi-chapter-title">Utilisation du Matériel, Véhicules &amp; Équipements de l'Entreprise</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 15 &middot; Conservation &amp; Entretien du Matériel</div>
+                <div class="roi-article-text">
+                  Les outillages, engins, véhicules, téléphones professionnels et équipements informatiques confiés aux collaborateurs doivent être maintenus en parfait état de fonctionnement et utilisés exclusivement pour les besoins du service.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 16 &middot; Conduite des Engins &amp; Véhicules de Service</div>
+                <div class="roi-article-text">
+                  La conduite des véhicules et engins de l'entreprise est réservée aux titulaires de permis de conduire valides et d'autorisations de conduite interne (permis minier de site). Le respect du code de la route et des limitations de vitesse sur site minier est impératif.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE VII -->
+          <section class="roi-chapter-card" id="chap7">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre VII</span>
+                <div class="roi-chapter-title">Absences, Permissions, Congés &amp; Maladie</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 17 &middot; Justification des Absences</div>
+                <div class="roi-article-text">
+                  Toute absence imprévisible doit être signalée au supérieur hiérarchique dans les 24 heures et justifiée par un certificat médical ou une pièce probante dans un délai maximum de 48 heures.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 18 &middot; Demandes de Congés Payés</div>
+                <div class="roi-article-text">
+                  Les congés payés s'acquièrent à raison des dispositions légales en vigueur. Toute demande de congé doit être soumise via l'intranet collaborateur au moins 15 jours ouvrables avant la date de départ souhaitée, pour validation par la Direction RH et la Direction des Opérations.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE VIII -->
+          <section class="roi-chapter-card" id="chap8">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre VIII</span>
+                <div class="roi-chapter-title">Rémunération, Primes de Risque &amp; Avantages Sociaux</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 19 &middot; Paiement des Salaires</div>
+                <div class="roi-article-text">
+                  Le salaire est versé mensuellement par virement bancaire ou mobile money officiel, accompagné d'un bulletin de paie détaillé mentionnant l'ensemble des éléments de rémunération et cotisations sociales légales (CNSS, IPR, ONEM).
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 20 &middot; Primes Spécifiques Terrain &amp; Risque</div>
+                <div class="roi-article-text">
+                  Des primes d'éloignement, de pénibilité ou de risque minier sont attribuées selon les grilles de rémunération de chaque section métier et les conditions effectives de détachement sur site.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE IX -->
+          <section class="roi-chapter-card" id="chap9">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre IX</span>
+                <div class="roi-chapter-title">Discipline, Fautes Professionnelles &amp; Échelle des Sanctions</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 21 &middot; Échelle des Sanctions Disciplinaires</div>
+                <div class="roi-article-text">
+                  Tout manquement aux obligations professionnelles expose son auteur à l'une des sanctions suivantes, graduée selon la gravité de la faute et les antécédents disciplinaires :
+                  <ul class="roi-article-list">
+                    <li>1. Avertissement verbal notifié ;</li>
+                    <li>2. Blâme écrit avec inscription au dossier ;</li>
+                    <li>3. Mise à pied disciplinaire temporaire sans solde (1 à 7 jours) ;</li>
+                    <li>4. Licenciement pour faute avec préavis ;</li>
+                    <li>5. Licenciement immédiat pour faute lourde sans préavis ni indemnités.</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 22 &middot; Exemples de Fautes Lourdes</div>
+                <div class="roi-article-text">
+                  Sont notamment qualifiés de fautes lourdes :
+                  <ul class="roi-article-list">
+                    <li>Le refus délibéré et réitéré d'exécuter les consignes de travail ou de sécurité ;</li>
+                    <li>Le non-port flagrant des EPI sur zone à risque ou zone minière active ;</li>
+                    <li>Le vol, la dégradation volontaire ou le détournement de biens de l'entreprise ou des clients ;</li>
+                    <li>L'état d'ébriété ou l'usage de stupéfiants sur le lieu de travail ;</li>
+                    <li>Les voies de fait, rixes, menaces ou insultes graves envers des collègues ou clients ;</li>
+                    <li>La divulgation de secrets de fabrication, techniques ou commerciaux.</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 23 &middot; Procédure Disciplinaire &amp; Droits de la Défense</div>
+                <div class="roi-article-text">
+                  Aucune sanction ne peut être infligée sans que le collaborateur ait été préalablement invité à un entretien d'explication ou ait reçu une demande d'explications écrites à laquelle il dispose de 48 heures pour répondre. Le collaborateur peut se faire assister par un délégué du personnel.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPITRE X -->
+          <section class="roi-chapter-card" id="chap10">
+            <div class="roi-chapter-header">
+              <div>
+                <span class="roi-chapter-tag">Chapitre X</span>
+                <div class="roi-chapter-title">Dispositions Finales &amp; Entrée en Vigueur</div>
+              </div>
+            </div>
+            <div class="roi-chapter-body">
+              <div class="roi-article">
+                <div class="roi-article-num">Article 24 &middot; Délégués Syndicaux &amp; Représentation du Personnel</div>
+                <div class="roi-article-text">
+                  La représentation des travailleurs est assurée par la délégation syndicale conformément aux dispositions du Code du Travail. Les délégués sont les interlocuteurs privilégiés de la Direction pour toute question relative aux conditions de travail et à l'application du présent règlement.
+                </div>
+              </div>
+              <div class="roi-article">
+                <div class="roi-article-num">Article 25 &middot; Date d'Effet &amp; Modifications</div>
+                <div class="roi-article-text">
+                  Le présent Règlement d'Ordre Intérieur entre en vigueur dès sa publication et son dépôt légal auprès de l'Inspection Générale du Travail. Toute modification ultérieure fera l'objet d'une consultation de la délégation syndicale et d'une communication officielle à l'ensemble du personnel.
+                </div>
+              </div>
+              <div class="roi-alert-info">
+                <strong>Fait à Lubumbashi, République Démocratique du Congo</strong><br>
+                Direction Générale &amp; Direction des Ressources Humaines — JBF SERVICES SARL
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    let currentProfile = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavigation('roi');
+      currentProfile = await initMemberSession();
+
+      if (currentProfile) {
+        document.getElementById('memberMatriculeDisplay').textContent = currentProfile.matricule || 'JBF-EMP-007';
+        checkSignStatus();
+      }
+
+      setupTocScrollSpy();
+    });
+
+    function checkSignStatus() {
+      const storageKey = `jbf_roi_acknowledged_${currentProfile ? currentProfile.id : 'demo'}`;
+      const isSigned = localStorage.getItem(storageKey);
+      const container = document.getElementById('acknowledgmentStatusContainer');
+
+      if (isSigned) {
+        const dateStr = localStorage.getItem(`${storageKey}_date`) || 'Session Active';
+        container.innerHTML = `
+          <span class="roi-sign-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            R.O.I Lu et Approuvé (${dateStr})
+          </span>
+        `;
+      } else {
+        container.innerHTML = `
+          <button class="btn btn-primary btn-sm" onclick="signRoiAcknowledgment()" style="font-size:0.75rem; padding:0.35rem 0.85rem;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:0.3rem;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            J'atteste avoir pris connaissance du R.O.I
+          </button>
+        `;
+      }
+    }
+
+    function signRoiAcknowledgment() {
+      const storageKey = `jbf_roi_acknowledged_${currentProfile ? currentProfile.id : 'demo'}`;
+      const todayStr = new Date().toLocaleDateString('fr-FR');
+      localStorage.setItem(storageKey, 'true');
+      localStorage.setItem(`${storageKey}_date`, todayStr);
+      checkSignStatus();
+      alert("Votre émargement du Règlement d'Ordre Intérieur (R.O.I) a été validé et enregistré sur votre compte collaborateur.");
+    }
+
+    function filterRoiArticles() {
+      const query = document.getElementById('roiSearchInput').value.toLowerCase().trim();
+      const articles = document.querySelectorAll('.roi-article, .roi-alert-danger, .roi-alert-warning, .roi-alert-info');
+      const chapters = document.querySelectorAll('.roi-chapter-card');
+      let visibleCount = 0;
+
+      if (!query) {
+        articles.forEach(a => a.style.display = '');
+        chapters.forEach(c => c.style.display = '');
+        document.getElementById('roiSearchResultCount').textContent = "42 articles";
+        return;
+      }
+
+      chapters.forEach(ch => {
+        let hasMatch = false;
+        const chArticles = ch.querySelectorAll('.roi-article, .roi-alert-danger, .roi-alert-warning, .roi-alert-info');
+        chArticles.forEach(a => {
+          const txt = a.textContent.toLowerCase();
+          if (txt.includes(query)) {
+            a.style.display = '';
+            hasMatch = true;
+            visibleCount++;
+          } else {
+            a.style.display = 'none';
+          }
+        });
+        ch.style.display = hasMatch ? '' : 'none';
+      });
+
+      document.getElementById('roiSearchResultCount').textContent = `${visibleCount} résultat(s)`;
+    }
+
+    function setupTocScrollSpy() {
+      const links = document.querySelectorAll('#roiTocList a');
+      const sections = document.querySelectorAll('.roi-chapter-card');
+
+      window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(sec => {
+          const top = sec.offsetTop - 120;
+          if (window.scrollY >= top) {
+            current = sec.getAttribute('id');
+          }
+        });
+
+        links.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    }
+
+    function downloadRoiPdf() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      doc.setFillColor(230, 0, 126);
+      doc.rect(0, 0, 595, 45, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text("JBF SERVICES SARL — RÈGLEMENT D'ORDRE INTÉRIEUR (R.O.I)", 40, 28);
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(16);
+      doc.text('DOCUMENT OFFICIEL RÉGLEMENTAIRE', 40, 80);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text("Édition 2026 — Applicable à l'ensemble des 15 Pôles Métiers et Chantiers Miniers", 40, 98);
+      doc.text(`Collaborateur : ${currentProfile ? currentProfile.full_name : 'Collaborateur'} (${currentProfile ? currentProfile.matricule : 'JBF-EMP-007'})`, 40, 113);
+      doc.text(`Pôle d'Affectation : Section ${currentProfile ? currentProfile.section_id : 4} — ${currentProfile ? currentProfile.section_nom : 'Prestations Minières'}`, 40, 128);
+
+      doc.setDrawColor(226, 232, 240);
+      doc.line(40, 140, 555, 140);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(230, 0, 126);
+      doc.text("1. CHAMP D'APPLICATION & ADHÉSION OBLIGATOIRE", 40, 165);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 41, 59);
+      const p1 = "Le présent Règlement d'Ordre Intérieur fixe l'organisation générale du travail, les règles de discipline, les normes d'hygiène et de sécurité, ainsi que les droits et obligations réciproques de la société JBF SERVICES SARL et de l'ensemble de ses collaborateurs. Il s'applique de plein droit sur tous les chantiers et sites clients.";
+      doc.text(doc.splitTextToSize(p1, 515), 40, 182);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(230, 0, 126);
+      doc.text("2. SÉCURITÉ, HYGIÈNE & NORMES HSE (TOLÉRANCE ZÉRO)", 40, 235);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 41, 59);
+      const p2 = "Le port des Équipements de Protection Individuelle (EPI complets : casque, chaussures coquées, gilet fluorescent, lunettes, protections auditives) est strictement obligatoire. L'introduction ou la consommation d'alcool et de stupéfiants est formellement proscrite et constitue une faute lourde avec exclusion immédiate.";
+      doc.text(doc.splitTextToSize(p2, 515), 40, 252);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(230, 0, 126);
+      doc.text("3. OBLIGATIONS PROFESSIONNELLES & SECRET DE FABRICATION", 40, 305);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 41, 59);
+      const p3 = "Chaque collaborateur est tenu à une obligation stricte de discrétion et de secret professionnel concernant les données, procédés techniques et contrats de l'entreprise et de ses clients. Tout acte de corruption ou tentative de fraude entraîne un licenciement immédiat et des poursuites pénales.";
+      doc.text(doc.splitTextToSize(p3, 515), 40, 322);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(230, 0, 126);
+      doc.text("4. ÉCHELLE DES SANCTIONS DISCIPLINAIRES", 40, 375);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(30, 41, 59);
+      const p4 = "1. Avertissement verbal notifié | 2. Blâme écrit | 3. Mise à pied disciplinaire (1 à 7 jours) | 4. Licenciement avec préavis | 5. Licenciement pour faute lourde sans préavis ni indemnités. Toute sanction respecte les droits de la défense avec demande d'explications sous 48h.";
+      doc.text(doc.splitTextToSize(p4, 515), 40, 392);
+
+      doc.setDrawColor(226, 232, 240);
+      doc.line(40, 720, 555, 720);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text("JBF SERVICES SARL • Lubumbashi, République Démocratique du Congo • Document authentifié & archivé sur l'intranet", 40, 735);
+      doc.text("Direction des Ressources Humaines & Secrétariat Général", 40, 747);
+
+      doc.save("JBF_Reglement_Ordre_Interieur_ROI.pdf");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de Bord Entreprise — JBF Client</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/client.css">
+  <!-- Chart.js 4 Enterprise UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="client-layout">
+  <!-- SIDEBAR CLIENT BLANCHE -->
+  <aside class="client-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;">
+      </div>
+      <div class="brand-text">
+        <h2>JBF CLIENT</h2>
+        <span>Espace Partenaire RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Compte</div>
+      <a href="dashboard.html" class="nav-item active">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de Bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Mes Devis & Commandes</span>
+        <span class="badge" id="badgeDevisClient">2</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Suivi des Chantiers</span>
+        <span class="badge" id="badgeMissionsClient">1</span>
+      </a>
+
+      <div class="nav-section-title">Comptabilité & Documents</div>
+      <a href="factures.html" class="nav-item">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Factures & Devis Validés</span>
+      </a>
+
+      <div class="nav-section-title">Relation Client</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service Client & Support</span>
+        <span class="badge" id="badgeSupportClient" style="background: var(--whatsapp-subtle); color: #075E54;">WhatsApp</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Mes Évaluations</span>
+      </a>
+
+      <div class="nav-section-title">Configuration</div>
+      <a href="profil.html" class="nav-item">
+        <i class="bi bi-building"></i>
+        <span>Profil Entreprise</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="client-user-pill">
+        <div class="user-avatar" id="clientUserAvatar">CL</div>
+        <div class="user-info">
+          <div class="name" id="clientCompanyName">Mon Entreprise</div>
+          <div class="role" id="clientUserName">Responsable Client</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.clientCore.logoutClient()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="client-main">
+    <!-- TOPBAR -->
+    <header class="client-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="page-title">
+          <h1>Tableau de Bord & Supervision des Services JBF</h1>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="period-selector">
+          <button class="period-btn" onclick="setClientPeriod('7d', this)">7 Jours</button>
+          <button class="period-btn active" onclick="setClientPeriod('30d', this)">30 Jours</button>
+          <button class="period-btn" onclick="setClientPeriod('year', this)">Année 2026</button>
+        </div>
+        <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Demande de renseignements / Devis direct')">
+          <i class="bi bi-whatsapp"></i> <span>Assistance WhatsApp</span>
+        </button>
+        <button class="btn btn-primary btn-sm btn-devis-mobile" onclick="openNewOrderModal()" title="Demander un Devis">
+          <i class="bi bi-plus-lg"></i> <span>Demander un Devis</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="client-content">
+
+
+      <!-- KPI METRICS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Devis en Traitement</h3>
+            <div class="kpi-value" id="kpiDevisTotal">0</div>
+            <div class="kpi-sub" id="kpiDevisSub">0 Validé • 0 En étude</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-compass"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Chantiers & Missions</h3>
+            <div class="kpi-value" id="kpiMissionsActives">0</div>
+            <div class="kpi-sub" id="kpiMissionsSub">Aucun chantier actif</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-receipt"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Factures Émises</h3>
+            <div class="kpi-value" id="kpiFacturesTotal">0</div>
+            <div class="kpi-sub" id="kpiFacturesSub">0 facture émise</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-headset"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Tickets Support</h3>
+            <div class="kpi-value" id="kpiTicketsSupport">0</div>
+            <div class="kpi-sub">Lien direct WhatsApp actif</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION GRAPHIQUES 1 : DÉPENSES & PÔLES D'ACTIVITÉ -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;" id="clientMainChartsGrid">
+        
+        <!-- GRAPHIQUE 1 : ÉVOLUTION DES PRESTATIONS & DÉPENSES ENGAGÉES (USD) -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <h2><i class="bi bi-graph-up-arrow"></i> Volume des Prestations & Budget Facturé (USD)</h2>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="badge-status valide" id="chartExpensesPeriodLabel">Période Mensuelle</span>
+              <div class="period-selector mobile-chart-period-selector" style="display: none;">
+                <button class="period-btn" onclick="setClientPeriod('7d', this)">7j</button>
+                <button class="period-btn active" onclick="setClientPeriod('30d', this)">30j</button>
+                <button class="period-btn" onclick="setClientPeriod('year', this)">Année</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chartClientExpenses"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Total Facturé 2026</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);" id="statClientTotalBudget">$0 USD</div>
+              </div>
+              <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Factures Acquittées</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #059669;" id="statClientPaidPct">0%</div>
+              </div>
+              <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Délai Moyen Mobilisation</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--brand-pink);">24h chrono</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUE 2 : RÉPARTITION PAR DOMAINE D'ACTIVITÉ (DOUGHNUT) -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-pie-chart-fill"></i> Pôles Contractés</h2>
+            <span class="badge-status nouveau">15 Métiers</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container-sm">
+              <canvas id="chartClientSectors"></canvas>
+            </div>
+            <div class="legend-custom" id="clientSectorsLegend">
+              <!-- Injecté dynamiquement -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION GRAPHIQUES 2 : RESPECT SLA & CYCLE DES COMMANDES -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;" id="clientSubChartsGrid">
+        
+        <!-- GRAPHIQUE 3 : RESPECT DES DÉLAIS SLA PAR CHANTIER RDC -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-speedometer2"></i> Respect des Délais d'Intervention & SLA</h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Jours réels vs Objectif SLA</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chartClientSLA"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUE 4 : CYCLE DE VIE DES DEMANDES & MISSIONS -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2><i class="bi bi-funnel-fill"></i> Cycle de Vie de vos Prestations</h2>
+            <span class="badge-status valide">Temps Réel</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container-sm">
+              <canvas id="chartClientPipeline"></canvas>
+            </div>
+            <div class="legend-custom" id="clientPipelineLegend">
+              <!-- Injecté dynamiquement -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TABLEAU 1 : MES DERNIERS DEVIS -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-file-earmark-check"></i> Mes Dernières Demandes de Devis</h2>
+          <a href="devis.html" class="btn btn-secondary btn-sm">Voir tous mes devis</a>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="client-table table-devis-client">
+              <thead>
+                <tr>
+                  <th>Référence Devis</th>
+                  <th>Prestation Demandée</th>
+                  <th>Site d'Exécution</th>
+                  <th>Date Soumission</th>
+                  <th>Statut Proposition</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardDevisBody">
+                <tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement de vos devis...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU 2 : CHANTIERS & MISSIONS EN DIRECT -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-geo-alt-fill"></i> Missions & Interventions en Cours pour Votre Société</h2>
+          <a href="missions.html" class="btn btn-secondary btn-sm">Suivi détaillé</a>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="client-table table-missions-client">
+              <thead>
+                <tr>
+                  <th>Ordre de Mission</th>
+                  <th>Prestation Concernée</th>
+                  <th>Localité / Chantier</th>
+                  <th>Chef d'Équipe JBF</th>
+                  <th>Avancement</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Contact Direct</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardMissionsBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement de vos chantiers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODALE NOUVELLE DEMANDE DE DEVIS -->
+<div class="modal-overlay" id="newOrderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-plus-circle" style="color: var(--brand-pink);"></i> Demander une Nouvelle Prestation</h3>
+      <button class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newOrderModal')">&times;</button>
+    </div>
+    <form onsubmit="handleCreateOrder(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Sélectionnez le Domaine d'Activité JBF *</label>
+          <select id="orderServiceSelect" class="form-control" required>
+            <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
+            <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
+            <option value="BTP, Génie Civil & Construction">3. BTP, Génie Civil & Construction</option>
+            <option value="Maintenance Industrielle & Soudure">4. Maintenance Industrielle & Soudure</option>
+            <option value="Gardiennage & Sécurité Physique">5. Gardiennage, Sécurité Physique & Surveillance</option>
+            <option value="Nettoyage Industriel & Housekeeping">6. Nettoyage Industriel & Housekeeping</option>
+            <option value="Transport Personnel & Location Engins">7. Transport du Personnel & Location d'Engins</option>
+            <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
+            <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
+            <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
+            <option value="Gestion des Déchets & Assainissement">11. Gestion des Déchets & Assainissement</option>
+            <option value="Audit HSE & Contrôle Qualité">12. Audit HSE & Contrôle Qualité</option>
+            <option value="Plomberie & Traitement des Eaux">13. Plomberie & Traitement des Eaux</option>
+            <option value="Fournitures Générales de Bureau">14. Fournitures Générales de Bureau</option>
+            <option value="Import-Export & Transit">15. Import-Export & Transit</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Site d'Intervention / Ville en RDC *</label>
+          <input type="text" id="orderSiteInput" class="form-control" placeholder="Ex: Lubumbashi, Kolwezi, Kinshasa, Likasi..." required>
+        </div>
+
+        <div class="form-group">
+          <label>Détails & Besoins Spécifiques</label>
+          <textarea id="orderDetailsInput" class="form-control" placeholder="Précisez le volume, la durée estimée, les exigences particulières..." rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newOrderModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send-fill"></i> Transmettre ma Demande</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/whatsapp-config.js"></script>
+<script src="js/whatsapp-auth.js"></script>
+<script src="js/client-core.js"></script>
+
+<script>
+  let clientExpensesChart = null;
+  let clientSectorsChart = null;
+  let clientSLAChart = null;
+  let clientPipelineChart = null;
+  let currentClientPeriod = '30d';
+  let supabaseClient = null;
+
+  function getSupabaseClient() {
+    if (supabaseClient) return supabaseClient;
+    if (window.supabase && window.JBF_CLIENT_CONFIG?.SUPABASE_URL) {
+      try {
+        supabaseClient = window.supabase.createClient(
+          window.JBF_CLIENT_CONFIG.SUPABASE_URL,
+          window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
+        );
+      } catch (e) {
+        console.warn('[Supabase Init]', e);
+      }
+    }
+    return supabaseClient;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initClientCharts();
+    loadDashboardTables();
+  });
+
+  function openNewOrderModal() {
+    window.clientCore.openModal('newOrderModal');
+  }
+
+  async function loadDashboardTables() {
+    const session = window.clientCore.getClientSession() || {};
+    const clientEmail = (session.email || '').toLowerCase();
+    const clientName = session.companyName || session.name || '';
+
+    let devisList = [];
+    let missionsList = [];
+
+    // 1. Chargement dynamique depuis Supabase si connecté
+    const sb = getSupabaseClient();
+    if (sb && clientEmail) {
+      try {
+        const { data: dbDevis, error: errDevis } = await sb
+          .from('demandes_devis')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!errDevis && Array.isArray(dbDevis)) {
+          // Filtrer par email ou client
+          devisList = dbDevis.filter(d => 
+            (d.email && d.email.toLowerCase() === clientEmail) ||
+            (clientName && d.societe && d.societe.toLowerCase().includes(clientName.toLowerCase())) ||
+            (d.client_id && d.client_id === session.id)
+          );
+        }
+      } catch (e) {
+        console.warn('[Supabase Devis Query]', e);
+      }
+
+      try {
+        const { data: dbMissions, error: errMissions } = await sb
+          .from('missions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!errMissions && Array.isArray(dbMissions)) {
+          missionsList = dbMissions.filter(m => 
+            (clientName && m.client && m.client.toLowerCase().includes(clientName.toLowerCase())) ||
+            (m.assigned_to && m.assigned_to === session.id)
+          );
+        }
+      } catch (e) {
+        console.warn('[Supabase Missions Query]', e);
+      }
+    }
+
+    // Fallback stockage local si Supabase en attente ou hors ligne
+    try {
+      const storedDevis = localStorage.getItem('JBF_DEVIS_LOCAL');
+      if (storedDevis) {
+        const localList = JSON.parse(storedDevis);
+        // Ne garder que les devis du client courant
+        const filteredLocal = localList.filter(d => !d.email || d.email.toLowerCase() === clientEmail);
+        devisList = [...devisList, ...filteredLocal];
+      }
+    } catch (e) {}
+
+    // Déduplication par id
+    const seenDevis = new Set();
+    devisList = devisList.filter(d => {
+      const k = d.id || d.created_at;
+      if (seenDevis.has(k)) return false;
+      seenDevis.add(k);
+      return true;
+    });
+
+    // Mise à jour des compteurs KPIs réels
+    const totalDevis = devisList.length;
+    const validesDevis = devisList.filter(d => d.statut === 'valide' || d.statut === 'accepte').length;
+    const etudeDevis = devisList.filter(d => d.statut !== 'valide' && d.statut !== 'accepte').length;
+
+    const elKpiTotal = document.getElementById('kpiDevisTotal');
+    const elKpiSub = document.getElementById('kpiDevisSub');
+    if (elKpiTotal) elKpiTotal.textContent = totalDevis;
+    if (elKpiSub) elKpiSub.textContent = `${validesDevis} Validé(s) • ${etudeDevis} En étude`;
+
+    const elKpiMissions = document.getElementById('kpiMissionsActives');
+    const elKpiMissionsSub = document.getElementById('kpiMissionsSub');
+    const activesMissions = missionsList.filter(m => m.statut !== 'termine').length;
+    if (elKpiMissions) elKpiMissions.textContent = activesMissions;
+    if (elKpiMissionsSub) elKpiMissionsSub.textContent = activesMissions > 0 ? `${activesMissions} équipe(s) déployée(s)` : 'Aucun chantier actif';
+
+    // Rendu Table Devis
+    const devisBody = document.getElementById('dashboardDevisBody');
+    if (devisBody) {
+      if (devisList.length === 0) {
+        devisBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucune demande de devis enregistrée. <a href="devis.html" style="color: var(--brand-pink); font-weight: 600; text-decoration: none;">Initier un devis &rarr;</a></td></tr>';
+      } else {
+        devisBody.innerHTML = devisList.map(d => {
+          const dateStr = d.date || (d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR') : 'Récemment');
+          const serviceName = Array.isArray(d.services) ? d.services.join(', ') : (d.service || d.prestation || 'Prestation JBF');
+          const isValide = d.statut === 'valide' || d.statut === 'accepte';
+          return `
+            <tr>
+              <td><strong>#DEV-${(d.id || '').toString().slice(-4).toUpperCase()}</strong></td>
+              <td>${escapeHtml(serviceName)}</td>
+              <td>${escapeHtml(d.localite || d.site || 'RDC')}</td>
+              <td>${dateStr}</td>
+              <td><span class="badge-status ${isValide ? 'valide' : 'en_etude'}">${isValide ? 'Validé' : 'En étude'}</span></td>
+              <td style="text-align: right;">
+                <a href="devis.html" class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i> Consulter</a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // Rendu Table Missions
+    const missionsBody = document.getElementById('dashboardMissionsBody');
+    if (missionsBody) {
+      if (missionsList.length === 0) {
+        missionsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucun chantier actif pour le moment. Vos projets validés apparaîtront ici.</td></tr>';
+      } else {
+        missionsBody.innerHTML = missionsList.map(m => {
+          const pct = m.avancement || 0;
+          return `
+            <tr>
+              <td><strong>#MSN-${(m.id || '').toString().slice(-4).toUpperCase()}</strong></td>
+              <td>${escapeHtml(m.titre || m.service_nom || m.service || 'Intervention')}</td>
+              <td>${escapeHtml(m.site_intervention || m.site || 'RDC')}</td>
+              <td>${escapeHtml(m.chef || 'Superviseur JBF')}</td>
+              <td>
+                <div style="font-size: 0.75rem; margin-bottom: 2px;">${pct}% Réalisé</div>
+                <div style="background: #F1F5F9; height: 6px; border-radius: 3px; overflow: hidden;">
+                  <div style="background: var(--brand-pink); width: ${pct}%; height: 100%;"></div>
+                </div>
+              </td>
+              <td><span class="badge-status ${m.statut === 'termine' ? 'termine' : 'en_cours'}">${m.statut === 'termine' ? 'Terminé' : 'En Cours'}</span></td>
+              <td style="text-align: right;">
+                <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Question mission ${m.id}')">
+                  <i class="bi bi-whatsapp"></i> Chef d'Équipe
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function handleCreateOrder(e) {
+    e.preventDefault();
+    const service = document.getElementById('orderServiceSelect').value;
+    const site = document.getElementById('orderSiteInput').value;
+    const details = document.getElementById('orderDetailsInput')?.value || '';
+    const session = window.clientCore.getClientSession() || {};
+
+    const newDevis = {
+      id: 'dev-' + Date.now(),
+      service: service,
+      services: [service],
+      site: site,
+      localite: site,
+      message: details,
+      statut: 'en_etude',
+      email: (session.email || '').toLowerCase(),
+      nom: session.contactName || session.name || 'Client',
+      societe: session.companyName || '',
+      date: new Date().toLocaleDateString('fr-FR'),
+      created_at: new Date().toISOString()
+    };
+
+    // Insertion Supabase
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        await sb.from('demandes_devis').insert([{
+          nom: newDevis.nom,
+          societe: newDevis.societe,
+          telephone: session.phone || '',
+          email: newDevis.email,
+          services: [service],
+          localite: site,
+          message: details,
+          statut: 'nouveau'
+        }]);
+      } catch (err) {
+        console.warn('[Supabase Insert Devis]', err);
+      }
+    }
+
+    // Sauvegarde locale de réactivité immédiate
+    let devisList = [];
+    try {
+      const stored = localStorage.getItem('JBF_DEVIS_LOCAL');
+      if (stored) devisList = JSON.parse(stored);
+    } catch (e) {}
+    devisList.unshift(newDevis);
+    localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(devisList));
+
+    window.clientCore.closeModal('newOrderModal');
+    loadDashboardTables();
+    window.clientCore.showToast(`Demande de devis pour "${service}" enregistrée avec succès.`, 'success');
+  }
+
+  function initClientCharts() {
+    Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
+    Chart.defaults.color = '#64748B';
+
+    // 1. Chart Dépenses & Prestations (Area Line)
+    const ctxExp = document.getElementById('chartClientExpenses');
+    if (ctxExp) {
+      const gradPink = ctxExp.getContext('2d').createLinearGradient(0, 0, 0, 280);
+      gradPink.addColorStop(0, 'rgba(230, 0, 126, 0.28)');
+      gradPink.addColorStop(0.7, 'rgba(230, 0, 126, 0.04)');
+      gradPink.addColorStop(1, 'rgba(230, 0, 126, 0.0)');
+
+      const gradGreen = ctxExp.getContext('2d').createLinearGradient(0, 0, 0, 280);
+      gradGreen.addColorStop(0, 'rgba(5, 150, 105, 0.22)');
+      gradGreen.addColorStop(1, 'rgba(5, 150, 105, 0.0)');
+
+      clientExpensesChart = new Chart(ctxExp, {
+        type: 'line',
+        data: {
+          labels: ['Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept 2026'],
+          datasets: [
+            {
+              label: 'Prestations Engagées ($ USD)',
+              data: [18500, 24000, 29000, 26500, 38000, 42000, 39500, 48500],
+              borderColor: '#E6007E',
+              backgroundColor: gradPink,
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#FFFFFF',
+              pointBorderColor: '#E6007E',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Factures Validées & Réglées ($ USD)',
+              data: [18500, 24000, 28000, 26500, 35000, 41000, 37000, 45000],
+              borderColor: '#059669',
+              backgroundColor: gradGreen,
+              borderWidth: 2,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#FFFFFF',
+              pointBorderColor: '#059669',
+              pointBorderWidth: 2,
+              pointRadius: 3.5,
+              pointHoverRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11, weight: '600' } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  return ` ${c.dataset.label}: $${c.raw.toLocaleString()} USD`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: '#F1F5F9' },
+              ticks: {
+                callback: function(v) { return '$' + (v / 1000) + 'k'; },
+                font: { size: 10 }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Chart Pôles Contractés (Doughnut)
+    const ctxSectors = document.getElementById('chartClientSectors');
+    if (ctxSectors) {
+      const sectorsData = [
+        { label: 'Catering & Vivres', value: 45000, pct: 36, color: '#E6007E' },
+        { label: 'BTP & Maintenance', value: 32500, pct: 26, color: '#059669' },
+        { label: 'Sécurité & Gardiennage', value: 22500, pct: 18, color: '#2563EB' },
+        { label: 'Transport & Engins', value: 15000, pct: 12, color: '#D97706' },
+        { label: 'Télécoms & IT', value: 9500, pct: 8, color: '#8B5CF6' }
+      ];
+
+      clientSectorsChart = new Chart(ctxSectors, {
+        type: 'doughnut',
+        data: {
+          labels: sectorsData.map(d => d.label),
+          datasets: [{
+            data: sectorsData.map(d => d.pct),
+            backgroundColor: sectorsData.map(d => d.color),
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  const item = sectorsData[c.dataIndex];
+                  return ` ${item.label}: ${item.pct}% ($${item.value.toLocaleString()} USD)`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const legendBox = document.getElementById('clientSectorsLegend');
+      if (legendBox) {
+        legendBox.innerHTML = sectorsData.map(d => `
+          <div class="legend-item">
+            <div style="display: flex; align-items: center;">
+              <span class="legend-color" style="background: ${d.color};"></span>
+              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--text-secondary);">${d.pct}% ($${(d.value / 1000).toFixed(1)}k)</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 3. Chart Respect SLA par Chantier (Bar Chart)
+    const ctxSLA = document.getElementById('chartClientSLA');
+    if (ctxSLA) {
+      clientSLAChart = new Chart(ctxSLA, {
+        type: 'bar',
+        data: {
+          labels: ['Site Minier Katanga', 'Kolwezi Base', 'Lubumbashi Dépôt', 'Likasi Usine', 'Fungurume Hub'],
+          datasets: [
+            {
+              label: 'Délai Réalisé JBF (Jours)',
+              data: [1.2, 0.8, 1.0, 1.5, 1.1],
+              backgroundColor: '#E6007E',
+              borderRadius: 6
+            },
+            {
+              label: 'Objectif SLA Contractuel',
+              data: [2.0, 2.0, 2.0, 2.0, 2.0],
+              backgroundColor: '#CBD5E1',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11, weight: '600' } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(c) { return ` ${c.dataset.label}: ${c.raw} jour(s)`; }
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: '#F1F5F9' },
+              ticks: { callback: function(v) { return v + ' j'; }, font: { size: 10 } },
+              max: 2.5
+            },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // 4. Chart Cycle de Vie des Demandes (Doughnut Pipeline)
+    const ctxPipe = document.getElementById('chartClientPipeline');
+    if (ctxPipe) {
+      const pipeData = [
+        { label: 'Devis en Étude', count: 1, color: '#F59E0B' },
+        { label: 'Devis Validés', count: 2, color: '#059669' },
+        { label: 'Chantiers Actifs', count: 1, color: '#E6007E' },
+        { label: 'Missions Clôturées', count: 5, color: '#2563EB' }
+      ];
+
+      clientPipelineChart = new Chart(ctxPipe, {
+        type: 'doughnut',
+        data: {
+          labels: pipeData.map(d => d.label),
+          datasets: [{
+            data: pipeData.map(d => d.count),
+            backgroundColor: pipeData.map(d => d.color),
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  const item = pipeData[c.dataIndex];
+                  return ` ${item.label}: ${item.count} opération(s)`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const pipeLegend = document.getElementById('clientPipelineLegend');
+      if (pipeLegend) {
+        pipeLegend.innerHTML = pipeData.map(d => `
+          <div class="legend-item">
+            <div style="display: flex; align-items: center;">
+              <span class="legend-color" style="background: ${d.color};"></span>
+              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--text-secondary);">${d.count}</span>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  function setClientPeriod(period, btn) {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentClientPeriod = period;
+
+    const label = document.getElementById('chartExpensesPeriodLabel');
+    const budgetStat = document.getElementById('statClientTotalBudget');
+
+    if (period === '7d') {
+      if (label) label.textContent = '7 Derniers Jours';
+      if (budgetStat) budgetStat.textContent = '$14,200 USD';
+      if (clientExpensesChart) {
+        clientExpensesChart.data.labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        clientExpensesChart.data.datasets[0].data = [1200, 2400, 1800, 3100, 2800, 1900, 1000];
+        clientExpensesChart.data.datasets[1].data = [1200, 2200, 1800, 2900, 2800, 1800, 1000];
+        clientExpensesChart.update();
+      }
+    } else if (period === '30d') {
+      if (label) label.textContent = 'Période Mensuelle';
+      if (budgetStat) budgetStat.textContent = '$124,500 USD';
+      if (clientExpensesChart) {
+        clientExpensesChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
+        clientExpensesChart.data.datasets[0].data = [28500, 34000, 31000, 31000];
+        clientExpensesChart.data.datasets[1].data = [26000, 32500, 30500, 31000];
+        clientExpensesChart.update();
+      }
+    } else {
+      if (label) label.textContent = 'Cumul Année 2026';
+      if (budgetStat) budgetStat.textContent = '$285,000 USD';
+      if (clientExpensesChart) {
+        clientExpensesChart.data.labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept'];
+        clientExpensesChart.data.datasets[0].data = [16000, 18500, 24000, 29000, 26500, 38000, 42000, 39500, 48500];
+        clientExpensesChart.data.datasets[1].data = [15500, 18500, 24000, 28000, 26500, 35000, 41000, 37000, 45000];
+        clientExpensesChart.update();
+      }
+    }
+  }
+</script>
+
+</body>
+</html>

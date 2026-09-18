@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Entreprise & Paramètres — JBF Client</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/client.css">
+</head>
+<body>
+
+<div class="client-layout">
+  <aside class="client-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="brand-text">
+        <h2>JBF CLIENT</h2>
+        <span>Espace Partenaire RDC</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Compte</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de Bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Mes Devis & Commandes</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Suivi des Chantiers</span>
+      </a>
+      <div class="nav-section-title">Comptabilité & Documents</div>
+      <a href="factures.html" class="nav-item">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Factures & Devis Validés</span>
+      </a>
+      <div class="nav-section-title">Relation Client</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service Client & Support</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Mes Évaluations</span>
+      </a>
+      <div class="nav-section-title">Configuration</div>
+      <a href="profil.html" class="nav-item active">
+        <i class="bi bi-building"></i>
+        <span>Profil Entreprise</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="client-user-pill">
+        <div class="user-avatar client-user-avatar">CL</div>
+        <div class="user-info">
+          <div class="name client-company-name">Mon Entreprise</div>
+          <div class="role client-user-name">Responsable Client</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.clientCore.logoutClient()"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </aside>
+
+  <div class="client-main">
+    <header class="client-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title"><h1>Fiche Entreprise & Canaux de Contact WhatsApp</h1></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" onclick="window.clientCore.logoutClient()">
+          <i class="bi bi-box-arrow-right"></i> Déconnexion
+        </button>
+      </div>
+    </header>
+
+    <main class="client-content">
+      <div class="card" style="max-width: 760px;">
+        <div class="card-header">
+          <h2><i class="bi bi-building-gear"></i> Paramètres du Compte Partenaire</h2>
+        </div>
+        <div class="card-body">
+          <form onsubmit="handleSaveProfile(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label>Raison Sociale / Société *</label>
+                <input type="text" id="profCompanyName" class="form-control" placeholder="Ex: Société Minière" required>
+              </div>
+
+              <div class="form-group">
+                <label>Nom & Titre de l'Interlocuteur *</label>
+                <input type="text" id="profContactName" class="form-control" placeholder="Ex: Jean-Luc Mwamba (Directeur Logistique)" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label>Adresse Email Professionnelle *</label>
+                <input type="email" id="profEmail" class="form-control" placeholder="contact@entreprise.cd" required>
+              </div>
+
+              <div class="form-group">
+                <label>Numéro de Téléphone / WhatsApp *</label>
+                <input type="tel" id="profWhatsapp" class="form-control" placeholder="+243 810 000 000" required>
+                <small style="color: var(--text-muted); font-size: 0.72rem;">Ce numéro recevra vos alertes de suivi de devis et missions.</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Siège / Ville Principale en RDC *</label>
+              <input type="text" id="profCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi" required>
+            </div>
+
+            <div class="form-group">
+              <label>Secteur d'Activité Principal</label>
+              <input type="text" id="profSector" class="form-control" placeholder="Ex: Sous-Traitance Minière & Extraction">
+            </div>
+
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check2-circle"></i> Mettre à jour le Profil
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/whatsapp-config.js"></script>
+<script src="js/whatsapp-auth.js"></script>
+<script src="js/client-core.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const session = window.clientCore.getClientSession();
+    if (session) {
+      if (session.companyName) document.getElementById('profCompanyName').value = session.companyName;
+      if (session.contactName || session.name) document.getElementById('profContactName').value = session.contactName || session.name;
+      if (session.email) document.getElementById('profEmail').value = session.email;
+      if (session.whatsapp || session.phone) document.getElementById('profWhatsapp').value = session.whatsapp || session.phone;
+      if (session.city) document.getElementById('profCity').value = session.city;
+      if (session.sector) document.getElementById('profSector').value = session.sector;
+    }
+  });
+
+  async function handleSaveProfile(e) {
+    e.preventDefault();
+    const session = window.clientCore.getClientSession() || {};
+    session.companyName = document.getElementById('profCompanyName').value.trim();
+    session.contactName = document.getElementById('profContactName').value.trim();
+    session.name = session.contactName;
+    session.email = document.getElementById('profEmail').value.trim();
+    session.whatsapp = document.getElementById('profWhatsapp').value.trim();
+    session.phone = session.whatsapp;
+    session.city = document.getElementById('profCity').value.trim();
+    session.sector = document.getElementById('profSector').value.trim();
+    session.avatar = (session.companyName || session.name || 'CL').substring(0, 2).toUpperCase();
+
+    // Mise à jour Supabase si possible
+    if (window.supabase && window.JBF_CLIENT_CONFIG?.SUPABASE_URL && session.id) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CLIENT_CONFIG.SUPABASE_URL, window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY);
+        await sb.from('profiles').update({
+          full_name: session.contactName,
+          company: session.companyName,
+          city: session.city,
+          secteur: session.sector,
+          phone: session.whatsapp
+        }).eq('id', session.id);
+      } catch (err) {
+        console.warn('[Supabase Profile Update]', err);
+      }
+    }
+
+    window.clientCore.setClientSession(session);
+    window.clientCore.showToast('Profil et coordonnées mis à jour avec succès.', 'success');
+    setTimeout(() => location.reload(), 600);
+  }
+</script>
+
+</body>
+</html>

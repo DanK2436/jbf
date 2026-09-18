@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planification & Missions Terrain — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item active">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Missions & Interventions sur Sites</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openNewMissionModal()" title="Planifier une nouvelle mission">
+          <i class="bi bi-plus-lg"></i><span class="btn-label-desktop"> Planifier une Mission</span><span class="btn-label-mobile"> Planifier</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-compass"></i> Ordres de Mission Actifs (Mines, BTP, Catering, Logistique)</h2>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-primary btn-sm" onclick="openNewMissionModal()">
+              <i class="bi bi-plus-lg"></i> <span class="btn-label-desktop">Planifier une Mission</span><span class="btn-label-mobile">Planifier</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadMissionsList()">
+              <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          
+          <div class="table-controls">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="missionsSearchInput" placeholder="Rechercher par titre, client, site minier..." oninput="filterMissions()">
+            </div>
+            <div class="filter-group">
+              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Statut :</label>
+              <select class="filter-select" id="missionsStatusFilter" onchange="filterMissions()">
+                <option value="all">Tous les statuts</option>
+                <option value="en_cours">En cours</option>
+                <option value="planifiee">Planifiée</option>
+                <option value="termine">Terminée</option>
+              </select>
+            </div>
+          </div>
+
+
+          <!-- TABLE -->
+          <div class="table-responsive">
+            <table class="admin-table table-missions">
+              <thead>
+                <tr>
+                  <th>Intitulé Mission</th>
+                  <th>Client / Mandataire</th>
+                  <th>Site d'Intervention</th>
+                  <th>Pôle / Prestation</th>
+                  <th>Effectif Déployé</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="missionsTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des missions...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODALE CRÉATION DE MISSION -->
+<div class="modal-overlay" id="missionCreateModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="bi bi-plus-circle"></i> Planifier un Ordre de Mission</h3>
+      <button class="btn-modal-close" onclick="window.adminCore.closeModal('missionCreateModal')">&times;</button>
+    </div>
+    <form id="createMissionForm" onsubmit="handleCreateMission(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Intitulé de la Mission *</label>
+          <input type="text" id="newMissionTitre" class="form-control" placeholder="Ex: Maintenance Générateurs & Circuit Électrique" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label>Client Commanditaire *</label>
+            <input type="text" id="newMissionClient" class="form-control" placeholder="Ex: Kolwezi Mining Corp" required>
+          </div>
+          <div class="form-group">
+            <label>Site d'Intervention (Chantier / Concession) *</label>
+            <input type="text" id="newMissionSite" class="form-control" placeholder="Ex: Site Minier Lualaba" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label>Pôle Prestation</label>
+            <select id="newMissionService" class="form-control">
+              <option value="Services Miniers">Services Miniers</option>
+              <option value="Catering & Restauration">Catering & Restauration</option>
+              <option value="BTP & Construction">BTP & Construction</option>
+              <option value="Maintenance Industrielle">Maintenance Industrielle</option>
+              <option value="Logistique & Transport">Logistique & Transport</option>
+              <option value="Nettoyage Industriel">Nettoyage Industriel</option>
+              <option value="Gardiennage & Sécurité">Gardiennage & Sécurité</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date / Échéance d'Exécution</label>
+            <input type="date" id="newMissionDateFin" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Cahier des charges & Consignes de sécurité HSE</label>
+          <textarea id="newMissionDesc" class="form-control" placeholder="Détail des opérations et consignes de sécurité obligatoires..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Équipe / Agents Assignés</label>
+          <input type="text" id="newMissionAgents" class="form-control" placeholder="Ex: Alain T., Patrick K., Sarah M.">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="window.adminCore.closeModal('missionCreateModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Enregistrer la Mission</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let allMissions = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadMissionsList();
+  });
+
+  const DEMO_MISSIONS_DATA = [
+    {
+      id: 'mis-101',
+      titre: 'Maintenance Électromécanique Broyeurs & Concasseurs',
+      client: 'Tenke Fungurume Mining (TFM)',
+      site_intervention: 'Fungurume — Usine Kwatebala',
+      service: 'Maintenance Industrielle',
+      agents_assignes: ['Alain T. (Chef)', 'Patrick K.', 'Eric M.'],
+      statut: 'en_cours',
+      description: 'Révision générale des paliers et garnitures d\'étanchéité sur les broyeurs SAG. Consignes de cadenassage LOTO obligatoires.'
+    },
+    {
+      id: 'mis-102',
+      titre: 'Supervision & Contrôle Qualité Base-Vie',
+      client: 'Entreprise Partenaire Katanga',
+      site_intervention: 'Kolwezi — Base-Vie Chantier',
+      service: 'Catering & Restauration',
+      agents_assignes: ['Grace M. (Sup)', 'Sarah M.', 'Équipe Catering (6)'],
+      statut: 'en_cours',
+      description: 'Audit hygiène HACCP et supervision des services de restauration collective pour 350 personnes.'
+    },
+    {
+      id: 'mis-103',
+      titre: 'Coulage Radier & Fondations Transformateurs 110kV',
+      client: 'Kamoto Copper Company (KCC)',
+      site_intervention: 'Kolwezi — Sous-station Luilu',
+      service: 'BTP & Construction',
+      agents_assignes: ['Jonathan I. (Ingénieur)', 'Équipe Génie Civil (12)'],
+      statut: 'planifiee',
+      description: 'Coffrage et coulage de 180 m³ de béton armé B30 avec adjuvants hydrofuges selon plans d\'ingénierie.'
+    },
+    {
+      id: 'mis-104',
+      titre: 'Dispositif de Gardiennage & Contrôle Concession',
+      client: 'Société Minière de Bakwanga (MIBA)',
+      site_intervention: 'Mbuji-Mayi — Polygone Diamantifère',
+      service: 'Gardiennage & Sécurité',
+      agents_assignes: ['Eric M.', 'Poste Nord (8 agents)'],
+      statut: 'en_cours',
+      description: 'Surveillance périmétrique 24h/24, contrôle des accès et patrouilles véhiculées sur les axes sensibles.'
+    },
+    {
+      id: 'mis-105',
+      titre: 'Convoi Logistique & Transport Équipements Lourds',
+      client: 'Ruashi Mining SPRL',
+      site_intervention: 'Axe Lubumbashi — Likasi',
+      service: 'Logistique & Transport',
+      agents_assignes: ['Équipe Convois Exceptionnels (4)'],
+      statut: 'termine',
+      description: 'Acheminement sécurisé de transformateurs 40 tonnes avec véhicules d\'escorte et autorisation de voirie.'
+    },
+    {
+      id: 'mis-106',
+      titre: 'Pompage Eaux d\'Exhaure & Assainissement Fosse',
+      client: 'Mutanda Mining (MUMI)',
+      site_intervention: 'Kolwezi — Fosse Ouest',
+      service: 'Services Miniers',
+      agents_assignes: ['Patrick K.', 'Techniciens Pompage (3)'],
+      statut: 'termine',
+      description: 'Installation de motopompes submersibles haute pression pour l\'évacuation continue des venues d\'eau.'
+    }
+  ];
+
+  async function loadMissionsList() {
+    const tbody = document.getElementById('missionsTableBody');
+    try {
+      const res = await window.adminCore.apiFetch('/api/missions');
+      if (res.ok && res.data && res.data.missions && res.data.missions.length > 0) {
+        allMissions = res.data.missions;
+      } else {
+        allMissions = DEMO_MISSIONS_DATA;
+      }
+    } catch (e) {
+      allMissions = DEMO_MISSIONS_DATA;
+    }
+    renderMissionsTable(allMissions);
+  }
+
+  function renderMissionsTable(list) {
+    const tbody = document.getElementById('missionsTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucune mission enregistrée.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(m => {
+      const agentsStr = Array.isArray(m.agents_assignes) 
+        ? m.agents_assignes.join(', ') 
+        : (m.agents_assignes || 'Équipe Polyvalente (3 agents)');
+
+      return `
+        <tr>
+          <td data-label="Mission">
+            <strong style="color: var(--pink-deep); font-size: 0.95rem;">${m.titre}</strong>
+            <div style="font-size: 0.75rem; color: var(--gray-mid); margin-top: 2px;">${m.description || 'Intervention programmée'}</div>
+          </td>
+          <td data-label="Client / Mandataire"><strong>${m.client || 'Client JBF'}</strong></td>
+          <td data-label="Site d'Intervention"><i class="bi bi-geo-alt-fill" style="color: var(--pink);"></i> ${m.site_intervention || 'Lubumbashi'}</td>
+          <td data-label="Prestation"><span class="badge-status nouveau">${m.service || 'Prestation'}</span></td>
+          <td data-label="Effectif"><span style="font-size: 0.82rem; font-weight: 500;">${agentsStr}</span></td>
+          <td data-label="Statut">${window.adminCore.renderBadgeStatus(m.statut || 'en_cours')}</td>
+          <td data-label="Actions" style="text-align: right;">
+            <div class="table-actions" style="justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" onclick="toggleMissionStatut('${m.id}', '${m.statut || 'en_cours'}')" title="Changer de statut">
+                <i class="bi bi-arrow-repeat"></i> Statut
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteMission('${m.id}')" title="Supprimer">
+                <i class="bi bi-trash"></i> Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterMissions() {
+    const q = document.getElementById('missionsSearchInput').value.toLowerCase().trim();
+    const st = document.getElementById('missionsStatusFilter').value;
+
+    const filtered = allMissions.filter(m => {
+      const matchQuery = (m.titre && m.titre.toLowerCase().includes(q)) ||
+                         (m.client && m.client.toLowerCase().includes(q)) ||
+                         (m.site_intervention && m.site_intervention.toLowerCase().includes(q));
+      const matchStatus = (st === 'all' || (m.statut || 'en_cours') === st);
+      return matchQuery && matchStatus;
+    });
+
+    renderMissionsTable(filtered);
+  }
+
+  function openNewMissionModal() {
+    document.getElementById('createMissionForm').reset();
+    window.adminCore.openModal('missionCreateModal');
+  }
+
+  async function handleCreateMission(e) {
+    e.preventDefault();
+    const titre = document.getElementById('newMissionTitre').value;
+    const client = document.getElementById('newMissionClient').value;
+    const site = document.getElementById('newMissionSite').value;
+    const service = document.getElementById('newMissionService').value;
+    const dateFin = document.getElementById('newMissionDateFin').value;
+    const desc = document.getElementById('newMissionDesc').value;
+    const agentsRaw = document.getElementById('newMissionAgents').value;
+
+    const agentsList = agentsRaw ? agentsRaw.split(',').map(s => s.trim()) : ['Équipe JBF'];
+
+    try {
+      await window.adminCore.apiFetch('/api/missions', {
+        method: 'POST',
+        body: JSON.stringify({
+          titre,
+          client,
+          site_intervention: site,
+          service,
+          date_fin: dateFin || null,
+          description: desc,
+          agents_assignes: agentsList
+        })
+      });
+    } catch (err) {}
+
+    const newMission = {
+      id: 'mis-' + Date.now().toString().slice(-4),
+      titre,
+      client,
+      site_intervention: site,
+      service,
+      statut: 'en_cours',
+      description: desc || 'Intervention programmée',
+      agents_assignes: agentsList,
+      date_fin: dateFin
+    };
+    allMissions.unshift(newMission);
+
+    window.adminCore.showToast('Nouvelle mission planifiée avec succès', 'success');
+    window.adminCore.closeModal('missionCreateModal');
+    renderMissionsTable(allMissions);
+  }
+
+  async function toggleMissionStatut(id, currentStatut) {
+    const nextStatut = currentStatut === 'en_cours' ? 'termine' : 'en_cours';
+    try {
+      await window.adminCore.apiFetch(`/api/admin/missions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ statut: nextStatut })
+      });
+    } catch (err) {}
+
+    const target = allMissions.find(m => m.id === id);
+    if (target) target.statut = nextStatut;
+
+    window.adminCore.showToast(`Statut mission mis à jour : ${nextStatut === 'termine' ? 'Terminée' : 'En cours'}`, 'success');
+    renderMissionsTable(allMissions);
+  }
+
+  async function deleteMission(id) {
+    if (!confirm('Confirmez-vous la suppression de cette mission ?')) return;
+
+    try {
+      await window.adminCore.apiFetch(`/api/admin/missions/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {}
+
+    allMissions = allMissions.filter(m => m.id !== id);
+    window.adminCore.showToast('Mission supprimée avec succès', 'info');
+    renderMissionsTable(allMissions);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foire Aux Questions (FAQ) — JBF SERVICES SARL | RDC</title>
+  <meta name="description" content="Toutes les réponses à vos questions sur les prestations de sous-traitance, catering, BTP, maintenance, délais et conformité ARSP de JBF SERVICES en RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .faq-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+      text-align: left;
+    }
+    .faq-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .faq-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 680px;
+      line-height: 1.7;
+      margin-bottom: 1.75rem;
+    }
+    .faq-search-box {
+      max-width: 580px;
+      position: relative;
+    }
+    .faq-search-input {
+      width: 100%;
+      padding: 1rem 1.25rem 1rem 3rem;
+      border-radius: 50px;
+      border: none;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text-h);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      outline: none;
+    }
+    .faq-search-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--pink);
+    }
+
+    /* Filters */
+    .faq-filter-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 2.5rem;
+    }
+    .faq-tab-btn {
+      padding: 0.65rem 1.4rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1.5px solid var(--gray-border);
+      background: #fff;
+      color: var(--text-body);
+      cursor: pointer;
+      transition: var(--t-fast);
+    }
+    .faq-tab-btn:hover {
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+    .faq-tab-btn.active {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+    }
+
+    /* Accordion Container */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      display: block;
+    }
+    .faq-item.open {
+      border-color: var(--pink);
+      box-shadow: 0 6px 24px rgba(230,0,126,0.12);
+    }
+    .faq-question {
+      padding: 1.35rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.25rem;
+      cursor: pointer;
+      user-select: none;
+      background: #fff;
+      transition: background 0.2s;
+    }
+    .faq-question:hover {
+      background: var(--pink-pale);
+    }
+    .faq-q-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-h);
+      line-height: 1.4;
+    }
+    .faq-item.open .faq-q-title {
+      color: var(--pink);
+    }
+    .faq-icon-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gray-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--pink);
+      transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+    }
+    .faq-item.open .faq-icon-badge {
+      transform: rotate(45deg);
+      background: var(--pink);
+      color: #fff;
+    }
+    .faq-answer {
+      display: none;
+      padding: 0 1.75rem 1.5rem;
+      color: var(--text-body);
+      font-size: 0.94rem;
+      line-height: 1.8;
+      border-top: 1px solid var(--pink-pale);
+      background: #fff;
+    }
+    .faq-item.open .faq-answer {
+      display: block;
+      padding-top: 1.25rem;
+    }
+    .faq-answer p { margin-bottom: 0.75rem; }
+    .faq-answer p:last-child { margin-bottom: 0; }
+    .faq-answer strong { color: var(--text-h); }
+    .faq-answer ul { list-style: disc; padding-left: 1.4rem; margin: 0.5rem 0 0.75rem; }
+    .faq-answer li { margin-bottom: 0.3rem; }
+
+    /* CTA Help Box */
+    .faq-help-box {
+      background: linear-gradient(135deg, var(--pink-deep) 0%, var(--pink-deeper) 100%);
+      border-radius: var(--r-card);
+      padding: 3rem 2rem;
+      color: #fff;
+      text-align: center;
+      max-width: 900px;
+      margin: 4rem auto 0;
+      box-shadow: var(--sh-card-h);
+    }
+    .faq-help-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+    }
+    .faq-help-desc {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+      max-width: 620px;
+      margin: 0 auto 1.75rem;
+      line-height: 1.65;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link active">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- FAQ HERO -->
+<section class="faq-hero">
+  <div class="container">
+    <h1 class="faq-hero-title">Foire Aux Questions (FAQ)</h1>
+    <p class="faq-hero-sub">
+      Retrouvez les réponses complètes sur nos modalités d'intervention, nos délais de cotation, nos certifications de sous-traitance ARSP et nos protocoles QHSE en République Démocratique du Congo.
+    </p>
+
+    <!-- Search Input -->
+    <div class="faq-search-box">
+      <svg class="faq-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="faq-search-input" id="faqSearchInput" placeholder="Rechercher une question, un mot-clé (ex: ARSP, Devis, Délais, Kolwezi)..." oninput="searchFAQ()">
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding: 4rem 0 6rem;">
+  <div class="container">
+
+    <!-- Category Filters -->
+    <div style="max-width: 900px; margin: 0 auto;">
+      <div class="faq-filter-wrap" id="faqFilters">
+        <button class="faq-tab-btn active" onclick="filterFAQ('all', this)">Toutes les questions (12)</button>
+        <button class="faq-tab-btn" onclick="filterFAQ('devis', this)">Devis &amp; Tarification (3)</button>
+        <button class="faq-tab-btn" onclick="filterFAQ('terrain', this)">Déploiement &amp; 26 Provinces (3)</button>
+        <button class="faq-tab-btn" onclick="filterFAQ('hse', this)">Loi ARSP &amp; Normes QHSE (3)</button>
+        <button class="faq-tab-btn" onclick="filterFAQ('organisation', this)">Organisation &amp; Encadrement (3)</button>
+      </div>
+    </div>
+
+    <!-- FAQ Accordion List -->
+    <div class="faq-list" id="faqList">
+
+      <!-- Q1 -->
+      <div class="faq-item open" data-cat="devis">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Quel est le délai de transmission d'un devis commercial chiffré ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Toute demande de cotation soumise via notre site web ou par courriel officiel fait l'objet d'un accusé de réception immédiat.</p>
+          <p>Nos ingénieurs d'affaires et métreurs vous transmettent une proposition technique et financière détaillée sous un <strong>délai garanti de 24 heures ouvrables</strong> pour les demandes courantes (gardiennage, catering, mise à disposition de main-d'œuvre) et <strong>sous 48 heures</strong> pour les chantiers complexes de génie civil ou de maintenance d'usine nécessitant une étude d'ingénierie préliminaire.</p>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="faq-item" data-cat="devis">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Quelles sont vos modalités de facturation et devises acceptées ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Nos conditions de règlement sont parfaitement adaptées aux standards industriels et miniers :</p>
+          <ul>
+            <li><strong>Contrats récurrents (catering, gardiennage, maintenance) :</strong> Facturation mensuelle à terme échu sur la base des états de présence ou situations de travaux validées.</li>
+            <li><strong>Missions ponctuelles (BTP, arrêts d'usines, convoyage) :</strong> Acompte de mobilisation (30% à 50%) puis solde à réception définitive des livrables.</li>
+          </ul>
+          <p>Les paiements sont acceptés par virement bancaire sécurisé en <strong>USD</strong> ou en <strong>Francs Congolais (CDF)</strong> sur nos comptes bancaires d'entreprise domiciliés en RDC.</p>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="faq-item" data-cat="devis">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Proposez-vous des contrats-cadres pluriannuels avec des remises de volume ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Oui. Pour les grands donneurs d'ordres industriels et miniers engageant des volumes réguliers ou combinant plusieurs de nos 15 prestations (ex: Gestion globale de camp de vie + Gardiennage + Catering), nous mettons en place des <strong>contrats-cadres de sous-traitance pluriannuels</strong>.</p>
+          <p>Ces accords confèrent des tarifs préférentiels dégressifs, des engagements de niveau de service (SLA chiffrés) et la désignation d'un Directeur de Compte dédié joignable 24h/24.</p>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="faq-item" data-cat="terrain">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Dans quelles provinces de la RDC vos équipes peuvent-elles intervenir ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>JBF SERVICES SARL possède une capacité de projection opérationnelle sur l'ensemble des <strong>26 provinces de la République Démocratique du Congo</strong>.</p>
+          <p>Grâce à nos bases et hubs logistiques établis à <strong>Lubumbashi (Haut-Katanga)</strong>, <strong>Kolwezi (Lualaba)</strong> et <strong>Kinshasa</strong>, nous approvisionnons et déployons nos brigades techniques jusque dans les sites miniers les plus enclavés (Kibali, Tenke, Kamoa, Doko, Matadi, etc.).</p>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="faq-item" data-cat="terrain">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Quel est le délai moyen de mobilisation d'équipes sur site ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Nos délais de déploiement sont parmi les plus compétitifs du marché congolais :</p>
+          <ul>
+            <li><strong>Interventions d'urgence (soudure, maintenance, renfort de sécurité) :</strong> Mobilisation sous <strong>12 à 24 heures</strong>.</li>
+            <li><strong>Déploiements complets de brigades (équipes de catering de 500 repas/jour, régie BTP, gardiennage de site) :</strong> Mobilisation complète sous <strong>48 à 72 heures</strong> incluant visites médicales d'aptitude, badges et inductions de sécurité.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="faq-item" data-cat="terrain">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Prenez-vous en charge l'intendance et la logistique complète d'acheminement ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Absolument. JBF SERVICES fonctionne en autonomie complète selon les termes convenus au cahier des charges :</p>
+          <p>Nous assurons l'acheminement de notre personnel qualifié, le transport de notre outillage lourd, l'approvisionnement en denrées certifiées et consommables industriels, ainsi que l'hébergement de nos équipes de relève. Le donneur d'ordre peut ainsi se concentrer sur son cœur de métier.</p>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="faq-item" data-cat="hse">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">JBF SERVICES est-elle officiellement enregistrée et certifiée ARSP ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p><strong>Oui, sans réserve.</strong> JBF SERVICES SARL est une société de droit congolais en règle intégrale avec les dispositions de la <strong>Loi n° 17/001 du 8 février 2017</strong> régissant la sous-traitance dans le secteur privé en RDC.</p>
+          <p>Nous détenons notre certificat d'enregistrement auprès de l'<strong>ARSP</strong> et fournissons à chaque appel d'offres notre dossier complet de régularité fiscale (DGI) et sociale (CNSS).</p>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="faq-item" data-cat="hse">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Quels sont vos protocoles de sécurité industrielle et d'hygiène HACCP ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>La sécurité et la conformité sont nos priorités absolues :</p>
+          <ul>
+            <li><strong>QHSE Minier &amp; Industriel :</strong> Alignement rigoureux sur les normes <strong>ISO 45001</strong> et <strong>ISO 9001</strong> avec causeries sécurité matinales (« Tool Box Talks ») et analyse quotidienne des risques (JSA).</li>
+            <li><strong>Restauration &amp; Catering :</strong> Application stricte de la méthode <strong>HACCP</strong>, contrôle microbiologique des denrées et respect sans faille de la chaîne du froid.</li>
+            <li><strong>Soudure Industrielle :</strong> Soudeurs qualifiés et certifiés selon les normes <strong>ASME IX</strong> et <strong>ISO 9606</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="faq-item" data-cat="hse">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Fournissez-vous les Équipements de Protection Individuelle (EPI) à vos équipes ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Oui. Tous nos agents déployés sur site sont intégralement dotés d'EPI certifiés CE et conformes aux exigences spécifiques de chaque mine ou usine :</p>
+          <p>Casques avec jugulaire, lunettes de protection balistiques, gants anticoupure adaptés aux tâches, chaussures de sécurité coquées S3, gilets haute visibilité floqués JBF SERVICES et harnais anti-chute vérifiés pour le travail en hauteur.</p>
+        </div>
+      </div>
+
+      <!-- Q10 -->
+      <div class="faq-item" data-cat="organisation">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Comment est encadrée et supervisée chaque mission sur le terrain ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Chaque détachement opérationnel est structuré hiérarchiquement :</p>
+          <p>Un <strong>Superviseur de Site</strong> ou Chef de Brigade assure le commandement direct et la coordination opérationnelle quotidienne avec vos chefs d'équipe, tandis qu'un <strong>Officier QHSE</strong> veille à la conformité réglementaire et à la prévention des incidents.</p>
+        </div>
+      </div>
+
+      <!-- Q11 -->
+      <div class="faq-item" data-cat="organisation">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Quels rapports de suivi d'activité transmettez-vous aux clients ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Nous assurons une traçabilité totale à travers :</p>
+          <ul>
+            <li>Des feuilles de pointage et de présence quotidiennes émargées.</li>
+            <li>Des rapports hebdomadaires d'avancement technique et d'avancement des travaux.</li>
+            <li>Des revues mensuelles de performance (KPI) portant sur la qualité de service, le respect des délais et les statistiques QHSE (taux de fréquence et de gravité zéro accident).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q12 -->
+      <div class="faq-item" data-cat="organisation">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">Comment planifier une visite technique préalable sur notre site ?</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          <p>Nos ingénieurs d'affaires se déplacent gratuitement sur vos sites d'exploitation pour auditer les installations et évaluer les besoins réels avant cotation.</p>
+          <p>Vous pouvez nous contacter directement par téléphone au <strong>+243 0822 357 053</strong> ou via notre formulaire de contact en ligne pour convenir d'une date d'audit technique.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Help / Contact Box -->
+    <div class="faq-help-box">
+      <h2 class="faq-help-title">Vous avez une question spécifique sur vos chantiers ?</h2>
+      <p class="faq-help-desc">
+        Nos directeurs d'opérations et chargés d'affaires sont à votre disposition pour étudier vos cahiers des charges et formuler une réponse adaptée.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="../JBF Client/auth/login.html" class="btn btn-white btn-lg">Demander une Cotation Express →</a>
+        <a href="tel:+2430822357053" class="btn btn-outline-white btn-lg">Appeler la Direction : +243 0822 357 053</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER UNIFIÉ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+function toggleItem(headerEl) {
+  const item = headerEl.closest('.faq-item');
+  const wasOpen = item.classList.contains('open');
+  
+  // Close all
+  document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+  
+  // Open clicked if was closed
+  if (!wasOpen) {
+    item.classList.add('open');
+  }
+}
+
+function filterFAQ(cat, btn) {
+  document.querySelectorAll('#faqFilters .faq-tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach(item => {
+    if (cat === 'all' || item.getAttribute('data-cat') === cat) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+      item.classList.remove('open');
+    }
+  });
+}
+
+function searchFAQ() {
+  const q = document.getElementById('faqSearchInput').value.toLowerCase().trim();
+  const items = document.querySelectorAll('.faq-item');
+
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (!q || text.includes(q)) {
+      item.style.display = 'block';
+      if (q && text.includes(q)) {
+        item.classList.add('open');
+      }
+    } else {
+      item.style.display = 'none';
+      item.classList.remove('open');
+    }
+  });
+}
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

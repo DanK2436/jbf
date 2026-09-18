@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actualités &amp; Études Sectorielles — JBF SERVICES SARL</title>
+  <meta name="description" content="Analyses techniques, études de cas et éclairages réglementaires sur la sous-traitance minière, le catering, le BTP et la logistique en RDC.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .blog-hero {
+      background: var(--pink);
+      padding: 9rem 0 4.5rem;
+      color: #fff;
+    }
+    .blog-hero-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .blog-hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .blog-featured {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card-h);
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      margin-top: -3rem;
+      margin-bottom: 3.5rem;
+      position: relative;
+      z-index: 10;
+      cursor: pointer;
+      transition: var(--t);
+    }
+    .blog-featured:hover {
+      border-color: var(--pink-blush);
+      transform: translateY(-4px);
+    }
+    .bf-img-wrap {
+      position: relative;
+      min-height: 320px;
+      background: var(--gray-border);
+    }
+    .bf-img { width: 100%; height: 100%; object-fit: cover; }
+    .bf-body {
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .bf-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+    .bf-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+    .bf-excerpt {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .b-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      transition: var(--t);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    .b-card:hover {
+      border-color: var(--pink-blush);
+      box-shadow: var(--sh-card-h);
+      transform: translateY(-4px);
+    }
+    .b-img-wrap {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      background: var(--gray-border);
+      overflow: hidden;
+    }
+    .b-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .b-card:hover .b-img { transform: scale(1.05); }
+    .b-body {
+      padding: 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .b-meta {
+      font-size: 0.74rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .b-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.5rem;
+      line-height: 1.35;
+    }
+    .b-excerpt {
+      font-size: 0.84rem;
+      color: var(--text-light);
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+    }
+    .b-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--pink);
+      font-weight: 700;
+      border-top: 1px solid var(--gray-border);
+      padding-top: 0.8rem;
+    }
+
+    /* Article Reader Modal */
+    .article-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .article-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .article-modal-card {
+      background: #fff;
+      border-radius: var(--r-lg);
+      max-width: 820px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .article-modal-overlay.open .article-modal-card { transform: scale(1); }
+    .article-modal-header {
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+      color: #fff;
+      padding: 2rem 2.5rem 1.75rem;
+      position: relative;
+    }
+    .article-modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--t-fast);
+    }
+    .article-modal-close:hover { background: #fff; color: var(--pink); }
+    .article-modal-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 0.6rem;
+    }
+    .article-modal-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .article-modal-meta {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: 0.5rem;
+    }
+    .article-modal-body {
+      padding: 2.25rem 2.5rem;
+      overflow-y: auto;
+      color: var(--text-body);
+      line-height: 1.85;
+      font-size: 0.95rem;
+    }
+    .article-modal-body h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin: 1.75rem 0 0.6rem;
+    }
+    .article-modal-body h3:first-child { margin-top: 0; }
+    .article-modal-body p { margin-bottom: 1.1rem; }
+    .article-modal-body ul {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+      list-style: disc;
+    }
+    .article-modal-body li { margin-bottom: 0.4rem; }
+    .article-modal-footer {
+      padding: 1.25rem 2.5rem;
+      background: var(--gray-light);
+      border-top: 1px solid var(--gray-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .blog-featured { grid-template-columns: 1fr; }
+      .blog-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .blog-grid { grid-template-columns: 1fr; }
+      .article-modal-body { padding: 1.5rem; }
+      .article-modal-header { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html"    class="nav-link">Accueil</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
+      <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
+      <li><a href="blog.html"     class="nav-link active">Actualités</a></li>
+      <li><a href="faq.html"      class="nav-link">FAQ</a></li>
+      <li><a href="about.html"    class="nav-link">À Propos</a></li>
+      <li><a href="contact.html"  class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Demander un Devis</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- BLOG HERO -->
+<section class="blog-hero">
+  <div class="container">
+    <h1 class="blog-hero-title">Actualités &amp; Études Sectorielles</h1>
+    <p class="blog-hero-sub">
+      Analyses opérationnelles, décryptages réglementaires de la sous-traitance ARSP et guides pratiques pour les donneurs d'ordres industriels et miniers en RDC.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section style="background: var(--gray-light); padding: 4.5rem 0 6rem;">
+  <div class="container">
+
+    <!-- Dynamic Featured Article Container -->
+    <div id="blogFeaturedContainer"></div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-bar" id="blogFilterBar" style="margin-bottom: 2.5rem;">
+      <button class="fc active" onclick="filterBlog('all')">Tous les articles (6)</button>
+      <button class="fc" onclick="filterBlog('mines')">Mines &amp; Réglementation</button>
+      <button class="fc" onclick="filterBlog('catering')">Catering &amp; HACCP</button>
+      <button class="fc" onclick="filterBlog('maintenance')">Maintenance &amp; BTP</button>
+      <button class="fc" onclick="filterBlog('logistique')">Logistique &amp; RSE</button>
+    </div>
+
+    <!-- Articles Grid -->
+    <div class="blog-grid" id="blogGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- ARTICLE READER MODAL -->
+<div class="article-modal-overlay" id="articleModalOverlay" onclick="closeArticleModal()">
+  <div class="article-modal-card" onclick="event.stopPropagation()">
+    <div class="article-modal-header">
+      <button class="article-modal-close" onclick="closeArticleModal()" aria-label="Fermer">&times;</button>
+      <span class="article-modal-tag" id="artModalTag">Secteur Minier</span>
+      <h2 class="article-modal-title" id="artModalTitle">Titre de l'Article</h2>
+      <div class="article-modal-meta" id="artModalMeta">Publié par JBF SERVICES &bull; 6 min de lecture</div>
+    </div>
+    <div class="article-modal-body" id="artModalBody">
+      <!-- Content injected -->
+    </div>
+    <div class="article-modal-footer">
+      <span style="font-size: 0.82rem; color: var(--text-light);">JBF SERVICES SARL — Pôle Expertise &amp; Documentation</span>
+      <a href="contact.html" class="btn btn-pink btn-sm">Contacter nos experts →</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER UNIFIÉ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-header">
+          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+        </div>
+        <p class="footer-about">
+          Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="services.html">Nos 15 Prestations</a></li>
+          <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
+          <li><a href="avis.html">Avis Clients</a></li>
+          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="faq.html">Foire Aux Questions</a></li>
+          <li><a href="about.html">À Propos</a></li>
+          <li><a href="contact.html">Contact &amp; Devis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Pôles d'Activité</div>
+        <ul class="footer-links">
+          <li><a href="services.html?service=1">Catering &amp; Restauration HACCP</a></li>
+          <li><a href="services.html?service=2">Sous-traitance Minière</a></li>
+          <li><a href="services.html?service=3">BTP &amp; Génie Civil Industriel</a></li>
+          <li><a href="services.html?service=4">Maintenance &amp; Soudure</a></li>
+          <li><a href="services.html?service=5">Gardiennage &amp; Sécurité</a></li>
+          <li><a href="services.html?service=7">Logistique &amp; Transport de Fret</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Contact National</div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span class="footer-contact-text">contact@jbf-services.com</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.09h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="footer-contact-text">+243 0822 357 053 &bull; +243 0970 349 724</span>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="footer-contact-text">Siège : Lubumbashi &bull; Déploiement : Toute la RDC (26 Provinces)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <div class="footer-legal-links">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="cgu.html">Conditions Générales (CGU)</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let BLOG_ARTICLES = [];
+let activeBlogCat = 'all';
+
+function toggleNav() {
+  const menu = document.getElementById('navMenu');
+  const btn = document.getElementById('hamburger');
+  if (menu) menu.classList.toggle('is-open');
+  if (btn) btn.classList.toggle('active');
+}
+
+document.querySelectorAll('#navMenu .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const menu = document.getElementById('navMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu) menu.classList.remove('is-open');
+    if (btn) btn.classList.remove('active');
+  });
+});
+
+function renderBlog() {
+  const grid = document.getElementById('blogGrid');
+  const featContainer = document.getElementById('blogFeaturedContainer');
+
+  const filtered = BLOG_ARTICLES.filter(a => {
+    return (activeBlogCat === 'all') || (a.catId === activeBlogCat);
+  });
+
+  if (BLOG_ARTICLES.length === 0) {
+    if (featContainer) featContainer.innerHTML = '';
+    grid.innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; background:#fff; border-radius:12px; border:1.5px solid var(--gray-border);">
+        <div style="font-size:2.5rem; margin-bottom:1rem;">📰</div>
+        <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-h); margin-bottom:0.5rem;">Articles et analyses en cours de rédaction</h3>
+        <p style="color:var(--text-light); font-size:0.9rem;">Nos publications officielles et études sectorielles seront publiées prochainement.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Render featured post if activeBlogCat === 'all'
+  if (featContainer) {
+    if (activeBlogCat === 'all' && BLOG_ARTICLES.length > 0) {
+      const feat = BLOG_ARTICLES[0];
+      featContainer.innerHTML = `
+        <div class="blog-featured reveal visible" onclick="openArticleModal(${feat.id})">
+          <div class="bf-img-wrap">
+            <img src="${feat.img || 'assets/gallery_mining.jpg'}" alt="${feat.title}" class="bf-img"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
+          </div>
+          <div class="bf-body">
+            <div class="bf-meta">
+              <span style="background: var(--pink); color: #fff; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;">À la une</span>
+              <span>${feat.date}</span> &bull; <span>${feat.readTime}</span>
+            </div>
+            <h2 class="bf-title">${feat.title}</h2>
+            <p class="bf-excerpt">${feat.excerpt}</p>
+            <div>
+              <span class="btn btn-pink btn-sm">Lire l'article complet →</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      featContainer.innerHTML = '';
+    }
+  }
+
+  // Articles in grid (skip 1st if featured and cat is all)
+  const listToRender = (activeBlogCat === 'all' && filtered.length > 1) ? filtered.slice(1) : filtered;
+
+  grid.innerHTML = listToRender.map(a => `
+    <div class="b-card reveal visible" onclick="openArticleModal(${a.id})">
+      <div class="b-img-wrap">
+        <img src="${a.img || 'assets/gallery_mining.jpg'}" alt="${a.title}" class="b-img" loading="lazy"
+             onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
+      </div>
+      <div class="b-body">
+        <div>
+          <div class="b-meta">
+            <span style="color:var(--pink); font-weight:800; text-transform:uppercase;">${a.catName}</span> &bull; <span>${a.date}</span>
+          </div>
+          <h3 class="b-title">${a.title}</h3>
+          <p class="b-excerpt">${a.excerpt}</p>
+        </div>
+        <div class="b-footer">
+          <span>${a.readTime}</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;">Lire l'analyse →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterBlog(cat) {
+  activeBlogCat = cat;
+  document.querySelectorAll('#blogFilterBar .fc').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${cat}'`));
+  });
+  renderBlog();
+}
+
+function openArticleModal(id) {
+  const article = BLOG_ARTICLES.find(a => a.id === id);
+  if (!article) return;
+
+  document.getElementById('artModalTag').textContent = article.catName;
+  document.getElementById('artModalTitle').textContent = article.title;
+  document.getElementById('artModalMeta').textContent = `Publié le ${article.date} &bull; ${article.readTime} &bull; JBF SERVICES Documentation`;
+  document.getElementById('artModalBody').innerHTML = article.content;
+
+  document.getElementById('articleModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeArticleModal() {
+  document.getElementById('articleModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeArticleModal();
+});
+
+async function loadBlogFromDB() {
+  const grid = document.getElementById('blogGrid');
+  grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des actualités…</div>`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('blog_posts')
+      .select('*')
+      .eq('publie', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      BLOG_ARTICLES = data.map(row => ({
+        id: row.id,
+        catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+        catName: row.categorie || 'Actualité',
+        title: row.titre || row.title,
+        date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+        readTime: row.temps_lecture || row.read_time || '5 min de lecture',
+        img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
+        excerpt: row.resume || row.excerpt || '',
+        content: row.contenu || row.content || '',
+        ...row
+      }));
+    } else {
+      BLOG_ARTICLES = [];
+    }
+  } catch (err) {
+    console.warn('Blog : impossible de charger depuis la base de données.', err.message);
+    BLOG_ARTICLES = [];
+  }
+
+  renderBlog();
+}
+
+document.addEventListener('DOMContentLoaded', loadBlogFromDB);
+
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));
+</script>
+</body>
+</html>

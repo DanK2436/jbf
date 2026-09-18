@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Créer un compte — JBF SERVICES SARL</title>
+  <meta name="description" content="Inscrivez-vous sur l'espace client de JBF SERVICES SARL pour soumettre et suivre vos demandes de cotation en RDC.">
+  <link rel="stylesheet" href="../css/main.css">
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── Conteneur principal ── */
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--gray-light);
+    }
+    .auth-header-bar {
+      padding: 1rem 2rem;
+      background: #fff;
+      border-bottom: 1px solid var(--gray-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .auth-center {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2.5rem 1.25rem 4rem;
+      flex-grow: 1;
+    }
+    .auth-box {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh-card-h);
+      max-width: 520px;
+      width: 100%;
+    }
+
+    /* ── Onglets Connexion / Inscription ── */
+    .auth-switch {
+      display: flex;
+      background: var(--gray-light);
+      padding: 4px;
+      border-radius: calc(var(--r-lg) - 4px) calc(var(--r-lg) - 4px) 0 0;
+      border-bottom: 1px solid var(--gray-border);
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.55rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-light);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--t-fast);
+      text-decoration: none;
+    }
+    .auth-tab.active {
+      background: #fff;
+      color: var(--pink);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    }
+
+    /* ── Barre de progression 4 étapes ── */
+    .stepper-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 1.5rem 2rem 0;
+      position: relative;
+    }
+    .stepper-bar::before {
+      content: '';
+      position: absolute;
+      top: 2.35rem;
+      left: calc(2rem + 20px);
+      right: calc(2rem + 20px);
+      height: 2px;
+      background: var(--gray-border);
+      z-index: 0;
+    }
+    .stepper-progress {
+      position: absolute;
+      top: 2.35rem;
+      left: calc(2rem + 20px);
+      height: 2px;
+      background: var(--pink);
+      z-index: 1;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .stepper-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--gray-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      transition: all 0.35s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    .step-circle svg {
+      width: 16px; height: 16px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .stepper-step.active .step-circle {
+      border-color: var(--pink);
+      background: var(--pink);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(230,0,126,0.15);
+    }
+    .stepper-step.done .step-circle {
+      border-color: var(--pink);
+      background: var(--pink);
+      color: #fff;
+    }
+    .step-lbl {
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      text-align: center;
+      line-height: 1.3;
+      max-width: 68px;
+    }
+    .stepper-step.active .step-lbl,
+    .stepper-step.done .step-lbl {
+      color: var(--pink);
+    }
+
+    /* ── Corps des étapes ── */
+    .step-body {
+      padding: 1.75rem 2rem 2rem;
+    }
+    .step-heading {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.3rem;
+    }
+    .step-sub {
+      color: var(--text-light);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    /* ── Champs de formulaire ── */
+    .fg { margin-bottom: 1.1rem; }
+    .fl {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-h);
+      margin-bottom: 0.35rem;
+    }
+    .fl .opt {
+      font-weight: 400;
+      color: var(--text-light);
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.68rem;
+    }
+    .fc-input {
+      width: 100%;
+      padding: 0.82rem 1rem;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-btn);
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-h);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fff;
+    }
+    .fc-input::placeholder { color: var(--text-light); font-size: 0.9rem; }
+    .fc-input:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(230,0,126,0.12);
+    }
+    .fc-input.error {
+      border-color: #e53935;
+      box-shadow: 0 0 0 3px rgba(229,57,53,0.1);
+    }
+    .fc-input.success {
+      border-color: #43a047;
+      box-shadow: 0 0 0 3px rgba(67,160,71,0.1);
+    }
+    .field-error {
+      font-size: 0.76rem;
+      color: #e53935;
+      margin-top: 0.3rem;
+      display: none;
+      font-weight: 600;
+    }
+    .field-error.visible { display: block; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* Alert Banners */
+    .alert-box-error {
+      background: #fef2f2;
+      border: 1.5px solid #ef4444;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      color: #991b1b;
+      margin-bottom: 1.25rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert-box-error.visible { display: block; }
+
+    .alert-box-success {
+      background: #f0fdf4;
+      border: 1.5px solid #22c55e;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      color: #166534;
+      margin-bottom: 1.25rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert-box-success.visible { display: block; }
+
+    /* ── Boîte des Exigences du Mot de Passe ── */
+    .pwd-rules-box {
+      background: #f8fafc;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-top: 0.65rem;
+      margin-bottom: 0.5rem;
+    }
+    .pwd-rules-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-h);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .pwd-rules-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem 0.75rem;
+    }
+    .pwd-rule {
+      font-size: 0.76rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s ease;
+    }
+    .pwd-rule.valid {
+      color: #16a34a;
+      font-weight: 700;
+    }
+    .pwd-rule.valid .rule-icon {
+      color: #16a34a;
+    }
+    .rule-icon {
+      font-size: 0.82rem;
+      display: inline-block;
+      min-width: 14px;
+    }
+
+    /* ── Indicateur de force du mot de passe ── */
+    .pwd-meter-bar {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--gray-border);
+      margin-top: 0.45rem;
+      overflow: hidden;
+    }
+    .pwd-meter-fill {
+      height: 100%;
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.35s, background 0.35s;
+    }
+    .pwd-meter-lbl {
+      font-size: 0.72rem;
+      margin-top: 0.3rem;
+      font-weight: 600;
+    }
+
+    /* ── Boutons de navigation ── */
+    .step-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .step-actions .btn { flex: 1; min-width: 0; text-align: center; }
+    .btn-step-back {
+      flex: 0 0 auto;
+      background: var(--gray-light);
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-btn);
+      padding: 0.82rem 1.25rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-h);
+      cursor: pointer;
+      transition: var(--t-fast);
+    }
+    .btn-step-back:hover {
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+
+    /* ── Bloc Étape 4 (Confirmation Email Envoyée) ── */
+    .verify-icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(230,0,126,0.1);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem;
+      position: relative;
+    }
+    .verify-icon-wrap::after {
+      content: '';
+      position: absolute;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      border: 2px solid var(--pink);
+      animation: pulse-ring 2s infinite ease-out;
+      opacity: 0.6;
+    }
+    .verify-icon-wrap svg {
+      width: 38px; height: 38px;
+      stroke: var(--pink); fill: none;
+      stroke-width: 1.8;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+
+    .verify-email-display {
+      background: var(--gray-light);
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-btn);
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-h);
+      text-align: center;
+      margin-bottom: 1.25rem;
+      word-break: break-all;
+      letter-spacing: 0.02em;
+    }
+
+    .instruction-card {
+      background: #fdf2f8;
+      border: 1.5px solid rgba(230,0,126,0.25);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .instruction-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-h);
+      line-height: 1.5;
+    }
+    .instruction-item:last-child { margin-bottom: 0; }
+    .instruction-badge {
+      background: var(--pink);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .waiting-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      padding: 0.75rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid var(--gray-border);
+      margin-bottom: 1.25rem;
+    }
+    .spinner-dot {
+      width: 8px; height: 8px;
+      background: var(--pink);
+      border-radius: 50%;
+      animation: pulse-dot 1.2s infinite ease-in-out;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(0.6); opacity: 0.4; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ── CGU ── */
+    .cgu-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-body);
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+    .cgu-check input[type="checkbox"] {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      accent-color: var(--pink);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .cgu-check a { color: var(--pink); font-weight: 700; }
+
+    /* ── Footer ── */
+    .auth-footer-bar {
+      padding: 1.25rem 2rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--gray-border);
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .auth-footer-bar a { color: var(--text-light); margin: 0 0.4rem; transition: color 0.2s; text-decoration: none; }
+    .auth-footer-bar a:hover { color: var(--pink); }
+
+    /* ── Responsive Mobile ── */
+    @media (max-width: 600px) {
+      .auth-center { padding: 1.5rem 0.75rem 3rem; }
+      .stepper-bar { padding: 1.25rem 1rem 0; }
+      .step-body   { padding: 1.35rem 1.25rem 1.5rem; }
+      .row-2 { grid-template-columns: 1fr; gap: 0; }
+      .pwd-rules-list { grid-template-columns: 1fr; }
+      .step-lbl { display: none; }
+      .auth-header-bar { padding: 0.75rem 1.25rem; }
+      .auth-footer-bar { padding: 1rem 1.25rem; }
+    }
+  </style>
+</head>
+<body class="auth-container">
+
+  <!-- En-tête -->
+  <header class="auth-header-bar">
+    <a href="../index.html" class="nav-brand">
+      <img src="../assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+    </a>
+    <a href="../index.html" class="btn btn-outline-pink btn-sm">← Retour au site</a>
+  </header>
+
+  <!-- Zone centrale -->
+  <main class="auth-center">
+    <div class="auth-box">
+
+      <!-- Onglets Connexion / Inscription -->
+      <div class="auth-switch">
+        <a href="login.html" class="auth-tab">Connexion Client</a>
+        <a href="register.html" class="auth-tab active">Créer un compte</a>
+      </div>
+
+      <!-- Barre de progression -->
+      <div class="stepper-bar" id="stepperBar">
+        <div class="stepper-step active" id="sStep1">
+          <div class="step-circle" id="sc1">1</div>
+          <span class="step-lbl">Identité</span>
+        </div>
+        <div class="stepper-step" id="sStep2">
+          <div class="step-circle" id="sc2">2</div>
+          <span class="step-lbl">Entreprise</span>
+        </div>
+        <div class="stepper-step" id="sStep3">
+          <div class="step-circle" id="sc3">3</div>
+          <span class="step-lbl">Mot de passe</span>
+        </div>
+        <div class="stepper-step" id="sStep4">
+          <div class="step-circle" id="sc4">4</div>
+          <span class="step-lbl">Confirmation</span>
+        </div>
+        <div class="stepper-progress" id="stepperProgress"></div>
+      </div>
+
+      <!-- ╔════════════════════════════╗
+           ║  ÉTAPE 1 — Identité        ║
+           ╚════════════════════════════╝ -->
+      <div class="step-body step-panel" id="step1">
+        <h1 class="step-heading">Vos informations personnelles</h1>
+        <p class="step-sub">Ces informations permettent à notre équipe commerciale de vous identifier.</p>
+
+        <div class="fg">
+          <label class="fl" for="s1_nom">Nom complet *</label>
+          <input type="text" id="s1_nom" class="fc-input" placeholder="Ex: Jean-Baptiste Mutombo" autocomplete="name">
+          <span class="field-error" id="e_nom">Veuillez saisir votre nom complet (au moins 3 lettres).</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="s1_email">Adresse email professionnelle *</label>
+          <input type="email" id="s1_email" class="fc-input" placeholder="contact@entreprise.com" autocomplete="email">
+          <span class="field-error" id="e_email">Veuillez saisir une adresse email valide.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="s1_tel">Numéro de téléphone *</label>
+          <input type="tel" id="s1_tel" class="fc-input" placeholder="+243 0822 000 000" autocomplete="tel">
+          <span class="field-error" id="e_tel">Veuillez saisir un numéro de téléphone valide.</span>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-pink" onclick="goToStep2()">Continuer →</button>
+        </div>
+      </div>
+
+      <!-- ╔════════════════════════════╗
+           ║  ÉTAPE 2 — Entreprise      ║
+           ╚════════════════════════════╝ -->
+      <div class="step-body step-panel" id="step2" style="display:none;">
+        <h1 class="step-heading">Votre entreprise &amp; adresse</h1>
+        <p class="step-sub">Ces informations sont facultatives mais permettent d'accélérer le traitement de vos demandes de cotation.</p>
+
+        <div class="fg">
+          <label class="fl" for="s2_entreprise">
+            Entreprise / Organisation
+            <span class="opt">(facultatif)</span>
+          </label>
+          <input type="text" id="s2_entreprise" class="fc-input" placeholder="Ex: Katanga Mining SARL" autocomplete="organization">
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="s2_secteur">
+            Secteur d'activité
+            <span class="opt">(facultatif)</span>
+          </label>
+          <select id="s2_secteur" class="fc-input">
+            <option value="">Sélectionnez un secteur (optionnel)</option>
+            <option value="mines">Mines &amp; Extraction</option>
+            <option value="btp">BTP &amp; Génie Civil</option>
+            <option value="catering">Alimentaire &amp; Catering</option>
+            <option value="logistique">Logistique &amp; Transport</option>
+            <option value="securite">Sécurité &amp; Gardiennage</option>
+            <option value="maintenance">Maintenance Industrielle</option>
+            <option value="facilities">Gestion de Bases de Vie</option>
+            <option value="autre">Autre secteur</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="s2_adresse">
+            Adresse professionnelle
+            <span class="opt">(facultatif)</span>
+          </label>
+          <input type="text" id="s2_adresse" class="fc-input" placeholder="Ex: Avenue du Commerce, Lubumbashi" autocomplete="street-address">
+        </div>
+
+        <div class="row-2">
+          <div class="fg">
+            <label class="fl" for="s2_ville">
+              Ville
+              <span class="opt">(facultatif)</span>
+            </label>
+            <input type="text" id="s2_ville" class="fc-input" placeholder="Ex: Kolwezi" autocomplete="address-level2">
+          </div>
+          <div class="fg">
+            <label class="fl" for="s2_province">
+              Province RDC
+              <span class="opt">(facultatif)</span>
+            </label>
+            <select id="s2_province" class="fc-input">
+              <option value="">Choisir la province...</option>
+              <option value="Haut-Katanga">Haut-Katanga</option>
+              <option value="Lualaba">Lualaba</option>
+              <option value="Kinshasa">Kinshasa</option>
+              <option value="Kongo-Central">Kongo-Central</option>
+              <option value="Nord-Kivu">Nord-Kivu</option>
+              <option value="Sud-Kivu">Sud-Kivu</option>
+              <option value="Haut-Uélé">Haut-Uélé</option>
+              <option value="Tanganyika">Tanganyika</option>
+              <option value="Maniema">Maniema</option>
+              <option value="Kasaï-Oriental">Kasaï-Oriental</option>
+              <option value="Kasaï-Central">Kasaï-Central</option>
+              <option value="Autre">Autre province</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-step-back" onclick="goToStep(1)">← Retour</button>
+          <button type="button" class="btn btn-pink" onclick="goToStep3()">Continuer →</button>
+        </div>
+      </div>
+
+      <!-- ╔══════════════════════════════╗
+           ║  ÉTAPE 3 — Mot de passe      ║
+           ╚══════════════════════════════╝ -->
+      <div class="step-body step-panel" id="step3" style="display:none;">
+        <h1 class="step-heading">Créer votre mot de passe</h1>
+        <p class="step-sub">Définissez un mot de passe robuste conforme aux règles de sécurité ci-dessous.</p>
+
+        <!-- Message d'erreur serveur Supabase -->
+        <div class="alert-box-error" id="s3_server_error"></div>
+
+        <div class="fg">
+          <label class="fl" for="s3_pwd">Mot de passe *</label>
+          <input type="password" id="s3_pwd" class="fc-input" placeholder="Créez votre mot de passe" oninput="evalPassword(this.value)" autocomplete="new-password">
+          <div class="pwd-meter-bar"><div class="pwd-meter-fill" id="pwdMeter"></div></div>
+          <div class="pwd-meter-lbl" id="pwdLabel" style="color: var(--text-light);"></div>
+
+          <!-- Exigences visuelles claires -->
+          <div class="pwd-rules-box">
+            <div class="pwd-rules-title">Exigences obligatoires pour votre mot de passe :</div>
+            <ul class="pwd-rules-list">
+              <li class="pwd-rule" id="rule_len"><span class="rule-icon">○</span> Au moins 8 caractères</li>
+              <li class="pwd-rule" id="rule_maj"><span class="rule-icon">○</span> 1 lettre majuscule (A-Z)</li>
+              <li class="pwd-rule" id="rule_min"><span class="rule-icon">○</span> 1 lettre minuscule (a-z)</li>
+              <li class="pwd-rule" id="rule_num"><span class="rule-icon">○</span> 1 chiffre (0-9)</li>
+              <li class="pwd-rule" id="rule_spe"><span class="rule-icon">○</span> 1 caractère spécial (!@#$...)</li>
+            </ul>
+          </div>
+          <span class="field-error" id="e_pwd">Veuillez respecter toutes les exigences de sécurité ci-dessus.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="s3_confirm">Confirmer le mot de passe *</label>
+          <input type="password" id="s3_confirm" class="fc-input" placeholder="Retapez votre mot de passe" oninput="checkConfirm()" autocomplete="new-password">
+          <span class="field-error" id="e_confirm">Les deux mots de passe ne correspondent pas.</span>
+        </div>
+
+        <div class="cgu-check">
+          <input type="checkbox" id="s3_cgu">
+          <label for="s3_cgu">
+            J'ai lu et j'accepte les
+            <a href="../cgu.html" target="_blank">Conditions Générales d'Utilisation</a>
+            et la
+            <a href="../politique-confidentialite.html" target="_blank">Politique de Confidentialité</a>
+            de JBF SERVICES SARL.
+          </label>
+        </div>
+        <span class="field-error" id="e_cgu">Vous devez accepter les conditions pour continuer.</span>
+
+        <div class="step-actions">
+          <button type="button" class="btn-step-back" onclick="goToStep(2)">← Retour</button>
+          <button type="button" class="btn btn-pink" id="btnCreateAccount" onclick="submitRegisterToSupabase()">
+            Créer mon compte →
+          </button>
+        </div>
+      </div>
+
+      <!-- ╔════════════════════════════════════════════════════════╗
+           ║  ÉTAPE 4 — Confirmation de l'Email Envoyé (Supabase) ║
+           ╚════════════════════════════════════════════════════════╝ -->
+      <div class="step-body step-panel" id="step4" style="display:none;">
+        <div class="verify-icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+
+        <h1 class="step-heading" style="text-align:center; margin-bottom: 0.4rem;">Vérifiez votre boîte de réception</h1>
+        <p class="step-sub" style="text-align:center; margin-bottom: 0.85rem;">
+          Un email officiel de confirmation a été envoyé à :
+        </p>
+        <div class="verify-email-display" id="verifyEmailDisplay">—</div>
+
+        <!-- Alert messages Step 4 -->
+        <div class="alert-box-error" id="s4_error_banner"></div>
+        <div class="alert-box-success" id="s4_success_banner"></div>
+
+        <!-- Instructions -->
+        <div class="instruction-card">
+          <div class="instruction-item">
+            <span class="instruction-badge">1</span>
+            <span>Cliquez sur le lien reçu dans votre email pour valider immédiatement votre compte.</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-badge">2</span>
+            <span><strong>Ou saisissez directement le code à 6 chiffres</strong> présent dans l'email :</span>
+          </div>
+        </div>
+
+        <!-- Saisie Code OTP -->
+        <div style="background: #fff; border: 1.5px solid var(--gray-border); border-radius: 10px; padding: 1.15rem; margin-bottom: 1.25rem;">
+          <label class="fl" for="otpCodeInput" style="text-align: center; margin-bottom: 0.5rem;">Code de confirmation à 6 chiffres</label>
+          <div style="display: flex; gap: 0.6rem;">
+            <input type="text" id="otpCodeInput" class="fc-input" placeholder="Ex: 123456" maxlength="8" style="text-align: center; font-size: 1.25rem; font-weight: 800; letter-spacing: 0.2em;" autocomplete="one-time-code">
+            <button type="button" class="btn btn-pink" id="btnVerifyOtp" onclick="verifySupabaseOtp()" style="flex-shrink: 0; padding: 0.75rem 1.25rem;">
+              Valider le Code
+            </button>
+          </div>
+          <span class="field-error" id="e_otp">Veuillez saisir un code valide.</span>
+        </div>
+
+        <!-- Statut d'écoute automatique en temps réel -->
+        <div class="waiting-status" id="waitingStatus">
+          <div class="spinner-dot"></div>
+          <span>En attente de confirmation du lien email... Détection automatique active.</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="step-actions" style="flex-direction: column; align-items: stretch; gap: 0.65rem;">
+          <button type="button" class="btn btn-outline-pink" id="resendBtn" onclick="resendSupabaseCode()" style="padding: 0.85rem;">
+            Renvoyer l'email de confirmation
+          </button>
+          <button type="button" class="btn-step-back" style="text-align:center;" onclick="goToStep(3)">
+            ← Modifier mes informations
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Pied de page -->
+  <footer class="auth-footer-bar">
+    <span>&copy; 2026 JBF SERVICES SARL — Lubumbashi, RDC</span>
+    <div>
+      <a href="../mentions-legales.html">Mentions légales</a>
+      <a href="../politique-confidentialite.html">Confidentialité</a>
+      <a href="../cgu.html">CGU</a>
+    </div>
+  </footer>
+
+<script>
+  // Redirection automatique immédiate vers le nouvel Espace Client & Inscription
+  const clientRegisterTarget = '../../JBF Client/auth/register.html' + (window.location.search || '') + (window.location.hash || '');
+  window.location.replace(clientRegisterTarget);
+
+  /* ======================================================
+     CONFIGURATION SUPABASE AUTHENTIQUE
+     ====================================================== */
+  const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
+
+  let supabaseClient = null;
+  if (typeof supabase !== 'undefined') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  /* ======================================================
+     ÉTAT GLOBAL
+     ====================================================== */
+  let currentStep = 1;
+  let checkSessionInterval = null;
+  let resendCooldown = 0;
+
+  /* ======================================================
+     NAVIGATEUR D'ÉTAPES
+     ====================================================== */
+  function goToStep(n) {
+    document.getElementById('step' + currentStep).style.display = 'none';
+    document.getElementById('step' + n).style.display = 'block';
+    currentStep = n;
+    updateStepper(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateStepper(activeStep) {
+    const total = 4;
+    for (let i = 1; i <= total; i++) {
+      const stepEl = document.getElementById('sStep' + i);
+      const circle = document.getElementById('sc' + i);
+      stepEl.classList.remove('active', 'done');
+      if (i < activeStep) {
+        stepEl.classList.add('done');
+        circle.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (i === activeStep) {
+        stepEl.classList.add('active');
+        circle.textContent = i;
+      } else {
+        circle.textContent = i;
+      }
+    }
+    const pct = ((activeStep - 1) / (total - 1)) * 100;
+    document.getElementById('stepperProgress').style.width = `calc(${pct}% * ((100% - 80px) / 100))`;
+  }
+
+  /* ======================================================
+     VALIDATION ÉTAPE 1
+     ====================================================== */
+  function goToStep2() {
+    let valid = true;
+    const nom = document.getElementById('s1_nom').value.trim();
+    const email = document.getElementById('s1_email').value.trim();
+    const tel = document.getElementById('s1_tel').value.trim();
+
+    if (nom.length < 3) {
+      showError('s1_nom', 'e_nom'); valid = false;
+    } else { clearError('s1_nom', 'e_nom'); }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      showError('s1_email', 'e_email'); valid = false;
+    } else { clearError('s1_email', 'e_email'); }
+
+    const telClean = tel.replace(/[\s\-().+]/g, '');
+    if (telClean.length < 8 || !/^\d+$/.test(telClean)) {
+      showError('s1_tel', 'e_tel'); valid = false;
+    } else { clearError('s1_tel', 'e_tel'); }
+
+    if (valid) goToStep(2);
+  }
+
+  /* ======================================================
+     VALIDATION ÉTAPE 2 (Facultative)
+     ====================================================== */
+  function goToStep3() {
+    goToStep(3);
+  }
+
+  /* ======================================================
+     ÉVALUATEUR DE MOT DE PASSE ET RÈGLES INTERACTIVES
+     ====================================================== */
+  function updateRule(elementId, isValid) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const icon = el.querySelector('.rule-icon');
+    if (isValid) {
+      el.classList.add('valid');
+      if (icon) icon.textContent = '✓';
+    } else {
+      el.classList.remove('valid');
+      if (icon) icon.textContent = '○';
+    }
+  }
+
+  function evalPassword(pwd) {
+    const meter = document.getElementById('pwdMeter');
+    const lbl   = document.getElementById('pwdLabel');
+
+    const hasLen = pwd.length >= 8;
+    const hasMaj = /[A-Z]/.test(pwd);
+    const hasMin = /[a-z]/.test(pwd);
+    const hasNum = /[0-9]/.test(pwd);
+    const hasSpe = /[^A-Za-z0-9]/.test(pwd);
+
+    updateRule('rule_len', hasLen);
+    updateRule('rule_maj', hasMaj);
+    updateRule('rule_min', hasMin);
+    updateRule('rule_num', hasNum);
+    updateRule('rule_spe', hasSpe);
+
+    let score = 0;
+    if (hasLen) score++;
+    if (hasMaj) score++;
+    if (hasMin) score++;
+    if (hasNum) score++;
+    if (hasSpe) score++;
+
+    const configs = [
+      { pct: '0%',   color: '#e53935', text: '' },
+      { pct: '20%',  color: '#e53935', text: 'Très faible — Ajoutez des majuscules et chiffres' },
+      { pct: '40%',  color: '#f59e0b', text: 'Faible — Ajoutez des caractères spéciaux' },
+      { pct: '60%',  color: '#facc15', text: 'Moyen — Presque conforme' },
+      { pct: '80%',  color: '#22c55e', text: 'Fort — Conforme aux règles' },
+      { pct: '100%', color: '#16a34a', text: 'Excellent — Sécurité maximale' },
+    ];
+    const c = configs[score];
+    meter.style.width = c.pct;
+    meter.style.background = c.color;
+    lbl.textContent = c.text;
+    lbl.style.color = c.color;
+
+    if (score >= 4 && hasLen && (hasMaj || hasMin) && hasNum) {
+      clearError('s3_pwd', 'e_pwd');
+    }
+  }
+
+  function checkConfirm() {
+    const pwd = document.getElementById('s3_pwd').value;
+    const conf = document.getElementById('s3_confirm').value;
+    if (conf.length === 0) return;
+    if (pwd !== conf) {
+      showError('s3_confirm', 'e_confirm');
+    } else {
+      clearError('s3_confirm', 'e_confirm');
+    }
+  }
+
+  /* ======================================================
+     ÉTAPE 3 -> CRÉATION DE COMPTE SUPABASE (STANDARD & SÉCURISÉ)
+     ====================================================== */
+  async function submitRegisterToSupabase() {
+    let valid = true;
+    const nom = document.getElementById('s1_nom').value.trim();
+    const email = document.getElementById('s1_email').value.trim();
+    const tel = document.getElementById('s1_tel').value.trim();
+    const entreprise = document.getElementById('s2_entreprise').value.trim();
+    const secteur = document.getElementById('s2_secteur').value;
+    const adresse = document.getElementById('s2_adresse').value.trim();
+    const ville = document.getElementById('s2_ville').value.trim();
+    const province = document.getElementById('s2_province').value;
+    const pwd  = document.getElementById('s3_pwd').value;
+    const conf = document.getElementById('s3_confirm').value;
+    const cgu  = document.getElementById('s3_cgu').checked;
+
+    const hasLen = pwd.length >= 8;
+    const hasMaj = /[A-Z]/.test(pwd);
+    const hasMin = /[a-z]/.test(pwd);
+    const hasNum = /[0-9]/.test(pwd);
+
+    if (!hasLen || !(hasMaj && (hasMin || hasNum))) {
+      showError('s3_pwd', 'e_pwd'); valid = false;
+    } else { clearError('s3_pwd', 'e_pwd'); }
+
+    if (pwd !== conf) {
+      showError('s3_confirm', 'e_confirm'); valid = false;
+    } else { clearError('s3_confirm', 'e_confirm'); }
+
+    if (!cgu) {
+      document.getElementById('e_cgu').classList.add('visible'); valid = false;
+    } else {
+      document.getElementById('e_cgu').classList.remove('visible');
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('btnCreateAccount');
+    const errBox = document.getElementById('s3_server_error');
+    errBox.classList.remove('visible');
+    errBox.textContent = '';
+    btn.disabled = true;
+    btn.textContent = "Création du compte en cours...";
+
+    try {
+      if (!supabaseClient) {
+        throw new Error("Impossible d'initialiser la connexion Supabase. Vérifiez votre réseau.");
+      }
+
+      // Construction de l'URL de redirection sécurisée
+      let redirectUrl = window.location.href.replace(/register\.html.*$/, 'login.html?verified=true');
+      if (!redirectUrl.startsWith('http')) {
+        redirectUrl = 'http://localhost:8080/auth/login.html?verified=true';
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: pwd,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: nom,
+            phone: tel,
+            company: entreprise,
+            secteur: secteur,
+            address: adresse,
+            city: ville,
+            province: province,
+            role: 'client'
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Vérifier si un compte existe déjà sans identité nouvelle
+      if (data && data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error("Un compte existe déjà avec cette adresse email. Veuillez vous connecter.");
+      }
+
+      // Si la session est déjà confirmée (ex: auto-confirm activé sur Supabase)
+      if (data && data.session) {
+        onEmailConfirmedSuccess(data.session);
+        return;
+      }
+
+      // Affichage de l'Étape 4 avec l'email cible
+      document.getElementById('verifyEmailDisplay').textContent = email;
+      goToStep(4);
+      startAutoSessionListener();
+
+    } catch (err) {
+      console.error("Erreur Inscription Supabase:", err);
+      let msg = err.message || "Erreur lors de la création du compte.";
+      if (msg.includes("User already registered") || msg.includes("already registered") || msg.includes("already exists")) {
+        msg = "Un compte existe déjà avec cette adresse email. <a href='login.html' style='color:var(--pink);font-weight:bold;text-decoration:underline;'>Cliquez ici pour vous connecter</a>.";
+      } else if (msg.includes("Password should be")) {
+        msg = "Le mot de passe doit comporter au moins 8 caractères.";
+      } else if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit") || msg.includes("Email rate limit exceeded")) {
+        msg = "Limite d'envoi d'emails atteinte sur Supabase. Veuillez patienter quelques instants avant de réessayer.";
+      }
+      errBox.innerHTML = `<strong>Attention :</strong> ${msg}`;
+      errBox.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Créer mon compte →";
+    }
+  }
+
+  /* ======================================================
+     VALIDATION DU CODE OTP (ÉTAPE 4)
+     ====================================================== */
+  async function verifySupabaseOtp() {
+    const email = document.getElementById('s1_email').value.trim();
+    const token = document.getElementById('otpCodeInput').value.trim();
+    const btn = document.getElementById('btnVerifyOtp');
+    const errBox = document.getElementById('s4_error_banner');
+    const succBox = document.getElementById('s4_success_banner');
+    const errOtp = document.getElementById('e_otp');
+
+    errBox.classList.remove('visible');
+    succBox.classList.remove('visible');
+    errOtp.classList.remove('visible');
+
+    if (!token || token.length < 6) {
+      errOtp.textContent = "Veuillez saisir le code à 6 chiffres reçu par email.";
+      errOtp.classList.add('visible');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Validation...";
+
+    try {
+      if (!supabaseClient) throw new Error("Client Supabase indisponible.");
+
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        email: email,
+        token: token,
+        type: 'signup'
+      });
+
+      if (error) throw error;
+
+      succBox.textContent = "Code validé avec succès ! Connexion en cours...";
+      succBox.classList.add('visible');
+
+      if (data && data.session) {
+        onEmailConfirmedSuccess(data.session);
+      } else {
+        setTimeout(() => {
+          window.location.href = "login.html?verified=true";
+        }, 1200);
+      }
+
+    } catch (err) {
+      console.error("Erreur validation OTP:", err);
+      let msg = err.message || "Code invalide ou expiré.";
+      if (msg.includes("Token has expired") || msg.includes("expired")) {
+        msg = "Ce code a expiré. Cliquez sur 'Renvoyer l'email' pour en obtenir un nouveau.";
+      } else if (msg.includes("invalid") || msg.includes("Token is invalid")) {
+        msg = "Le code saisi est incorrect. Veuillez vérifier vos emails.";
+      }
+      errBox.innerHTML = `<strong>Erreur de validation :</strong> ${msg}`;
+      errBox.classList.add('visible');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Valider le Code";
+    }
+  }
+
+  /* ======================================================
+     ÉCOUTE AUTOMATIQUE DE CONFIRMATION EMAIL (ÉTAPE 4)
+     ====================================================== */
+  function startAutoSessionListener() {
+    if (!supabaseClient) return;
+
+    // 1. Écoute événementielle Supabase
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
+        onEmailConfirmedSuccess(session);
+      }
+    });
+
+    // 2. Sondage régulier
+    if (checkSessionInterval) clearInterval(checkSessionInterval);
+    checkSessionInterval = setInterval(async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          clearInterval(checkSessionInterval);
+          onEmailConfirmedSuccess(session);
+        }
+      } catch(e) {}
+    }, 3000);
+  }
+
+  function onEmailConfirmedSuccess(session) {
+    if (checkSessionInterval) clearInterval(checkSessionInterval);
+
+    try {
+      if (session) {
+        localStorage.setItem('jbf_client_session', JSON.stringify(session));
+        localStorage.setItem('jbf_client_user', JSON.stringify(session.user));
+      }
+    } catch(e) {}
+
+    const stepBody = document.getElementById('step4');
+    stepBody.innerHTML = `
+      <div style="text-align:center; padding: 1.5rem 0;">
+        <div style="width:76px;height:76px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text-h);margin-bottom:0.5rem;">Email Confirmé avec Succès !</h2>
+        <p style="color:var(--text-body);font-size:0.92rem;line-height:1.6;max-width:380px;margin:0 auto 1.5rem;">
+          Bienvenue chez JBF SERVICES SARL. Votre compte a été validé et votre session est active.
+        </p>
+        <div style="margin-top: 1rem;">
+          <a href="login.html?verified=true" class="btn btn-pink" style="padding: 0.9rem 1.75rem; font-size:0.92rem;">
+            Accéder à mon Espace Client & Devis →
+          </a>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      window.location.href = "login.html?verified=true";
+    }, 1800);
+  }
+
+  /* ======================================================
+     RENVOYER L'EMAIL DE CONFIRMATION
+     ====================================================== */
+  async function resendSupabaseCode() {
+    if (resendCooldown > 0) return;
+
+    const email = document.getElementById('s1_email').value.trim();
+    const resendBtn = document.getElementById('resendBtn');
+    const errBox = document.getElementById('s4_error_banner');
+    const succBox = document.getElementById('s4_success_banner');
+    errBox.classList.remove('visible');
+    succBox.classList.remove('visible');
+
+    resendBtn.disabled = true;
+    resendBtn.textContent = "Envoi en cours...";
+
+    try {
+      if (!supabaseClient) throw new Error("Client Supabase indisponible.");
+
+      let redirectUrl = window.location.href.replace(/register\.html.*$/, 'login.html?verified=true');
+      if (!redirectUrl.startsWith('http')) {
+        redirectUrl = 'http://localhost:8080/auth/login.html?verified=true';
+      }
+
+      const { error } = await supabaseClient.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (error) throw error;
+
+      succBox.textContent = "Un nouvel email de confirmation a été envoyé. Vérifiez votre boîte de réception et vos spams.";
+      succBox.classList.add('visible');
+
+      // Cooldown de 60s
+      resendCooldown = 60;
+      const cdInterval = setInterval(() => {
+        resendCooldown--;
+        if (resendCooldown > 0) {
+          resendBtn.textContent = `Renvoyer l'email (${resendCooldown}s)`;
+          resendBtn.disabled = true;
+        } else {
+          clearInterval(cdInterval);
+          resendBtn.textContent = "Renvoyer l'email de confirmation";
+          resendBtn.disabled = false;
+        }
+      }, 1000);
+
+    } catch (err) {
+      console.error("Erreur renvoi email:", err);
+      let msg = err.message || "Impossible de renvoyer l'email.";
+      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit") || msg.includes("Email rate limit exceeded")) {
+        msg = "Limite d'envoi atteinte sur Supabase. Veuillez patienter quelques minutes.";
+      }
+      errBox.innerHTML = `<strong>Attention :</strong> ${msg}`;
+      errBox.classList.add('visible');
+      resendBtn.disabled = false;
+      resendBtn.textContent = "Renvoyer l'email de confirmation";
+    }
+  }
+
+  /* ======================================================
+     UTILITAIRES D'ERREURS
+     ====================================================== */
+  function showError(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    if (input) input.classList.add('error');
+    const err = document.getElementById(errorId);
+    if (err) err.classList.add('visible');
+  }
+
+  function clearError(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    if (input) { input.classList.remove('error'); input.classList.add('success'); }
+    const err = document.getElementById(errorId);
+    if (err) err.classList.remove('visible');
+  }
+
+  /* Initialisation */
+  updateStepper(1);
+</script>
+</body>
+</html>

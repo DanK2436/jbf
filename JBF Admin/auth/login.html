@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Administration — JBF SERVICES</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../supabase/auth-client.js"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #FFF0F7 0%, #F8F9FA 100%);
+      padding: 20px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      background: #FFFFFF;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 36px rgba(230, 0, 126, 0.08);
+      overflow: hidden;
+    }
+
+    .login-header {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .login-header img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+
+    .login-header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .login-header p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .login-body {
+      padding: 28px 32px 32px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-sm);
+      outline: none;
+      transition: var(--t-instant);
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      border-color: var(--brand-pink);
+      box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.1);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--brand-pink);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--t-instant);
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--brand-pink-dark);
+      box-shadow: 0 4px 16px rgba(230, 0, 126, 0.3);
+    }
+
+    .alert-error {
+      background: #FEE2E2;
+      border: 1px solid #F87171;
+      color: #B91C1C;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-success {
+      background: #DEF7EC;
+      border: 1px solid #31C48D;
+      color: #03543F;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .extra-links {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .extra-links a {
+      color: var(--brand-pink);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .extra-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-header">
+    <img src="../../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo" onerror="this.src='../assets/logo.png'">
+    <h1>Administration JBF</h1>
+    <p>Portail Sécurisé de Supervision & Décision</p>
+  </div>
+
+  <div class="login-body">
+    <div id="alertError" class="alert-error"></div>
+    <div id="alertSuccess" class="alert-success"></div>
+
+    <!-- FORMULAIRE DE CONNEXION MOT DE PASSE STRICT -->
+    <form id="passwordForm" onsubmit="handlePasswordLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Administrateur</label>
+        <input type="email" id="passEmail" class="form-control" required placeholder="admin@jbf-services.cd" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" id="passPassword" class="form-control" required placeholder="••••••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-submit" id="btnPassSubmit">
+        Connexion Sécurisée
+      </button>
+      <div class="extra-links">
+        <a onclick="showForgotPassword()">Mot de passe oublié ?</a>
+      </div>
+    </form>
+
+    <!-- SECTION MOT DE PASSE OUBLIÉ -->
+    <div id="resetSection" style="display: none;">
+      <div class="form-group">
+        <label class="form-label">Email pour réinitialisation</label>
+        <input type="email" id="resetEmail" class="form-control" placeholder="admin@jbf-services.cd">
+      </div>
+      <button type="button" class="btn-submit" onclick="handleResetPassword()">
+        Envoyer le lien de réinitialisation
+      </button>
+      <div class="extra-links">
+        <a onclick="hideForgotPassword()">Retour à la connexion</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showError(msg) {
+    const el = document.getElementById('alertError');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('alertSuccess').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('alertSuccess');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('alertError').style.display = 'none';
+  }
+
+  function clearAlerts() {
+    document.getElementById('alertError').style.display = 'none';
+    document.getElementById('alertSuccess').style.display = 'none';
+  }
+
+  function showForgotPassword() {
+    clearAlerts();
+    document.getElementById('passwordForm').style.display = 'none';
+    document.getElementById('resetSection').style.display = 'block';
+  }
+
+  function hideForgotPassword() {
+    clearAlerts();
+    document.getElementById('resetSection').style.display = 'none';
+    document.getElementById('passwordForm').style.display = 'block';
+  }
+
+  async function handlePasswordLogin(e) {
+    e.preventDefault();
+    clearAlerts();
+
+    const email = document.getElementById('passEmail').value.trim();
+    const pass = document.getElementById('passPassword').value;
+    const btn = document.getElementById('btnPassSubmit');
+
+    btn.disabled = true;
+    btn.textContent = 'Vérification en cours...';
+
+    try {
+      // 1. Authentification stricte via le serveur Backend (credentials isolés dans le backend .env)
+      const endpoints = ['/api/admin/login', 'http://localhost:3001/api/admin/login'];
+      let loginSuccessful = false;
+      let lastErr = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: pass })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success) {
+              const adminSession = {
+                email: data.email || email,
+                name: data.name || 'Direction Générale JBF',
+                role: data.role || 'Super Administrateur',
+                permissions: data.permissions || ['*'],
+                token: data.token || ('jbf-admin-' + Date.now())
+              };
+              localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminSession));
+              localStorage.setItem('jbf_admin_session', JSON.stringify(adminSession));
+              localStorage.setItem('jbf_admin_token', adminSession.token);
+
+              showSuccess('Connexion validée. Redirection vers le tableau de bord...');
+              setTimeout(() => {
+                window.location.href = '../dashboard.html';
+              }, 500);
+              loginSuccessful = true;
+              return;
+            }
+          } else if (res.status === 401) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Identifiants administrateur incorrects.');
+          }
+        } catch (callErr) {
+          if (callErr.message && callErr.message.includes('Identifiants administrateur')) {
+            throw callErr;
+          }
+          lastErr = callErr;
+        }
+      }
+
+      // 2. Fallback Supabase Auth directe si le serveur local ne répond pas
+      if (!loginSuccessful && window.JBFAuth) {
+        const res = await window.JBFAuth.loginWithPassword(email, pass, 'admin');
+        if (res && res.success) {
+          showSuccess('Connexion validée. Redirection...');
+          setTimeout(() => {
+            window.location.href = res.redirect || '../dashboard.html';
+          }, 500);
+          return;
+        }
+      }
+
+      throw new Error(lastErr?.message || 'Identifiants administrateur invalides ou serveur indisponible.');
+    } catch (err) {
+      showError(err.message || 'Échec de connexion administrateur.');
+      btn.disabled = false;
+      btn.textContent = 'Connexion Sécurisée';
+    }
+  }
+
+  async function handleResetPassword() {
+    clearAlerts();
+    const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+    try {
+      if (window.JBFAuth) {
+        await window.JBFAuth.sendPasswordReset(email);
+        showSuccess('Email de réinitialisation transmis à votre boîte.');
+      } else {
+        showSuccess('Demande enregistrée.');
+      }
+    } catch (e) {
+      showError(e.message || 'Erreur lors de la réinitialisation.');
+    }
+  }
+</script>
+</body>
+</html>

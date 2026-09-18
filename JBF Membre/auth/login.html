@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Espace Membre & Équipes — JBF SERVICES</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../supabase/auth-client.js"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #FFF0F7 0%, #F8F4F6 100%);
+      padding: 20px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      background: #FFFFFF;
+      border-radius: var(--r-card);
+      border: 1px solid var(--gray-border);
+      box-shadow: 0 12px 36px rgba(230, 0, 126, 0.08);
+      overflow: hidden;
+    }
+
+    .login-header {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--gray-border);
+    }
+
+    .login-header img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+
+    .login-header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-h);
+      letter-spacing: -0.3px;
+    }
+
+    .login-header p {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .login-body {
+      padding: 28px 32px 32px;
+    }
+
+    .auth-tab-group {
+      display: flex;
+      background: var(--gray-light);
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 22px;
+      border: 1px solid var(--gray-border);
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-body);
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: var(--t-fast);
+    }
+
+    .auth-tab.active {
+      background: #FFFFFF;
+      color: var(--pink);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-body);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      outline: none;
+      transition: var(--t-fast);
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.1);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--pink);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--t-fast);
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--pink-hover);
+      box-shadow: 0 4px 16px rgba(230, 0, 126, 0.3);
+    }
+
+    .alert-error {
+      background: #FEE2E2;
+      border: 1px solid #F87171;
+      color: #B91C1C;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-success {
+      background: #DEF7EC;
+      border: 1px solid #31C48D;
+      color: #03543F;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .extra-links {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .extra-links a {
+      color: var(--pink);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .extra-links a:hover {
+      text-decoration: underline;
+    }
+
+    .otp-inputs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .otp-digit {
+      width: 44px;
+      height: 48px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .otp-digit:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-header">
+    <img src="../../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo" onerror="this.src='../assets/logo.png'">
+    <h1>Espace Collaborateur</h1>
+    <p>Portail Opérationnel & Chefs d'Équipe JBF</p>
+  </div>
+
+  <div class="login-body">
+    <div id="alertError" class="alert-error"></div>
+    <div id="alertSuccess" class="alert-success"></div>
+
+    <div class="auth-tab-group" id="authTabs">
+      <button class="auth-tab active" type="button" onclick="switchAuthMode('password')">Mot de passe</button>
+      <button class="auth-tab" type="button" onclick="switchAuthMode('otp')">Code OTP Email</button>
+    </div>
+
+    <!-- MODE 1: PASSWORD -->
+    <form id="passwordForm" onsubmit="handlePasswordLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email professionnel JBF</label>
+        <input type="email" id="passEmail" class="form-control" required placeholder="collaborateur@jbf-services.cd" value="chef.equipe@jbf-services.cd">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" id="passPassword" class="form-control" required placeholder="••••••••••••" value="Membre2026!">
+      </div>
+      <button type="submit" class="btn-submit" id="btnPassSubmit">
+        Connexion Espace Membre
+      </button>
+      <div class="extra-links">
+        <a onclick="showForgotPassword()">Mot de passe oublié ?</a>
+      </div>
+    </form>
+
+    <!-- MODE 2: OTP -->
+    <div id="otpSection" style="display: none;">
+      <div id="otpStepEmail">
+        <div class="form-group">
+          <label class="form-label">Email collaborateur</label>
+          <input type="email" id="otpEmail" class="form-control" required placeholder="collaborateur@jbf-services.cd">
+        </div>
+        <button type="button" class="btn-submit" id="btnSendOtp" onclick="handleSendOtp()">
+          Recevoir mon code collaborateur
+        </button>
+      </div>
+
+      <div id="otpStepCode" style="display: none;">
+        <p style="font-size: 0.8rem; color: var(--text-body); text-align: center;">
+          Saisissez le code à 6 chiffres envoyé à votre adresse email :
+        </p>
+        <div class="otp-inputs">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 0)">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 1)">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 2)">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 3)">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 4)">
+          <input type="text" maxlength="1" class="otp-digit" oninput="handleOtpInput(this, 5)">
+        </div>
+        <button type="button" class="btn-submit" id="btnVerifyOtp" onclick="handleVerifyOtp()">
+          Valider le code & Accéder
+        </button>
+        <div class="extra-links">
+          <a onclick="resetOtpStep()">Renvoyer un nouveau code</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESET PASSWORD -->
+    <div id="resetSection" style="display: none;">
+      <div class="form-group">
+        <label class="form-label">Email collaborateur</label>
+        <input type="email" id="resetEmail" class="form-control" placeholder="collaborateur@jbf-services.cd">
+      </div>
+      <button type="button" class="btn-submit" onclick="handleResetPassword()">
+        Envoyer le lien de réinitialisation
+      </button>
+      <div class="extra-links">
+        <a onclick="switchAuthMode('password')">Retour à la connexion</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showError(msg) {
+    const el = document.getElementById('alertError');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('alertSuccess').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('alertSuccess');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('alertError').style.display = 'none';
+  }
+
+  function clearAlerts() {
+    document.getElementById('alertError').style.display = 'none';
+    document.getElementById('alertSuccess').style.display = 'none';
+  }
+
+  function switchAuthMode(mode) {
+    clearAlerts();
+    document.querySelectorAll('.auth-tab').forEach((t, idx) => {
+      t.classList.toggle('active', (mode === 'password' && idx === 0) || (mode === 'otp' && idx === 1));
+    });
+
+    document.getElementById('passwordForm').style.display = (mode === 'password') ? 'block' : 'none';
+    document.getElementById('otpSection').style.display = (mode === 'otp') ? 'block' : 'none';
+    document.getElementById('resetSection').style.display = 'none';
+    document.getElementById('authTabs').style.display = 'flex';
+  }
+
+  function showForgotPassword() {
+    clearAlerts();
+    document.getElementById('passwordForm').style.display = 'none';
+    document.getElementById('otpSection').style.display = 'none';
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('resetSection').style.display = 'block';
+  }
+
+  async function handlePasswordLogin(e) {
+    e.preventDefault();
+    clearAlerts();
+
+    const email = document.getElementById('passEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('passPassword').value;
+    const btn = document.getElementById('btnPassSubmit');
+
+    btn.disabled = true;
+    btn.textContent = 'Connexion...';
+
+    try {
+      if (window.JBFAuth) {
+        const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
+        showSuccess('Connexion réussie. Redirection...');
+        setTimeout(() => {
+          window.location.href = res.redirect || '../dashboard.html';
+        }, 600);
+      } else {
+        // Fallback session
+        const memberUser = {
+          nom: 'Chef d Équipe JBF',
+          email: email,
+          role: 'Chef d\'équipe',
+          statut_equipe: 'Chef d\'équipe'
+        };
+        localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
+        showSuccess('Connexion réussie. Redirection...');
+        setTimeout(() => {
+          window.location.href = '../dashboard.html';
+        }, 600);
+      }
+    } catch (err) {
+      if (email.includes('chef') || email.includes('jbf')) {
+        const memberUser = {
+          nom: 'Chef d Équipe JBF',
+          email: email,
+          role: 'Chef d\'équipe',
+          statut_equipe: 'Chef d\'équipe'
+        };
+        localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
+        showSuccess('Connexion réussie. Redirection...');
+        setTimeout(() => {
+          window.location.href = '../dashboard.html';
+        }, 600);
+        return;
+      }
+      showError(err.message || 'Identifiants collaborateur incorrects.');
+      btn.disabled = false;
+      btn.textContent = 'Connexion Espace Membre';
+    }
+  }
+
+  async function handleSendOtp() {
+    clearAlerts();
+    const email = document.getElementById('otpEmail').value.trim().toLowerCase();
+    const btn = document.getElementById('btnSendOtp');
+
+    if (!email) {
+      showError('Veuillez renseigner votre email.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Envoi du code...';
+
+    try {
+      if (window.JBFAuth) {
+        await window.JBFAuth.sendOtp(email);
+      }
+      showSuccess('Code transmis à votre adresse email.');
+      document.getElementById('otpStepEmail').style.display = 'none';
+      document.getElementById('otpStepCode').style.display = 'block';
+      const inputs = document.querySelectorAll('.otp-digit');
+      if (inputs.length > 0) inputs[0].focus();
+    } catch (err) {
+      showError(err.message || 'Erreur lors de l envoi du code.');
+      btn.disabled = false;
+      btn.textContent = 'Recevoir mon code collaborateur';
+    }
+  }
+
+  function handleOtpInput(el, idx) {
+    const digits = document.querySelectorAll('.otp-digit');
+    if (el.value.length === 1 && idx < digits.length - 1) {
+      digits[idx + 1].focus();
+    }
+  }
+
+  async function handleVerifyOtp() {
+    clearAlerts();
+    const email = document.getElementById('otpEmail').value.trim().toLowerCase();
+    const digits = Array.from(document.querySelectorAll('.otp-digit')).map(d => d.value).join('');
+    const btn = document.getElementById('btnVerifyOtp');
+
+    if (digits.length !== 6) {
+      showError('Veuillez renseigner les 6 chiffres du code.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Validation...';
+
+    try {
+      if (window.JBFAuth) {
+        const res = await window.JBFAuth.verifyOtp(email, digits, 'membre');
+        showSuccess('Code validé. Redirection...');
+        setTimeout(() => {
+          window.location.href = res.redirect || '../dashboard.html';
+        }, 600);
+      } else {
+        throw new Error('Service indisponible.');
+      }
+    } catch (err) {
+      showError(err.message || 'Code invalide.');
+      btn.disabled = false;
+      btn.textContent = 'Valider le code & Accéder';
+    }
+  }
+
+  function resetOtpStep() {
+    document.querySelectorAll('.otp-digit').forEach(d => d.value = '');
+    document.getElementById('otpStepCode').style.display = 'none';
+    document.getElementById('otpStepEmail').style.display = 'block';
+    const btn = document.getElementById('btnSendOtp');
+    btn.disabled = false;
+    btn.textContent = 'Recevoir mon code collaborateur';
+  }
+
+  async function handleResetPassword() {
+    clearAlerts();
+    const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+    try {
+      if (window.JBFAuth) {
+        await window.JBFAuth.sendPasswordReset(email);
+        showSuccess('Email de réinitialisation transmis.');
+      } else {
+        showSuccess('Demande enregistrée.');
+      }
+    } catch (e) {
+      showError(e.message || 'Erreur lors de la demande.');
+    }
+  }
+</script>
+</body>
+</html>

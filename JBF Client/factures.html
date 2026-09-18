@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factures & Règlements — JBF Client</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/client.css">
+</head>
+<body>
+
+<div class="client-layout">
+  <aside class="client-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="brand-text">
+        <h2>JBF CLIENT</h2>
+        <span>Espace Partenaire RDC</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Compte</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de Bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Mes Devis & Commandes</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Suivi des Chantiers</span>
+      </a>
+      <div class="nav-section-title">Comptabilité & Documents</div>
+      <a href="factures.html" class="nav-item active">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Factures & Devis Validés</span>
+      </a>
+      <div class="nav-section-title">Relation Client</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service Client & Support</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Mes Évaluations</span>
+      </a>
+      <div class="nav-section-title">Configuration</div>
+      <a href="profil.html" class="nav-item">
+        <i class="bi bi-building"></i>
+        <span>Profil Entreprise</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="client-user-pill">
+        <div class="user-avatar client-user-avatar">CL</div>
+        <div class="user-info">
+          <div class="name client-company-name">Mon Entreprise</div>
+          <div class="role client-user-name">Responsable Client</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.clientCore.logoutClient()"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </aside>
+
+  <div class="client-main">
+    <header class="client-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title"><h1>Facturation, Règlements & Pièces Comptables</h1></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Service Comptabilité JBF')">
+          <i class="bi bi-whatsapp"></i> <span>Contact Comptabilité</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="client-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-receipt"></i> Registre des Factures JBF SERVICES</h2>
+          <button class="btn btn-secondary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+        </div>
+        <div class="card-body">
+          
+          <div class="table-responsive">
+            <table class="client-table table-factures-client">
+              <thead>
+                <tr>
+                  <th>N° Facture</th>
+                  <th>Prestation Associée</th>
+                  <th>Date d'Émission</th>
+                  <th>Montant HT</th>
+                  <th>Montant TTC</th>
+                  <th>Statut Règlement</th>
+                  <th style="text-align: right;">Téléchargement</th>
+                </tr>
+              </thead>
+              <tbody id="facturesTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement de vos pièces comptables...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/whatsapp-config.js"></script>
+<script src="js/whatsapp-auth.js"></script>
+<script src="js/client-core.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const supabase = createClient(
+    JBF_CLIENT_CONFIG.SUPABASE_URL,
+    JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
+  );
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadClientFactures();
+  });
+
+  async function loadClientFactures() {
+    const tbody = document.getElementById('facturesTableBody');
+
+    // Récupérer la session client
+    let session = null;
+    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
+    if (!session || !session.id) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">Veuillez vous connecter pour voir vos factures.</td></tr>';
+      return;
+    }
+
+    let list = [];
+    let fromSupabase = false;
+
+    // --- Tentative Supabase ---
+    try {
+      const { data, error } = await supabase
+        .from('demandes_devis')
+        .select('*')
+        .eq('client_id', session.id)
+        .in('statut', ['valide', 'facture', 'paye'])
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        list = data;
+        fromSupabase = true;
+        try { localStorage.setItem('JBF_FACTURES_LOCAL', JSON.stringify(list)); } catch(e) {}
+      }
+    } catch(e) {}
+
+    // --- Fallback localStorage ---
+    if (!fromSupabase) {
+      try {
+        const stored = localStorage.getItem('JBF_FACTURES_LOCAL');
+        if (stored) list = JSON.parse(stored);
+      } catch(e) {}
+    }
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">Aucune facture émise pour le moment. Vos pièces comptables apparaîtront ici dès validation de vos devis.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(f => {
+      const isPaid = f.statut === 'paye';
+      const statusClass = isPaid ? 'paye' : 'en_attente';
+      const statusLabel = isPaid ? 'Payé / Reçu Émis' : 'En attente virement';
+      const dateStr = f.created_at ? new Date(f.created_at).toLocaleDateString('fr-CD') : 'Récemment';
+
+      return `
+        <tr>
+          <td><strong>#FAC-${(f.id || '').toString().slice(-4).toUpperCase()}</strong></td>
+          <td>${escapeHtml(f.service || f.prestation || 'Prestation JBF')}</td>
+          <td>${dateStr}</td>
+          <td>$${Number(f.montant_ht || 0).toLocaleString()} USD</td>
+          <td><strong style="color:var(--brand-pink);">$${Number(f.montant_ttc || f.montant_ht || 0).toLocaleString()} USD</strong></td>
+          <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+          <td style="text-align:right;">
+            <button class="btn btn-secondary btn-sm" onclick="window.clientCore.showToast('Téléchargement de la pièce officielle...', 'info')">
+              <i class="bi bi-file-earmark-arrow-down"></i> PDF Facture
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+
+</body>
+</html>

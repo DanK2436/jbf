@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Client & Support — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item active">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+        <span class="badge" id="badgeTicketsOuverts" style="background: var(--brand-pink); color: white;">0</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Service Client & Gestion des Requêtes</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-indicator">
+          <div class="pulse-dot"></div>
+          <span>Support Opérationnel</span>
+        </div>
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI METRICS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-envelope-open"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Tickets Ouverts</h3>
+            <div class="kpi-value" id="kpiOuverts">--</div>
+            <div class="kpi-sub">En attente de prise en charge</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>En Traitement</h3>
+            <div class="kpi-value" id="kpiTraitement">--</div>
+            <div class="kpi-sub">Échanges en cours</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Résolus & Clôturés</h3>
+            <div class="kpi-value" id="kpiResolus">--</div>
+            <div class="kpi-sub">Satisfaction 99.2%</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-whatsapp"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Canal Prioritaire</h3>
+            <div class="kpi-value">WhatsApp</div>
+            <div class="kpi-sub">Liaison directe client</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TICKETS TABLE CARD -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-chat-left-dots"></i> Requêtes Clients Transmises</h2>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="loadTicketsList()">
+              <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center;">
+            <div style="flex: 1; min-width: 260px; position: relative;">
+              <input type="text" id="ticketSearchInput" class="form-control" placeholder="Rechercher par client, email, téléphone ou sujet..." oninput="filterTickets()">
+            </div>
+            <div style="width: 200px;">
+              <select class="form-select" id="ticketStatusFilter" onchange="filterTickets()">
+                <option value="all">Tous les statuts</option>
+                <option value="ouvert">Ouvert</option>
+                <option value="en_traitement">En traitement</option>
+                <option value="resolu">Résolu</option>
+                <option value="ferme">Fermé</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Contact</th>
+                  <th>Sujet</th>
+                  <th>Canal</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ticketsTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL TRAITEMENT TICKET -->
+<div class="modal-backdrop-custom" id="ticketDetailModal">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">
+        <i class="bi bi-ticket-detailed" style="color: var(--brand-pink);"></i> Traitement du Ticket Support
+      </h3>
+      <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" onclick="closeTicketModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <div style="margin-bottom: 16px;">
+        <label class="form-label">Client</label>
+        <div id="modalClientNom" style="font-weight: 700; font-size: 1rem;"></div>
+        <div id="modalClientContact" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;"></div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="form-label">Sujet de la demande</label>
+        <div id="modalTicketSujet" style="font-weight: 600; color: var(--text-secondary);"></div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="form-label">Message du client</label>
+        <div id="modalTicketMessage" style="background: var(--bg-main); padding: 14px; border-radius: var(--r-sm); border: 1px solid var(--border-subtle); font-size: 0.85rem; line-height: 1.5; white-space: pre-line;"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Statut du ticket</label>
+        <select class="form-select" id="modalTicketStatut">
+          <option value="ouvert">Ouvert (Nouveau)</option>
+          <option value="en_traitement">En traitement</option>
+          <option value="resolu">Résolu</option>
+          <option value="ferme">Fermé</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes internes ou Réponse Admin</label>
+        <textarea class="form-control" id="modalReponseAdmin" rows="3" placeholder="Saisissez vos observations ou notes de suivi..."></textarea>
+      </div>
+
+      <input type="hidden" id="modalTicketId">
+      <input type="hidden" id="modalTicketPhone">
+
+      <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+        <button class="btn btn-whatsapp" onclick="openClientWhatsAppFromModal()">
+          <i class="bi bi-whatsapp"></i> Contacter sur WhatsApp
+        </button>
+        <button class="btn btn-primary" onclick="saveTicketStatus()">
+          <i class="bi bi-check2"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let allTickets = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadTicketsList();
+  });
+
+  async function loadTicketsList() {
+    const tbody = document.getElementById('ticketsTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des tickets en cours...</td></tr>';
+
+    let loaded = [];
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await client
+          .from('tickets_support')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          loaded = data;
+        }
+      }
+    } catch (e) {
+      console.warn('Erreur chargement Supabase tickets:', e);
+    }
+
+    if (loaded.length === 0) {
+      const local = localStorage.getItem('JBF_TICKETS_LOCAL');
+      if (local) {
+        try {
+          loaded = JSON.parse(local);
+        } catch (e) {}
+      }
+    }
+
+    allTickets = loaded || [];
+    updateKPIs();
+    renderTicketsTable(allTickets);
+  }
+
+  function updateKPIs() {
+    const ouverts = allTickets.filter(t => t.statut === 'ouvert').length;
+    const enTraitement = allTickets.filter(t => t.statut === 'en_traitement').length;
+    const resolus = allTickets.filter(t => t.statut === 'resolu' || t.statut === 'ferme').length;
+
+    document.getElementById('kpiOuverts').textContent = ouverts;
+    document.getElementById('kpiTraitement').textContent = enTraitement;
+    document.getElementById('kpiResolus').textContent = resolus;
+    document.getElementById('badgeTicketsOuverts').textContent = ouverts;
+  }
+
+  function renderTicketsTable(list) {
+    const tbody = document.getElementById('ticketsTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucun ticket ne correspond aux critères.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(t => {
+      let statusBadge = '';
+      if (t.statut === 'ouvert') statusBadge = '<span class="badge-status nouveau">Ouvert</span>';
+      else if (t.statut === 'en_traitement') statusBadge = '<span class="badge-status en_cours">En traitement</span>';
+      else if (t.statut === 'resolu') statusBadge = '<span class="badge-status valide">Résolu</span>';
+      else statusBadge = '<span class="badge-status archive">Fermé</span>';
+
+      const dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '--';
+
+      const cleanPhone = (t.client_telephone || '').replace(/[^0-9+]/g, '');
+
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(t.client_nom || 'Client')}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(t.client_email || '')}</div>
+          </td>
+          <td>
+            <span style="font-family: monospace; font-size: 0.82rem;">${escapeHtml(t.client_telephone || 'Non renseigné')}</span>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: var(--text-secondary); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(t.sujet || '')}">
+              ${escapeHtml(t.sujet || 'Requête générale')}
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${escapeHtml(t.message || '')}
+            </div>
+          </td>
+          <td>
+            <span class="badge-status" style="background: ${t.canal === 'whatsapp' ? 'var(--whatsapp-subtle)' : 'var(--bg-main)'}; color: ${t.canal === 'whatsapp' ? 'var(--whatsapp)' : 'var(--text-secondary)'};">
+              <i class="bi bi-${t.canal === 'whatsapp' ? 'whatsapp' : 'globe'}"></i> ${t.canal === 'whatsapp' ? 'WhatsApp' : 'Web'}
+            </span>
+          </td>
+          <td style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
+          <td>${statusBadge}</td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent('Bonjour ' + (t.client_nom || '') + ', Service Client JBF SERVICES à votre écoute concernant votre ticket : ' + (t.sujet || ''))}" target="_blank" class="btn btn-whatsapp btn-sm" title="Répondre sur WhatsApp">
+                  <i class="bi bi-whatsapp"></i>
+                </a>
+              ` : ''}
+              <button class="btn btn-primary btn-sm" onclick="openTicketModal('${t.id}')" title="Traiter">
+                <i class="bi bi-pencil-square"></i> Traiter
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterTickets() {
+    const q = document.getElementById('ticketSearchInput').value.toLowerCase().trim();
+    const st = document.getElementById('ticketStatusFilter').value;
+
+    const filtered = allTickets.filter(t => {
+      const matchQuery = (t.client_nom && t.client_nom.toLowerCase().includes(q)) ||
+                         (t.client_email && t.client_email.toLowerCase().includes(q)) ||
+                         (t.client_telephone && t.client_telephone.includes(q)) ||
+                         (t.sujet && t.sujet.toLowerCase().includes(q)) ||
+                         (t.message && t.message.toLowerCase().includes(q));
+      const matchStatus = (st === 'all' || t.statut === st);
+      return matchQuery && matchStatus;
+    });
+
+    renderTicketsTable(filtered);
+  }
+
+  function openTicketModal(id) {
+    const t = allTickets.find(item => item.id === id);
+    if (!t) return;
+
+    document.getElementById('modalTicketId').value = t.id;
+    document.getElementById('modalTicketPhone').value = t.client_telephone || '';
+    document.getElementById('modalClientNom').textContent = t.client_nom || 'Client';
+    document.getElementById('modalClientContact').textContent = `${t.client_telephone || 'Téléphone non précisé'} • ${t.client_email || 'Email non précisé'}`;
+    document.getElementById('modalTicketSujet').textContent = t.sujet || 'Requête sans sujet';
+    document.getElementById('modalTicketMessage').textContent = t.message || 'Aucun message.';
+    document.getElementById('modalTicketStatut').value = t.statut || 'ouvert';
+    document.getElementById('modalReponseAdmin').value = t.reponse_admin || '';
+
+    document.getElementById('ticketDetailModal').style.display = 'flex';
+  }
+
+  function closeTicketModal() {
+    document.getElementById('ticketDetailModal').style.display = 'none';
+  }
+
+  function openClientWhatsAppFromModal() {
+    const phone = document.getElementById('modalTicketPhone').value;
+    const clientNom = document.getElementById('modalClientNom').textContent;
+    const sujet = document.getElementById('modalTicketSujet').textContent;
+
+    if (!phone) {
+      alert('Numéro de téléphone non renseigné pour ce client.');
+      return;
+    }
+
+    const clean = phone.replace(/[^0-9]/g, '');
+    const text = encodeURIComponent(`Bonjour ${clientNom}, Service Client JBF SERVICES à votre écoute concernant votre dossier : "${sujet}". En quoi pouvons-nous vous assister ?`);
+    window.open(`https://wa.me/${clean}?text=${text}`, '_blank');
+  }
+
+  async function saveTicketStatus() {
+    const id = document.getElementById('modalTicketId').value;
+    const statut = document.getElementById('modalTicketStatut').value;
+    const reponse = document.getElementById('modalReponseAdmin').value;
+
+    const target = allTickets.find(t => t.id === id);
+    if (target) {
+      target.statut = statut;
+      target.reponse_admin = reponse;
+      target.updated_at = new Date().toISOString();
+    }
+
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        await client
+          .from('tickets_support')
+          .update({ statut: statut, reponse_admin: reponse, updated_at: new Date().toISOString() })
+          .eq('id', id);
+      }
+    } catch (e) {
+      console.warn('Erreur mise a jour ticket Supabase:', e);
+    }
+
+    localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(allTickets));
+    closeTicketModal();
+    updateKPIs();
+    renderTicketsTable(allTickets);
+
+    if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+      window.adminCore.showToast('Ticket mis à jour avec succès', 'success');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Ressources & HSE — JBF Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF ADMIN</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item active">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Sécurité & Accès</div>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Médiathèque, Procédures & Formations HSE</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-folder-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Documents En Ligne</h3>
+            <div class="kpi-value" id="kpiTotalDocs">--</div>
+            <div class="kpi-sub">Procédures, fiches & manuels</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-play-btn-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Vidéos Formations</h3>
+            <div class="kpi-value" id="kpiVideos">--</div>
+            <div class="kpi-sub">Supports d'induction miniers</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Ressources Publiées</h3>
+            <div class="kpi-value" id="kpiPubliees">--</div>
+            <div class="kpi-sub">Visibles par les membres</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-shield-shaded"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Standards HSE</h3>
+            <div class="kpi-value">100%</div>
+            <div class="kpi-sub">Conformité légale RDC</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD TABLEAU -->
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="bi bi-file-earmark-text"></i> Catalogue des Ressources Opérationnelles</h2>
+          <button class="btn btn-primary btn-sm" onclick="openCreateRessourceModal()">
+            <i class="bi bi-cloud-upload"></i> Ajouter une ressource
+          </button>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center;">
+            <div style="flex: 1; min-width: 260px;">
+              <input type="text" id="ressourceSearchInput" class="form-control" placeholder="Rechercher un document ou une formation..." oninput="filterRessources()">
+            </div>
+            <div style="width: 220px;">
+              <select class="form-select" id="ressourceCatFilter" onchange="filterRessources()">
+                <option value="all">Toutes les catégories</option>
+                <option value="HSE & Sécurité">HSE & Sécurité</option>
+                <option value="Formation Vidéo">Formation Vidéo</option>
+                <option value="Procédure Métier">Procédure Métier</option>
+                <option value="Fiche Technique">Fiche Technique</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Titre & Description</th>
+                  <th>Catégorie</th>
+                  <th>Section Concernée</th>
+                  <th>Format / Taille</th>
+                  <th>Visibilité</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ressourcesTableBody">
+                <tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL AJOUT / ÉDITION RESSOURCE -->
+<div class="modal-backdrop-custom" id="ressourceModal">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 id="ressourceModalTitle" style="font-size: 1.05rem; font-weight: 700;">Ajouter une ressource</h3>
+      <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" onclick="closeRessourceModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <input type="hidden" id="modalRessourceId">
+
+      <div class="form-group">
+        <label class="form-label">Titre du document ou de la formation *</label>
+        <input type="text" id="resTitre" class="form-control" placeholder="Ex: Manuel d'Induction Sécurité Mines 2026" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <select id="resCategorie" class="form-select">
+          <option value="HSE & Sécurité">HSE & Sécurité</option>
+          <option value="Formation Vidéo">Formation Vidéo</option>
+          <option value="Procédure Métier">Procédure Métier</option>
+          <option value="Fiche Technique">Fiche Technique</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Section Opérationnelle Cible</label>
+        <select id="resSectionNom" class="form-select">
+          <option value="Tous Services">Tous Services / Transversal</option>
+          <option value="Sous-Traitance Minière">Sous-Traitance Minière</option>
+          <option value="Catering & Restauration">Catering & Restauration</option>
+          <option value="BTP & Génie Civil">BTP & Génie Civil</option>
+          <option value="Maintenance Industrielle">Maintenance Industrielle</option>
+          <option value="Gardiennage & Sécurité">Gardiennage & Sécurité</option>
+          <option value="Logistique & Transport">Logistique & Transport</option>
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Format de Fichier</label>
+          <select id="resTypeFichier" class="form-select">
+            <option value="PDF">Document PDF</option>
+            <option value="MP4">Vidéo MP4</option>
+            <option value="DOCX">Document Word (DOCX)</option>
+            <option value="XLSX">Tableur Excel (XLSX)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Taille estimée</label>
+          <input type="text" id="resTaille" class="form-control" placeholder="Ex: 3.4 MB / 18 min">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lien du fichier ou vidéo (URL / Cloud Storage)</label>
+        <input type="text" id="resFichierUrl" class="form-control" placeholder="https://storage.jbf-services.cd/docs/...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description ou Objectif Pédagogique</label>
+        <textarea id="resDescription" class="form-control" rows="3" placeholder="Présentation synthétique du document..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+          <input type="checkbox" id="resPublie" checked> Publier immédiatement pour les collaborateurs
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button class="btn btn-secondary" onclick="closeRessourceModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveRessource()">
+          <i class="bi bi-check2"></i> Enregistrer la ressource
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  const DEMO_RESSOURCES = [];
+
+  let allRessources = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRessources();
+  });
+
+  async function loadRessources() {
+    const tbody = document.getElementById('ressourcesTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
+
+    let loaded = [];
+    try {
+      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
+        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await client.from('ressources_hse').select('*').order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          loaded = data;
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase ressources_hse:', e);
+    }
+
+    if (loaded.length === 0) {
+      const stored = localStorage.getItem('JBF_RESSOURCES_LOCAL');
+      if (stored) {
+        try { loaded = JSON.parse(stored); } catch (e) {}
+      }
+    }
+
+    allRessources = loaded || [];
+    updateKPIs();
+    renderRessourcesTable(allRessources);
+  }
+
+  function updateKPIs() {
+    const totalDocs = allRessources.length;
+    const videos = allRessources.filter(r => r.categorie === 'Formation Vidéo' || r.type_fichier === 'MP4').length;
+    const publiees = allRessources.filter(r => r.publie).length;
+
+    document.getElementById('kpiTotalDocs').textContent = totalDocs;
+    document.getElementById('kpiVideos').textContent = videos;
+    document.getElementById('kpiPubliees').textContent = publiees;
+  }
+
+  function renderRessourcesTable(list) {
+    const tbody = document.getElementById('ressourcesTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucune ressource répertoriée.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(r => {
+      let icon = 'bi-file-earmark-pdf';
+      if (r.type_fichier === 'MP4' || r.categorie === 'Formation Vidéo') icon = 'bi-file-earmark-play-fill';
+      else if (r.type_fichier === 'DOCX') icon = 'bi-file-earmark-word';
+      else if (r.type_fichier === 'XLSX') icon = 'bi-file-earmark-excel';
+
+      const statusBadge = r.publie 
+        ? '<span class="badge-status valide">Publié</span>' 
+        : '<span class="badge-status archive">Brouillon</span>';
+
+      return `
+        <tr>
+          <td>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <i class="bi ${icon}" style="font-size: 1.4rem; color: var(--brand-pink); margin-top: 2px;"></i>
+              <div>
+                <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(r.titre)}</div>
+                <div style="font-size: 0.76rem; color: var(--text-muted); max-width: 320px;">${escapeHtml(r.description || '')}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge-status" style="background: var(--brand-pink-subtle); color: var(--brand-pink);">
+              ${escapeHtml(r.categorie)}
+            </span>
+          </td>
+          <td>
+            <span style="font-weight: 600; color: var(--text-secondary);">${escapeHtml(r.section_nom || 'Tous Services')}</span>
+          </td>
+          <td>
+            <span style="font-size: 0.8rem; font-family: monospace;">${r.type_fichier || 'PDF'} &middot; ${r.taille || '2.0 MB'}</span>
+          </td>
+          <td>${statusBadge}</td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn btn-secondary btn-sm" onclick="togglePublishRessource('${r.id}')" title="${r.publie ? 'Mettre en brouillon' : 'Publier'}">
+                <i class="bi bi-${r.publie ? 'eye-slash' : 'eye'}"></i>
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="editRessource('${r.id}')" title="Modifier">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteRessource('${r.id}')" title="Supprimer">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterRessources() {
+    const q = document.getElementById('ressourceSearchInput').value.toLowerCase().trim();
+    const cat = document.getElementById('ressourceCatFilter').value;
+
+    const filtered = allRessources.filter(r => {
+      const matchQ = (r.titre && r.titre.toLowerCase().includes(q)) ||
+                     (r.description && r.description.toLowerCase().includes(q)) ||
+                     (r.section_nom && r.section_nom.toLowerCase().includes(q));
+      const matchCat = (cat === 'all' || r.categorie === cat);
+      return matchQ && matchCat;
+    });
+
+    renderRessourcesTable(filtered);
+  }
+
+  function openCreateRessourceModal() {
+    document.getElementById('ressourceModalTitle').textContent = 'Ajouter une ressource';
+    document.getElementById('modalRessourceId').value = '';
+    document.getElementById('resTitre').value = '';
+    document.getElementById('resCategorie').value = 'HSE & Sécurité';
+    document.getElementById('resSectionNom').value = 'Tous Services';
+    document.getElementById('resTypeFichier').value = 'PDF';
+    document.getElementById('resTaille').value = '2.5 MB';
+    document.getElementById('resFichierUrl').value = '';
+    document.getElementById('resDescription').value = '';
+    document.getElementById('resPublie').checked = true;
+
+    document.getElementById('ressourceModal').style.display = 'flex';
+  }
+
+  function editRessource(id) {
+    const r = allRessources.find(item => item.id === id);
+    if (!r) return;
+
+    document.getElementById('ressourceModalTitle').textContent = 'Modifier la ressource';
+    document.getElementById('modalRessourceId').value = r.id;
+    document.getElementById('resTitre').value = r.titre || '';
+    document.getElementById('resCategorie').value = r.categorie || 'HSE & Sécurité';
+    document.getElementById('resSectionNom').value = r.section_nom || 'Tous Services';
+    document.getElementById('resTypeFichier').value = r.type_fichier || 'PDF';
+    document.getElementById('resTaille').value = r.taille || '';
+    document.getElementById('resFichierUrl').value = r.fichier_url || '';
+    document.getElementById('resDescription').value = r.description || '';
+    document.getElementById('resPublie').checked = !!r.publie;
+
+    document.getElementById('ressourceModal').style.display = 'flex';
+  }
+
+  function closeRessourceModal() {
+    document.getElementById('ressourceModal').style.display = 'none';
+  }
+
+  async function saveRessource() {
+    const id = document.getElementById('modalRessourceId').value;
+    const titre = document.getElementById('resTitre').value.trim();
+    const categorie = document.getElementById('resCategorie').value;
+    const sectionNom = document.getElementById('resSectionNom').value;
+    const typeFichier = document.getElementById('resTypeFichier').value;
+    const taille = document.getElementById('resTaille').value.trim() || '2.0 MB';
+    const fichierUrl = document.getElementById('resFichierUrl').value.trim() || '#';
+    const description = document.getElementById('resDescription').value.trim();
+    const publie = document.getElementById('resPublie').checked;
+
+    if (!titre) {
+      alert('Veuillez renseigner le titre de la ressource.');
+      return;
+    }
+
+    if (id) {
+      const target = allRessources.find(item => item.id === id);
+      if (target) {
+        target.titre = titre;
+        target.categorie = categorie;
+        target.section_nom = sectionNom;
+        target.type_fichier = typeFichier;
+        target.taille = taille;
+        target.fichier_url = fichierUrl;
+        target.description = description;
+        target.publie = publie;
+      }
+    } else {
+      const newRes = {
+        id: 'res-' + Date.now(),
+        titre: titre,
+        categorie: categorie,
+        section_nom: sectionNom,
+        type_fichier: typeFichier,
+        taille: taille,
+        fichier_url: fichierUrl,
+        description: description,
+        publie: publie,
+        created_at: new Date().toISOString()
+      };
+      allRessources.unshift(newRes);
+    }
+
+    localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(allRessources));
+    closeRessourceModal();
+    updateKPIs();
+    renderRessourcesTable(allRessources);
+
+    if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+      window.adminCore.showToast('Ressource enregistrée avec succès', 'success');
+    }
+  }
+
+  function togglePublishRessource(id) {
+    const target = allRessources.find(item => item.id === id);
+    if (!target) return;
+    target.publie = !target.publie;
+    localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(allRessources));
+    updateKPIs();
+    renderRessourcesTable(allRessources);
+    if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+      window.adminCore.showToast(target.publie ? 'Ressource publiée' : 'Ressource dépubliée', 'info');
+    }
+  }
+
+  function deleteRessource(id) {
+    const target = allRessources.find(item => item.id === id);
+    if (!target) return;
+    if (confirm(`Confirmez-vous la suppression de la ressource "${target.titre}" ?`)) {
+      allRessources = allRessources.filter(item => item.id !== id);
+      localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(allRessources));
+      updateKPIs();
+      renderRessourcesTable(allRessources);
+      if (window.adminCore && typeof window.adminCore.showToast === 'function') {
+        window.adminCore.showToast('Ressource supprimée', 'success');
+      }
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

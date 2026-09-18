@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer un compte Client — JBF SERVICES SARL</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/client.css">
+  <style>
+    :root {
+      --brand-pink: #E6007E;
+      --brand-pink-dark: #C4006B;
+      --brand-pink-soft: #FFF0F7;
+      --brand-pink-border: rgba(230, 0, 126, 0.2);
+      --slate-dark: #0F172A;
+      --slate-gray: #475569;
+      --slate-light: #94A3B8;
+      --border-color: #E2E8F0;
+      --bg-light: #F8FAFC;
+      --card-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(230, 0, 126, 0.05);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: radial-gradient(circle at 10% 10%, rgba(230, 0, 126, 0.04) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 90%, rgba(230, 0, 126, 0.03) 0%, transparent 40%),
+                  #F8FAFC;
+      color: var(--slate-dark);
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 36px 32px 30px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .auth-logo {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+
+    .auth-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--slate-dark);
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+
+    .auth-subtitle {
+      font-size: 0.82rem;
+      color: var(--slate-gray);
+      font-weight: 500;
+    }
+
+    /* ── Stepper Épuré & Professionnel ── */
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 36px;
+      right: 36px;
+      height: 2px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+
+    .stepper-progress {
+      position: absolute;
+      top: 15px;
+      left: 36px;
+      height: 2px;
+      background: var(--brand-pink);
+      z-index: 2;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      color: var(--slate-light);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+    }
+
+    .step-item.active .step-badge {
+      border-color: var(--brand-pink);
+      background: var(--brand-pink);
+      color: #FFFFFF;
+      box-shadow: 0 0 0 4px rgba(230, 0, 126, 0.15);
+    }
+
+    .step-item.completed .step-badge {
+      border-color: var(--brand-pink);
+      background: var(--brand-pink);
+      color: #FFFFFF;
+    }
+
+    .step-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--slate-light);
+      transition: color 0.2s ease;
+    }
+
+    .step-item.active .step-name {
+      color: var(--brand-pink);
+      font-weight: 700;
+    }
+
+    .step-item.completed .step-name {
+      color: var(--slate-dark);
+    }
+
+    /* ── Formulaires & Groupes ── */
+    .step-panel {
+      display: none;
+    }
+
+    .step-panel.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-header {
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--slate-dark);
+      margin-bottom: 3px;
+    }
+
+    .panel-desc {
+      font-size: 0.8rem;
+      color: var(--slate-gray);
+    }
+
+    /* Toggle Compte */
+    .toggle-account-type {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      border-radius: 10px;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .btn-toggle-type {
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--slate-gray);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-toggle-type.active {
+      background: #FFFFFF;
+      color: var(--brand-pink);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-label span.req {
+      color: var(--brand-pink);
+    }
+
+    .input-icon-wrap {
+      position: relative;
+    }
+
+    .input-icon-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-light);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      color: var(--slate-dark);
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--brand-pink);
+      box-shadow: 0 0 0 3.5px rgba(230, 0, 126, 0.12);
+    }
+
+    .phone-flex {
+      display: flex;
+      gap: 8px;
+    }
+
+    .phone-code-select {
+      width: 110px;
+      flex-shrink: 0;
+      padding: 11px 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      font-weight: 600;
+      background: var(--bg-light);
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--slate-dark);
+    }
+
+    .phone-code-select:focus {
+      outline: none;
+      border-color: var(--brand-pink);
+    }
+
+    /* Force mot de passe */
+    .password-strength {
+      margin-top: 6px;
+    }
+
+    .strength-meter {
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    .strength-text {
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 4px;
+      color: var(--slate-light);
+    }
+
+    /* CGU Checkbox */
+    .cgu-agreement {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 0.78rem;
+      color: var(--slate-gray);
+      line-height: 1.45;
+      margin: 18px 0 20px;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .cgu-agreement input {
+      margin-top: 2px;
+      accent-color: var(--brand-pink);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .cgu-agreement a {
+      color: var(--brand-pink);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .cgu-agreement a:hover {
+      text-decoration: underline;
+    }
+
+    /* Boutons de soumission & navigation */
+    .btn-primary-action {
+      width: 100%;
+      padding: 12px 18px;
+      background: var(--brand-pink);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary-action:hover {
+      background: var(--brand-pink-dark);
+      box-shadow: 0 4px 14px rgba(230, 0, 126, 0.28);
+    }
+
+    .btn-primary-action:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-back-action {
+      width: 100%;
+      padding: 10px 14px;
+      background: transparent;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--slate-gray);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      margin-top: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back-action:hover {
+      background: var(--bg-light);
+      color: var(--slate-dark);
+    }
+
+    /* ── Étape 3: Vérification OTP Email ── */
+    .email-otp-box {
+      background: var(--brand-pink-soft);
+      border: 1px solid var(--brand-pink-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .email-otp-box i {
+      font-size: 1.6rem;
+      color: var(--brand-pink);
+    }
+
+    .email-otp-box-text {
+      font-size: 0.8rem;
+      color: var(--slate-dark);
+      line-height: 1.4;
+    }
+
+    .email-otp-box-text strong {
+      color: var(--brand-pink-dark);
+      word-break: break-all;
+    }
+
+    .otp-digits-container {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .otp-box {
+      width: 46px;
+      height: 52px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--slate-dark);
+      background: #FFFFFF;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .otp-box:focus {
+      outline: none;
+      border-color: var(--brand-pink);
+      box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.12);
+    }
+
+    .resend-section {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--slate-gray);
+      margin-bottom: 20px;
+    }
+
+    .resend-link {
+      color: var(--brand-pink);
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .resend-link.disabled {
+      color: var(--slate-light);
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    /* Pied de page et alertes */
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.82rem;
+      color: var(--slate-gray);
+    }
+
+    .auth-footer a {
+      color: var(--brand-pink);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .alert-banner {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-banner.error {
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+    }
+
+    .alert-banner.success {
+      background: #DCFCE7;
+      border: 1px solid #86EFAC;
+      color: #166534;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+        align-items: flex-start;
+      }
+      .auth-container {
+        padding: 24px 18px 20px;
+        border-radius: 16px;
+      }
+      .otp-box {
+        width: 38px;
+        height: 46px;
+        font-size: 1.15rem;
+      }
+      .otp-digits-container {
+        gap: 6px;
+      }
+      .form-control, .phone-code-select {
+        font-size: 16px !important; /* iOS zoom prevention */
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <!-- En-tête -->
+  <div class="auth-header">
+    <a href="../../JBF%20Public/index.html">
+      <img src="../../assets/logo.png" alt="JBF SERVICES SARL" class="auth-logo" onerror="this.src='../assets/logo.png'">
+    </a>
+    <h1 class="auth-title">Créer mon Espace Client</h1>
+    <p class="auth-subtitle">Plateforme Partenaires &amp; Suivi Opérationnel RDC</p>
+  </div>
+
+  <!-- Fil d'Ariane / Stepper -->
+  <div class="stepper">
+    <div class="stepper-progress" id="stepProgress"></div>
+    <div class="step-item active" id="stepIndicator1">
+      <div class="step-badge" id="stepBadge1">1</div>
+      <span class="step-name">Profil</span>
+    </div>
+    <div class="step-item" id="stepIndicator2">
+      <div class="step-badge" id="stepBadge2">2</div>
+      <span class="step-name">Sécurité</span>
+    </div>
+    <div class="step-item" id="stepIndicator3">
+      <div class="step-badge" id="stepBadge3">3</div>
+      <span class="step-name">Vérification</span>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  <div id="alertBanner" class="alert-banner"></div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- ÉTAPE 1 : IDENTITÉ & EMAIL (OBLIGATOIRE)     -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="step-panel active" id="panelStep1">
+    <div class="panel-header">
+      <div class="panel-title">1. Vos Coordonnées</div>
+      <div class="panel-desc">Sélectionnez votre type de profil et renseignez vos coordonnées de contact.</div>
+    </div>
+
+    <!-- Toggle Particulier / Entreprise -->
+    <div class="toggle-account-type">
+      <button type="button" class="btn-toggle-type active" id="btnTypeParticulier" onclick="switchAccountType('particulier')">
+        <i class="bi bi-person-fill"></i> Particulier
+      </button>
+      <button type="button" class="btn-toggle-type" id="btnTypeEntreprise" onclick="switchAccountType('entreprise')">
+        <i class="bi bi-building-fill"></i> Entreprise / Société
+      </button>
+    </div>
+
+    <form id="formStep1" onsubmit="handleStep1Submit(event)">
+      <!-- Champs Particulier -->
+      <div id="particulierFields">
+        <div class="form-group">
+          <label class="form-label">Nom <span class="req">*</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person"></i>
+            <input type="text" id="inputNom" class="form-control" placeholder="Ex: Kabila" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Post-nom &amp; Prénom <span class="req">*</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person-badge"></i>
+            <input type="text" id="inputPostnom" class="form-control" placeholder="Ex: Joseph Eric" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Champs Entreprise -->
+      <div id="entrepriseFields" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Raison sociale / Société <span class="req">*</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-building"></i>
+            <input type="text" id="inputCompany" class="form-control" placeholder="Ex: Société Minière du Katanga">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom complet du représentant <span class="req">*</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person-check"></i>
+            <input type="text" id="inputContact" class="form-control" placeholder="Ex: Jean-Paul Mwamba (Directeur Achat)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Email (OBLIGATOIRE POUR TOUS) -->
+      <div class="form-group">
+        <label class="form-label">Adresse Email professionnelle <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <i class="bi bi-envelope"></i>
+          <input type="email" id="inputEmail" class="form-control" placeholder="contact@entreprise.cd" required>
+        </div>
+      </div>
+
+      <!-- Numéro de téléphone -->
+      <div class="form-group">
+        <label class="form-label">Numéro de téléphone <span class="req">*</span></label>
+        <div class="phone-flex">
+          <select id="selectPhoneCode" class="phone-code-select">
+            <option value="+243" selected>🇨🇩 +243</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+32">🇧🇪 +32</option>
+            <option value="+27">🇿🇦 +27</option>
+            <option value="+260">🇿🇲 +260</option>
+            <option value="+1">🇺🇸 +1</option>
+          </select>
+          <div class="input-icon-wrap" style="flex: 1;">
+            <i class="bi bi-telephone"></i>
+            <input type="tel" id="inputPhone" class="form-control" placeholder="810 000 000" required>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary-action" style="margin-top: 20px;">
+        <span>Continuer vers la sécurité</span>
+        <i class="bi bi-arrow-right"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- ÉTAPE 2 : SÉCURITÉ & ACCÈS                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="step-panel" id="panelStep2">
+    <div class="panel-header">
+      <div class="panel-title">2. Sécurité du Compte</div>
+      <div class="panel-desc">Définissez un mot de passe robuste pour protéger votre accès client.</div>
+    </div>
+
+    <form id="formStep2" onsubmit="handleStep2Submit(event)">
+      <div class="form-group">
+        <label class="form-label">Mot de passe <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <i class="bi bi-lock"></i>
+          <input type="password" id="inputPassword" class="form-control" placeholder="Au moins 6 caractères" required minlength="6" oninput="assessPasswordStrength(this.value)">
+        </div>
+        <div class="password-strength">
+          <div class="strength-meter">
+            <div class="strength-bar" id="strengthBar"></div>
+          </div>
+          <div class="strength-text" id="strengthText">Saisissez un mot de passe sécurisé</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirmer le mot de passe <span class="req">*</span></label>
+        <div class="input-icon-wrap">
+          <i class="bi bi-shield-lock"></i>
+          <input type="password" id="inputConfirmPassword" class="form-control" placeholder="Répétez votre mot de passe" required minlength="6">
+        </div>
+      </div>
+
+      <label class="cgu-agreement">
+        <input type="checkbox" id="checkCGU" required>
+        <span>J'accepte les <a href="../../JBF%20Public/cgu.html" target="_blank">Conditions Générales d'Utilisation</a> et la <a href="../../JBF%20Public/politique-confidentialite.html" target="_blank">Politique de Confidentialité</a> de JBF SERVICES SARL.</span>
+      </label>
+
+      <button type="submit" class="btn-primary-action" id="btnSubmitStep2">
+        <span>Recevoir mon code par Email</span>
+        <i class="bi bi-send-fill"></i>
+      </button>
+
+      <button type="button" class="btn-back-action" onclick="goToStep(1)">
+        <i class="bi bi-arrow-left"></i>
+        <span>Retour aux coordonnées</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- ÉTAPE 3 : VÉRIFICATION PAR EMAIL (OTP)       -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="step-panel" id="panelStep3">
+    <div class="panel-header">
+      <div class="panel-title">3. Vérification de l'Adresse Email</div>
+      <div class="panel-desc">Saisissez le code de sécurité transmis à votre boîte de messagerie.</div>
+    </div>
+
+    <div class="email-otp-box">
+      <i class="bi bi-envelope-check-fill"></i>
+      <div class="email-otp-box-text">
+        Code envoyé à l'adresse :<br>
+        <strong id="displayTargetEmail">client@domaine.cd</strong>
+      </div>
+    </div>
+
+    <div class="otp-digits-container">
+      <input type="text" maxlength="1" class="otp-box" id="otpInput0" oninput="onOtpDigit(this, 0)" onkeydown="onOtpKeydown(event, 0)" autofocus>
+      <input type="text" maxlength="1" class="otp-box" id="otpInput1" oninput="onOtpDigit(this, 1)" onkeydown="onOtpKeydown(event, 1)">
+      <input type="text" maxlength="1" class="otp-box" id="otpInput2" oninput="onOtpDigit(this, 2)" onkeydown="onOtpKeydown(event, 2)">
+      <input type="text" maxlength="1" class="otp-box" id="otpInput3" oninput="onOtpDigit(this, 3)" onkeydown="onOtpKeydown(event, 3)">
+      <input type="text" maxlength="1" class="otp-box" id="otpInput4" oninput="onOtpDigit(this, 4)" onkeydown="onOtpKeydown(event, 4)">
+      <input type="text" maxlength="1" class="otp-box" id="otpInput5" oninput="onOtpDigit(this, 5)" onkeydown="onOtpKeydown(event, 5)">
+    </div>
+
+    <div class="resend-section">
+      <span>Vous n'avez pas reçu le code ? </span>
+      <span id="resendCountdown" style="color: var(--slate-gray); font-weight: 600;">(Attendre 60s)</span>
+      <a class="resend-link disabled" id="resendButton" onclick="handleResendOtp()" style="display: none;">Renvoyer un nouveau code</a>
+    </div>
+
+    <button type="button" class="btn-primary-action" id="btnValidateOtp" onclick="handleVerifyRegistrationOtp()">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>Valider et Accéder à mon Espace</span>
+    </button>
+
+    <button type="button" class="btn-back-action" onclick="goToStep(2)">
+      <i class="bi bi-arrow-left"></i>
+      <span>Modifier les informations</span>
+    </button>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="auth-footer">
+    Vous disposez déjà d'un compte ? 
+    <a href="login.html">Se connecter</a>
+    <div style="margin-top: 10px;">
+      <a href="../../JBF%20Public/index.html" style="color: var(--slate-gray); font-size: 0.76rem;">
+        <i class="bi bi-arrow-left"></i> Retour au site public JBF SERVICES
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Inclusion du service email -->
+<script src="../../supabase/mail-service.js"></script>
+<script>
+  // Variables d'état
+  let currentStep = 1;
+  let accountType = 'particulier';
+  let formData = {
+    accountType: 'particulier',
+    nom: '',
+    postnom: '',
+    company: '',
+    contact: '',
+    displayName: '',
+    email: '',
+    phoneCode: '+243',
+    phone: '',
+    fullPhone: '',
+    password: ''
+  };
+
+  let activeOtpCode = null;
+  let otpExpiresAt = 0;
+  let resendTimerInterval = null;
+  let resendSecondsRemaining = 60;
+
+  function showAlert(message, type = 'error') {
+    const banner = document.getElementById('alertBanner');
+    banner.textContent = message;
+    banner.className = `alert-banner ${type}`;
+    banner.style.display = 'block';
+    window.scrollTo({ top: banner.offsetTop - 20, behavior: 'smooth' });
+  }
+
+  function clearAlert() {
+    const banner = document.getElementById('alertBanner');
+    banner.style.display = 'none';
+    banner.textContent = '';
+  }
+
+  function switchAccountType(type) {
+    accountType = type;
+    formData.accountType = type;
+    
+    document.getElementById('btnTypeParticulier').classList.toggle('active', type === 'particulier');
+    document.getElementById('btnTypeEntreprise').classList.toggle('active', type === 'entreprise');
+
+    const partFields = document.getElementById('particulierFields');
+    const entrFields = document.getElementById('entrepriseFields');
+
+    if (type === 'particulier') {
+      partFields.style.display = 'block';
+      entrFields.style.display = 'none';
+      document.getElementById('inputNom').required = true;
+      document.getElementById('inputPostnom').required = true;
+      document.getElementById('inputCompany').required = false;
+      document.getElementById('inputContact').required = false;
+    } else {
+      partFields.style.display = 'none';
+      entrFields.style.display = 'block';
+      document.getElementById('inputNom').required = false;
+      document.getElementById('inputPostnom').required = false;
+      document.getElementById('inputCompany').required = true;
+      document.getElementById('inputContact').required = true;
+    }
+  }
+
+  function goToStep(step) {
+    clearAlert();
+    currentStep = step;
+
+    // Mise à jour des panneaux
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panelStep${step}`).classList.add('active');
+
+    // Mise à jour du stepper
+    for (let i = 1; i <= 3; i++) {
+      const item = document.getElementById(`stepIndicator${i}`);
+      const badge = document.getElementById(`stepBadge${i}`);
+      item.classList.remove('active', 'completed');
+      if (i < step) {
+        item.classList.add('completed');
+        badge.innerHTML = '<i class="bi bi-check"></i>';
+      } else if (i === step) {
+        item.classList.add('active');
+        badge.textContent = i;
+      } else {
+        badge.textContent = i;
+      }
+    }
+
+    const progressWidth = step === 1 ? '0%' : (step === 2 ? '50%' : '100%');
+    document.getElementById('stepProgress').style.width = progressWidth;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Soumission Étape 1 ──
+  function handleStep1Submit(e) {
+    e.preventDefault();
+    clearAlert();
+
+    const email = document.getElementById('inputEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('inputPhone').value.trim();
+    const phoneCode = document.getElementById('selectPhoneCode').value;
+
+    if (!email || !email.includes('@')) {
+      showAlert('Veuillez renseigner une adresse email valide.');
+      return;
+    }
+
+    if (!phone) {
+      showAlert('Veuillez renseigner un numéro de téléphone joignable.');
+      return;
+    }
+
+    if (accountType === 'particulier') {
+      const nom = document.getElementById('inputNom').value.trim();
+      const postnom = document.getElementById('inputPostnom').value.trim();
+      if (!nom || !postnom) {
+        showAlert('Veuillez remplir vos nom et post-nom.');
+        return;
+      }
+      formData.nom = nom;
+      formData.postnom = postnom;
+      formData.displayName = `${nom} ${postnom}`;
+    } else {
+      const company = document.getElementById('inputCompany').value.trim();
+      const contact = document.getElementById('inputContact').value.trim();
+      if (!company || !contact) {
+        showAlert('Veuillez renseigner la raison sociale et le nom du responsable.');
+        return;
+      }
+      formData.company = company;
+      formData.contact = contact;
+      formData.displayName = company;
+    }
+
+    formData.email = email;
+    formData.phoneCode = phoneCode;
+    formData.phone = phone;
+    formData.fullPhone = `${phoneCode} ${phone}`;
+
+    goToStep(2);
+  }
+
+  // ── Évaluation Force Mot de Passe ──
+  function assessPasswordStrength(pass) {
+    const bar = document.getElementById('strengthBar');
+    const text = document.getElementById('strengthText');
+
+    let score = 0;
+    if (pass.length >= 6) score++;
+    if (pass.length >= 9) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    const levels = [
+      { width: '20%', color: '#EF4444', label: 'Très faible' },
+      { width: '40%', color: '#F97316', label: 'Faible' },
+      { width: '65%', color: '#EAB308', label: 'Moyen' },
+      { width: '85%', color: '#22C55E', label: 'Robuste' },
+      { width: '100%', color: '#16A34A', label: 'Excellent' }
+    ];
+
+    if (!pass) {
+      bar.style.width = '0%';
+      text.textContent = 'Saisissez un mot de passe sécurisé';
+      text.style.color = 'var(--slate-light)';
+      return;
+    }
+
+    const current = levels[Math.max(0, score - 1)];
+    bar.style.width = current.width;
+    bar.style.background = current.color;
+    text.textContent = `Niveau de sécurité : ${current.label}`;
+    text.style.color = current.color;
+  }
+
+  // ── Soumission Étape 2 (Déclenchement envoi OTP) ──
+  async function handleStep2Submit(e) {
+    e.preventDefault();
+    clearAlert();
+
+    const pwd = document.getElementById('inputPassword').value;
+    const confirm = document.getElementById('inputConfirmPassword').value;
+    const cgu = document.getElementById('checkCGU').checked;
+
+    if (pwd.length < 6) {
+      showAlert('Le mot de passe doit contenir au minimum 6 caractères.');
+      return;
+    }
+
+    if (pwd !== confirm) {
+      showAlert('Les deux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (!cgu) {
+      showAlert('Vous devez accepter les conditions d\'utilisation pour créer votre compte.');
+      return;
+    }
+
+    formData.password = pwd;
+
+    const btn = document.getElementById('btnSubmitStep2');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi du code par email...';
+
+    try {
+      await sendRegistrationOtpEmail();
+      btn.disabled = false;
+      btn.innerHTML = '<span>Recevoir mon code par Email</span> <i class="bi bi-send-fill"></i>';
+
+      document.getElementById('displayTargetEmail').textContent = formData.email;
+      goToStep(3);
+      startResendCountdown();
+
+      setTimeout(() => {
+        const firstInput = document.getElementById('otpInput0');
+        if (firstInput) firstInput.focus();
+      }, 300);
+
+    } catch (err) {
+      console.error('[Registration OTP Error]', err);
+      showAlert(err.message || 'Impossible d\'envoyer le code email. Veuillez vérifier votre adresse.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<span>Recevoir mon code par Email</span> <i class="bi bi-send-fill"></i>';
+    }
+  }
+
+  // ── Envoi OTP Email ──
+  async function sendRegistrationOtpEmail() {
+    activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    otpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+    console.log(`%c[JBF Inscription OTP] Code généré pour ${formData.email} : %c${activeOtpCode}`, 
+      'color: #64748B; font-size: 13px;', 
+      'color: #E6007E; font-size: 16px; font-weight: bold; background: #FFF0F7; padding: 2px 8px; border-radius: 4px;');
+
+    if (window.JBFMailService && typeof window.JBFMailService.sendClientLoginOtp === 'function') {
+      await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
+    } else {
+      console.warn('JBFMailService non chargé, simulation active en console.');
+    }
+  }
+
+  // ── Compte à rebours renvoi ──
+  function startResendCountdown() {
+    clearInterval(resendTimerInterval);
+    resendSecondsRemaining = 60;
+
+    const countdownSpan = document.getElementById('resendCountdown');
+    const resendBtn = document.getElementById('resendButton');
+
+    countdownSpan.style.display = 'inline';
+    resendBtn.style.display = 'none';
+
+    resendTimerInterval = setInterval(() => {
+      resendSecondsRemaining--;
+      if (resendSecondsRemaining <= 0) {
+        clearInterval(resendTimerInterval);
+        countdownSpan.style.display = 'none';
+        resendBtn.style.display = 'inline';
+        resendBtn.classList.remove('disabled');
+      } else {
+        countdownSpan.textContent = `(Attendre ${resendSecondsRemaining}s)`;
+      }
+    }, 1000);
+  }
+
+  async function handleResendOtp() {
+    const resendBtn = document.getElementById('resendButton');
+    if (resendBtn.classList.contains('disabled')) return;
+
+    clearAlert();
+    resendBtn.classList.add('disabled');
+    resendBtn.textContent = 'Envoi...';
+
+    try {
+      await sendRegistrationOtpEmail();
+      showAlert('Un nouveau code à 6 chiffres a été envoyé à votre adresse email.', 'success');
+      startResendCountdown();
+      for (let i = 0; i < 6; i++) {
+        document.getElementById(`otpInput${i}`).value = '';
+      }
+      document.getElementById('otpInput0').focus();
+    } catch (err) {
+      showAlert(err.message || 'Erreur lors du renvoi du code.');
+    } finally {
+      resendBtn.textContent = 'Renvoyer un nouveau code';
+    }
+  }
+
+  // ── Gestion des boîtes OTP ──
+  function onOtpDigit(input, index) {
+    input.value = input.value.replace(/\D/g, '').slice(0, 1);
+    if (input.value && index < 5) {
+      document.getElementById(`otpInput${index + 1}`).focus();
+    }
+    const entered = getEnteredOtp();
+    if (entered.length === 6) {
+      handleVerifyRegistrationOtp();
+    }
+  }
+
+  function onOtpKeydown(e, index) {
+    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+      document.getElementById(`otpInput${index - 1}`).focus();
+    }
+  }
+
+  function getEnteredOtp() {
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += document.getElementById(`otpInput${i}`).value;
+    }
+    return code;
+  }
+
+  // Gestion du coller (Paste)
+  document.addEventListener('DOMContentLoaded', () => {
+    for (let i = 0; i < 6; i++) {
+      const el = document.getElementById(`otpInput${i}`);
+      el.addEventListener('paste', e => {
+        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        if (pasted.length >= 6) {
+          e.preventDefault();
+          for (let k = 0; k < 6; k++) {
+            document.getElementById(`otpInput${k}`).value = pasted[k] || '';
+          }
+          document.getElementById('otpInput5').focus();
+          handleVerifyRegistrationOtp();
+        }
+      });
+    }
+  });
+
+  // ── Validation Finale et Enregistrement ──
+  async function handleVerifyRegistrationOtp() {
+    clearAlert();
+    const enteredCode = getEnteredOtp();
+
+    if (enteredCode.length !== 6) {
+      showAlert('Veuillez saisir les 6 chiffres du code reçu par email.');
+      return;
+    }
+
+    if (!activeOtpCode || enteredCode !== activeOtpCode) {
+      showAlert('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou redemander un code.');
+      return;
+    }
+
+    if (Date.now() > otpExpiresAt) {
+      showAlert('Ce code a expiré. Veuillez cliquer sur "Renvoyer un nouveau code".');
+      return;
+    }
+
+    const btn = document.getElementById('btnValidateOtp');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Création de votre espace en cours...';
+
+    try {
+      // Construction de la session client validée
+      const clientSession = {
+        id: 'client_' + Date.now().toString().slice(-6),
+        name: formData.displayName,
+        companyName: formData.company || formData.displayName,
+        contactName: formData.contact || formData.displayName,
+        email: formData.email,
+        phone: formData.fullPhone,
+        role: 'client',
+        accountType: formData.accountType,
+        verifiedEmail: true,
+        createdAt: new Date().toISOString()
+      };
+
+      // Sauvegarde multi-clés pour compatibilité dashboard
+      localStorage.setItem('JBF_CLIENT_SESSION', JSON.stringify(clientSession));
+      localStorage.setItem('jbf_client_session', JSON.stringify(clientSession));
+
+      showAlert('Vérification réussie ! Création de votre compte...', 'success');
+
+      setTimeout(() => {
+        window.location.href = '../dashboard.html';
+      }, 900);
+
+    } catch (err) {
+      console.error('[Registration Final Error]', err);
+      showAlert('Erreur lors de la finalisation du compte. Réessayez.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Valider et Accéder à mon Espace</span>';
+    }
+  }
+</script>
+</body>
+</html>
