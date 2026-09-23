@@ -374,7 +374,7 @@
       </div>
 
       <div class="leave-review-cta">
-        <button class="btn btn-pink" onclick="openAvisModal()">
+        <button class="btn btn-pink" onclick="openAvisModal()" id="btnOpenAvisModal">
           Déposer une Évaluation →
         </button>
         <p style="font-size: 0.74rem; color: var(--text-light); margin-top: 0.6rem;">Évaluation certifiée et vérifiée</p>
@@ -635,14 +635,31 @@ if (typeof supabase !== 'undefined') {
 
 function openAvisModal() {
   selectStar(5);
-  document.getElementById('avisModalOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  const modal = document.getElementById('avisModalOverlay');
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
 }
 
 function closeAvisModal() {
-  document.getElementById('avisModalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+  const modal = document.getElementById('avisModalOverlay');
+  if (modal) {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 }
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAvisModal();
+});
+
+// Close modal when clicking overlay
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('avisModalOverlay');
+  if (e.target === modal) closeAvisModal();
+});
 
 async function submitAvis(e) {
   e.preventDefault();
