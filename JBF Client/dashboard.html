@@ -88,7 +88,7 @@
           <i class="bi bi-list"></i>
         </button>
         <div class="page-title">
-          <h1>Tableau de Bord & Supervision des Services JBF</h1>
+          <h1>Accueil Client</h1>
         </div>
       </div>
 
@@ -101,9 +101,7 @@
         <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Demande de renseignements / Devis direct')">
           <i class="bi bi-whatsapp"></i> <span>Assistance WhatsApp</span>
         </button>
-        <button class="btn btn-primary btn-sm btn-devis-mobile" onclick="openNewOrderModal()" title="Demander un Devis">
-          <i class="bi bi-plus-lg"></i> <span>Demander un Devis</span>
-        </button>
+
       </div>
     </header>
 
@@ -306,53 +304,6 @@
   </div>
 </div>
 
-<!-- MODALE NOUVELLE DEMANDE DE DEVIS -->
-<div class="modal-overlay" id="newOrderModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-plus-circle" style="color: var(--brand-pink);"></i> Demander une Nouvelle Prestation</h3>
-      <button class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newOrderModal')">&times;</button>
-    </div>
-    <form onsubmit="handleCreateOrder(event)">
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Sélectionnez le Domaine d'Activité JBF *</label>
-          <select id="orderServiceSelect" class="form-control" required>
-            <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
-            <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
-            <option value="BTP, Génie Civil & Construction">3. BTP, Génie Civil & Construction</option>
-            <option value="Maintenance Industrielle & Soudure">4. Maintenance Industrielle & Soudure</option>
-            <option value="Gardiennage & Sécurité Physique">5. Gardiennage, Sécurité Physique & Surveillance</option>
-            <option value="Nettoyage Industriel & Housekeeping">6. Nettoyage Industriel & Housekeeping</option>
-            <option value="Transport Personnel & Location Engins">7. Transport du Personnel & Location d'Engins</option>
-            <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
-            <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
-            <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
-            <option value="Gestion des Déchets & Assainissement">11. Gestion des Déchets & Assainissement</option>
-            <option value="Audit HSE & Contrôle Qualité">12. Audit HSE & Contrôle Qualité</option>
-            <option value="Plomberie & Traitement des Eaux">13. Plomberie & Traitement des Eaux</option>
-            <option value="Fournitures Générales de Bureau">14. Fournitures Générales de Bureau</option>
-            <option value="Import-Export & Transit">15. Import-Export & Transit</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Site d'Intervention / Ville en RDC *</label>
-          <input type="text" id="orderSiteInput" class="form-control" placeholder="Ex: Lubumbashi, Kolwezi, Kinshasa, Likasi..." required>
-        </div>
-
-        <div class="form-group">
-          <label>Détails & Besoins Spécifiques</label>
-          <textarea id="orderDetailsInput" class="form-control" placeholder="Précisez le volume, la durée estimée, les exigences particulières..." rows="3"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newOrderModal')">Annuler</button>
-        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send-fill"></i> Transmettre ma Demande</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
@@ -385,11 +336,12 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initClientCharts();
+    loadChartData();
     loadDashboardTables();
   });
 
   function openNewOrderModal() {
-    window.clientCore.openModal('newOrderModal');
+    window.location.href = 'devis.html';
   }
 
   async function loadDashboardTables() {
@@ -588,7 +540,6 @@
     devisList.unshift(newDevis);
     localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(devisList));
 
-    window.clientCore.closeModal('newOrderModal');
     loadDashboardTables();
     window.clientCore.showToast(`Demande de devis pour "${service}" enregistrée avec succès.`, 'success');
   }
@@ -616,7 +567,7 @@
           datasets: [
             {
               label: 'Prestations Engagées ($ USD)',
-              data: [18500, 24000, 29000, 26500, 38000, 42000, 39500, 48500],
+              data: [0, 0, 0, 0, 0, 0, 0, 0],
               borderColor: '#E6007E',
               backgroundColor: gradPink,
               borderWidth: 2.5,
@@ -630,7 +581,7 @@
             },
             {
               label: 'Factures Validées & Réglées ($ USD)',
-              data: [18500, 24000, 28000, 26500, 35000, 41000, 37000, 45000],
+              data: [0, 0, 0, 0, 0, 0, 0, 0],
               borderColor: '#059669',
               backgroundColor: gradGreen,
               borderWidth: 2,
@@ -683,11 +634,11 @@
     const ctxSectors = document.getElementById('chartClientSectors');
     if (ctxSectors) {
       const sectorsData = [
-        { label: 'Catering & Vivres', value: 45000, pct: 36, color: '#E6007E' },
-        { label: 'BTP & Maintenance', value: 32500, pct: 26, color: '#059669' },
-        { label: 'Sécurité & Gardiennage', value: 22500, pct: 18, color: '#2563EB' },
-        { label: 'Transport & Engins', value: 15000, pct: 12, color: '#D97706' },
-        { label: 'Télécoms & IT', value: 9500, pct: 8, color: '#8B5CF6' }
+        { label: 'Catering & Vivres', value: 0, pct: 0, color: '#E6007E' },
+        { label: 'BTP & Maintenance', value: 0, pct: 0, color: '#059669' },
+        { label: 'Sécurité & Gardiennage', value: 0, pct: 0, color: '#2563EB' },
+        { label: 'Transport & Engins', value: 0, pct: 0, color: '#D97706' },
+        { label: 'Télécoms & IT', value: 0, pct: 0, color: '#8B5CF6' }
       ];
 
       clientSectorsChart = new Chart(ctxSectors, {
@@ -744,13 +695,13 @@
           datasets: [
             {
               label: 'Délai Réalisé JBF (Jours)',
-              data: [1.2, 0.8, 1.0, 1.5, 1.1],
+              data: [0, 0, 0, 0, 0],
               backgroundColor: '#E6007E',
               borderRadius: 6
             },
             {
               label: 'Objectif SLA Contractuel',
-              data: [2.0, 2.0, 2.0, 2.0, 2.0],
+              data: [0, 0, 0, 0, 0],
               backgroundColor: '#CBD5E1',
               borderRadius: 6
             }
@@ -787,10 +738,10 @@
     const ctxPipe = document.getElementById('chartClientPipeline');
     if (ctxPipe) {
       const pipeData = [
-        { label: 'Devis en Étude', count: 1, color: '#F59E0B' },
-        { label: 'Devis Validés', count: 2, color: '#059669' },
-        { label: 'Chantiers Actifs', count: 1, color: '#E6007E' },
-        { label: 'Missions Clôturées', count: 5, color: '#2563EB' }
+        { label: 'Devis en Étude', count: 0, color: '#F59E0B' },
+        { label: 'Devis Validés', count: 0, color: '#059669' },
+        { label: 'Chantiers Actifs', count: 0, color: '#E6007E' },
+        { label: 'Missions Clôturées', count: 0, color: '#2563EB' }
       ];
 
       clientPipelineChart = new Chart(ctxPipe, {
@@ -838,39 +789,99 @@
     }
   }
 
+  async function loadChartData() {
+    const sb = getSupabaseClient();
+    const session = window.clientCore?.getClientSession() || {};
+    const clientEmail = (session.email || '').toLowerCase();
+
+    let totalBudget = 0;
+    let devisEnEtude = 0;
+    let devisValides = 0;
+    let missionsActives = 0;
+    let missionsCloturees = 0;
+
+    if (sb && clientEmail) {
+      try {
+        const { data: devis } = await sb.from('demandes_devis').select('*');
+        if (devis) {
+          const clientDevis = devis.filter(d => (d.email && d.email.toLowerCase() === clientEmail) || (d.client_id === session.id));
+          clientDevis.forEach(d => {
+            if (d.statut === 'valide' || d.statut === 'accepte') devisValides++;
+            else devisEnEtude++;
+            if (d.montant) totalBudget += Number(d.montant);
+          });
+        }
+
+        const { data: missions } = await sb.from('missions').select('*');
+        if (missions) {
+          const clientMissions = missions.filter(m => (m.assigned_to === session.id) || (session.companyName && m.client && m.client.toLowerCase().includes(session.companyName.toLowerCase())));
+          clientMissions.forEach(m => {
+            if (m.statut === 'termine') missionsCloturees++;
+            else missionsActives++;
+          });
+        }
+      } catch(e) {
+        console.warn('[Chart Data Load]', e);
+      }
+    }
+
+    const budgetStat = document.getElementById('statClientTotalBudget');
+    if (budgetStat) budgetStat.textContent = `$${totalBudget.toLocaleString()} USD`;
+
+    // Update pipeline chart with real counts
+    if (clientPipelineChart) {
+      clientPipelineChart.data.datasets[0].data = [devisEnEtude, devisValides, missionsActives, missionsCloturees];
+      clientPipelineChart.update();
+      const pipeLegend = document.getElementById('clientPipelineLegend');
+      if (pipeLegend) {
+        const pipeData = [
+          { label: 'Devis en Étude', count: devisEnEtude, color: '#F59E0B' },
+          { label: 'Devis Validés', count: devisValides, color: '#059669' },
+          { label: 'Chantiers Actifs', count: missionsActives, color: '#E6007E' },
+          { label: 'Missions Clôturées', count: missionsCloturees, color: '#2563EB' }
+        ];
+        pipeLegend.innerHTML = pipeData.map(d => `
+          <div class="legend-item">
+            <div style="display: flex; align-items: center;">
+              <span class="legend-color" style="background: ${d.color};"></span>
+              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--text-secondary);">${d.count}</span>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
   function setClientPeriod(period, btn) {
     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentClientPeriod = period;
 
     const label = document.getElementById('chartExpensesPeriodLabel');
-    const budgetStat = document.getElementById('statClientTotalBudget');
 
     if (period === '7d') {
       if (label) label.textContent = '7 Derniers Jours';
-      if (budgetStat) budgetStat.textContent = '$14,200 USD';
       if (clientExpensesChart) {
         clientExpensesChart.data.labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-        clientExpensesChart.data.datasets[0].data = [1200, 2400, 1800, 3100, 2800, 1900, 1000];
-        clientExpensesChart.data.datasets[1].data = [1200, 2200, 1800, 2900, 2800, 1800, 1000];
+        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
+        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.update();
       }
     } else if (period === '30d') {
       if (label) label.textContent = 'Période Mensuelle';
-      if (budgetStat) budgetStat.textContent = '$124,500 USD';
       if (clientExpensesChart) {
         clientExpensesChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
-        clientExpensesChart.data.datasets[0].data = [28500, 34000, 31000, 31000];
-        clientExpensesChart.data.datasets[1].data = [26000, 32500, 30500, 31000];
+        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0];
+        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0];
         clientExpensesChart.update();
       }
     } else {
       if (label) label.textContent = 'Cumul Année 2026';
-      if (budgetStat) budgetStat.textContent = '$285,000 USD';
       if (clientExpensesChart) {
         clientExpensesChart.data.labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept'];
-        clientExpensesChart.data.datasets[0].data = [16000, 18500, 24000, 29000, 26500, 38000, 42000, 39500, 48500];
-        clientExpensesChart.data.datasets[1].data = [15500, 18500, 24000, 28000, 26500, 35000, 41000, 37000, 45000];
+        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.update();
       }
     }

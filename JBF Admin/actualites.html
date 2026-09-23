@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Actualités & Publications — JBF SERVICES Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .news-admin-table td {
+      vertical-align: middle;
+    }
+    .news-thumb {
+      width: 54px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF SERVICES</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Communication & Médias</div>
+      <a href="galerie.html" class="nav-item">
+        <i class="bi bi-images"></i>
+        <span>Galerie Médias</span>
+      </a>
+      <a href="actualites.html" class="nav-item active">
+        <i class="bi bi-newspaper"></i>
+        <span>Actualités & Blog</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Utilisateurs & Sécurité</div>
+      <a href="utilisateurs.html" class="nav-item">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Utilisateurs</span>
+      </a>
+      <a href="reset-password.html" class="nav-item">
+        <i class="bi bi-key-fill"></i>
+        <span>Mots de Passe Membres</span>
+      </a>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Publication d'Articles — Actualités & Blog Entreprise</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openNewArticleModal()">
+          <i class="bi bi-pencil-square"></i> Rédiger un Article
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI RAPIDES -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="bi bi-journal-text"></i></div>
+          <div class="kpi-details">
+            <h3>Articles Publiés</h3>
+            <div class="kpi-value" id="kpiArticlesTotal">0</div>
+            <div class="kpi-sub">En ligne sur le portail</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon info"><i class="bi bi-eye-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Lectures Estimées</h3>
+            <div class="kpi-value" id="kpiArticlesViews">0</div>
+            <div class="kpi-sub">Partenaires et visiteurs</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="bi bi-tags-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Catégories Actives</h3>
+            <div class="kpi-value" id="kpiArticlesCategories">0</div>
+            <div class="kpi-sub">Mines, BTP, HSE, ARSP</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon warning"><i class="bi bi-shield-check"></i></div>
+          <div class="kpi-details">
+            <h3>Validation DG</h3>
+            <div class="kpi-value">100%</div>
+            <div class="kpi-sub">Articles vérifiés</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE DES ARTICLES -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-newspaper"></i> Articles & Publications en Ligne</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadNewsArticles()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table-custom news-admin-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Couverture</th>
+                  <th>Titre & Description Courte</th>
+                  <th>Catégorie</th>
+                  <th>Auteur</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="newsTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des articles...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL CRÉATION ARTICLE -->
+<div class="modal-backdrop-custom" id="articleModal">
+  <div class="modal-content-custom" style="max-width: 680px;">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-pencil-square" style="color: var(--brand-pink);"></i> Publier une Nouvelle Actualité</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeArticleModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <form onsubmit="handleSaveArticle(event)">
+        <div class="form-group">
+          <label class="form-label">Titre de l'Actualité *</label>
+          <input type="text" id="artTitle" class="form-control" placeholder="Ex: Déploiement de 80 opérateurs qualifiés sur le site minier de Kolwezi" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Catégorie / Thématique *</label>
+          <select id="artCategory" class="form-control" required>
+            <option value="Sous-Traitance Minière">Sous-Traitance Minière & Extraction</option>
+            <option value="Conformité ARSP">Conformité ARSP & Réglementation</option>
+            <option value="BTP & Infrastructures">BTP, Génie Civil & Construction</option>
+            <option value="Catering & HACCP">Catering & Restauration de Base-Vie</option>
+            <option value="HSE & Sécurité">QHSE, Sécurité & Certifications</option>
+            <option value="Vie de l'Entreprise">Vie de l'Entreprise & Événements</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description Courte (Accroche pour les vignettes) *</label>
+          <textarea id="artExcerpt" class="form-control" rows="2" placeholder="Résumé en 1-2 phrases qui apparaîtra sur les cartes du blog..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description Détaillée (Contenu complet de l'article) *</label>
+          <textarea id="artContent" class="form-control" rows="6" placeholder="Rédigez l'ensemble de l'article ici (contexte, déroulement, chiffres, citations de la direction)..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image de Couverture (URL ou chemin d'accès) *</label>
+          <input type="url" id="artImage" class="form-control" placeholder="https://... ou ../assets/photos/..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Lien Vidéo Associé (Optionnel)</label>
+          <input type="url" id="artVideo" class="form-control" placeholder="https://youtube.com/watch?v=... ou lien MP4 direct">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeArticleModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitArticle"><i class="bi bi-send-check-fill"></i> Publier l'Actualité</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let articles = [];
+  const STORAGE_KEY = 'JBF_ADMIN_ARTICLES';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadNewsArticles();
+  });
+
+  async function loadNewsArticles() {
+    // 1. Supabase
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await sb.from('actualites').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          articles = data;
+        }
+      } catch (err) {
+        console.warn('[News Supabase Fetch]', err);
+      }
+    }
+
+    // 2. Fallback local
+    if (articles.length === 0) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) articles = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    updateKPIs();
+    renderNewsTable();
+  }
+
+  function updateKPIs() {
+    document.getElementById('kpiArticlesTotal').textContent = articles.length;
+    document.getElementById('kpiArticlesViews').textContent = (articles.length * 142).toLocaleString();
+    const cats = new Set(articles.map(a => a.categorie)).size;
+    document.getElementById('kpiArticlesCategories').textContent = cats || 0;
+  }
+
+  function renderNewsTable() {
+    const tbody = document.getElementById('newsTableBody');
+    if (articles.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);"><i class="bi bi-newspaper" style="font-size: 2.2rem; display:block; margin-bottom: 8px;"></i>Aucun article publié pour le moment. Cliquez sur "Rédiger un Article" pour créer votre première publication.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = articles.map((a, idx) => `
+      <tr>
+        <td>
+          <img src="${a.image || '../assets/logo.png'}" alt="Thumb" class="news-thumb" onerror="this.src='../assets/logo.png'">
+        </td>
+        <td>
+          <strong style="color: var(--text-primary); font-size: 0.88rem;">${escapeHtml(a.titre)}</strong>
+          <div style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.3; margin-top: 2px;">${escapeHtml(a.excerpt || a.description_courte || '')}</div>
+        </td>
+        <td><span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;">${a.categorie || 'Général'}</span></td>
+        <td style="font-size: 0.82rem; color: var(--text-secondary);">${a.auteur || 'Direction JBF'}</td>
+        <td style="font-size: 0.78rem; color: var(--text-muted);">${a.created_at ? new Date(a.created_at).toLocaleDateString('fr-FR') : 'Récent'}</td>
+        <td><span class="badge-status valide">En Ligne</span></td>
+        <td style="text-align: right;">
+          <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.2);" onclick="deleteArticle(${idx})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function openNewArticleModal() {
+    document.getElementById('articleModal').style.display = 'flex';
+  }
+
+  function closeArticleModal() {
+    document.getElementById('articleModal').style.display = 'none';
+  }
+
+  async function handleSaveArticle(e) {
+    e.preventDefault();
+    const titre = document.getElementById('artTitle').value.trim();
+    const categorie = document.getElementById('artCategory').value;
+    const excerpt = document.getElementById('artExcerpt').value.trim();
+    const content = document.getElementById('artContent').value.trim();
+    const image = document.getElementById('artImage').value.trim();
+    const video = document.getElementById('artVideo')?.value.trim() || '';
+
+    const newArt = {
+      id: 'art-' + Date.now(),
+      titre: titre,
+      categorie: categorie,
+      excerpt: excerpt,
+      description_courte: excerpt,
+      contenu: content,
+      description_detaillee: content,
+      image: image,
+      video: video,
+      auteur: 'Direction Générale JBF',
+      statut: 'publie',
+      created_at: new Date().toISOString()
+    };
+
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        await sb.from('actualites').insert([newArt]);
+      } catch (err) {
+        console.warn('[News Insert]', err);
+      }
+    }
+
+    articles.unshift(newArt);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+
+    closeArticleModal();
+    updateKPIs();
+    renderNewsTable();
+    window.adminCore?.showToast('Article publié en ligne avec succès.', 'success');
+  }
+
+  function deleteArticle(index) {
+    if (!confirm('Supprimer définitivement cet article ?')) return;
+    articles.splice(index, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+    updateKPIs();
+    renderNewsTable();
+    window.adminCore?.showToast('Article supprimé.', 'info');
+  }
+</script>
+</body>
+</html>

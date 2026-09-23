@@ -166,45 +166,53 @@
         
         <!-- COLONNE 1 : SOUMETTRE UN TICKET / RÉCLAMATION -->
         <div class="card">
-          <div class="card-header">
-            <h2><i class="bi bi-plus-square-dotted"></i> Ouvrir un Ticket d'Assistance</h2>
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2><i class="bi bi-shield-plus" style="color: var(--brand-pink);"></i> Ouvrir un Ticket d'Assistance Technique</h2>
+            <span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;">Garantie SLA 24h</span>
           </div>
           <div class="card-body">
             <form onsubmit="handleCreateTicket(event)">
               <div class="form-group">
-                <label>Objet de votre demande *</label>
-                <input type="text" id="ticketSubject" class="form-control" placeholder="Ex: Ajustement effectif chantier Kolwezi" required>
+                <label>Objet précis de votre demande *</label>
+                <input type="text" id="ticketSubject" class="form-control" placeholder="Ex: Ajustement effectifs équipe soudure — Site Kolwezi" required>
               </div>
 
               <div class="form-group">
-                <label>Pôle ou Prestation Concernée</label>
-                <select id="ticketService" class="form-control">
-                  <option value="General">Service Général / Direction</option>
-                  <option value="Mines">Sous-Traitance Minière & Extraction</option>
-                  <option value="Catering">Fourniture Alimentaire & Catering</option>
-                  <option value="BTP">BTP, Génie Civil & Construction</option>
-                  <option value="Maintenance">Maintenance Industrielle & Soudure</option>
-                  <option value="Securite">Gardiennage & Sécurité Physique</option>
-                  <option value="Facturation">Facturation & Règlements</option>
+                <label>Pôle / Prestation Concernée *</label>
+                <select id="ticketService" class="form-control" required>
+                  <option value="Sous-Traitance Minière">Sous-Traitance Minière & Extraction</option>
+                  <option value="Catering & Alimentation">Fourniture Alimentaire & Catering HACCP</option>
+                  <option value="BTP & Génie Civil">BTP, Génie Civil & Construction</option>
+                  <option value="Maintenance Industrielle">Maintenance Industrielle & Soudure</option>
+                  <option value="Sécurité & Gardiennage">Gardiennage & Sécurité Physique</option>
+                  <option value="Nettoyage & Housekeeping">Nettoyage Industriel & Housekeeping</option>
+                  <option value="Transport & Engins">Transport du Personnel & Location Engins</option>
+                  <option value="Climatisation & Froid">Climatisation Industrielle & Froid</option>
+                  <option value="Télécoms & Réseaux">Télécoms & Fibre Optique</option>
+                  <option value="Informatique & Cybersécurité">Informatique & Cybersécurité</option>
+                  <option value="Gestion des Déchets">Gestion des Déchets & Assainissement</option>
+                  <option value="Audit HSE & Qualité">Audit HSE & Contrôle Qualité</option>
+                  <option value="Facturation & Règlements">Facturation, Devis & Règlements</option>
+                  <option value="Direction Générale">Service Général / Direction Opérationnelle</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Niveau de Priorité</label>
+                <label>Niveau de Priorité Opérationnelle</label>
                 <select id="ticketPriority" class="form-control">
-                  <option value="normal">Normal (Réponse sous 24h)</option>
-                  <option value="urgent">Urgent (Chantier en cours)</option>
-                  <option value="critique">Critique (Interruption d'activité)</option>
+                  <option value="normal">⚪ Normal — Traitement standard (sous 24h)</option>
+                  <option value="urgent">🟠 Urgent — Chantier / Équipe en cours</option>
+                  <option value="critique">🔴 Critique — Arrêt ou interruption d'activité</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Description Détaillée du Problème ou Besoin</label>
-                <textarea id="ticketMessage" class="form-control" rows="4" placeholder="Expliquez la situation avec précision..." required></textarea>
+                <label>Description Détaillée du Problème ou Besoin *</label>
+                <textarea id="ticketMessage" class="form-control" rows="4" placeholder="Indiquez le contexte, les contraintes horaires, les effectifs impactés et toute information utile..." required></textarea>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-send-check"></i> Enregistrer le Ticket
+              <button type="submit" class="btn btn-primary" id="btnSubmitTicket" style="width: 100%;">
+                <i class="bi bi-send-check-fill"></i> Transmettre le Ticket au Pôle Technique
               </button>
             </form>
           </div>
@@ -274,6 +282,28 @@
         </div>
       </div>
 
+      <!-- BANDEAU D'ACTION EN BAS DE PAGE -->
+      <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #FFFFFF; border: none;">
+        <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 22px;">
+          <div>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin-bottom: 4px;">
+              <i class="bi bi-broadcast" style="color: var(--brand-pink);"></i> Incident Critique ou Urgence Opérationnelle sur Site ?
+            </h3>
+            <p style="font-size: 0.82rem; color: #94A3B8; margin: 0;">
+              Nos superviseurs de permanence interviennent 24h/24 et 7j/7 pour la continuité de vos opérations minières et industrielles.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-whatsapp" onclick="window.clientCore.openWhatsAppDirect('URGENCE OPÉRATIONNELLE SUR SITE')">
+              <i class="bi bi-whatsapp"></i> Déclencher Urgence WhatsApp
+            </button>
+            <a href="tel:+243971306666" class="btn btn-secondary" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #FFFFFF;">
+              <i class="bi bi-telephone-fill"></i> Appel Hotline Direct
+            </a>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -335,29 +365,7 @@
       } catch (e) {}
     }
 
-    // 3. Exemple si liste vide pour démonstration immédiate
-    if (tickets.length === 0) {
-      tickets = [
-        {
-          id: '1042',
-          sujet: 'Planification déploiement équipe nettoyage',
-          client_nom: session.companyName || 'Société Partenaire',
-          created_at: new Date().toISOString(),
-          priorite: 'urgent',
-          statut: 'en_cours'
-        },
-        {
-          id: '1038',
-          sujet: 'Questionnement sur relevé de pointage site',
-          client_nom: session.companyName || 'Société Partenaire',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          priorite: 'normal',
-          statut: 'resolu'
-        }
-      ];
-      try { localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(tickets)); } catch(e) {}
-    }
-
+    // Suppression des faux tickets hardcodés
     renderTicketsTable(tickets);
   }
 

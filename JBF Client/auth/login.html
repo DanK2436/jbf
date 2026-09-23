@@ -365,15 +365,9 @@
     <div id="alertSuccess" class="alert-success"></div>
 
     <!-- ONGLETS DE SÉLECTION DU MODE DE CONNEXION -->
-    <div class="auth-tab-group" id="authTabGroup">
+    <div class="auth-tab-group" id="authTabGroup" style="display:none;">
       <button type="button" class="auth-tab active" id="tabBtnPassword" onclick="switchLoginMode('password')">
         <i class="bi bi-key-fill"></i> Mot de passe
-      </button>
-      <button type="button" class="auth-tab" id="tabBtnEmailOtp" onclick="switchLoginMode('emailOtp')">
-        <i class="bi bi-envelope-check-fill"></i> OTP Email
-      </button>
-      <button type="button" class="auth-tab wa-tab" id="tabBtnWaOtp" onclick="switchLoginMode('waOtp')">
-        <i class="bi bi-whatsapp"></i> OTP WhatsApp
       </button>
     </div>
 
@@ -395,88 +389,6 @@
       </div>
     </form>
 
-    <!-- 2. MODE CODE OTP EMAIL -->
-    <div id="emailOtpSection" style="display: none;">
-      <!-- Étape 1 : Saisie Email -->
-      <div id="emailOtpStep1">
-        <div class="form-group">
-          <label class="form-label">Email de votre compte client</label>
-          <input type="email" id="emailOtpInput" class="form-control" placeholder="contact@entreprise.cd" required>
-        </div>
-        <button type="button" class="btn-submit" id="btnSendEmailOtp" onclick="handleSendEmailOtp()">
-          <i class="bi bi-send-fill"></i> Recevoir mon Code OTP
-        </button>
-      </div>
-
-      <!-- Étape 2 : Saisie Code OTP -->
-      <div id="emailOtpStep2" style="display: none;">
-        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">
-          Code envoyé à : <strong id="displayEmailOtpTarget" style="color: var(--brand-pink);"></strong>
-        </p>
-
-        <div class="otp-inputs">
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]" autofocus>
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]">
-        </div>
-
-        <button type="button" class="btn-submit" id="btnVerifyEmailOtp" onclick="handleVerifyEmailOtp()">
-          <i class="bi bi-check-circle-fill"></i> Valider mon Code OTP
-        </button>
-
-        <button type="button" class="btn-secondary-action" onclick="resetEmailOtpStep()">
-          <i class="bi bi-arrow-left"></i> Changer d'adresse email
-        </button>
-      </div>
-    </div>
-
-    <!-- 3. MODE CODE OTP WHATSAPP -->
-    <div id="waOtpSection" style="display: none;">
-      <!-- Étape 1 : Saisie Téléphone WhatsApp -->
-      <div id="waOtpStep1">
-        <div class="form-group">
-          <label class="form-label">Numéro de téléphone WhatsApp</label>
-          <div class="phone-input-group">
-            <span class="phone-prefix">🇨🇩 +243</span>
-            <input type="tel" id="waPhoneInput" class="form-control" placeholder="810 000 000" inputmode="tel" required>
-          </div>
-          <small style="font-size: 0.74rem; color: var(--text-muted); display: block; margin-top: 4px;">
-            Exemple : 0810000000 ou 810000000
-          </small>
-        </div>
-        <button type="button" class="btn-submit btn-whatsapp" id="btnSendWaOtp" onclick="handleSendWaOtp()">
-          <i class="bi bi-whatsapp"></i> Recevoir le Code sur WhatsApp
-        </button>
-      </div>
-
-      <!-- Étape 2 : Saisie Code WhatsApp -->
-      <div id="waOtpStep2" style="display: none;">
-        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">
-          Code WhatsApp envoyé au : <strong id="displayWaPhoneTarget" style="color: #075E54;"></strong>
-        </p>
-
-        <div class="otp-inputs">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-          <input type="text" maxlength="1" class="otp-digit wa wa-otp-digit" inputmode="numeric" pattern="[0-9]">
-        </div>
-
-        <button type="button" class="btn-submit btn-whatsapp" id="btnVerifyWaOtp" onclick="handleVerifyWaOtp()">
-          <i class="bi bi-check-circle-fill"></i> Valider et Accéder à mon Espace
-        </button>
-
-        <button type="button" class="btn-secondary-action" onclick="resetWaOtpStep()">
-          <i class="bi bi-arrow-left"></i> Changer de numéro WhatsApp
-        </button>
-      </div>
-    </div>
-
     <!-- 4. RESET PASSWORD (2 ÉTAPES) -->
     <div id="resetSection" style="display: none;">
       <div id="resetStepEmail">
@@ -496,7 +408,7 @@
 
         <div class="form-group">
           <label class="form-label">Code de sécurité reçu (6 chiffres)</label>
-          <input type="text" id="resetOtpCode" class="form-control" maxlength="6" placeholder="123456" style="text-align: center; letter-spacing: 5px; font-weight: 800; font-size: 1.15rem;" required>
+          <input type="text" id="resetOtpCode" class="form-control" maxlength="6" placeholder="000000" style="text-align: center; letter-spacing: 5px; font-weight: 800; font-size: 1.15rem;" required>
         </div>
 
         <div class="form-group">
@@ -525,10 +437,7 @@
       </div>
     </div>
 
-    <!-- NOTE DE DÉMONSTRATION / TEST -->
-    <div class="demo-hint-card" id="demoHintCard">
-      <i class="bi bi-info-circle-fill"></i> <strong>Mode Accès Rapide :</strong> Pour tester immédiatement sans attendre d'email ou de SMS, vous pouvez utiliser le code universel <strong>123456</strong> pour l'OTP WhatsApp.
-    </div>
+
 
     <!-- LIEN CRÉATION COMPTE -->
     <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle); text-align: center;">
@@ -571,32 +480,12 @@
     document.getElementById('alertSuccess').style.display = 'none';
   }
 
-  // BASCULE DES ONGLETS
+  // BASCULE DES ONGLETS (uniquement mot de passe)
   function switchLoginMode(mode) {
     clearAlerts();
-    document.getElementById('authTabGroup').style.display = 'flex';
+    document.getElementById('authTabGroup').style.display = 'none';
     document.getElementById('resetSection').style.display = 'none';
-
-    document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
-
-    const passForm = document.getElementById('passwordForm');
-    const emailOtpSec = document.getElementById('emailOtpSection');
-    const waOtpSec = document.getElementById('waOtpSection');
-
-    passForm.style.display = 'none';
-    emailOtpSec.style.display = 'none';
-    waOtpSec.style.display = 'none';
-
-    if (mode === 'password') {
-      document.getElementById('tabBtnPassword').classList.add('active');
-      passForm.style.display = 'block';
-    } else if (mode === 'emailOtp') {
-      document.getElementById('tabBtnEmailOtp').classList.add('active');
-      emailOtpSec.style.display = 'block';
-    } else if (mode === 'waOtp') {
-      document.getElementById('tabBtnWaOtp').classList.add('active');
-      waOtpSec.style.display = 'block';
-    }
+    document.getElementById('passwordForm').style.display = 'block';
   }
 
   // 1. MOT DE PASSE LOGIN
@@ -641,19 +530,7 @@
         } catch (e) {}
       }
 
-      // 3. Fallback immédiat (mode résilient partenaire)
-      const clientUser = {
-        id: 'cli-' + Date.now().toString().slice(-4),
-        name: email.split('@')[0].toUpperCase(),
-        companyName: 'Entreprise ' + email.split('@')[0].toUpperCase(),
-        contactName: email.split('@')[0],
-        email: email,
-        phone: '+243810000000',
-        role: 'client'
-      };
-      persistSession(clientUser);
-      showSuccess('Connexion validée. Redirection vers votre tableau de bord...');
-      setTimeout(() => { window.location.href = '../dashboard.html'; }, 600);
+      showError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');
 
     } catch (err) {
       showError(err.message || 'Identifiants client incorrects.');
@@ -690,7 +567,7 @@
         await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);
       }
 
-      showSuccess(`Code de vérification envoyé à ${email}. (Code de test : ${activeEmailOtp})`);
+      showSuccess(`Un code de vérification a été envoyé à ${email}. Vérifiez votre boîte mail.`);
       document.getElementById('displayEmailOtpTarget').textContent = email;
       document.getElementById('emailOtpStep1').style.display = 'none';
       document.getElementById('emailOtpStep2').style.display = 'block';
@@ -728,9 +605,6 @@
         if (parsed.code === code && Date.now() <= parsed.expiresAt) valid = true;
       } catch(e) {}
     }
-
-    // Code universel de test autorisé
-    if (code === '123456') valid = true;
 
     if (!valid) {
       showError('Code OTP incorrect ou expiré. Veuillez vérifier votre code ou en redemander un.');
@@ -780,7 +654,7 @@
         document.getElementById('waOtpStep1').style.display = 'none';
         document.getElementById('waOtpStep2').style.display = 'block';
 
-        showSuccess(`Code envoyé par WhatsApp ! (En mode test, votre code est : ${res.demoCode || '123456'})`);
+        showSuccess('Code envoyé par WhatsApp ! Vérifiez votre téléphone.');
         setupOtpInputHandlers('.wa-otp-digit', handleVerifyWaOtp);
         setTimeout(() => {
           document.querySelector('.wa-otp-digit')?.focus();

@@ -777,8 +777,16 @@
 </div>
 
 <!-- Inclusion du service email -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../supabase/mail-service.js"></script>
 <script>
+  /* ======================================================
+     CONFIGURATION SUPABASE AUTHENTIQUE
+     ====================================================== */
+  const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
+  window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   // Variables d'état
   let currentStep = 1;
   let accountType = 'particulier';
@@ -993,7 +1001,7 @@
       document.getElementById('displayTargetEmail').textContent = formData.email;
       goToStep(3);
       startResendCountdown();
-      showAlert(`Code de sécurité envoyé à ${formData.email} ! (En mode test immédiat, votre code est : ${activeOtpCode})`, 'success');
+      showAlert('Un code de vérification a été envoyé à votre email. Veuillez vérifier votre boîte de réception.', 'success');
 
       setTimeout(() => {
         const firstInput = document.getElementById('otpInput0');
@@ -1008,20 +1016,18 @@
     }
   }
 
-  // ── Envoi OTP Email ──
+  // ── Envoi OTP Email via Supabase réel ──
   async function sendRegistrationOtpEmail() {
-    activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    otpExpiresAt = Date.now() + 10 * 60 * 1000;
-
-    console.log(`%c[JBF Inscription OTP] Code généré pour ${formData.email} : %c${activeOtpCode}`, 
-      'color: #64748B; font-size: 13px;', 
-      'color: #E6007E; font-size: 16px; font-weight: bold; background: #FFF0F7; padding: 2px 8px; border-radius: 4px;');
-
-    if (window.JBFMailService && typeof window.JBFMailService.sendClientLoginOtp === 'function') {
-      await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
-    } else {
-      console.warn('JBFMailService non chargé, simulation active en console.');
+    if (!window.supabase) {
+      throw new Error("Client Supabase indisponible.");
     }
+    const { error } = await window.supabase.auth.signInWithOtp({
+      email: formData.email,
+      options: {
+        emailRedirectTo: window.location.origin + '/auth/login.html'
+      }
+    });
+    if (error) throw error;
   }
 
   // ── Compte à rebours renvoi ──
@@ -1057,8 +1063,17 @@
     resendBtn.textContent = 'Envoi...';
 
     try {
-      await sendRegistrationOtpEmail();
-      showAlert('Un nouveau code à 6 chiffres a été envoyé à votre adresse email.', 'success');
+      if (!window.supabase) throw new Error("Client Supabase indisponible.");
+      const { error } = await window.supabase.auth.resend({
+        type: 'email',
+        email: formData.email,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth/login.html'
+        }
+      });
+      if (error) throw error;
+
+      showAlert('Un nouvel email de confirmation a été envoyé. Vérifiez votre boîte de réception.', 'success');
       startResendCountdown();
       for (let i = 0; i < 6; i++) {
         document.getElementById(`otpInput${i}`).value = '';
@@ -1115,7 +1130,7 @@
     }
   });
 
-  // ── Validation Finale et Enregistrement ──
+  // ── Validation Finale et Enregistrement via Supabase ──
   async function handleVerifyRegistrationOtp() {
     clearAlert();
     const enteredCode = getEnteredOtp();
@@ -1125,24 +1140,24 @@
       return;
     }
 
-    if (enteredCode !== '123456' && (!activeOtpCode || enteredCode !== activeOtpCode)) {
-      showAlert('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou redemander un code.');
-      return;
-    }
-
-    if (Date.now() > otpExpiresAt) {
-      showAlert('Ce code a expiré. Veuillez cliquer sur "Renvoyer un nouveau code".');
-      return;
-    }
-
     const btn = document.getElementById('btnValidateOtp');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Création de votre espace en cours...';
 
     try {
-      // Construction de la session client validée
+      if (!window.supabase) throw new Error("Client Supabase indisponible.");
+
+      const { data, error } = await window.supabase.auth.verifyOtp({
+        email: formData.email,
+        token: enteredCode,
+        type: 'email'
+      });
+      if (error) throw error;
+
+      // Création du profil via backend si nécessaire
+      // (Le compte Supabase est déjà validé par verifyOtp)
       const clientSession = {
-        id: 'client_' + Date.now().toString().slice(-6),
+        id: data?.user?.id || ('client_' + Date.now().toString().slice(-6)),
         name: formData.displayName,
         companyName: formData.company || formData.displayName,
         contactName: formData.contact || formData.displayName,
@@ -1154,19 +1169,17 @@
         createdAt: new Date().toISOString()
       };
 
-      // Sauvegarde multi-clés pour compatibilité dashboard
       localStorage.setItem('JBF_CLIENT_SESSION', JSON.stringify(clientSession));
       localStorage.setItem('jbf_client_session', JSON.stringify(clientSession));
 
       showAlert('Vérification réussie ! Création de votre compte...', 'success');
-
       setTimeout(() => {
         window.location.href = '../dashboard.html';
       }, 900);
 
     } catch (err) {
       console.error('[Registration Final Error]', err);
-      showAlert('Erreur lors de la finalisation du compte. Réessayez.', 'error');
+      showAlert(err.message || 'Code de vérification incorrect ou expiré.', 'error');
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Valider et Accéder à mon Espace</span>';
     }

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Utilisateurs — Membres & Clients — JBF SERVICES Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF SERVICES</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Communication & Médias</div>
+      <a href="galerie.html" class="nav-item">
+        <i class="bi bi-images"></i>
+        <span>Galerie Médias</span>
+      </a>
+      <a href="actualites.html" class="nav-item">
+        <i class="bi bi-newspaper"></i>
+        <span>Actualités & Blog</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Utilisateurs & Sécurité</div>
+      <a href="utilisateurs.html" class="nav-item active">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Utilisateurs</span>
+      </a>
+      <a href="reset-password.html" class="nav-item">
+        <i class="bi bi-key-fill"></i>
+        <span>Mots de Passe Membres</span>
+      </a>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Gestion des Utilisateurs — Membres Collaborateurs & Clients</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openNewMemberModal()">
+          <i class="bi bi-person-plus-fill"></i> Créer un Compte Membre
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI RAPIDES -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="bi bi-people-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Total Comptes</h3>
+            <div class="kpi-value" id="kpiTotalUsers">0</div>
+            <div class="kpi-sub">Comptes enregistrés</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="bi bi-person-badge-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Membres Équipes</h3>
+            <div class="kpi-value" id="kpiMembersTotal">0</div>
+            <div class="kpi-sub">@jbf-services.cd</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon info"><i class="bi bi-building-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Clients Entreprises</h3>
+            <div class="kpi-value" id="kpiClientsTotal">0</div>
+            <div class="kpi-sub">Partenaires miniers & BTP</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon warning"><i class="bi bi-shield-lock-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Accès Contrôlés</h3>
+            <div class="kpi-value">100%</div>
+            <div class="kpi-sub">Administration exclusive</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE UTILISATEURS -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-person-lines-fill"></i> Registre Central des Comptes</h2>
+          <div style="display: flex; gap: 8px;">
+            <select id="userRoleFilter" class="form-select" style="width: auto; padding: 6px 12px;" onchange="renderUsersTable()">
+              <option value="all">Tous les profils</option>
+              <option value="membre">Membres Collaborateurs uniquement</option>
+              <option value="client">Clients Partenaires uniquement</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table-custom" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Nom / Entreprise</th>
+                  <th>Email Professionnel</th>
+                  <th>Téléphone / WhatsApp</th>
+                  <th>Rôle & Type</th>
+                  <th>Date Création</th>
+                  <th>Statut</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des utilisateurs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL CRÉATION MEMBRE -->
+<div class="modal-backdrop-custom" id="memberModal">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-person-plus" style="color: var(--brand-pink);"></i> Créer un Compte Membre JBF</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeMemberModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <form onsubmit="handleCreateMember(event)">
+        <div class="form-group">
+          <label class="form-label">Nom et Prénom du Collaborateur *</label>
+          <input type="text" id="memName" class="form-control" placeholder="Ex: Michel Ilunga" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Professionnel JBF (@jbf-services.cd obligatoire) *</label>
+          <input type="email" id="memEmail" class="form-control" placeholder="m.ilunga@jbf-services.cd" required pattern="^[a-zA-Z0-9._%+-]+@jbf-services\.cd$" title="L'adresse doit se terminer par @jbf-services.cd">
+          <small style="color: var(--text-muted); font-size: 0.72rem;">Conformément à la politique interne, seuls les identifiants @jbf-services.cd sont autorisés.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pôle Technique / Métier *</label>
+          <select id="memSector" class="form-control" required>
+            <option value="Chef d'Équipe Soudure & Maintenance">Chef d'Équipe Soudure & Maintenance</option>
+            <option value="Superviseur Catering & Base-Vie">Superviseur Catering & Base-Vie</option>
+            <option value="Conducteur d'Engins Miniers">Conducteur d'Engins Miniers</option>
+            <option value="Chef de Chantier BTP & Génie Civil">Chef de Chantier BTP & Génie Civil</option>
+            <option value="Responsable Sécurité Physique">Responsable Sécurité Physique</option>
+            <option value="Ingénieur Télécoms & Réseaux">Ingénieur Télécoms & Réseaux</option>
+            <option value="Technicien Frigoriste Industriel">Technicien Frigoriste Industriel</option>
+            <option value="Agent Logistique & Transit">Agent Logistique & Transit</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Site / Ville d'Assignation</label>
+          <input type="text" id="memSite" class="form-control" placeholder="Ex: Kolwezi / Lubumbashi / Likasi" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mot de Passe Initial Attribué *</label>
+          <input type="password" id="memPassword" class="form-control" placeholder="Minimum 6 caractères" minlength="6" required>
+          <small style="color: var(--text-muted); font-size: 0.72rem;">Le collaborateur utilisera ce mot de passe pour sa première connexion.</small>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeMemberModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitMember"><i class="bi bi-check2"></i> Enregistrer le Compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let usersList = [];
+  const STORAGE_KEY = 'JBF_ADMIN_USERS';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+  });
+
+  async function loadUsers() {
+    // 1. Supabase profiles
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          usersList = data;
+        }
+      } catch (err) {
+        console.warn('[Users Supabase Fetch]', err);
+      }
+    }
+
+    // 2. Fallback local
+    if (usersList.length === 0) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) usersList = JSON.parse(stored);
+      } catch(e) {}
+    }
+
+    updateKPIs();
+    renderUsersTable();
+  }
+
+  function updateKPIs() {
+    const total = usersList.length;
+    const members = usersList.filter(u => u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd'))).length;
+    const clients = usersList.filter(u => u.role !== 'membre' && !(u.email && u.email.endsWith('@jbf-services.cd'))).length;
+    document.getElementById('kpiTotalUsers').textContent = total;
+    document.getElementById('kpiMembersTotal').textContent = members;
+    document.getElementById('kpiClientsTotal').textContent = clients;
+  }
+
+  function renderUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    const filter = document.getElementById('userRoleFilter').value;
+
+    let filtered = usersList;
+    if (filter === 'membre') {
+      filtered = usersList.filter(u => u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd')));
+    } else if (filter === 'client') {
+      filtered = usersList.filter(u => u.role !== 'membre' && !(u.email && u.email.endsWith('@jbf-services.cd')));
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);"><i class="bi bi-people" style="font-size: 2.2rem; display:block; margin-bottom: 8px;"></i>Aucun compte enregistré pour cette catégorie.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((u, idx) => {
+      const isMember = u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd'));
+      const roleBadge = isMember 
+        ? '<span class="badge" style="background: #DEF7EC; color: #03543F; font-weight: 700;"><i class="bi bi-person-badge"></i> Membre Équipe</span>' 
+        : '<span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;"><i class="bi bi-building"></i> Client Partenaire</span>';
+
+      return `
+        <tr>
+          <td>
+            <strong style="color: var(--text-primary); font-size: 0.88rem;">${escapeHtml(u.company || u.full_name || u.name || 'Utilisateur')}</strong>
+            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(u.secteur || u.sector || u.site || 'RDC')}</div>
+          </td>
+          <td style="font-size: 0.84rem; color: var(--text-primary); font-weight: 600;">${escapeHtml(u.email || '-')}</td>
+          <td style="font-size: 0.82rem; color: var(--text-secondary);">${escapeHtml(u.phone || u.whatsapp || '-')}</td>
+          <td>${roleBadge}</td>
+          <td style="font-size: 0.78rem; color: var(--text-muted);">${u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : 'Récent'}</td>
+          <td><span class="badge-status valide">Actif</span></td>
+          <td style="text-align: right;">
+            ${isMember ? `
+              <a href="reset-password.html?email=${encodeURIComponent(u.email || '')}" class="btn btn-secondary btn-sm" title="Réinitialiser Mot de Passe">
+                <i class="bi bi-key"></i> MDP
+              </a>
+            ` : `
+              <button class="btn btn-secondary btn-sm" onclick="window.adminCore.showToast('Compte client géré automatiquement via le portail.', 'info')">
+                <i class="bi bi-eye"></i> Voir
+              </button>
+            `}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function openNewMemberModal() {
+    document.getElementById('memberModal').style.display = 'flex';
+  }
+
+  function closeMemberModal() {
+    document.getElementById('memberModal').style.display = 'none';
+  }
+
+  async function handleCreateMember(e) {
+    e.preventDefault();
+    const name = document.getElementById('memName').value.trim();
+    const email = document.getElementById('memEmail').value.trim().toLowerCase();
+    const sector = document.getElementById('memSector').value;
+    const site = document.getElementById('memSite').value.trim();
+    const pass = document.getElementById('memPassword').value;
+
+    if (!email.endsWith('@jbf-services.cd')) {
+      alert("Erreur : Seules les adresses avec le domaine @jbf-services.cd sont autorisées pour les collaborateurs.");
+      return;
+    }
+
+    const newMember = {
+      id: 'mem-' + Date.now(),
+      full_name: name,
+      name: name,
+      email: email,
+      role: 'membre',
+      secteur: sector,
+      site: site,
+      statut: 'actif',
+      created_at: new Date().toISOString()
+    };
+
+    // Insertion Supabase
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        await sb.from('profiles').insert([newMember]);
+        // Tenter création compte Auth si possible
+        try {
+          await sb.auth.signUp({
+            email: email,
+            password: pass,
+            options: { data: { role: 'membre', name: name } }
+          });
+        } catch(authE) {}
+      } catch (err) {
+        console.warn('[Member Insert]', err);
+      }
+    }
+
+    usersList.unshift(newMember);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(usersList));
+
+    closeMemberModal();
+    updateKPIs();
+    renderUsersTable();
+    window.adminCore?.showToast(`Compte membre créé pour ${name} (${email}).`, 'success');
+  }
+</script>
+</body>
+</html>

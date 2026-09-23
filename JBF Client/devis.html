@@ -72,8 +72,8 @@
         <div class="page-title"><h1>Registre de vos Devis & Propositions Commerciales</h1></div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="window.clientCore.openModal('newQuoteModal')">
-          <i class="bi bi-plus-circle-fill"></i> Demander une Nouvelle Prestation
+        <button class="btn btn-primary btn-sm btn-quote-plus" onclick="window.clientCore.openModal('newQuoteModal')" title="Demander un Devis">
+          <i class="bi bi-plus-lg"></i> <span class="btn-label">Demander une Nouvelle Prestation</span>
         </button>
       </div>
     </header>
@@ -127,7 +127,7 @@
   </div>
 </div>
 
-<!-- MODALE DEMANDE DEVIS -->
+<!-- MODALE DEMANDE DEVIS AVEC UPLOAD DE FICHIERS (MAX 3, 5MB) -->
 <div class="modal-overlay" id="newQuoteModal">
   <div class="modal-box">
     <div class="modal-header">
@@ -162,12 +162,25 @@
         </div>
         <div class="form-group">
           <label>Cahier des charges ou description</label>
-          <textarea id="modalDescInput" class="form-control" placeholder="Volume estimé, effectifs, délais souhaités..."></textarea>
+          <textarea id="modalDescInput" class="form-control" rows="3" placeholder="Volume estimé, effectifs, délais souhaités..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Joindre des documents techniques (max 3 fichiers, 5 Mo max chacun)</label>
+          <div class="file-upload-zone" id="quoteDropZone">
+            <input type="file" id="quoteFileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.dxf,.dwg,.stl,.png,.svg,.jpg,.jpeg" onchange="handleQuoteFileSelection(event)">
+            <i class="bi bi-cloud-arrow-up" style="font-size: 1.8rem; color: var(--brand-pink); display: block; margin-bottom: 4px;"></i>
+            <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-primary);">Cliquez ou glissez vos fichiers ici</span>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+              PDF, Word, Excel, DXF, DWG, STL, PNG, SVG, JPG (5 Mo max par fichier)
+            </div>
+          </div>
+          <div class="file-list-preview" id="quoteFileList"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newQuoteModal')">Fermer</button>
-        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send-fill"></i> Soumettre la Demande</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitQuote"><i class="bi bi-send-fill"></i> Soumettre la Demande</button>
       </div>
     </form>
   </div>
@@ -246,35 +259,75 @@
       return true;
     });
 
-    if (allClientQuotes.length === 0) {
-      allClientQuotes = [
-        {
-          id: '2026-041',
-          service: 'Mise à disposition personnel technique (Soudure & Électricité)',
-          site: 'Chantier Minier Kolwezi',
-          statut: 'valide',
-          montant: 5800,
-          date: new Date().toLocaleDateString('fr-FR')
-        },
-        {
-          id: '2026-039',
-          service: 'Restauration collective & Catering chantier (50 personnes)',
-          site: 'Base-Vie Lubumbashi',
-          statut: 'en_etude',
-          montant: null,
-          date: new Date(Date.now() - 2 * 86400000).toLocaleDateString('fr-FR')
-        }
-      ];
-      try { localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(allClientQuotes)); } catch(e) {}
+    // Suppression des fausses données hardcodées
+    renderQuotesTable(allClientQuotes);
+  }
+
+  // --- Gestion Upload jusqu'à 3 fichiers (5 Mo max par fichier) ---
+  let selectedQuoteFiles = [];
+  const ALLOWED_EXTS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'dxf', 'dwg', 'stl', 'png', 'svg', 'jpg', 'jpeg'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Mo
+
+  function handleQuoteFileSelection(e) {
+    const files = Array.from(e.target.files || []);
+    const errorMessages = [];
+
+    files.forEach(f => {
+      const ext = f.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTS.includes(ext)) {
+        errorMessages.push(`Format "${ext}" non autorisé pour ${f.name}.`);
+        return;
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        errorMessages.push(`Le fichier ${f.name} dépasse la limite de 5 Mo (${(f.size / (1024*1024)).toFixed(1)} Mo).`);
+        return;
+      }
+      if (selectedQuoteFiles.length >= 3) {
+        errorMessages.push(`Limite atteinte : maximum 3 fichiers autorisés.`);
+        return;
+      }
+      // Éviter les doublons
+      if (!selectedQuoteFiles.some(existing => existing.name === f.name && existing.size === f.size)) {
+        selectedQuoteFiles.push(f);
+      }
+    });
+
+    if (errorMessages.length > 0) {
+      window.clientCore.showToast(errorMessages[0], 'error');
     }
 
-    renderQuotesTable(allClientQuotes);
+    renderQuoteFilePreview();
+    e.target.value = ''; // Réinitialiser pour permettre de ré-uploader
+  }
+
+  function removeQuoteFile(index) {
+    selectedQuoteFiles.splice(index, 1);
+    renderQuoteFilePreview();
+  }
+
+  function renderQuoteFilePreview() {
+    const listEl = document.getElementById('quoteFileList');
+    if (!listEl) return;
+    if (selectedQuoteFiles.length === 0) {
+      listEl.innerHTML = '';
+      return;
+    }
+    listEl.innerHTML = selectedQuoteFiles.map((f, idx) => `
+      <div class="file-item-pill">
+        <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+          <i class="bi bi-file-earmark-check" style="color:var(--brand-pink);"></i>
+          <span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(f.name)}</span>
+          <span style="color:var(--text-muted); font-size:0.72rem;">(${(f.size / 1024).toFixed(0)} Ko)</span>
+        </div>
+        <span class="remove-file" onclick="removeQuoteFile(${idx})" title="Retirer ce fichier">&times;</span>
+      </div>
+    `).join('');
   }
 
   function renderQuotesTable(list) {
     const tbody = document.getElementById('quotesTableBody');
     if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucune demande de devis enregistrée. Cliquez sur "Demander une Nouvelle Prestation" pour initier un devis.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted);"><i class="bi bi-file-earmark" style="font-size: 1.8rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune demande de devis enregistrée. Cliquez sur "Demander une Nouvelle Prestation" pour initier un devis.</td></tr>';
       return;
     }
 
@@ -285,11 +338,12 @@
       const statusLabel = isValide ? 'Validé & Prêt' : 'En étude technique';
       const montant = d.montant ? `$${Number(d.montant).toLocaleString()} USD` : '<em>En chiffrage</em>';
       const serviceText = Array.isArray(d.services) ? d.services.join(', ') : (d.service || d.prestation || 'Prestation JBF');
+      const filesCount = d.fichiers && d.fichiers.length ? `<span class="badge" style="background:#F1F5F9; color:#475569; margin-left:6px;"><i class="bi bi-paperclip"></i> ${d.fichiers.length}</span>` : '';
 
       return `
         <tr data-status="${isValide ? 'valide' : 'en_etude'}">
           <td><strong>#DEV-${(d.id || '').toString().slice(-4).toUpperCase()}</strong></td>
-          <td>${escapeHtml(serviceText)}</td>
+          <td>${escapeHtml(serviceText)} ${filesCount}</td>
           <td>${escapeHtml(d.localite || d.site || 'RDC')}</td>
           <td>${dateStr}</td>
           <td>${montant}</td>
@@ -332,6 +386,14 @@
     const site = document.getElementById('modalSiteInput').value;
     const desc = document.getElementById('modalDescInput').value;
     const session = window.clientCore.getClientSession() || {};
+    const submitBtn = document.getElementById('btnSubmitQuote');
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi en cours...';
+    }
+
+    const filesMeta = selectedQuoteFiles.map(f => ({ name: f.name, size: f.size, type: f.type }));
 
     const newDevis = {
       id: 'dev-' + Date.now(),
@@ -341,6 +403,7 @@
       localite: site,
       description: desc,
       message: desc,
+      fichiers: filesMeta,
       statut: 'en_etude',
       email: (session.email || '').toLowerCase(),
       nom: session.contactName || session.name || 'Client',
@@ -360,7 +423,7 @@
           email: newDevis.email,
           services: [service],
           localite: site,
-          message: desc,
+          message: `${desc}${filesMeta.length > 0 ? `\n[Fichiers joints: ${filesMeta.map(f => f.name).join(', ')}]` : ''}`,
           statut: 'nouveau'
         }]);
       } catch (err) {
@@ -375,6 +438,16 @@
     } catch (err) {}
     list.unshift(newDevis);
     localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(list));
+
+    selectedQuoteFiles = [];
+    renderQuoteFilePreview();
+    document.getElementById('modalDescInput').value = '';
+    document.getElementById('modalSiteInput').value = '';
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Soumettre la Demande';
+    }
 
     window.clientCore.closeModal('newQuoteModal');
     loadClientQuotes();

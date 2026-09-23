@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion de la Galerie Photos & Vidéos — JBF SERVICES Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .gallery-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .gallery-admin-card {
+      background: var(--white);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      box-shadow: var(--sh-card);
+      transition: var(--t-instant);
+      display: flex;
+      flex-direction: column;
+    }
+    .gallery-admin-card:hover {
+      box-shadow: var(--sh-hover);
+      border-color: var(--border-pink);
+    }
+    .gallery-thumb-container {
+      position: relative;
+      height: 150px;
+      background: #0F172A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .gallery-thumb-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-type-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #FFF;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .gallery-card-body {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
+      </div>
+      <div class="brand-text">
+        <h2>JBF SERVICES</h2>
+        <span>Supervision RDC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Pilotage Général</div>
+      <a href="dashboard.html" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="devis.html" class="nav-item">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Demandes de Devis</span>
+      </a>
+      <a href="devis-equipes.html" class="nav-item">
+        <i class="bi bi-folder-check"></i>
+        <span>Devis Chefs d'Équipe</span>
+      </a>
+      <a href="missions.html" class="nav-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Missions Terrain</span>
+      </a>
+
+      <div class="nav-section-title">Communication & Médias</div>
+      <a href="galerie.html" class="nav-item active">
+        <i class="bi bi-images"></i>
+        <span>Galerie Médias</span>
+      </a>
+      <a href="actualites.html" class="nav-item">
+        <i class="bi bi-newspaper"></i>
+        <span>Actualités & Blog</span>
+      </a>
+
+      <div class="nav-section-title">Ressources & Équipes</div>
+      <a href="conges.html" class="nav-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Demandes de Congés</span>
+      </a>
+      <a href="membres.html" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Collaborateurs</span>
+      </a>
+      <a href="ressources.html" class="nav-item">
+        <i class="bi bi-file-earmark-arrow-up-fill"></i>
+        <span>Ressources & Formations</span>
+      </a>
+
+      <div class="nav-section-title">Qualité & Retours</div>
+      <a href="service-client.html" class="nav-item">
+        <i class="bi bi-headset"></i>
+        <span>Service client</span>
+      </a>
+      <a href="avis.html" class="nav-item">
+        <i class="bi bi-star-fill"></i>
+        <span>Avis & Retours Clients</span>
+      </a>
+
+      <div class="nav-section-title">Utilisateurs & Sécurité</div>
+      <a href="utilisateurs.html" class="nav-item">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Utilisateurs</span>
+      </a>
+      <a href="reset-password.html" class="nav-item">
+        <i class="bi bi-key-fill"></i>
+        <span>Mots de Passe Membres</span>
+      </a>
+      <a href="sous-admins.html" class="nav-item">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Sous-Administrateurs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-pill">
+        <div class="user-avatar" id="adminUserAvatar">DG</div>
+        <div class="user-info">
+          <div class="name" id="adminUserName">Direction JBF</div>
+          <div class="role" id="adminUserRole">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="window.adminCore.logoutAdmin()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Publication dans la Galerie — Photos & Vidéos</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" onclick="openNewMediaModal()">
+          <i class="bi bi-cloud-arrow-up-fill"></i> Ajouter un Média
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI RAPIDES -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="bi bi-images"></i></div>
+          <div class="kpi-details">
+            <h3>Total Médias</h3>
+            <div class="kpi-value" id="kpiTotalMedias">0</div>
+            <div class="kpi-sub">Photos et Vidéos</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon info"><i class="bi bi-camera-reels-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Vidéos HD</h3>
+            <div class="kpi-value" id="kpiTotalVideos">0</div>
+            <div class="kpi-sub">Chantiers & Équipements</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Publiés en Ligne</h3>
+            <div class="kpi-value" id="kpiTotalPublies">0</div>
+            <div class="kpi-sub">Visibles portail public</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon warning"><i class="bi bi-shield-check"></i></div>
+          <div class="kpi-details">
+            <h3>15 Pôles</h3>
+            <div class="kpi-value">100%</div>
+            <div class="kpi-sub">Conformité ARSP RDC</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTE DES MÉDIAS -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-collection-play-fill"></i> Médias de la Galerie Publique</h2>
+          <div style="display: flex; gap: 8px;">
+            <select id="filterType" class="form-select" style="width: auto; padding: 6px 12px;" onchange="renderMediaGrid()">
+              <option value="all">Tous les types</option>
+              <option value="photo">Photos uniquement</option>
+              <option value="video">Vidéos uniquement</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="galleryGrid" class="gallery-preview-grid">
+            <!-- Injecté dynamiquement -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL AJOUT MÉDIA -->
+<div class="modal-backdrop-custom" id="mediaModal">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-cloud-arrow-up" style="color: var(--brand-pink);"></i> Publier un Média dans la Galerie</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeMediaModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <form onsubmit="handleSaveMedia(event)">
+        <div class="form-group">
+          <label class="form-label">Titre du Média / Réalisation *</label>
+          <input type="text" id="mediaTitle" class="form-control" placeholder="Ex: Terrassement industriel — Hangar Logistique Kolwezi" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pôle Technique / Prestation *</label>
+          <select id="mediaCategory" class="form-control" required>
+            <option value="Sous-Traitance Minière">Sous-Traitance Minière & Extraction</option>
+            <option value="BTP & Construction">BTP, Génie Civil & Construction</option>
+            <option value="Catering & Restauration">Fourniture Alimentaire & Catering</option>
+            <option value="Maintenance Industrielle">Maintenance Industrielle & Soudure</option>
+            <option value="Sécurité Physique">Gardiennage & Sécurité Physique</option>
+            <option value="Nettoyage & Housekeeping">Nettoyage Industriel & Housekeeping</option>
+            <option value="Transport & Engins">Transport & Location Engins</option>
+            <option value="Installations Électriques">Installations Électriques & Solaire</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Type de Média *</label>
+          <select id="mediaType" class="form-control" onchange="toggleMediaTypeFields()" required>
+            <option value="photo">Photo / Image (JPG, PNG, WebP)</option>
+            <option value="video">Vidéo (MP4, YouTube, Lien Stream)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">URL de l'Image ou Miniature *</label>
+          <input type="url" id="mediaUrl" class="form-control" placeholder="https://... ou ../assets/photos/..." required>
+          <small style="color: var(--text-muted); font-size: 0.72rem;">Lien direct vers l'image hébergée sur CDN ou serveur Supabase.</small>
+        </div>
+
+        <div class="form-group" id="videoUrlGroup" style="display: none;">
+          <label class="form-label">URL de la Vidéo (si type vidéo)</label>
+          <input type="url" id="videoUrl" class="form-control" placeholder="https://youtube.com/watch?v=... ou lien MP4 direct">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description ou Contexte Opérationnel</label>
+          <textarea id="mediaDescription" class="form-control" rows="3" placeholder="Précisez le client, le site, les dates ou les chiffres clés de la réalisation..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeMediaModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitMedia"><i class="bi bi-check2"></i> Mettre en Ligne</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
+<script>
+  let galleryItems = [];
+  const STORAGE_KEY = 'JBF_ADMIN_GALLERY';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadGalleryItems();
+  });
+
+  async function loadGalleryItems() {
+    // 1. Supabase
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await sb.from('galerie_items').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          galleryItems = data;
+        }
+      } catch (err) {
+        console.warn('[Gallery Supabase Fetch]', err);
+      }
+    }
+
+    // 2. Fallback local
+    if (galleryItems.length === 0) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) galleryItems = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    updateKPIs();
+    renderMediaGrid();
+  }
+
+  function updateKPIs() {
+    const total = galleryItems.length;
+    const videos = galleryItems.filter(i => i.type === 'video').length;
+    document.getElementById('kpiTotalMedias').textContent = total;
+    document.getElementById('kpiTotalVideos').textContent = videos;
+    document.getElementById('kpiTotalPublies').textContent = total;
+  }
+
+  function renderMediaGrid() {
+    const grid = document.getElementById('galleryGrid');
+    const filter = document.getElementById('filterType').value;
+    const items = filter === 'all' ? galleryItems : galleryItems.filter(i => i.type === filter);
+
+    if (items.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);"><i class="bi bi-images" style="font-size: 2.5rem; display: block; margin-bottom: 8px;"></i>Aucun média dans la galerie pour le moment. Cliquez sur "Ajouter un Média" pour publier.</div>';
+      return;
+    }
+
+    grid.innerHTML = items.map((m, idx) => `
+      <div class="gallery-admin-card">
+        <div class="gallery-thumb-container">
+          <img src="${m.url || '../assets/logo.png'}" alt="${m.titre || 'Média'}" onerror="this.src='../assets/logo.png'">
+          <div class="gallery-type-badge">
+            <i class="bi bi-${m.type === 'video' ? 'play-circle-fill' : 'image'}"></i>
+            ${m.type === 'video' ? 'VIDÉO' : 'PHOTO'}
+          </div>
+        </div>
+        <div class="gallery-card-body">
+          <div>
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-pink); text-transform: uppercase;">${m.categorie || 'Général'}</span>
+            <h4 style="font-size: 0.9rem; font-weight: 700; margin: 4px 0 6px; color: var(--text-primary);">${m.titre || 'Sans titre'}</h4>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">${(m.description || '').slice(0, 80)}${(m.description || '').length > 80 ? '...' : ''}</p>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+            <span style="font-size: 0.7rem; color: var(--text-muted);">${m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : 'Récent'}</span>
+            <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.2);" onclick="deleteMedia(${idx})">
+              <i class="bi bi-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function toggleMediaTypeFields() {
+    const type = document.getElementById('mediaType').value;
+    document.getElementById('videoUrlGroup').style.display = type === 'video' ? 'block' : 'none';
+  }
+
+  function openNewMediaModal() {
+    document.getElementById('mediaModal').style.display = 'flex';
+  }
+
+  function closeMediaModal() {
+    document.getElementById('mediaModal').style.display = 'none';
+  }
+
+  async function handleSaveMedia(e) {
+    e.preventDefault();
+    const titre = document.getElementById('mediaTitle').value.trim();
+    const categorie = document.getElementById('mediaCategory').value;
+    const type = document.getElementById('mediaType').value;
+    const url = document.getElementById('mediaUrl').value.trim();
+    const videoUrl = document.getElementById('videoUrl')?.value.trim() || '';
+    const desc = document.getElementById('mediaDescription').value.trim();
+
+    const newItem = {
+      id: 'med-' + Date.now(),
+      titre: titre,
+      categorie: categorie,
+      type: type,
+      url: url,
+      video_url: videoUrl,
+      description: desc,
+      publie: true,
+      created_at: new Date().toISOString()
+    };
+
+    // Supabase insert
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+      try {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        await sb.from('galerie_items').insert([newItem]);
+      } catch (err) {
+        console.warn('[Gallery Insert]', err);
+      }
+    }
+
+    galleryItems.unshift(newItem);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+
+    closeMediaModal();
+    updateKPIs();
+    renderMediaGrid();
+    window.adminCore?.showToast('Média publié dans la galerie avec succès.', 'success');
+  }
+
+  function deleteMedia(index) {
+    if (!confirm('Êtes-vous sûr de vouloir retirer ce média de la galerie ?')) return;
+    galleryItems.splice(index, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+    updateKPIs();
+    renderMediaGrid();
+    window.adminCore?.showToast('Média retiré de la galerie.', 'info');
+  }
+</script>
+</body>
+</html>

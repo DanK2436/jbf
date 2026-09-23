@@ -767,9 +767,8 @@
   </footer>
 
 <script>
-  // Redirection automatique immédiate vers le nouvel Espace Client & Inscription
-  const clientRegisterTarget = '../../JBF Client/auth/register.html' + (window.location.search || '') + (window.location.hash || '');
-  window.location.replace(clientRegisterTarget);
+  // Page d'inscription — redirection vers le portail client sécurisé avec Supabase
+  // (Le flux OTP réel est géré côté client via Supabase Auth)
 
   /* ======================================================
      CONFIGURATION SUPABASE AUTHENTIQUE

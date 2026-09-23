@@ -801,12 +801,32 @@ body {
   }
 
   .kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .kpi-card {
-    padding: 14px 16px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .kpi-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    border-radius: var(--r-sm);
+  }
+
+  .kpi-details h3 {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.66rem;
   }
 
   .card-header {
@@ -840,4 +860,181 @@ body {
   input, select, textarea {
     font-size: 16px !important; /* Anti-zoom automatique sur iOS Safari */
   }
+}
+
+/* ============================================================
+   MODALES UNIVERSELLES CLIENT
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal-overlay.active,
+.modal-overlay.open {
+  display: flex !important;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal-box {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  max-width: 580px;
+  width: 100%;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FAFAFC;
+}
+
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #FAFAFC;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Zone d'upload de fichiers pour devis */
+.file-upload-zone {
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--r-md);
+  padding: 16px;
+  text-align: center;
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.file-upload-zone:hover, .file-upload-zone.dragover {
+  border-color: var(--brand-pink);
+  background: var(--brand-pink-subtle);
+}
+.file-upload-zone input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-list-preview {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.file-item-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--white);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  font-size: 0.8rem;
+}
+.file-item-pill .remove-file {
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: 800;
+  margin-left: 8px;
+}
+
+/* Bouton devis "+" sur mobile */
+@media (max-width: 768px) {
+  .btn-quote-plus {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    font-size: 1.25rem !important;
+  }
+  .btn-quote-plus .btn-label {
+    display: none !important;
+  }
+}
+
+/* FAB Devis Button */
+.fab-devis {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--brand-pink);
+  color: #fff;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(230,0,126,0.4);
+  z-index: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 768px) {
+  .fab-devis { display: flex; }
+}
+
+/* Ensure KPI grid is always 4 columns */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+@media (max-width: 992px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 }

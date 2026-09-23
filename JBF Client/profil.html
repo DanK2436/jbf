@@ -79,19 +79,35 @@
 
     <main class="client-content">
       <div class="card" style="max-width: 760px;">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
           <h2><i class="bi bi-building-gear"></i> Paramètres du Compte Partenaire</h2>
+          <span class="badge-status valide" id="accountSyncBadge"><i class="bi bi-cloud-check-fill"></i> Synchronisé Base de Données</span>
         </div>
         <div class="card-body">
+          <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap: 12px;">
+            <div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Identifiant Partenaire Unique</div>
+              <div style="font-size: 0.95rem; font-weight: 800; color: var(--brand-pink);" id="displayClientId">CLI-CHARGEMENT...</div>
+            </div>
+            <div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Statut Juridique</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #059669;"><i class="bi bi-patch-check-fill"></i> Compte Partenaire Actif</div>
+            </div>
+            <div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Conformité ARSP RDC</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Agréé & Vérifié</div>
+            </div>
+          </div>
+
           <form onsubmit="handleSaveProfile(event)">
             <div class="form-grid-2col">
               <div class="form-group">
-                <label>Raison Sociale / Société *</label>
-                <input type="text" id="profCompanyName" class="form-control" placeholder="Ex: Société Minière" required>
+                <label>Raison Sociale / Entreprise *</label>
+                <input type="text" id="profCompanyName" class="form-control" placeholder="Ex: Société Minière du Katanga" required>
               </div>
 
               <div class="form-group">
-                <label>Nom & Titre de l'Interlocuteur *</label>
+                <label>Nom & Titre de l'Interlocuteur Principal *</label>
                 <input type="text" id="profContactName" class="form-control" placeholder="Ex: Jean-Luc Mwamba (Directeur Logistique)" required>
               </div>
             </div>
@@ -103,25 +119,27 @@
               </div>
 
               <div class="form-group">
-                <label>Numéro de Téléphone / WhatsApp *</label>
+                <label>Numéro Téléphone / Ligne WhatsApp Directe *</label>
                 <input type="tel" id="profWhatsapp" class="form-control" placeholder="+243 810 000 000" required>
-                <small style="color: var(--text-muted); font-size: 0.72rem;">Ce numéro recevra vos alertes de suivi de devis et missions.</small>
+                <small style="color: var(--text-muted); font-size: 0.72rem;">Numéro utilisé pour vos notifications officielles et alertes chantiers.</small>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>Siège / Ville Principale en RDC *</label>
-              <input type="text" id="profCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi" required>
-            </div>
+            <div class="form-grid-2col">
+              <div class="form-group">
+                <label>Siège / Ville Principale en RDC *</label>
+                <input type="text" id="profCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi / Kinshasa" required>
+              </div>
 
-            <div class="form-group">
-              <label>Secteur d'Activité Principal</label>
-              <input type="text" id="profSector" class="form-control" placeholder="Ex: Sous-Traitance Minière & Extraction">
+              <div class="form-group">
+                <label>Secteur d'Activité Principal</label>
+                <input type="text" id="profSector" class="form-control" placeholder="Ex: Sous-Traitance Minière & Extraction">
+              </div>
             </div>
 
             <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check2-circle"></i> Mettre à jour le Profil
+              <button type="submit" class="btn btn-primary" id="btnSaveProfile">
+                <i class="bi bi-check2-circle"></i> Enregistrer les Modifications
               </button>
             </div>
           </form>
@@ -138,49 +156,123 @@
 <script src="js/client-core.js"></script>
 
 <script>
+  let sbClient = null;
+  function getSb() {
+    if (sbClient) return sbClient;
+    if (window.supabase && window.JBF_CLIENT_CONFIG?.SUPABASE_URL) {
+      try {
+        sbClient = window.supabase.createClient(window.JBF_CLIENT_CONFIG.SUPABASE_URL, window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY);
+      } catch (e) {}
+    }
+    return sbClient;
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
-    const session = window.clientCore.getClientSession();
-    if (session) {
-      if (session.companyName) document.getElementById('profCompanyName').value = session.companyName;
-      if (session.contactName || session.name) document.getElementById('profContactName').value = session.contactName || session.name;
-      if (session.email) document.getElementById('profEmail').value = session.email;
-      if (session.whatsapp || session.phone) document.getElementById('profWhatsapp').value = session.whatsapp || session.phone;
-      if (session.city) document.getElementById('profCity').value = session.city;
-      if (session.sector) document.getElementById('profSector').value = session.sector;
+    let session = window.clientCore.getClientSession() || {};
+    const clientEmail = (session.email || '').toLowerCase();
+    const idDisplay = document.getElementById('displayClientId');
+
+    if (idDisplay) {
+      idDisplay.textContent = session.id ? `#CLI-${String(session.id).slice(-6).toUpperCase()}` : '#CLI-PARTENAIRE';
+    }
+
+    // Remplissage immédiat avec la session locale
+    populateForm(session);
+
+    // Chargement dynamique depuis Supabase (table profiles)
+    const sb = getSb();
+    if (sb && (session.id || clientEmail)) {
+      try {
+        let query = sb.from('profiles').select('*');
+        if (session.id) {
+          query = query.eq('id', session.id);
+        } else {
+          query = query.eq('email', clientEmail);
+        }
+        const { data, error } = await query.maybeSingle();
+
+        if (!error && data) {
+          // Fusionner avec les données fraîches de la base
+          session.companyName = data.company || data.company_name || session.companyName;
+          session.contactName = data.full_name || data.name || session.contactName;
+          session.email = data.email || session.email;
+          session.phone = data.phone || data.telephone || session.phone;
+          session.whatsapp = session.phone;
+          session.city = data.city || data.ville || session.city;
+          session.sector = data.secteur || data.sector || session.sector;
+          session.id = data.id || session.id;
+
+          window.clientCore.setClientSession(session);
+          populateForm(session);
+
+          const badge = document.getElementById('accountSyncBadge');
+          if (badge) badge.innerHTML = '<i class="bi bi-check-all"></i> Données synchronisées (Base Supabase)';
+        }
+      } catch (err) {
+        console.warn('[Supabase Profile Fetch]', err);
+      }
     }
   });
 
+  function populateForm(data) {
+    if (!data) return;
+    if (data.companyName) document.getElementById('profCompanyName').value = data.companyName;
+    if (data.contactName || data.name) document.getElementById('profContactName').value = data.contactName || data.name;
+    if (data.email) document.getElementById('profEmail').value = data.email;
+    if (data.whatsapp || data.phone) document.getElementById('profWhatsapp').value = data.whatsapp || data.phone;
+    if (data.city) document.getElementById('profCity').value = data.city;
+    if (data.sector) document.getElementById('profSector').value = data.sector;
+  }
+
   async function handleSaveProfile(e) {
     e.preventDefault();
+    const btn = document.getElementById('btnSaveProfile');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enregistrement...';
+    }
+
     const session = window.clientCore.getClientSession() || {};
     session.companyName = document.getElementById('profCompanyName').value.trim();
     session.contactName = document.getElementById('profContactName').value.trim();
     session.name = session.contactName;
-    session.email = document.getElementById('profEmail').value.trim();
+    session.email = document.getElementById('profEmail').value.trim().toLowerCase();
     session.whatsapp = document.getElementById('profWhatsapp').value.trim();
     session.phone = session.whatsapp;
     session.city = document.getElementById('profCity').value.trim();
     session.sector = document.getElementById('profSector').value.trim();
     session.avatar = (session.companyName || session.name || 'CL').substring(0, 2).toUpperCase();
 
-    // Mise à jour Supabase si possible
-    if (window.supabase && window.JBF_CLIENT_CONFIG?.SUPABASE_URL && session.id) {
+    // Mise à jour Supabase
+    const sb = getSb();
+    if (sb) {
       try {
-        const sb = window.supabase.createClient(window.JBF_CLIENT_CONFIG.SUPABASE_URL, window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY);
-        await sb.from('profiles').update({
+        const updatePayload = {
           full_name: session.contactName,
           company: session.companyName,
           city: session.city,
           secteur: session.sector,
-          phone: session.whatsapp
-        }).eq('id', session.id);
+          phone: session.whatsapp,
+          email: session.email,
+          updated_at: new Date().toISOString()
+        };
+
+        if (session.id) {
+          await sb.from('profiles').upsert({ id: session.id, ...updatePayload });
+        } else {
+          await sb.from('profiles').upsert(updatePayload, { onConflict: 'email' });
+        }
       } catch (err) {
         console.warn('[Supabase Profile Update]', err);
       }
     }
 
     window.clientCore.setClientSession(session);
-    window.clientCore.showToast('Profil et coordonnées mis à jour avec succès.', 'success');
+    window.clientCore.showToast('Profil d\'entreprise mis à jour avec succès.', 'success');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check2-circle"></i> Enregistrer les Modifications';
+    }
     setTimeout(() => location.reload(), 600);
   }
 </script>

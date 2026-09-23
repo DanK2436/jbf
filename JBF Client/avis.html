@@ -71,9 +71,6 @@
         <div class="page-title"><h1>Évaluations & Satisfaction Qualité</h1></div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="window.clientCore.openModal('newReviewModal')">
-          <i class="bi bi-star"></i> Laisser un Avis sur une Prestation
-        </button>
       </div>
     </header>
 
@@ -219,24 +216,20 @@
       } catch(e) {}
     }
 
-    // --- Exemple pour test immédiat ---
+    // --- Pas de fausses données hardcodées ---
     if (!list || list.length === 0) {
-      list = [
-        {
-          id: '1',
-          service: 'Nettoyage & Assainissement',
-          site: 'Siège Social Kinshasa',
-          note: 5,
-          commentaire: 'Équipe rigoureuse, matériel professionnel et respect strict des horaires.',
-          created_at: new Date(Date.now() - 2 * 86400000).toISOString()
-        }
-      ];
-      try { localStorage.setItem('JBF_REVIEWS_LOCAL', JSON.stringify(list)); } catch(e) {}
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 28px; color: var(--text-muted);"><i class="bi bi-star" style="font-size: 1.8rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune évaluation enregistrée pour le moment. Cliquez sur "Nouvel Avis" pour évaluer une prestation.</td></tr>';
+      return;
     }
 
     tbody.innerHTML = list.map(r => {
       const rating = Number(r.note || r.rating || 5);
       const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-CD') : 'Récemment';
+      const isApproved = r.approuve === true;
+      const statusBadge = isApproved 
+        ? '<span class="badge-status valide">Validé & Publié</span>' 
+        : '<span class="badge-status en_cours">En Modération Direction</span>';
+
       return `
         <tr>
           <td><strong>${escapeHtml(r.service || r.prestation || 'Prestation JBF')}</strong></td>
@@ -246,7 +239,7 @@
           </td>
           <td>${escapeHtml(r.commentaire || r.text || '')}</td>
           <td>${dateStr}</td>
-          <td><span class="badge-status valide">Enregistré</span></td>
+          <td>${statusBadge}</td>
         </tr>
       `;
     }).join('');
@@ -275,6 +268,7 @@
       note: Number(rating),
       commentaire: text,
       site: 'Chantier RDC',
+      approuve: false, // Transmis à l'administration pour validation
       created_at: new Date().toISOString()
     };
 

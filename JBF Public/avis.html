@@ -340,9 +340,9 @@
     <!-- Score Summary Banner -->
     <div class="score-banner reveal visible">
       <div class="score-big">
-        <div class="score-num">4.9</div>
-        <div class="score-stars">★★★★★</div>
-        <div class="score-label">Note globale sur 148 évaluations</div>
+        <div class="score-num" id="scoreValue">--</div>
+        <div class="score-stars" id="scoreStars">★★★★★</div>
+        <div class="score-label" id="scoreLabel">Calcul en cours...</div>
       </div>
 
       <div class="rating-bars">
@@ -543,98 +543,7 @@
 </footer>
 
 <script>
-const REVIEWS_DATA = [
-  {
-    id: 1,
-    name: "Jean-Marc Kabengele",
-    role: "Directeur des Achats & Sous-traitance",
-    company: "Société Minière du Lualaba",
-    loc: "Kolwezi",
-    stars: 5,
-    category: "Sous-traitance Minière",
-    text: "Nous collaborons avec JBF SERVICES depuis plus de 2 ans sur nos sites d'extraction. La conformité ARSP est irréprochable et la qualification des opérateurs d'engins a permis de fluidifier nos rotations sans aucun temps mort."
-  },
-  {
-    id: 2,
-    name: "Aurore Tshisekedi",
-    role: "Responsable HSE & Camp Management",
-    company: "Katanga Copper Processing",
-    loc: "Lubumbashi",
-    stars: 5,
-    category: "Catering & Restauration",
-    text: "Le service de restauration collective assuré pour nos 400 agents sur base de vie est exemplaire. Les normes HACCP sont scrupuleusement respectées et la variété des menus est très appréciée des équipes."
-  },
-  {
-    id: 3,
-    name: "Michel Vanderberg",
-    role: "Chef de Projet Infrastructures",
-    company: "Consortium BTP Congo",
-    loc: "Kinshasa",
-    stars: 5,
-    category: "BTP & Génie Civil",
-    text: "Pour le coulage de dalles industrielles et le terrassement de nos hangars logistiques, JBF SERVICES a fait preuve d'une rigueur technique remarquable et d'un strict respect du planning."
-  },
-  {
-    id: 4,
-    name: "David Mukendi",
-    role: "Directeur d'Usine",
-    company: "Metals & Minerals Processing",
-    loc: "Likasi",
-    stars: 5,
-    category: "Maintenance Industrielle",
-    text: "Leur équipe de soudeurs haute pression est intervenue en urgence lors d'un arrêt technique critique. Le travail a été réalisé et testé par radiographie en moins de 48 heures."
-  },
-  {
-    id: 5,
-    name: "Éric Kalombo",
-    role: "Directeur de la Sécurité Générale",
-    company: "Logistics Hub RDC",
-    loc: "Kasumbalesa",
-    stars: 5,
-    category: "Sécurité & Gardiennage",
-    text: "Le filtrage des accès et le gardiennage de notre plateforme frontière sont gérés avec un grand professionnalisme. Aucun incident à déplorer et reporting quotidien irréprochable."
-  },
-  {
-    id: 6,
-    name: "Sophie Kasongo",
-    role: "Responsable Chaîne d'Approvisionnement",
-    company: "Agri-Industry RDC",
-    loc: "Lubumbashi",
-    stars: 5,
-    category: "Logistique & Transport",
-    text: "L'acheminement de nos convois de fret lourd à travers le pays est sécurisé et suivi par GPS en temps réel. Une vraie tranquillité d'esprit pour notre direction."
-  },
-  {
-    id: 7,
-    name: "Alain Ngoy",
-    role: "Directeur des Ressources Humaines",
-    company: "Industrial Construction Ltd",
-    loc: "Kolwezi",
-    stars: 4,
-    category: "Mise à disposition Main-d'œuvre",
-    text: "JBF SERVICES a mobilisé 75 ouvriers qualifiés en un temps record pour un pic d'activité de 6 mois. La gestion administrative et contractuelle était 100% conforme à la loi."
-  },
-  {
-    id: 8,
-    name: "Benoît Ilunga",
-    role: "Superviseur Énergie & Utilités",
-    company: "Kipushi Mining Camp",
-    loc: "Kipushi",
-    stars: 5,
-    category: "Installations Électriques",
-    text: "L'installation du parc solaire hybride sur notre camp isolé a fonctionné du premier coup. Excellente maîtrise des armoires de distribution et du stockage lithium."
-  },
-  {
-    id: 9,
-    name: "Clarisse Mbuyi",
-    role: "Gestionnaire de Site Administratif",
-    company: "Banque & Services Corp",
-    loc: "Kinshasa",
-    stars: 5,
-    category: "Nettoyage & Entretien",
-    text: "Housekeeping et hygiène impeccables dans nos bureaux de direction. Les produits utilisés sont professionnels et les agents sont très discrets et courtois."
-  }
-];
+let REVIEWS_DATA = [];
 
 let selectedRating = 5;
 const ratingLabels = {
@@ -663,6 +572,10 @@ document.querySelectorAll('#navMenu .nav-link').forEach(link => {
 
 function renderReviews() {
   const grid = document.getElementById('reviewsGrid');
+  if (!REVIEWS_DATA || REVIEWS_DATA.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 24px;color:#94a3b8;"><i class="bi bi-star" style="font-size:2.5rem;margin-bottom:12px;display:block;"></i><p style="font-size:0.95rem;font-weight:600;">Aucun avis client pour le moment.</p><p style="font-size:0.82rem;margin-top:4px;">Soyez le premier à partager votre expérience !</p></div>`;
+    return;
+  }
   grid.innerHTML = REVIEWS_DATA.map(r => `
     <div class="review-box reveal visible">
       <div>
@@ -712,7 +625,6 @@ function resetStarHover() {
   updateStarDisplay(selectedRating);
 }
 
-<script>
 const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
 
@@ -769,7 +681,7 @@ async function submitAvis(e) {
           service: domaine,
           note: selectedRating,
           commentaire: comment,
-          approuve: true
+          approuve: false
         }]);
     }
   } catch(err) {
@@ -800,7 +712,7 @@ async function loadSupabaseReviews() {
       .eq('approuve', true)
       .order('created_at', { ascending: false });
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const dynamicReviews = data.map(d => ({
         id: d.id,
         name: d.nom,
@@ -811,9 +723,39 @@ async function loadSupabaseReviews() {
         category: d.service || 'Multi-Services',
         text: d.commentaire
       }));
-      // Merge with static
-      REVIEWS_DATA = [...dynamicReviews, ...REVIEWS_DATA];
+      // Replace (not merge) with real Supabase data
+      REVIEWS_DATA = dynamicReviews;
       renderReviews();
+      // Update stats from real data
+      const total = REVIEWS_DATA.length;
+      const avg = total > 0 ? (REVIEWS_DATA.reduce((s, r) => s + r.stars, 0) / total).toFixed(1) : '5.0';
+      const avgEl = document.getElementById('scoreValue');
+      if (avgEl) avgEl.textContent = total > 0 ? avg : '--';
+      const labelEl = document.getElementById('scoreLabel');
+      if (labelEl) {
+        labelEl.textContent = total > 0 ? `Note globale sur ${total} évaluation${total > 1 ? 's' : ''}` : 'Aucune évaluation enregistrée';
+      }
+      const starsEl = document.getElementById('scoreStars');
+      if (starsEl && total > 0) {
+        const fullStars = Math.round(Number(avg));
+        starsEl.textContent = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+      } else if (starsEl) {
+        starsEl.textContent = '☆☆☆☆☆';
+      }
+
+      // Calcul des pourcentages par étoile
+      const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      REVIEWS_DATA.forEach(r => { if (counts[r.stars] !== undefined) counts[r.stars]++; });
+      const barRows = document.querySelectorAll('.rating-bars .bar-row');
+      [5, 4, 3, 2, 1].forEach((star, idx) => {
+        if (barRows[idx]) {
+          const pct = total > 0 ? Math.round((counts[star] / total) * 100) : 0;
+          const fill = barRows[idx].querySelector('.bar-fill');
+          if (fill) fill.style.width = pct + '%';
+          const pctText = barRows[idx].querySelector('span:last-child');
+          if (pctText) pctText.textContent = pct + '%';
+        }
+      });
     }
   } catch(err) {
     console.warn("Erreur chargement avis Supabase:", err);
