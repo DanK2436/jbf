@@ -677,47 +677,53 @@ async function submitAvis(e) {
     submitBtn.textContent = "Publication en cours...";
   }
 
-  const newReview = {
-    id: Date.now(),
-    name: nom,
-    role: societe,
-    company: "Client Partenaire",
-    loc: ville || "RDC",
-    stars: selectedRating,
-    category: domaine,
-    text: comment
-  };
-
   try {
     if (supabaseClient) {
-      await supabaseClient
+      let insertRes = await supabaseClient
         .from('avis_clients')
         .insert([{
           nom: nom,
           entreprise: societe + (ville ? ` (${ville})` : ''),
           service: domaine,
+          categorie: domaine,
           note: selectedRating,
+          stars: selectedRating,
           commentaire: comment,
           approuve: false
         }]);
+
+      if (insertRes.error) {
+        // Fallback retry with minimal columns
+        await supabaseClient
+          .from('avis_clients')
+          .insert([{
+            nom: nom,
+            entreprise: societe + (ville ? ` (${ville})` : ''),
+            service: domaine,
+            note: selectedRating,
+            commentaire: comment,
+            approuve: false
+          }]);
+      }
     }
   } catch(err) {
     console.warn("Supabase avis save:", err);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Publier mon Avis Client Vérifié →";
+      submitBtn.textContent = "Publier mon Évaluation →";
     }
   }
 
-  REVIEWS_DATA.unshift(newReview);
-  renderReviews();
   closeAvisModal();
   document.getElementById('avisForm').reset();
 
   const toast = document.getElementById('toastMsg');
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 4000);
+  if (toast) {
+    toast.textContent = "Votre évaluation a été enregistrée avec succès ! Elle apparaîtra sur cette page dès sa validation par notre équipe.";
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 5000);
+  }
 }
 
 async function loadSupabaseReviews() {
@@ -736,8 +742,8 @@ async function loadSupabaseReviews() {
         role: d.entreprise || 'Partenaire',
         company: 'Client JBF',
         loc: 'RDC',
-        stars: d.note || 5,
-        category: d.service || 'Multi-Services',
+        stars: d.note || d.stars || 5,
+        category: d.service || d.categorie || 'Multi-Services',
         text: d.commentaire
       }));
       // Replace (not merge) with real Supabase data
@@ -778,10 +784,6 @@ async function loadSupabaseReviews() {
     console.warn("Erreur chargement avis Supabase:", err);
   }
 }
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAvisModal();
-});
 
 document.addEventListener('DOMContentLoaded', () => {
   renderReviews();

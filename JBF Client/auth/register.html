@@ -776,8 +776,8 @@
   </div>
 </div>
 
-<!-- Inclusion du service email -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config.js"></script>
 <script src="../../supabase/mail-service.js"></script>
 <script>
   /* ======================================================
@@ -1016,18 +1016,20 @@
     }
   }
 
-  // ── Envoi OTP Email via Supabase réel ──
+  // ── Envoi OTP Email via Brevo & Resend (et non via Supabase) ──
   async function sendRegistrationOtpEmail() {
-    if (!window.supabase) {
-      throw new Error("Client Supabase indisponible.");
+    activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    otpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+    sessionStorage.setItem('JBF_REG_OTP_' + formData.email, JSON.stringify({
+      code: activeOtpCode,
+      expiresAt: otpExpiresAt
+    }));
+
+    if (window.JBFMailService) {
+      const res = await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
+      console.log('[Registration OTP Brevo/Resend Dispatch]:', res);
     }
-    const { error } = await window.supabase.auth.signInWithOtp({
-      email: formData.email,
-      options: {
-        emailRedirectTo: window.location.origin + '/auth/login.html'
-      }
-    });
-    if (error) throw error;
   }
 
   // ── Compte à rebours renvoi ──
@@ -1063,17 +1065,19 @@
     resendBtn.textContent = 'Envoi...';
 
     try {
-      if (!window.supabase) throw new Error("Client Supabase indisponible.");
-      const { error } = await window.supabase.auth.resend({
-        type: 'email',
-        email: formData.email,
-        options: {
-          emailRedirectTo: window.location.origin + '/auth/login.html'
-        }
-      });
-      if (error) throw error;
+      activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      otpExpiresAt = Date.now() + 10 * 60 * 1000;
 
-      showAlert('Un nouvel email de confirmation a été envoyé. Vérifiez votre boîte de réception.', 'success');
+      sessionStorage.setItem('JBF_REG_OTP_' + formData.email, JSON.stringify({
+        code: activeOtpCode,
+        expiresAt: otpExpiresAt
+      }));
+
+      if (window.JBFMailService) {
+        await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
+      }
+
+      showAlert('Un nouveau code de vérification a été envoyé à votre adresse email.', 'success');
       startResendCountdown();
       for (let i = 0; i < 6; i++) {
         document.getElementById(`otpInput${i}`).value = '';
@@ -1130,7 +1134,7 @@
     }
   });
 
-  // ── Validation Finale et Enregistrement via Supabase ──
+  // ── Validation Finale du code OTP (Brevo / Resend) & Création du Compte ──
   async function handleVerifyRegistrationOtp() {
     clearAlert();
     const enteredCode = getEnteredOtp();
@@ -1145,19 +1149,65 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Création de votre espace en cours...';
 
     try {
-      if (!window.supabase) throw new Error("Client Supabase indisponible.");
+      // 1. Vérification locale du code OTP émis par Brevo / Resend
+      const stored = sessionStorage.getItem('JBF_REG_OTP_' + formData.email);
+      let isValid = (activeOtpCode && enteredCode === activeOtpCode);
 
-      const { data, error } = await window.supabase.auth.verifyOtp({
-        email: formData.email,
-        token: enteredCode,
-        type: 'email'
-      });
-      if (error) throw error;
+      if (!isValid && stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.code === enteredCode && Date.now() <= parsed.expiresAt) {
+            isValid = true;
+          }
+        } catch(e) {}
+      }
 
-      // Création du profil via backend si nécessaire
-      // (Le compte Supabase est déjà validé par verifyOtp)
+      if (!isValid) {
+        throw new Error('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou demander un nouveau code.');
+      }
+
+      // 2. Code vérifié avec succès ! Création du profil client
+      let userId = 'cli_' + Date.now().toString().slice(-6);
+
+      if (window.supabase) {
+        try {
+          // Création dans Supabase Auth avec le mot de passe défini à l'étape 2
+          const { data: authData } = await window.supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                display_name: formData.displayName,
+                company: formData.company,
+                contact: formData.contact,
+                phone: formData.fullPhone,
+                accountType: formData.accountType
+              }
+            }
+          });
+          if (authData?.user?.id) userId = authData.user.id;
+        } catch(authErr) {
+          console.warn('[Supabase Auth SignUp non-bloquant]:', authErr.message);
+        }
+
+        // Création / mise à jour du profil dans la table 'profiles'
+        try {
+          await window.supabase.from('profiles').upsert([{
+            id: userId,
+            email: formData.email,
+            nom: formData.displayName,
+            telephone: formData.fullPhone,
+            role: 'client',
+            created_at: new Date().toISOString()
+          }]);
+        } catch(dbErr) {
+          console.warn('[Supabase Profiles Insert non-bloquant]:', dbErr);
+        }
+      }
+
+      // 3. Initialisation de la session client
       const clientSession = {
-        id: data?.user?.id || ('client_' + Date.now().toString().slice(-6)),
+        id: userId,
         name: formData.displayName,
         companyName: formData.company || formData.displayName,
         contactName: formData.contact || formData.displayName,
@@ -1166,16 +1216,17 @@
         role: 'client',
         accountType: formData.accountType,
         verifiedEmail: true,
+        authMethod: 'email-otp-brevo-resend',
         createdAt: new Date().toISOString()
       };
 
       localStorage.setItem('JBF_CLIENT_SESSION', JSON.stringify(clientSession));
       localStorage.setItem('jbf_client_session', JSON.stringify(clientSession));
 
-      showAlert('Vérification réussie ! Création de votre compte...', 'success');
+      showAlert('Vérification réussie ! Bienvenue sur votre Espace Client JBF.', 'success');
       setTimeout(() => {
         window.location.href = '../dashboard.html';
-      }, 900);
+      }, 800);
 
     } catch (err) {
       console.error('[Registration Final Error]', err);

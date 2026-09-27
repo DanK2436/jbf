@@ -503,35 +503,86 @@ async function loadGalleryFromDB() {
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des réalisations…</div>`;
 
+  GALLERY_DATA = [];
+
+  // 1. Essai Supabase galerie_items
   try {
     const { data, error } = await supabaseClient
-      .from('gallery_images')
+      .from('galerie_items')
       .select('*')
-      .eq('publie', true)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-
-    if (data && data.length > 0) {
+    if (!error && data && data.length > 0) {
       GALLERY_DATA = data.map(row => ({
         id: row.id,
         catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
         catName: row.categorie || 'Réalisation',
         title: row.titre || row.title,
-        loc: row.localite || row.loc || '',
-        img: row.img_url || row.image_url || '',
-        img_url: row.img_url || row.image_url || '',
+        loc: row.localite || row.loc || 'RDC',
+        img: row.url || row.img_url || row.image_url || '',
+        img_url: row.url || row.img_url || row.image_url || '',
         desc: row.description || row.desc || '',
-        period: row.periode || row.period || '',
+        period: row.periode || row.period || (row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : ''),
         highlights: row.impact || row.highlights || '',
         ...row
       }));
-    } else {
-      GALLERY_DATA = [];
     }
   } catch (err) {
-    console.warn('Galerie : impossible de charger depuis la base de données.', err.message);
-    GALLERY_DATA = [];
+    console.warn('Galerie (galerie_items) :', err.message);
+  }
+
+  // 2. Si vide, essai gallery_images
+  if (GALLERY_DATA.length === 0) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('gallery_images')
+        .select('*')
+        .eq('publie', true)
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        GALLERY_DATA = data.map(row => ({
+          id: row.id,
+          catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+          catName: row.categorie || 'Réalisation',
+          title: row.titre || row.title,
+          loc: row.localite || row.loc || 'RDC',
+          img: row.img_url || row.image_url || row.url || '',
+          img_url: row.img_url || row.image_url || row.url || '',
+          desc: row.description || row.desc || '',
+          period: row.periode || row.period || '',
+          highlights: row.impact || row.highlights || '',
+          ...row
+        }));
+      }
+    } catch (err) {
+      console.warn('Galerie (gallery_images) :', err.message);
+    }
+  }
+
+  // 3. Fallback localStorage publié par Admin (JBF_ADMIN_GALLERY)
+  if (GALLERY_DATA.length === 0) {
+    try {
+      const stored = localStorage.getItem('JBF_ADMIN_GALLERY');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          GALLERY_DATA = parsed.map(row => ({
+            id: row.id,
+            catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+            catName: row.categorie || 'Réalisation',
+            title: row.titre || row.title,
+            loc: row.localite || row.loc || 'RDC',
+            img: row.url || row.img_url || row.image_url || '',
+            img_url: row.url || row.img_url || row.image_url || '',
+            desc: row.description || row.desc || '',
+            period: row.periode || row.period || (row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : ''),
+            highlights: row.impact || row.highlights || '',
+            ...row
+          }));
+        }
+      }
+    } catch (e) {}
   }
 
   renderGallery();

@@ -17,7 +17,7 @@
         <img src="../assets/logo.png" alt="JBF SERVICES" class="admin-brand-logo">
       </div>
       <div class="brand-text">
-        <h2>JBF ADMIN</h2>
+        <h2>JBF SERVICES</h2>
         <span>Supervision RDC</span>
       </div>
     </div>
@@ -31,6 +31,7 @@
       <a href="devis.html" class="nav-item">
         <i class="bi bi-file-earmark-text-fill"></i>
         <span>Demandes de Devis</span>
+        <span class="badge" id="badgeDevisCount">0</span>
       </a>
       <a href="devis-equipes.html" class="nav-item">
         <i class="bi bi-folder-check"></i>
@@ -41,10 +42,21 @@
         <span>Missions Terrain</span>
       </a>
 
+      <div class="nav-section-title">Communication & Médias</div>
+      <a href="galerie.html" class="nav-item">
+        <i class="bi bi-images"></i>
+        <span>Galerie Médias</span>
+      </a>
+      <a href="actualites.html" class="nav-item">
+        <i class="bi bi-newspaper"></i>
+        <span>Actualités & Blog</span>
+      </a>
+
       <div class="nav-section-title">Ressources & Équipes</div>
       <a href="conges.html" class="nav-item">
         <i class="bi bi-calendar2-check-fill"></i>
         <span>Demandes de Congés</span>
+        <span class="badge" id="badgeCongesCount">0</span>
       </a>
       <a href="membres.html" class="nav-item">
         <i class="bi bi-people-fill"></i>
@@ -65,7 +77,15 @@
         <span>Avis & Retours Clients</span>
       </a>
 
-      <div class="nav-section-title">Sécurité & Accès</div>
+      <div class="nav-section-title">Utilisateurs & Sécurité</div>
+      <a href="utilisateurs.html" class="nav-item">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Utilisateurs</span>
+      </a>
+      <a href="reset-password.html" class="nav-item">
+        <i class="bi bi-key-fill"></i>
+        <span>Mots de Passe Membres</span>
+      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -161,78 +181,124 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
   let allAvis = [];
+  const STORAGE_KEY = 'JBF_ADMIN_AVIS';
+
+  function getSupabaseClient() {
+    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL && window.JBF_CONFIG?.SUPABASE_ANON_KEY) {
+      return window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+    }
+    return null;
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadAvisList();
   });
 
-  const DEMO_FALLBACK_AVIS = [
-    { id: 'av1', nom: 'Jean-Pierre Mutombo', entreprise: 'Kibali Goldmines', service: 'Maintenance Industrielle', note: 5, commentaire: 'Intervention rapide et professionnelle. Équipe technique très compétente.', created_at: '2023-09-12T10:00:00Z', approuve: true },
-    { id: 'av2', nom: 'Sarah Dubois', entreprise: 'Tenke Fungurume', service: 'Catering', note: 4, commentaire: 'Bonne qualité des repas sur site. Quelques améliorations possibles sur la logistique.', created_at: '2023-10-05T14:30:00Z', approuve: true },
-    { id: 'av3', nom: 'Marc Kalonji', entreprise: 'Entreprise Minière Katanga', service: 'Gardiennage', note: 5, commentaire: 'Sécurité renforcée sur notre site d\'extraction. Personnel vigilant et discipliné.', created_at: '2023-10-20T09:15:00Z', approuve: true },
-    { id: 'av4', nom: 'Elodie Ngoie', entreprise: 'Client Particulier', service: 'BTP', note: 3, commentaire: 'Travaux terminés avec un peu de retard mais finition impeccable.', created_at: '2023-11-02T11:45:00Z', approuve: false },
-    { id: 'av5', nom: 'Patient K.', entreprise: 'Boss Mining', service: 'Nettoyage Industriel', note: 5, commentaire: 'Service impeccable, nos locaux n\'ont jamais été aussi propres.', created_at: '2023-11-15T16:20:00Z', approuve: true }
-  ];
-
   async function loadAvisList() {
     const tbody = document.getElementById('avisTableBody');
-    try {
-      const res = await window.adminCore.apiFetch('/api/admin/avis?limit=100');
-      if (res.ok && res.data && res.data.avis) {
-        allAvis = res.data.avis;
-      } else {
-        allAvis = DEMO_FALLBACK_AVIS;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);"><i class="bi bi-hourglass-split"></i> Chargement des avis...</td></tr>';
+    
+    const sb = getSupabaseClient();
+    let loadedFromDB = false;
+
+    if (sb) {
+      try {
+        const { data, error } = await sb
+          .from('avis_clients')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          allAvis = data;
+          loadedFromDB = true;
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          } catch(e) {}
+        } else if (error) {
+          console.warn('[Admin Avis Supabase]', error);
+        }
+      } catch (err) {
+        console.warn('[Admin Avis Load]', err);
       }
-    } catch (err) {
-      allAvis = DEMO_FALLBACK_AVIS;
     }
-    renderAvisTable(allAvis);
+
+    if (!loadedFromDB) {
+      try {
+        const local = localStorage.getItem(STORAGE_KEY);
+        if (local) {
+          allAvis = JSON.parse(local);
+        } else {
+          allAvis = [];
+        }
+      } catch(e) {
+        allAvis = [];
+      }
+    }
+
+    filterAvis();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function renderAvisTable(list) {
     const tbody = document.getElementById('avisTableBody');
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucun avis ne correspond aux critères.</td></tr>';
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px 20px; color: var(--gray-mid);"><i class="bi bi-chat-square-quote" style="font-size: 2rem; display:block; margin-bottom: 8px; color: var(--gray-light);"></i>Aucun avis client enregistré pour le moment.</td></tr>';
       return;
     }
 
     tbody.innerHTML = list.map(a => {
-      const stars = '★'.repeat(a.note || 5) + '☆'.repeat(5 - (a.note || 5));
-      const isApproved = a.approuve !== false;
+      const noteNum = Number(a.note || a.stars || 5);
+      const stars = '★'.repeat(noteNum) + '☆'.repeat(5 - noteNum);
+      const isApproved = a.approuve === true;
+      const clientName = escapeHtml(a.nom || 'Anonyme');
+      const company = escapeHtml(a.entreprise || a.ville || 'Client Particulier');
+      const service = escapeHtml(a.service || a.categorie || 'Prestation Générale');
+      const comment = escapeHtml(a.commentaire || '—');
+      const dateStr = a.created_at || a.date_avis ? window.adminCore.formatDate(a.created_at || a.date_avis) : 'Récent';
 
       return `
         <tr>
           <td data-label="Client / Entreprise">
-            <strong>${a.nom}</strong>
-            <div style="font-size: 0.75rem; color: var(--gray-mid);">${a.entreprise || 'Client Particulier'}</div>
+            <strong>${clientName}</strong>
+            <div style="font-size: 0.75rem; color: var(--gray-mid);">${company}</div>
           </td>
-          <td data-label="Prestation"><span class="badge-status nouveau">${a.service || 'Prestation'}</span></td>
+          <td data-label="Prestation"><span class="badge-status nouveau">${service}</span></td>
           <td data-label="Note">
             <span style="color: var(--pink); font-size: 1rem; letter-spacing: 2px;">${stars}</span>
-            <div style="font-size: 0.72rem; color: var(--gray-mid);">${a.note || 5}/5</div>
+            <div style="font-size: 0.72rem; color: var(--gray-mid);">${noteNum}/5</div>
           </td>
-          <td data-label="Témoignage" style="font-size: 0.85rem; color: var(--gray-dark); max-width: 280px;">
-            "${a.commentaire || '—'}"
+          <td data-label="Témoignage" style="font-size: 0.85rem; color: var(--gray-dark); max-width: 280px; word-break: break-word;">
+            « ${comment} »
           </td>
           <td data-label="Date" style="font-size: 0.8rem; color: var(--gray-mid);">
-            ${window.adminCore.formatDate(a.created_at)}
+            ${dateStr}
           </td>
           <td data-label="Statut">
             ${isApproved 
               ? '<span class="badge-status valide"><i class="bi bi-eye"></i> Publié</span>'
-              : '<span class="badge-status rejete"><i class="bi bi-eye-slash"></i> Masqué</span>'}
+              : '<span class="badge-status rejete" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;"><i class="bi bi-eye-slash"></i> Masqué</span>'}
           </td>
           <td data-label="Actions" style="text-align: right;">
-            <div class="table-actions" style="justify-content: flex-end;">
-              <button class="btn btn-secondary btn-sm" onclick="toggleAvisPublication('${a.id}', ${isApproved})" title="${isApproved ? 'Masquer' : 'Publier'}">
-                <i class="bi ${isApproved ? 'bi-eye-slash' : 'bi-eye'}"></i> ${isApproved ? 'Masquer' : 'Publier'}
+            <div class="table-actions" style="justify-content: flex-end; gap: 6px;">
+              <button class="btn btn-sm ${isApproved ? 'btn-secondary' : 'btn-primary'}" onclick="toggleAvisPublication('${a.id}', ${isApproved})" title="${isApproved ? 'Masquer du site public' : 'Valider et publier'}">
+                <i class="bi ${isApproved ? 'bi-eye-slash' : 'bi-check-circle'}"></i> ${isApproved ? 'Masquer' : 'Publier'}
               </button>
-              <button class="btn btn-danger btn-sm" onclick="deleteAvis('${a.id}')" title="Supprimer">
-                <i class="bi bi-trash"></i> Supprimer
+              <button class="btn btn-danger btn-sm" onclick="deleteAvis('${a.id}')" title="Supprimer définitivement">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </td>
@@ -242,16 +308,18 @@
   }
 
   function filterAvis() {
-    const q = document.getElementById('avisSearchInput').value.toLowerCase().trim();
-    const note = document.getElementById('avisNoteFilter').value;
-    const st = document.getElementById('avisStatusFilter') ? document.getElementById('avisStatusFilter').value : 'all';
+    const q = (document.getElementById('avisSearchInput')?.value || '').toLowerCase().trim();
+    const note = document.getElementById('avisNoteFilter')?.value || 'all';
+    const st = document.getElementById('avisStatusFilter')?.value || 'all';
 
     const filtered = allAvis.filter(a => {
-      const isApproved = a.approuve !== false;
-      const matchQ = (a.nom && a.nom.toLowerCase().includes(q)) ||
+      const isApproved = a.approuve === true;
+      const aNote = String(a.note || a.stars || 5);
+      const matchQ = !q || 
+                     (a.nom && a.nom.toLowerCase().includes(q)) ||
                      (a.entreprise && a.entreprise.toLowerCase().includes(q)) ||
                      (a.commentaire && a.commentaire.toLowerCase().includes(q));
-      const matchN = (note === 'all' || String(a.note) === note);
+      const matchN = (note === 'all' || aNote === note);
       const matchS = (st === 'all') || 
                      (st === 'publie' && isApproved) || 
                      (st === 'masque' && !isApproved);
@@ -263,32 +331,53 @@
 
   async function toggleAvisPublication(id, currentApproved) {
     const nextApproved = !currentApproved;
-    try {
-      await window.adminCore.apiFetch(`/api/admin/avis/${id}/moderer`, {
-        method: 'PUT',
-        body: JSON.stringify({ approuve: nextApproved })
-      });
-    } catch (e) {}
+    const sb = getSupabaseClient();
 
-    const target = allAvis.find(a => a.id === id);
+    if (sb) {
+      try {
+        const { error } = await sb
+          .from('avis_clients')
+          .update({ approuve: nextApproved })
+          .eq('id', id);
+        if (error) console.warn('[Admin Avis Toggle]', error);
+      } catch (e) {
+        console.warn('[Admin Avis Toggle Exception]', e);
+      }
+    }
+
+    const target = allAvis.find(a => String(a.id) === String(id));
     if (target) target.approuve = nextApproved;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allAvis));
+    } catch(e) {}
 
-    window.adminCore.showToast(`Avis ${nextApproved ? 'publié sur le site' : 'masqué'}`, 'success');
-    renderAvisTable(allAvis);
+    window.adminCore?.showToast(nextApproved ? 'Avis validé et visible sur le site public' : 'Avis masqué du site public', 'success');
+    filterAvis();
   }
 
   async function deleteAvis(id) {
-    if (!confirm('Confirmez-vous la suppression définitive de cet avis ?')) return;
+    if (!confirm('Confirmez-vous la suppression définitive de cet avis client ?')) return;
 
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { error } = await sb
+          .from('avis_clients')
+          .delete()
+          .eq('id', id);
+        if (error) console.warn('[Admin Avis Delete]', error);
+      } catch (e) {
+        console.warn('[Admin Avis Delete Exception]', e);
+      }
+    }
+
+    allAvis = allAvis.filter(a => String(a.id) !== String(id));
     try {
-      await window.adminCore.apiFetch(`/api/admin/avis/${id}`, {
-        method: 'DELETE'
-      });
-    } catch (e) {}
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allAvis));
+    } catch(e) {}
 
-    allAvis = allAvis.filter(a => a.id !== id);
-    window.adminCore.showToast('Avis supprimé avec succès', 'info');
-    renderAvisTable(allAvis);
+    window.adminCore?.showToast('Avis supprimé avec succès', 'info');
+    filterAvis();
   }
 </script>
 </body>

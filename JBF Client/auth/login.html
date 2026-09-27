@@ -562,12 +562,17 @@
         expiresAt: Date.now() + 10 * 60 * 1000
       }));
 
-      // Envoi via service mail
+      // Envoi via service mail (Brevo / Resend / Relais / Simulation)
+      let mailResult = null;
       if (window.JBFMailService) {
-        await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);
+        mailResult = await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);
       }
 
-      showSuccess(`Un code de vérification a été envoyé à ${email}. Vérifiez votre boîte mail.`);
+      if (mailResult && mailResult.provider && mailResult.provider !== 'simulation-locale') {
+        showSuccess(`Code de vérification sécurisé envoyé à ${email} (via ${mailResult.provider.toUpperCase()}). Consultez votre boîte mail.`);
+      } else {
+        showSuccess(`Un code de vérification a été envoyé à ${email}. Vérifiez votre boîte mail.`);
+      }
       document.getElementById('displayEmailOtpTarget').textContent = email;
       document.getElementById('emailOtpStep1').style.display = 'none';
       document.getElementById('emailOtpStep2').style.display = 'block';

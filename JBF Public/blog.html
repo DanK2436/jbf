@@ -561,34 +561,83 @@ async function loadBlogFromDB() {
   const grid = document.getElementById('blogGrid');
   grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des actualités…</div>`;
 
+  BLOG_ARTICLES = [];
+
+  // 1. Essai Supabase table actualites
   try {
     const { data, error } = await supabaseClient
-      .from('blog_posts')
+      .from('actualites')
       .select('*')
-      .eq('publie', true)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-
-    if (data && data.length > 0) {
+    if (!error && data && data.length > 0) {
       BLOG_ARTICLES = data.map(row => ({
         id: row.id,
         catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
         catName: row.categorie || 'Actualité',
         title: row.titre || row.title,
-        date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-        readTime: row.temps_lecture || row.read_time || '5 min de lecture',
-        img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
-        excerpt: row.resume || row.excerpt || '',
-        content: row.contenu || row.content || '',
+        date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+        readTime: row.temps_lecture || '4 min de lecture',
+        img: row.image || row.img_url || row.image_url || 'assets/gallery_mining.jpg',
+        excerpt: row.excerpt || row.description_courte || row.resume || '',
+        content: row.contenu || row.description_detaillee || row.content || '',
         ...row
       }));
-    } else {
-      BLOG_ARTICLES = [];
     }
   } catch (err) {
-    console.warn('Blog : impossible de charger depuis la base de données.', err.message);
-    BLOG_ARTICLES = [];
+    console.warn('Blog (actualites) :', err.message);
+  }
+
+  // 2. Si vide, essai blog_posts
+  if (BLOG_ARTICLES.length === 0) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('blog_posts')
+        .select('*')
+        .eq('publie', true)
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        BLOG_ARTICLES = data.map(row => ({
+          id: row.id,
+          catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+          catName: row.categorie || 'Actualité',
+          title: row.titre || row.title,
+          date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+          readTime: row.temps_lecture || row.read_time || '5 min de lecture',
+          img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
+          excerpt: row.resume || row.excerpt || '',
+          content: row.contenu || row.content || '',
+          ...row
+        }));
+      }
+    } catch (err) {
+      console.warn('Blog (blog_posts) :', err.message);
+    }
+  }
+
+  // 3. Fallback localStorage publié par Admin (JBF_ADMIN_ARTICLES)
+  if (BLOG_ARTICLES.length === 0) {
+    try {
+      const stored = localStorage.getItem('JBF_ADMIN_ARTICLES');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          BLOG_ARTICLES = parsed.map(row => ({
+            id: row.id,
+            catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+            catName: row.categorie || 'Actualité',
+            title: row.titre || row.title,
+            date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+            readTime: '4 min de lecture',
+            img: row.image || row.img_url || 'assets/gallery_mining.jpg',
+            excerpt: row.excerpt || row.description_courte || '',
+            content: row.contenu || row.description_detaillee || '',
+            ...row
+          }));
+        }
+      }
+    } catch (e) {}
   }
 
   renderBlog();

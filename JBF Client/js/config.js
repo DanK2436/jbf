@@ -10,6 +10,11 @@ const JBF_CLIENT_CONFIG = {
   SUPABASE_URL: window.ENV_SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
   SUPABASE_ANON_KEY: window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
   WHATSAPP_SUPPORT_NUMBER: '+243971306666', // Numéro officiel Service Client JBF RDC
+  // Configuration pour les emails OTP réels via Brevo et Resend
+  BREVO_API_KEY: window.ENV_BREVO_API_KEY || localStorage.getItem('JBF_BREVO_API_KEY') || '',
+  RESEND_API_KEY: window.ENV_RESEND_API_KEY || localStorage.getItem('JBF_RESEND_API_KEY') || '',
+  MAIL_SENDER_NAME: 'JBF SERVICES RDC',
+  MAIL_SENDER_EMAIL: 'contact@jbf-services.com',
   DEFAULT_CLIENT: null
 };
 
