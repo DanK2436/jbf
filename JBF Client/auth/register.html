@@ -1166,31 +1166,11 @@
         throw new Error('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou demander un nouveau code.');
       }
 
-      // 2. Code vérifié avec succès ! Création du profil client
+      // 2. Code vérifié avec succès ! Création du profil client (Sans déclencher d'email Supabase)
       let userId = 'cli_' + Date.now().toString().slice(-6);
 
       if (window.supabase) {
-        try {
-          // Création dans Supabase Auth avec le mot de passe défini à l'étape 2
-          const { data: authData } = await window.supabase.auth.signUp({
-            email: formData.email,
-            password: formData.password,
-            options: {
-              data: {
-                display_name: formData.displayName,
-                company: formData.company,
-                contact: formData.contact,
-                phone: formData.fullPhone,
-                accountType: formData.accountType
-              }
-            }
-          });
-          if (authData?.user?.id) userId = authData.user.id;
-        } catch(authErr) {
-          console.warn('[Supabase Auth SignUp non-bloquant]:', authErr.message);
-        }
-
-        // Création / mise à jour du profil dans la table 'profiles'
+        // Enregistrement direct et propre dans la table 'profiles'
         try {
           await window.supabase.from('profiles').upsert([{
             id: userId,
@@ -1201,7 +1181,7 @@
             created_at: new Date().toISOString()
           }]);
         } catch(dbErr) {
-          console.warn('[Supabase Profiles Insert non-bloquant]:', dbErr);
+          console.warn('[Supabase Profiles Insert]:', dbErr);
         }
       }
 

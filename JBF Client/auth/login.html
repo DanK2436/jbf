@@ -530,6 +530,31 @@
         } catch (e) {}
       }
 
+      // 3. Vérification dans la table profiles Supabase
+      if (window.supabase) {
+        try {
+          const { data: prof } = await window.supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (prof) {
+            persistSession({
+              id: prof.id,
+              name: prof.nom || 'Client Partenaire',
+              companyName: prof.nom || 'Société Partenaire JBF',
+              email: prof.email,
+              phone: prof.telephone || '',
+              role: 'client'
+            });
+            showSuccess('Connexion réussie. Redirection...');
+            setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+            return;
+          }
+        } catch(e) {}
+      }
+
       showError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');
 
     } catch (err) {
