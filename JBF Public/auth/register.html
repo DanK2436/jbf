@@ -688,7 +688,7 @@
 
         <div class="step-actions">
           <button type="button" class="btn-step-back" onclick="goToStep(2)">← Retour</button>
-          <button type="button" class="btn btn-pink" id="btnCreateAccount" onclick="submitRegisterToSupabase()">
+          <button type="button" class="btn btn-pink" id="btnCreateAccount" onclick="sendOtpViaBackend()">
             Créer mon compte →
           </button>
         </div>
@@ -729,7 +729,7 @@
           <label class="fl" for="otpCodeInput" style="text-align: center; margin-bottom: 0.5rem;">Code de confirmation à 6 chiffres</label>
           <div style="display: flex; gap: 0.6rem;">
             <input type="text" id="otpCodeInput" class="fc-input" placeholder="Ex: 123456" maxlength="8" style="text-align: center; font-size: 1.25rem; font-weight: 800; letter-spacing: 0.2em;" autocomplete="one-time-code">
-            <button type="button" class="btn btn-pink" id="btnVerifyOtp" onclick="verifySupabaseOtp()" style="flex-shrink: 0; padding: 0.75rem 1.25rem;">
+            <button type="button" class="btn btn-pink" id="btnVerifyOtp" onclick="verifyOtpFromBackend()" style="flex-shrink: 0; padding: 0.75rem 1.25rem;">
               Valider le Code
             </button>
           </div>
@@ -744,7 +744,7 @@
 
         <!-- Actions -->
         <div class="step-actions" style="flex-direction: column; align-items: stretch; gap: 0.65rem;">
-          <button type="button" class="btn btn-outline-pink" id="resendBtn" onclick="resendSupabaseCode()" style="padding: 0.85rem;">
+          <button type="button" class="btn btn-outline-pink" id="resendBtn" onclick="resendOtpFromBackend()" style="padding: 0.85rem;">
             Renvoyer l'email de confirmation
           </button>
           <button type="button" class="btn-step-back" style="text-align:center;" onclick="goToStep(3)">
@@ -767,30 +767,26 @@
   </footer>
 
 <script>
-  // Page d'inscription — redirection vers le portail client sécurisé avec Supabase
-  // (Le flux OTP réel est géré côté client via Supabase Auth)
+  // Page d'inscription — flux OTP via Brevo/Resend (Backend API)
+  // L'envoi d'emails OTP utilise le backend Node.js qui route 80% via Brevo et 20% via Resend
 
   /* ======================================================
-     CONFIGURATION SUPABASE AUTHENTIQUE
+     CONFIGURATION API BACKEND
      ====================================================== */
-  const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
-
-  let supabaseClient = null;
-  if (typeof supabase !== 'undefined') {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
+  const API_BASE = "http://localhost:3000"; // URL du backend local pour le développement
+  // Pour la production: https://votre-domaine.com
+  // Le backend routing: 80% Brevo, 20% Resend pour l'envoi OTP
 
   /* ======================================================
-     ÉTAT GLOBAL
-     ====================================================== */
+      ÉTAT GLOBAL
+      ====================================================== */
   let currentStep = 1;
   let checkSessionInterval = null;
   let resendCooldown = 0;
 
   /* ======================================================
-     NAVIGATEUR D'ÉTAPES
-     ====================================================== */
+      NAVIGATEUR D'ÉTAPES
+      ====================================================== */
   function goToStep(n) {
     document.getElementById('step' + currentStep).style.display = 'none';
     document.getElementById('step' + n).style.display = 'block';
@@ -820,8 +816,8 @@
   }
 
   /* ======================================================
-     VALIDATION ÉTAPE 1
-     ====================================================== */
+      VALIDATION ÉTAPE 1
+      ====================================================== */
   function goToStep2() {
     let valid = true;
     const nom = document.getElementById('s1_nom').value.trim();
@@ -846,15 +842,15 @@
   }
 
   /* ======================================================
-     VALIDATION ÉTAPE 2 (Facultative)
-     ====================================================== */
+      VALIDATION ÉTAPE 2 (Facultative)
+      ====================================================== */
   function goToStep3() {
     goToStep(3);
   }
 
   /* ======================================================
-     ÉVALUATEUR DE MOT DE PASSE ET RÈGLES INTERACTIVES
-     ====================================================== */
+      ÉVALUATEUR DE MOT DE PASSE ET RÈGLES INTERACTIVES
+      ====================================================== */
   function updateRule(elementId, isValid) {
     const el = document.getElementById(elementId);
     if (!el) return;
@@ -922,124 +918,98 @@
   }
 
   /* ======================================================
-     ÉTAPE 3 -> CRÉATION DE COMPTE SUPABASE (STANDARD & SÉCURISÉ)
-     ====================================================== */
-  async function submitRegisterToSupabase() {
-    let valid = true;
-    const nom = document.getElementById('s1_nom').value.trim();
+      ÉTAPE 3 -> ENVOI OTP VIA BREVO/RESEND (API BACKEND)
+      ====================================================== */
+  async function sendOtpViaBackend() {
     const email = document.getElementById('s1_email').value.trim();
-    const tel = document.getElementById('s1_tel').value.trim();
-    const entreprise = document.getElementById('s2_entreprise').value.trim();
-    const secteur = document.getElementById('s2_secteur').value;
-    const adresse = document.getElementById('s2_adresse').value.trim();
-    const ville = document.getElementById('s2_ville').value.trim();
-    const province = document.getElementById('s2_province').value;
-    const pwd  = document.getElementById('s3_pwd').value;
-    const conf = document.getElementById('s3_confirm').value;
-    const cgu  = document.getElementById('s3_cgu').checked;
+    const btn = document.getElementById('btnCreateAccount');
 
-    const hasLen = pwd.length >= 8;
-    const hasMaj = /[A-Z]/.test(pwd);
-    const hasMin = /[a-z]/.test(pwd);
-    const hasNum = /[0-9]/.test(pwd);
-
-    if (!hasLen || !(hasMaj && (hasMin || hasNum))) {
-      showError('s3_pwd', 'e_pwd'); valid = false;
-    } else { clearError('s3_pwd', 'e_pwd'); }
-
-    if (pwd !== conf) {
-      showError('s3_confirm', 'e_confirm'); valid = false;
-    } else { clearError('s3_confirm', 'e_confirm'); }
-
-    if (!cgu) {
-      document.getElementById('e_cgu').classList.add('visible'); valid = false;
-    } else {
-      document.getElementById('e_cgu').classList.remove('visible');
+    if (!email) {
+      showError('s1_email', 'e_email');
+      return false;
     }
 
-    if (!valid) return;
-
-    const btn = document.getElementById('btnCreateAccount');
-    const errBox = document.getElementById('s3_server_error');
-    errBox.classList.remove('visible');
-    errBox.textContent = '';
     btn.disabled = true;
-    btn.textContent = "Création du compte en cours...";
+    btn.textContent = "Envoi du code en cours...";
 
     try {
-      if (!supabaseClient) {
-        throw new Error("Impossible d'initialiser la connexion Supabase. Vérifiez votre réseau.");
-      }
-
-      // Construction de l'URL de redirection sécurisée
-      let redirectUrl = window.location.href.replace(/register\.html.*$/, 'login.html?verified=true');
-      if (!redirectUrl.startsWith('http')) {
-        redirectUrl = 'http://localhost:8080/auth/login.html?verified=true';
-      }
-
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: pwd,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: nom,
-            phone: tel,
-            company: entreprise,
-            secteur: secteur,
-            address: adresse,
-            city: ville,
-            province: province,
-            role: 'client'
-          }
-        }
+      // Appel au backend qui envoie OTP via Brevo (80%) ou Resend (20%)
+      const response = await fetch(`${API_BASE}/api/auth/otp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
       });
 
-      if (error) {
-        throw error;
-      }
+      const data = await response.json();
 
-      // Vérifier si un compte existe déjà sans identité nouvelle
-      if (data && data.user && data.user.identities && data.user.identities.length === 0) {
-        throw new Error("Un compte existe déjà avec cette adresse email. Veuillez vous connecter.");
-      }
+      if (!response.ok) throw new Error(data.error || 'Erreur serveur');
 
-      // Si la session est déjà confirmée (ex: auto-confirm activé sur Supabase)
-      if (data && data.session) {
-        onEmailConfirmedSuccess(data.session);
-        return;
-      }
+      console.log(`[Frontend] Code OTP envoyé via ${data.provider} à ${email}`);
 
-      // Affichage de l'Étape 4 avec l'email cible
-      document.getElementById('verifyEmailDisplay').textContent = email;
+      // Passer à l'étape 4 pour la saisie du code
       goToStep(4);
-      startAutoSessionListener();
+      document.getElementById('verifyEmailDisplay').textContent = email;
+
+      // Démarrer le minuteur de cooldown pour le resend
+      startResendCooldown();
+
+      window.showOtpSentToast = () => {
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '2rem';
+        toast.style.left = '50%';
+        toast.transform = 'translateX(-50%)';
+        toast.style.background = '#E6007E';
+        toast.style.color = '#fff';
+        toast.style.padding = '0.9rem 2rem';
+        toast.style.borderRadius = 'var(--r-btn)';
+        toast.style.zIndex = '9999';
+        toast.style.maxWidth = '88vw';
+        toast.textContent = `Code de vérification envoyé à ${email} via ${data.provider.toUpperCase()}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+      };
+
+      return true;
 
     } catch (err) {
-      console.error("Erreur Inscription Supabase:", err);
-      let msg = err.message || "Erreur lors de la création du compte.";
-      if (msg.includes("User already registered") || msg.includes("already registered") || msg.includes("already exists")) {
-        msg = "Un compte existe déjà avec cette adresse email. <a href='login.html' style='color:var(--pink);font-weight:bold;text-decoration:underline;'>Cliquez ici pour vous connecter</a>.";
-      } else if (msg.includes("Password should be")) {
-        msg = "Le mot de passe doit comporter au moins 8 caractères.";
-      } else if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit") || msg.includes("Email rate limit exceeded")) {
-        msg = "Limite d'envoi d'emails atteinte sur Supabase. Veuillez patienter quelques instants avant de réessayer.";
-      }
-      errBox.innerHTML = `<strong>Attention :</strong> ${msg}`;
-      errBox.classList.add('visible');
-    } finally {
+      console.error("Erreur envoi OTP:", err);
+      alert("Impossible d'envoyer le code de vérification. Veuillez réessayer.");
       btn.disabled = false;
       btn.textContent = "Créer mon compte →";
+      return false;
     }
   }
 
+  function startResendCooldown() {
+    if (resendCooldown > 0) return;
+    resendCooldown = 60;
+    const cdInterval = setInterval(() => {
+      resendCooldown--;
+      const resendBtn = document.getElementById('resendBtn');
+      if (resendBtn) {
+        resendBtn.textContent = `Renvoyer l'email (${resendCooldown}s)`;
+        resendBtn.disabled = true;
+      }
+      if (resendCooldown <= 0) {
+        clearInterval(cdInterval);
+        if (resendBtn) {
+          resendBtn.textContent = "Renvoyer l'email de confirmation";
+          resendBtn.disabled = false;
+        }
+      }
+    }, 1000);
+  }
+
   /* ======================================================
-     VALIDATION DU CODE OTP (ÉTAPE 4)
-     ====================================================== */
-  async function verifySupabaseOtp() {
+      VALIDATION DU CODE OTP (ÉTAPE 4) VIA BACKEND
+      ====================================================== */
+  async function verifyOtpFromBackend() {
     const email = document.getElementById('s1_email').value.trim();
     const token = document.getElementById('otpCodeInput').value.trim();
-    const btn = document.getElementById('btnVerifyOtp');
+    const submitBtn = document.getElementById('btnVerifyOtp');
     const errBox = document.getElementById('s4_error_banner');
     const succBox = document.getElementById('s4_success_banner');
     const errOtp = document.getElementById('e_otp');
@@ -1054,30 +1024,36 @@
       return;
     }
 
-    btn.disabled = true;
-    btn.textContent = "Validation...";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Validation en cours...";
 
     try {
-      if (!supabaseClient) throw new Error("Client Supabase indisponible.");
-
-      const { data, error } = await supabaseClient.auth.verifyOtp({
-        email: email,
-        token: token,
-        type: 'signup'
+      const response = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email, token: token })
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
+      if (!response.ok) throw new Error(data.error || 'Erreur serveur');
+
+      console.log(`[Frontend] Code OTP vérifié avec succès via ${data.provider}`);
+
+      // Stocker la session utilisateur
+      localStorage.setItem('jbf_client_session', JSON.stringify(data.user));
+      localStorage.setItem('jbf_client_user', JSON.stringify(data.user));
+
+      // Passer au succès
       succBox.textContent = "Code validé avec succès ! Connexion en cours...";
       succBox.classList.add('visible');
 
-      if (data && data.session) {
-        onEmailConfirmedSuccess(data.session);
-      } else {
-        setTimeout(() => {
-          window.location.href = "login.html?verified=true";
-        }, 1200);
-      }
+      // Redirection après un court délai
+      setTimeout(() => {
+        window.location.href = "login.html?verified=true";
+      }, 1500);
 
     } catch (err) {
       console.error("Erreur validation OTP:", err);
@@ -1090,74 +1066,15 @@
       errBox.innerHTML = `<strong>Erreur de validation :</strong> ${msg}`;
       errBox.classList.add('visible');
     } finally {
-      btn.disabled = false;
-      btn.textContent = "Valider le Code";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Valider le Code";
     }
   }
 
   /* ======================================================
-     ÉCOUTE AUTOMATIQUE DE CONFIRMATION EMAIL (ÉTAPE 4)
-     ====================================================== */
-  function startAutoSessionListener() {
-    if (!supabaseClient) return;
-
-    // 1. Écoute événementielle Supabase
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
-        onEmailConfirmedSuccess(session);
-      }
-    });
-
-    // 2. Sondage régulier
-    if (checkSessionInterval) clearInterval(checkSessionInterval);
-    checkSessionInterval = setInterval(async () => {
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-          clearInterval(checkSessionInterval);
-          onEmailConfirmedSuccess(session);
-        }
-      } catch(e) {}
-    }, 3000);
-  }
-
-  function onEmailConfirmedSuccess(session) {
-    if (checkSessionInterval) clearInterval(checkSessionInterval);
-
-    try {
-      if (session) {
-        localStorage.setItem('jbf_client_session', JSON.stringify(session));
-        localStorage.setItem('jbf_client_user', JSON.stringify(session.user));
-      }
-    } catch(e) {}
-
-    const stepBody = document.getElementById('step4');
-    stepBody.innerHTML = `
-      <div style="text-align:center; padding: 1.5rem 0;">
-        <div style="width:76px;height:76px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <h2 style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text-h);margin-bottom:0.5rem;">Email Confirmé avec Succès !</h2>
-        <p style="color:var(--text-body);font-size:0.92rem;line-height:1.6;max-width:380px;margin:0 auto 1.5rem;">
-          Bienvenue chez JBF SERVICES SARL. Votre compte a été validé et votre session est active.
-        </p>
-        <div style="margin-top: 1rem;">
-          <a href="login.html?verified=true" class="btn btn-pink" style="padding: 0.9rem 1.75rem; font-size:0.92rem;">
-            Accéder à mon Espace Client & Devis →
-          </a>
-        </div>
-      </div>
-    `;
-
-    setTimeout(() => {
-      window.location.href = "login.html?verified=true";
-    }, 1800);
-  }
-
-  /* ======================================================
-     RENVOYER L'EMAIL DE CONFIRMATION
-     ====================================================== */
-  async function resendSupabaseCode() {
+      RENVOYER L'EMAIL DE CONFIRMATION (via backend)
+      ====================================================== */
+  async function resendOtpFromBackend() {
     if (resendCooldown > 0) return;
 
     const email = document.getElementById('s1_email').value.trim();
@@ -1167,49 +1084,37 @@
     errBox.classList.remove('visible');
     succBox.classList.remove('visible');
 
+    if (!email) {
+      alert("Veuillez entrer votre adresse email.");
+      return;
+    }
+
     resendBtn.disabled = true;
     resendBtn.textContent = "Envoi en cours...";
 
     try {
-      if (!supabaseClient) throw new Error("Client Supabase indisponible.");
-
-      let redirectUrl = window.location.href.replace(/register\.html.*$/, 'login.html?verified=true');
-      if (!redirectUrl.startsWith('http')) {
-        redirectUrl = 'http://localhost:8080/auth/login.html?verified=true';
-      }
-
-      const { error } = await supabaseClient.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
+      const response = await fetch(`${API_BASE}/api/auth/otp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      succBox.textContent = "Un nouvel email de confirmation a été envoyé. Vérifiez votre boîte de réception et vos spams.";
+      if (!response.ok) throw new Error(data.error || 'Erreur serveur');
+
+      succBox.textContent = `Un nouvel code de vérification a été envoyé à ${email} via ${data.provider.toUpperCase()}.`;
       succBox.classList.add('visible');
 
-      // Cooldown de 60s
-      resendCooldown = 60;
-      const cdInterval = setInterval(() => {
-        resendCooldown--;
-        if (resendCooldown > 0) {
-          resendBtn.textContent = `Renvoyer l'email (${resendCooldown}s)`;
-          resendBtn.disabled = true;
-        } else {
-          clearInterval(cdInterval);
-          resendBtn.textContent = "Renvoyer l'email de confirmation";
-          resendBtn.disabled = false;
-        }
-      }, 1000);
+      startResendCooldown();
 
     } catch (err) {
-      console.error("Erreur renvoi email:", err);
+      console.error("Erreur renvoi OTP:", err);
       let msg = err.message || "Impossible de renvoyer l'email.";
-      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit") || msg.includes("Email rate limit exceeded")) {
-        msg = "Limite d'envoi atteinte sur Supabase. Veuillez patienter quelques minutes.";
+      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
+        msg = "Limite d'envoi atteinte. Veuillez patienter quelques minutes.";
       }
       errBox.innerHTML = `<strong>Attention :</strong> ${msg}`;
       errBox.classList.add('visible');
@@ -1219,8 +1124,8 @@
   }
 
   /* ======================================================
-     UTILITAIRES D'ERREURS
-     ====================================================== */
+      UTILITAIRES D'ERREURS
+      ====================================================== */
   function showError(inputId, errorId) {
     const input = document.getElementById(inputId);
     if (input) input.classList.add('error');

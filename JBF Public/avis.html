@@ -543,7 +543,38 @@
 </footer>
 
 <script>
-let REVIEWS_DATA = [];
+let REVIEWS_DATA = [
+  {
+    id: 'r1',
+    name: 'Jean-Pierre T.',
+    role: 'Directeur Opérations',
+    company: 'Mining SARL Katanga',
+    loc: 'Kolwezi, RDC',
+    stars: 5,
+    category: 'Sous-traitance Minière',
+    text: 'Excellente prestation d\'équipes qualifiées sur notre site minier. Respect des délais et qualité irréprochable des interventions.'
+  },
+  {
+    id: 'r2',
+    name: 'Marie-Claire D.',
+    role: 'Directrice HSE',
+    company: 'Alimentation & Catering',
+    loc: 'Lubumbashi, RDC',
+    stars: 4,
+    category: 'Catering & Restauration',
+    text: 'Service catering remarquable avec une grande flexibilité. Les équipes sont professionnelles et respectueuses des normes HACCP.'
+  },
+  {
+    id: 'r3',
+    name: 'Pierre K.',
+    role: 'Chef de Projet BTP',
+    company: 'Génie Civil SARL',
+    loc: 'Lubumbashi, RDC',
+    stars: 5,
+    category: 'BTP & Génie Civil',
+    text: 'Réalisation rapide des travaux de terrassement. Équipe technique compétente et sécurisation optimale du chantier.'
+  }
+];
 
 let selectedRating = 5;
 const ratingLabels = {
