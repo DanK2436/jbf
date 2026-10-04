@@ -1,0 +1,340 @@
+DOCUMENT DE STRUCTURE TECHNIQUE ET FONCTIONNELLE – PLATEFORME JBF SERVICES
+
+Version : 1.0 (MVP)
+Date : 29 Juillet 2026
+Auteur : Ir. Dan KANDE
+Client : JBF SERVICES
+Stack technique : HTML / CSS / JS (Web) – Dart / Flutter (Mobile) – Node.js / Supabase (Backend commun)
+Activités couvertes : 15 domaines de services (alimentaire, RH, minier, BTP, logistique, etc.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PRÉAMBULE SUR L'ORGANISATION DU DOCUMENT
+
+La plateforme est découpée en trois familles de supports totalement indépendantes dans leur présentation, mais toutes reliées à la même base de données et aux mêmes API.
+
+· Famille 1 – Sites Web : deux interfaces distinctes (Publique et Membres). Aucune administration.
+· Famille 2 – Applications Mobiles : trois applications autonomes (Client, Membre, Administrateur).
+· Famille 3 – Logiciels / Back-offices : deux logiciels (Administrateur et optionnellement Membre), en version web lourd ou desktop.
+
+
+
+FAMILLE 1 – SITES WEB
+
+Les sites web sont développés en HTML, CSS et JavaScript pur. Ils sont responsives et intègrent la charte graphique rose de JBF SERVICES. Ils ne contiennent aucune interface d'administration.
+
+SITE WEB N°1 – SECTION PUBLIQUE (Vitrine et commandes)
+
+Accessible à tout internaute, ce site a pour objectif de présenter l'entreprise, ses 15 domaines d'activité et de permettre aux clients de passer des commandes.
+
+Page d'accueil
+Elle comprend une bannière principale avec le slogan « L'excellence à votre service » et deux appels à l'action forts : « Découvrir nos services » et « Demander un devis ». En dessous, une grille dynamique présente les 15 domaines d'activité classés par grandes familles (Alimentaire & Restauration, BTP & Maintenance, Logistique & Transport, Services Généraux & Sécurité, etc.). Des témoignages clients et des statistiques (nombre de projets réalisés, clients satisfaits) complètent la page.
+
+Fiches services détaillées
+Chacun des 15 domaines dispose d'une page dédiée. La liste complète des services est la suivante :
+
+1. Fourniture de produits alimentaires
+2. Placement de ressources humaines dans les entreprises
+3. Prestations de sous-traitance dans le domaine alimentaire
+4. Prestations de sous-traitance dans le domaine minier
+5. Prestations de service de maintenance
+6. Soudure
+7. Housekeeping et assainissement
+8. Construction et génie civil
+9. Restauration et agroalimentaire
+10. Jardinage
+11. Gardiennage
+12. Dépôt (logistique et stockage)
+13. Transport des biens et des personnes
+14. Informatique
+15. Livraison des consommables et pièces de rechanges
+
+Pour chaque fiche, on retrouve une description complète du service, la liste des prestations incluses, les avantages pour le client, des visuels et un bouton « Passer une commande » ou « Demander un devis ». Le contenu de ces fiches est administré via le CMS du logiciel et stocké dans Supabase.
+
+Espace client (avec authentification)
+Les clients peuvent créer un compte en fournissant nom, email, téléphone et type (particulier ou entreprise). Après connexion sécurisée (JWT), ils accèdent à un tableau de bord personnel où ils peuvent :
+
+· Passer une nouvelle commande (sélection du service parmi les 15, description, pièces jointes).
+· Suivre l'état d'avancement de leurs prestations avec des statuts visuels (en attente, en cours, terminé, annulé).
+· Consulter l'historique complet de leurs commandes.
+· Échanger avec l'administrateur via une messagerie simple intégrée.
+
+Blog et actualités
+Une section blog affiche les articles publiés par la direction (réalisations dans les secteurs minier, BTP, alimentaire, etc.). Une galerie média et une page FAQ sont également accessibles. Tous ces contenus sont gérés à distance via le logiciel administrateur.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SITE WEB N°2 – SECTION MEMBRES (Espace collaborateurs)
+
+Ce site est réservé aux employés et chefs d'équipe. L'accès est protégé par authentification et permissions RBAC. Il sert de poste de travail fixe pour les opérationnels.
+
+Tableau de bord personnalisé
+À la connexion, chaque membre visualise ses tâches du jour, ses notifications non lues, son planning hebdomadaire et les derniers messages internes. Les données sont actualisées en temps réel grâce à Supabase Realtime.
+
+Gestion des missions
+Le membre reçoit les missions attribuées par l'administration. Ces missions peuvent concerner n'importe lequel des 15 domaines (exemple : mission de soudure sur un site minier, mission de livraison de pièces, mission de housekeeping, etc.). Pour chaque mission, il peut :
+
+· L'accepter ou la refuser (avec motif).
+· Mettre à jour son statut (en cours, terminé, problème signalé).
+· Joindre des fichiers (photos, rapports PDF) directement depuis son poste.
+  Ces fichiers sont stockés dans Supabase Storage.
+
+Communication interne
+Un chat instantané (WebSocket / Socket.io) permet des échanges individuels ou en groupe entre membres. Une section dédiée regroupe les annonces officielles de la direction. Des forums thématiques (par métier ou par projet) facilitent le partage d'expérience.
+
+Gestion du temps
+Les membres pointent leurs heures de travail via une interface simple (avec géolocalisation optionnelle via l'API du navigateur). Ils peuvent soumettre des demandes de congés (payés, maladie) et consulter leur solde restant en temps réel. Ces demandes sont soumises à validation par le responsable via le logiciel administrateur.
+
+Ressources documentaires
+Une bibliothèque en ligne donne accès aux procédures internes, modes opératoires, fiches de sécurité et supports de formation (e-learning). Les fichiers sont consultables directement dans le navigateur.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FAMILLE 2 – APPLICATIONS MOBILES
+
+Les trois applications sont développées en Flutter (Dart) avec un code source unique pour iOS et Android. Elles consomment les mêmes API Node.js que les sites web.
+
+APPLICATION MOBILE N°1 – CLIENT
+
+Cette application est destinée aux clients de JBF SERVICES pour passer des commandes et suivre leurs prestations depuis leur téléphone.
+
+Navigation et découverte
+L'écran d'accueil présente les 15 domaines de services sous forme de vignettes classées par catégorie. Une barre de recherche permet de filtrer par mot-clé (ex : "minier", "alimentaire", "transport"). Chaque service dispose d'une fiche détaillée avec descriptions, photos et avantages.
+
+Passer une commande ou demander un devis
+Le client sélectionne l'un des 15 services, remplit un formulaire (quantité, date souhaitée, instructions particulières) et peut joindre des photos ou documents depuis l'appareil. La demande est transmise immédiatement à l'administrateur.
+
+Suivi en temps réel des commandes
+L'application affiche l'historique complet avec des statuts colorés. Dès qu'un statut change (par exemple « en cours » ? « terminé »), le client reçoit une notification push et la vue se met à jour automatiquement.
+
+Messagerie directe
+Un chat intégré permet au client d'échanger directement avec l'administrateur à propos d'une commande précise (par exemple, une livraison de consommables ou une prestation de maintenance). Les messages sont synchronisés en instantané.
+
+Authentification et gestion de profil
+Inscription, connexion, récupération de mot de passe. Le client peut modifier ses coordonnées et son type (particulier/entreprise) dans son profil.
+
+APPLICATION MOBILE N°2 – MEMBRE
+
+Cette application est le compagnon terrain des collaborateurs. Elle remplit les mêmes fonctions que le site web Membres, mais avec des capacités natives supplémentaires.
+
+Tableau de bord terrain
+Vue synthétique des tâches du jour, des notifications push, du planning de la semaine et des messages récents. L'interface est optimisée pour une utilisation en déplacement.
+
+Missions et reporting
+Le membre consulte ses missions attribuées. Celles-ci couvrent l'ensemble des 15 domaines (soudure, construction, jardinage, gardiennage, etc.). Il peut les accepter ou les refuser en un clic. Sur le terrain, il met à jour le statut et joint immédiatement des photos (via l'appareil photo) ou des rapports depuis la galerie. La géolocalisation est automatiquement enregistrée pour chaque intervention.
+
+Chat interne embarqué
+Messagerie instantanée individuelle et de groupe, avec accusés de lecture et indication de présence. Les discussions sont organisées par équipe ou par projet.
+
+Pointage horaire et congés
+Le membre pointe ses heures d'arrivée et de départ avec géolocalisation obligatoire (pour les missions externes). Il soumet des demandes de congés depuis l'application et consulte son solde en un coup d'œil. Les notifications push l'informent de la validation ou du rejet de ses demandes.
+
+Accès aux ressources
+La bibliothèque documentaire est consultable hors ligne (mise en cache). Les PDF et vidéos de formation peuvent être téléchargés sur le téléphone.
+
+APPLICATION MOBILE N°3 – ADMINISTRATEUR
+
+C'est la version nomade du back-office. Elle permet aux managers et à la direction de piloter l'activité depuis leur mobile, sans avoir à ouvrir le logiciel lourd.
+
+Super Dashboard mobile
+Indicateurs clés sous forme de graphiques simples et de cartes : chiffre d'affaires du jour, commandes en attente (par service : minier, BTP, alimentaire, etc.), missions en cours, taux d'absentéisme, alertes stocks critiques (pièces de rechange, produits alimentaires, consommables). Tout est actualisé en temps réel.
+
+Gestion rapide des utilisateurs
+Création, modification ou désactivation de comptes (tous rôles). Attribution ou retrait de permissions en quelques clics. Idéal pour gérer une arrivée ou un départ urgent.
+
+Suivi et validation des commandes
+Le responsable peut consulter toutes les commandes, valider les devis, affecter une équipe à une mission complexe (construction, maintenance, sous-traitance minière) et suivre le budget consommé. Il peut également relancer un client en retard de paiement depuis l'application.
+
+Validation des congés et suivi RH
+Consultation des demandes de congés en attente, validation ou rejet immédiat avec notification push automatique au membre. Visualisation des compétences de l'équipe (ex : soudeur, chauffeur, jardinier, agent de maintenance) pour une affectation optimale.
+
+Gestion des stocks et approvisionnement
+Alertes push lorsque les seuils de stock sont atteints (produits alimentaires, pièces de rechange, consommables). Le responsable peut lancer un bon de commande fournisseur directement depuis l'appli.
+
+Communication et notifications de masse
+Envoi de notifications push ciblées (à tous les membres, à un groupe ou à un individu). Publication instantanée d'annonces officielles ou d'articles sur le blog du site.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FAMILLE 3 – LOGICIELS / BACK-OFFICES
+
+Ces interfaces sont conçues pour un travail de gestion approfondi, en version web lourd (PWA) ou desktop (Electron). Ce sont les outils souverains de pilotage et d'administration. Ils ne sont pas accessibles sur le site web.
+
+LOGICIEL N°1 – ADMINISTRATEUR (Cœur du back-office)
+
+C'est l'outil le plus complet, destiné à la direction, aux managers et au personnel administratif. Il centralise toutes les fonctions de gestion.
+
+Super Dashboard stratégique
+Tableaux de bord interactifs avec filtres temporels (jour, mois, année). Visualisation croisée : CA par service (avec ventilation sur les 15 domaines), rentabilité par projet (minier, BTP, maintenance, etc.), taux d'occupation des équipes, évolution des stocks (alimentaires, pièces, consommables), courbe des impayés. Exports en PDF et Excel pour les rapports de gestion.
+
+Gestion complète des utilisateurs et des permissions (RBAC)
+Interface administrateur pour gérer finement chaque profil. Création en masse de comptes (import CSV), attribution des droits (lecture, écriture, validation, suppression) pour chaque rôle : Super Admin, Admin, Responsable, Membre, Client. Audit des connexions et des actions sensibles.
+
+Gestion des services et tarification (catalogue des 15 activités)
+Le catalogue est structuré exactement autour des 15 services listés dans l'objet social de JBF SERVICES. L'interface permet :
+
+· D'ajouter ou de modifier la description de chaque service.
+· De définir des tarifs unitaires, forfaitaires ou personnalisés selon les contrats.
+· De gérer des remises par client ou par volume.
+· De créer des packs promotionnels (ex : « Maintenance + Housekeeping » ou « Transport + Livraison de pièces »).
+
+Gestion des commandes et pilotage de projets
+Vue macroscopique de toutes les commandes avec des filtres avancés (par domaine : minier, alimentaire, BTP, etc.). Pour les prestations complexes (construction, sous-traitance minière, maintenance lourde), le module projet décompose le travail en tâches, permet d'affecter des équipes avec leur charge respective, de suivre les jalons et de contrôler le budget en temps réel avec alerte en cas de dérive.
+
+Gestion des ressources humaines et des compétences
+Base de données exhaustive des collaborateurs : contrats, salaires, formations suivies, arrêts maladie, évaluations. Cartographie des compétences spécifiques aux 15 domaines (soudure, pilotage d'engins, mécanique, hygiène alimentaire, jardinage, etc.) pour optimiser l'affectation des équipes aux missions. Gestion des plannings prévisionnels et des absences.
+
+Gestion financière complète
+Tenue des écritures comptables simplifiée (recettes/dépenses). Émission automatique de factures avec numérotation séquentielle, envoi par email depuis le logiciel. Enregistrement des paiements clients et fournisseurs. Gestion automatisée des relances pour impayés (échéancier, lettres de relance). Suivi analytique des dépenses par catégorie et par service (ex : coût des intrants pour la restauration, carburant pour le transport). Édition des bilans mensuels et des déclarations de TVA.
+
+Chaîne logistique et gestion des stocks
+Gestion complète des entrepôts pour les différents types de marchandises :
+
+· Produits alimentaires (gestion des dates de péremption, traçabilité).
+· Pièces de rechange et consommables (références, fournisseurs, emplacements).
+· Matériaux de construction et outillage.
+  Alertes de seuil avec proposition automatique de réapprovisionnement. Gestion des fournisseurs (coordonnées, conditions, historique d'achat). Suivi des commandes d'achat, des réceptions de marchandises et des livraisons clients avec traçabilité.
+
+Communication institutionnelle et CMS
+Interface de publication puissante pour administrer tout le contenu du site vitrine (pages, blog, FAQ, galerie média). Gestion des campagnes d'emailing et des newsletters (segmentation par secteur d'activité : minier, BTP, alimentaire, etc.). Pilotage du chat en direct avec les visiteurs du site (prise de relais depuis le logiciel).
+
+Reporting et exports avancés
+Génération automatique de rapports consolidés (bilan mensuel, état des impayés, suivi des projets, rentabilité par domaine) en formats PDF, Excel et CSV. Possibilité de programmation d'envois automatiques par email à la direction.
+
+LOGICIEL N°2 – MEMBRE (Optionnel – pour chefs d'équipe)
+
+Version allégée du logiciel administrateur, destinée aux responsables opérationnels qui ont besoin de superviser leur périmètre sans accéder aux données financières ou stratégiques globales.
+
+Tableau de bord d'équipe
+Vue d'ensemble des missions de l'équipe (avec statuts), plannings hebdomadaires, taux de réalisation par membre, indicateurs de productivité (heures pointées vs heures prévues). Les missions sont filtrées par domaine d'activité (maintenance, transport, construction, etc.).
+
+Gestion d'équipe
+Affectation des tâches aux membres selon leurs compétences (ex : tel agent est spécialisé en soudure, tel autre en jardinage). Répartition des charges. Suivi des pointages horaires de chaque subordonné. Validation ou rejet des demandes de congés de l'équipe (sous réserve des permissions définies dans le RBAC).
+
+Communication encadrée
+Chat et annonces spécifiques à l'équipe (groupe restreint). Remontée des problèmes terrain vers la direction via un système de tickets simplifié (ex : panne d'un véhicule de transport, rupture de stock sur un chantier).
+
+Accès restreint
+Ce logiciel ne donne accès ni aux finances, ni aux stocks globaux, ni à la gestion des comptes utilisateurs hors de l'équipe. Il est conçu pour l'autonomie opérationnelle sans risque de divulgation d'informations sensibles.
+
+FONCTIONNALITÉS TRANSVERSALES (Commune aux trois familles)
+
+Ces modules sont partagés par l'ensemble des sites, applications et logiciels.
+
+Authentification centralisée
+Inscription et connexion sécurisées par email/mot de passe (hash bcrypt dans Supabase). Gestion des sessions avec JWT pour toutes les API. Récupération de mot de passe automatisée. Le système RBAC est appliqué uniformément sur tous les supports : un utilisateur n'a accès qu'aux interfaces et données correspondant à son rôle.
+
+Système de notifications unifié
+Les alertes (nouvelles commandes, missions attribuées, messages, stock critique sur un produit alimentaire ou une pièce de rechange) sont envoyées simultanément par email (Nodemailer), par notification push (Firebase Cloud Messaging pour les mobiles) et dans le centre de notifications commun à toutes les interfaces. Les notifications sont marquées comme lues dès qu'elles sont consultées sur un support.
+
+Module de recherche globale
+Un moteur de recherche avec filtres avancés (par catégorie de service, date, statut, utilisateur, projet) permet de retrouver rapidement une information dans l'ensemble de la base de données PostgreSQL de Supabase (recherche full-text). La recherche est accessible sur tous les canaux.
+
+API RESTful unique
+Toutes les interfaces consomment la même API développée en Node.js (Express). Cette API centralise la logique métier, les validations et les accès à Supabase (Auth, Database, Storage, Realtime). Cela garantit une cohérence parfaite des données quel que soit le support utilisé.
+
+Base de données centralisée
+Supabase (PostgreSQL) stocke toutes les données : utilisateurs, services (les 15 domaines), commandes, missions, pointages, congés, stocks (alimentaires, pièces, consommables), factures, contenus CMS, messages, notifications. Les relations entre tables assurent l'intégrité et la cohérence en temps réel. Le Storage de Supabase héberge tous les fichiers (photos de chantier, rapports, documents techniques, médias).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RÉCAPITULATIF DES TECHNOLOGIES PAR FAMILLE
+
+Famille 1 – Sites Web (Public + Membres)
+Langages : HTML, CSS, JavaScript.
+Rôle : vitrine des 15 services, commandes client, espace collaborateur terrain (tâches, pointage, chat).
+Authentification : Supabase Auth (via JS SDK).
+Administration : Absente volontairement.
+
+Famille 2 – Applications Mobiles (Client + Membre + Admin)
+Langage : Dart / Flutter.
+Rôle : expériences natives iOS/Android, géolocalisation, appareil photo, notifications push. L'application Admin est la seule interface mobile de pilotage.
+Communication : API REST Node.js + WebSocket + Supabase Realtime.
+
+Famille 3 – Logiciels (Administrateur + Membre optionnel)
+Langages : HTML, CSS, JavaScript (embarqués dans Electron si version desktop).
+Rôle : gestion lourde (RH, finances, stocks, projets), exports, reporting, saisie en masse. C'est l'outil souverain d'administration.
+Backend : identique aux autres canaux (Node.js + Supabase).
+
+CONCLUSION
+Ce document intègre désormais la liste exhaustive et officielle des 15 domaines d'activité de JBF SERVICES. Chaque support – site web, application mobile ou logiciel – a été adapté pour refléter cette diversité sectorielle (alimentaire, minier, BTP, logistique, services généraux, etc.). L'architecture reste inchangée : les sites web sont allégés pour la performance, les applications mobiles assurent la réactivité terrain, et les logiciels concentrent toute la puissance décisionnelle, le tout reposant sur un socle technique unifié (Node.js / Supabase).
+
+Document technique – Offre JBF SERVICES – © 2026

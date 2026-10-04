@@ -1,0 +1,228 @@
+﻿1. Initialisation de Git...
+Initialized empty Git repository in C:/Users/is mlckl/Desktop/Sites_web/JBF Web/.git/
+2. Configuration de la branche main...
+3. Configuration du remote GitHub...
+4. Ajout des fichiers (README.md, .gitignore, et dossiers des sites web)...
+powershell : warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+Au caractère Ligne:1 : 1
++ powershell -ExecutionPolicy Bypass -File .\push.ps1 *>&1 | Out-File - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'JBF Admin/auth/login.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/avis.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/conges.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/css/main.css', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/devis-equipes.html', LF will be replaced by CRLF the next time Git touches 
+it
+
+warning: in the working copy of 'JBF Admin/devis.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/index.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/js/admin-core.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/js/config.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/js/supabase-admin.js', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Admin/membres.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/missions.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/pointages.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/ressources.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Admin/service-client.html', LF will be replaced by CRLF the next time Git touches 
+it
+
+warning: in the working copy of 'JBF Admin/sous-admins.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/auth/login.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/auth/register.html', LF will be replaced by CRLF the next time Git touches 
+it
+
+warning: in the working copy of 'JBF Client/auth/whatsapp-otp.html', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Client/avis.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/css/client.css', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/devis.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/factures.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/index.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/js/client-core.js', LF will be replaced by CRLF the next time Git touches 
+it
+
+warning: in the working copy of 'JBF Client/js/config.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/js/whatsapp-auth.js', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Client/js/whatsapp-config.js', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Client/missions.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/profil.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Client/service-client.html', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Membre/auth/login.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/chat.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/css/main.css', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/index.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/js/security_guard.js', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Membre/js/shared.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/leaves.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/missions.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/resources.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Membre/timesheet.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/about.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/auth/login.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/auth/register.html', LF will be replaced by CRLF the next time Git touches 
+it
+
+warning: in the working copy of 'JBF Public/avis.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/blog.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/cgu.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/contact.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/css/avis.css', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/css/main.css', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/faq.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/index.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/js/avis.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/js/shared.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/js/supabase.js', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'JBF Public/mentions-legales.html', LF will be replaced by CRLF the next time Git 
+touches it
+
+warning: in the working copy of 'JBF Public/politique-confidentialite.html', LF will be replaced by CRLF the next time 
+Git touches it
+
+warning: in the working copy of 'JBF Public/services.html', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+
+5. CrÃ©ation du commit...
+[main (root-commit) cfc99a2] first commit - sites web JBF (Public, Client, Membre, Admin)
+ 75 files changed, 29212 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 JBF Admin/auth/login.html
+ create mode 100644 JBF Admin/avis.html
+ create mode 100644 JBF Admin/conges.html
+ create mode 100644 JBF Admin/css/main.css
+ create mode 100644 JBF Admin/dashboard.html
+ create mode 100644 JBF Admin/devis-equipes.html
+ create mode 100644 JBF Admin/devis.html
+ create mode 100644 JBF Admin/index.html
+ create mode 100644 JBF Admin/js/admin-core.js
+ create mode 100644 JBF Admin/js/config.js
+ create mode 100644 JBF Admin/js/supabase-admin.js
+ create mode 100644 JBF Admin/membres.html
+ create mode 100644 JBF Admin/missions.html
+ create mode 100644 JBF Admin/pointages.html
+ create mode 100644 JBF Admin/ressources.html
+ create mode 100644 JBF Admin/service-client.html
+ create mode 100644 JBF Admin/sous-admins.html
+ create mode 100644 JBF Client/auth/login.html
+ create mode 100644 JBF Client/auth/register.html
+ create mode 100644 JBF Client/auth/whatsapp-otp.html
+ create mode 100644 JBF Client/avis.html
+ create mode 100644 JBF Client/css/client.css
+ create mode 100644 JBF Client/dashboard.html
+ create mode 100644 JBF Client/devis.html
+ create mode 100644 JBF Client/factures.html
+ create mode 100644 JBF Client/index.html
+ create mode 100644 JBF Client/js/client-core.js
+ create mode 100644 JBF Client/js/config.js
+ create mode 100644 JBF Client/js/whatsapp-auth.js
+ create mode 100644 JBF Client/js/whatsapp-config.js
+ create mode 100644 JBF Client/missions.html
+ create mode 100644 JBF Client/profil.html
+ create mode 100644 JBF Client/service-client.html
+ create mode 100644 JBF Membre/assets/logo.png
+ create mode 100644 JBF Membre/auth/login.html
+ create mode 100644 JBF Membre/chat.html
+ create mode 100644 JBF Membre/css/main.css
+ create mode 100644 JBF Membre/dashboard.html
+ create mode 100644 JBF Membre/index.html
+ create mode 100644 JBF Membre/js/security_guard.js
+ create mode 100644 JBF Membre/js/shared.js
+ create mode 100644 JBF Membre/leaves.html
+ create mode 100644 JBF Membre/missions.html
+ create mode 100644 JBF Membre/resources.html
+ create mode 100644 JBF Membre/roi.html
+ create mode 100644 JBF Membre/timesheet.html
+ create mode 100644 JBF Public/about.html
+ create mode 100644 JBF Public/assets/gallery_catering.jpg
+ create mode 100644 JBF Public/assets/gallery_construction.jpg
+ create mode 100644 JBF Public/assets/gallery_mining.jpg
+ create mode 100644 JBF Public/assets/gallery_security.jpg
+ create mode 100644 JBF Public/assets/hero_bg.jpg
+ create mode 100644 JBF Public/assets/logo.png
+ create mode 100644 JBF Public/assets/qr_code.png
+ create mode 100644 JBF Public/auth/login.html
+ create mode 100644 JBF Public/auth/register.html
+ create mode 100644 JBF Public/avis.html
+ create mode 100644 JBF Public/blog.html
+ create mode 100644 JBF Public/cgu.html
+ create mode 100644 JBF Public/contact.html
+ create mode 100644 JBF Public/css/avis.css
+ create mode 100644 JBF Public/css/main.css
+ create mode 100644 JBF Public/faq.html
+ create mode 100644 JBF Public/gallery.html
+ create mode 100644 JBF Public/index.html
+ create mode 100644 JBF Public/js/avis.js
+ create mode 100644 JBF Public/js/shared.js
+ create mode 100644 JBF Public/js/supabase.js
+ create mode 100644 JBF Public/mentions-legales.html
+ create mode 100644 JBF Public/politique-confidentialite.html
+ create mode 100644 JBF Public/services.html
+ create mode 100644 README.md
+ create mode 100644 assets/icon.png
+ create mode 100644 assets/logo.png
+6. Envoi vers GitHub (git push -u origin main)...

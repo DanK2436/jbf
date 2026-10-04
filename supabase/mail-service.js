@@ -43,66 +43,99 @@
     console.log(`[JBF Mail] Email transmis via ${provider.toUpperCase()}. Quota du jour: ${stats.total}/${DAILY_MAX_EMAILS}`);
   }
 
+  const DEFAULT_BREVO_KEY = '';
+  const DEFAULT_RESEND_KEY = '';
+
+
   function getMailConfig() {
     const clientCfg = window.JBF_CLIENT_CONFIG || {};
     const adminCfg = window.JBF_CONFIG || {};
 
     return {
-      brevoApiKey: window.ENV_BREVO_API_KEY || clientCfg.BREVO_API_KEY || adminCfg.BREVO_API_KEY || localStorage.getItem('JBF_BREVO_API_KEY') || '',
-      resendApiKey: window.ENV_RESEND_API_KEY || clientCfg.RESEND_API_KEY || adminCfg.RESEND_API_KEY || localStorage.getItem('JBF_RESEND_API_KEY') || '',
+      brevoApiKey: window.ENV_BREVO_API_KEY || clientCfg.BREVO_API_KEY || adminCfg.BREVO_API_KEY || localStorage.getItem('JBF_BREVO_API_KEY') || DEFAULT_BREVO_KEY,
+      resendApiKey: window.ENV_RESEND_API_KEY || clientCfg.RESEND_API_KEY || adminCfg.RESEND_API_KEY || localStorage.getItem('JBF_RESEND_API_KEY') || DEFAULT_RESEND_KEY,
       senderName: clientCfg.MAIL_SENDER_NAME || 'JBF SERVICES',
-      senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'contact@jbf-services.com',
+      senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'dankande3@gmail.com',
       backendEndpoints: ['/api/mail/send', 'http://localhost:3001/api/mail/send']
     };
   }
 
   // 1. Envoi direct via API REST Brevo (ex-Sendinblue)
   async function sendViaBrevo(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': apiKey,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        sender: { name: senderName, email: senderEmail },
-        to: [{ email: toEmail }],
-        subject: subject,
-        htmlContent: htmlContent
-      })
-    });
+    const sendersToTry = [
+      { name: senderName, email: senderEmail || 'dankande3@gmail.com' },
+      { name: senderName, email: 'dankande3@gmail.com' },
+      { name: senderName, email: 'contact@jbf-services.com' }
+    ];
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `Brevo HTTP ${res.status}`);
+    let lastError = null;
+    for (const sender of sendersToTry) {
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': apiKey,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: sender,
+            to: [{ email: toEmail }],
+            subject: subject,
+            htmlContent: htmlContent
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { success: true, provider: 'brevo', messageId: data.messageId };
+        } else {
+          const err = await res.json().catch(() => ({}));
+          lastError = new Error(err.message || `Brevo HTTP ${res.status}`);
+        }
+      } catch (e) {
+        lastError = e;
+      }
     }
-    const data = await res.json().catch(() => ({}));
-    return { success: true, provider: 'brevo', messageId: data.messageId };
+    throw lastError || new Error('Échec envoi Brevo');
   }
 
   // 2. Envoi direct via API REST Resend
   async function sendViaResend(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        from: `${senderName} <${senderEmail}>`,
-        to: [toEmail],
-        subject: subject,
-        html: htmlContent
-      })
-    });
+    const fromsToTry = [
+      `${senderName} <onboarding@resend.dev>`,
+      `${senderName} <${senderEmail || 'contact@jbf-services.com'}>`
+    ];
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `Resend HTTP ${res.status}`);
+    let lastError = null;
+    for (const fromStr of fromsToTry) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            from: fromStr,
+            to: [toEmail],
+            subject: subject,
+            html: htmlContent
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { success: true, provider: 'resend', id: data.id };
+        } else {
+          const err = await res.json().catch(() => ({}));
+          lastError = new Error(err.message || `Resend HTTP ${res.status}`);
+        }
+      } catch (e) {
+        lastError = e;
+      }
     }
-    const data = await res.json().catch(() => ({}));
-    return { success: true, provider: 'resend', id: data.id };
+    throw lastError || new Error('Échec envoi Resend');
   }
 
   // Dispatcher multi-provider intelligent

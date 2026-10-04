@@ -1,0 +1,114 @@
+{
+  "senders_error": "HTTP Error 403: Forbidden",
+  "account": {
+    "organization_id": "6a86e1c53c8e50ef930553ca",
+    "user_id": 11936390,
+    "enterprise": false,
+    "relay": {
+      "enabled": true,
+      "data": {
+        "userName": "b62286001@smtp-brevo.com",
+        "relay": "smtp-relay.brevo.com",
+        "port": 587
+      }
+    },
+    "email": "dankande22@gmail.com",
+    "firstName": "Dan",
+    "lastName": "Kande",
+    "companyName": "produits digitaux",
+    "address": {
+      "city": "Lubumbashi",
+      "street": "C/Ruashi, V/Lubumbashi, P/Katanga",
+      "zipCode": "71100",
+      "country": "Congo, The Democratic Republic of the"
+    },
+    "dateTimePreferences": {
+      "timezone": "Africa/Lubumbashi",
+      "timeFormat": "24",
+      "dateFormat": "dd-mm-yyyy"
+    },
+    "language": "fr",
+    "plan": [
+      {
+        "type": "free",
+        "credits": 300,
+        "creditsType": "sendLimit"
+      }
+    ],
+    "planVerticals": [
+      {
+        "planCategory": "Marketing",
+        "planType": "free",
+        "name": "Free",
+        "status": "active",
+        "startDate": "1787224524",
+        "endDate": "1789902924",
+        "users": {
+          "purchasedSeats": "1",
+          "usedSeats": "1"
+        }
+      }
+    ]
+  },
+  "events": {
+    "events": [
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:08:19.598+02:00",
+        "messageId": "<202609161108.64375963745@smtp-relay.mailin.fr>",
+        "event": "requests",
+        "subject": "Votre code de connexion JBF Client : 251897 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "ip": "::"
+      },
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:08:19.598+02:00",
+        "messageId": "<202609161108.64375963745@smtp-relay.mailin.fr>",
+        "event": "error",
+        "subject": "Votre code de connexion JBF Client : 251897 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "reason": "Sending has been rejected because the sender you used contact@jbf-services.cd is not valid. Validate your sender or authenticate your domain",
+        "ip": "::"
+      },
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:07:50.342+02:00",
+        "messageId": "<202609161107.35341403003@smtp-relay.mailin.fr>",
+        "event": "requests",
+        "subject": "Votre code de connexion JBF Client : 868837 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "ip": "::"
+      },
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:07:50.342+02:00",
+        "messageId": "<202609161107.35341403003@smtp-relay.mailin.fr>",
+        "event": "error",
+        "subject": "Votre code de connexion JBF Client : 868837 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "reason": "Sending has been rejected because the sender you used contact@jbf-services.cd is not valid. Validate your sender or authenticate your domain",
+        "ip": "::"
+      },
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:06:39.778+02:00",
+        "messageId": "<202609161106.40751742973@smtp-relay.mailin.fr>",
+        "event": "error",
+        "subject": "Votre code de connexion JBF Client : 328818 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "reason": "Sending has been rejected because the sender you used contact@jbf-services.cd is not valid. Validate your sender or authenticate your domain",
+        "ip": "::"
+      },
+      {
+        "email": "dankande3@gmail.com",
+        "date": "2026-09-16T13:06:39.778+02:00",
+        "messageId": "<202609161106.40751742973@smtp-relay.mailin.fr>",
+        "event": "requests",
+        "subject": "Votre code de connexion JBF Client : 328818 (IP: 169.239.158.113)",
+        "from": "contact@jbf-services.cd",
+        "ip": "::"
+      }
+    ]
+  }
+}

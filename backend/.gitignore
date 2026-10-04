@@ -1,0 +1,19 @@
+# =============================================================
+# Fichiers a ne JAMAIS committer
+# =============================================================
+
+# Variables d'environnement (contient les clés API)
+.env
+.env.local
+.env.production
+
+# Dépendances Node.js
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

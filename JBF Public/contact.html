@@ -833,6 +833,7 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://dvzwqxcaiagczyonrhsg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o";
@@ -858,6 +859,19 @@ document.querySelectorAll('#navMenu .nav-link').forEach(link => {
   });
 });
 
+function showContactToast(message, isError = false) {
+  const toast = document.getElementById('contactToast');
+  if (!toast) return;
+  toast.textContent = message;
+  if (isError) {
+    toast.style.background = '#991B1B';
+  } else {
+    toast.style.background = '#0F172A';
+  }
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
 async function submitContact(e) {
   e.preventDefault();
   const nom = document.getElementById('contactNom').value.trim();
@@ -869,7 +883,18 @@ async function submitContact(e) {
   const msg = document.getElementById('contactMessage').value.trim();
   const submitBtn = document.querySelector('.contact-submit-btn');
 
-  if (!nom || !entreprise || !email || !tel || !service || !province || !msg) return;
+  if (!nom || !entreprise || !email || !tel || !msg) {
+    showContactToast("Veuillez renseigner tous les champs obligatoires (*).", true);
+    return;
+  }
+  if (!service) {
+    showContactToast("Veuillez sélectionner la prestation souhaitée dans la liste.", true);
+    return;
+  }
+  if (!province) {
+    showContactToast("Veuillez sélectionner votre province de déploiement en RDC.", true);
+    return;
+  }
 
   submitBtn.disabled = true;
   submitBtn.textContent = "Envoi de votre demande en cours...";
@@ -892,19 +917,17 @@ async function submitContact(e) {
       if (error) throw error;
     }
 
-    const toast = document.getElementById('contactToast');
-    toast.textContent = "Votre demande de devis a été transmise avec succès à notre direction commerciale. Un chargé d'affaires vous contactera sous 24 heures.";
-    toast.classList.add('show');
+    showContactToast("Votre demande de devis a été transmise avec succès à notre direction commerciale. Un chargé d'affaires vous contactera sous 24 heures.");
     document.getElementById('contactForm').reset();
-    setTimeout(() => toast.classList.remove('show'), 5500);
+    document.getElementById('contactService')?.dispatchEvent(new Event('change'));
+    document.getElementById('contactProvince')?.dispatchEvent(new Event('change'));
 
   } catch (err) {
     console.error("Erreur enregistrement devis:", err);
-    const toast = document.getElementById('contactToast');
-    toast.textContent = "Votre demande a été enregistrée. Notre équipe commerciale vous répondra sous 24h.";
-    toast.classList.add('show');
+    showContactToast("Votre demande a été enregistrée. Notre équipe commerciale vous répondra sous 24h.");
     document.getElementById('contactForm').reset();
-    setTimeout(() => toast.classList.remove('show'), 5500);
+    document.getElementById('contactService')?.dispatchEvent(new Event('change'));
+    document.getElementById('contactProvince')?.dispatchEvent(new Event('change'));
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Envoyer ma Demande de Devis (Réponse sous 24h) →";
@@ -921,6 +944,7 @@ function setupCustomSelect(selectId) {
   select.style.pointerEvents = 'none';
   select.style.height = '0';
   select.style.width = '0';
+  select.removeAttribute('required');
 
   const wrapper = document.createElement('div');
   wrapper.className = 'custom-select-wrapper';

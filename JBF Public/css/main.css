@@ -1513,14 +1513,29 @@ select.fc-input:focus,
   box-shadow: 0 0 0 3px rgba(230,0,126,0.15) !important;
   outline: none;
 }
+select,
+select.fc-input,
+.contact-form-panel select,
+.modal select,
+.modal-card select {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+select option,
+select optgroup,
 select.fc-input option,
 .contact-form-panel select option,
 .modal select option,
 .modal-card select option {
+  color-scheme: light !important;
   background-color: #ffffff !important;
   color: #0f172a !important;
   padding: 10px 14px;
 }
+
+select option:checked,
 select.fc-input option:checked,
 .contact-form-panel select option:checked,
 .modal select option:checked,
@@ -1529,3 +1544,4 @@ select.fc-input option:checked,
   color: var(--pink) !important;
   font-weight: 700;
 }
+

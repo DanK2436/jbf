@@ -1,8 +1,16 @@
-﻿# Environnements & Secrets
+# Environnements & Secrets
 .env
 .env.*
 *.env
 backend/.env
+
+# Clés API locales (ne jamais commiter)
+init-keys.js
+
+# Scripts temporaires
+do_push.ps1
+push_out.txt
+
 
 # Dépendances
 node_modules/

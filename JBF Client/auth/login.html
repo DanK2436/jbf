@@ -771,7 +771,7 @@
         await window.JBFMailService.sendClientPasswordReset(email, activeResetOtp);
       }
 
-      showSuccess(`Code de vérification envoyé à ${email}. (Code : ${activeResetOtp})`);
+      showSuccess(`Un code de vérification a été envoyé à ${email}. Consultez votre boîte de messagerie.`);
       document.getElementById('resetTargetDisplay').textContent = email;
       document.getElementById('resetStepEmail').style.display = 'none';
       document.getElementById('resetStepNewPass').style.display = 'block';
