@@ -165,128 +165,30 @@
         </div>
       </div>
 
-      <!-- SECTION ANALYTIQUE : HISTOGRAMMES & GRAPHIQUES -->
-      <div class="histogram-card">
-        <div class="histogram-header">
-          <div class="histogram-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><rect x="3" y="12" width="4" height="8" rx="1"></rect><rect x="10" y="8" width="4" height="12" rx="1"></rect><rect x="17" y="4" width="4" height="16" rx="1"></rect></svg>
-            Analyse Graphique de Consommation des Congés
-          </div>
-          <span style="font-size:0.75rem; font-weight:700; color:#0369A1; background:#E0F2FE; border:1px solid #BAE6FD; padding:0.2rem 0.55rem; border-radius:4px;">
-            Année en cours 2026
-          </span>
+      <!-- STATS DYNAMIQUES DU COLLABORATEUR -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: var(--white); border-radius: var(--r-card); border: 1px solid var(--gray-border); padding: 1.1rem 1.25rem; box-shadow: var(--sh-card);">
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--pink); margin-bottom: 4px;">Droit Annuel Légal</div>
+          <div style="font-size: 1.4rem; font-weight: 900; color: var(--text-h);"><span id="statDroitTotal">30</span> jours</div>
+          <div style="font-size: 0.74rem; color: var(--text-light); margin-top: 2px;">Code du Travail RDC</div>
         </div>
 
-        <div class="histogram-grid">
-          
-          <!-- HISTOGRAMME 1 : RÉPARTITION PAR CATÉGORIE -->
-          <div>
-            <div style="font-size:0.8rem; font-weight:800; color:var(--text-h); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem;">
-              <span>Répartition par Typologie d'Absence</span>
-            </div>
+        <div style="background: var(--white); border-radius: var(--r-card); border: 1px solid var(--gray-border); padding: 1.1rem 1.25rem; box-shadow: var(--sh-card);">
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #16A34A; margin-bottom: 4px;">Solde Disponible</div>
+          <div style="font-size: 1.4rem; font-weight: 900; color: #166534;"><span id="statSoldeDispo">--</span> jours</div>
+          <div style="font-size: 0.74rem; color: var(--text-light); margin-top: 2px;">À planifier sur 2026</div>
+        </div>
 
-            <div class="histo-row">
-              <div class="histo-labels">
-                <span class="histo-name">Congés Annuels Payés</span>
-                <span class="histo-count">18 j restants (60%)</span>
-              </div>
-              <div class="histo-track">
-                <div class="histo-fill" style="width: 60%; background: linear-gradient(90deg, #E6007E, #FF2E99);"></div>
-              </div>
-            </div>
+        <div style="background: var(--white); border-radius: var(--r-card); border: 1px solid var(--gray-border); padding: 1.1rem 1.25rem; box-shadow: var(--sh-card);">
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #D97706; margin-bottom: 4px;">En Attente de Validation</div>
+          <div style="font-size: 1.4rem; font-weight: 900; color: #B45309;"><span id="statEnAttente">0</span> demande(s)</div>
+          <div style="font-size: 0.74rem; color: var(--text-light); margin-top: 2px;">En cours d'étude RH</div>
+        </div>
 
-            <div class="histo-row">
-              <div class="histo-labels">
-                <span class="histo-name">Permissions de Circonstance</span>
-                <span class="histo-count">3 j pris (10%)</span>
-              </div>
-              <div class="histo-track">
-                <div class="histo-fill" style="width: 25%; background: #3B82F6;"></div>
-              </div>
-            </div>
-
-            <div class="histo-row">
-              <div class="histo-labels">
-                <span class="histo-name">Arrêts Maladie / Médical</span>
-                <span class="histo-count">2 j pris (6%)</span>
-              </div>
-              <div class="histo-track">
-                <div class="histo-fill" style="width: 15%; background: #F59E0B;"></div>
-              </div>
-            </div>
-
-            <div class="histo-row">
-              <div class="histo-labels">
-                <span class="histo-name">Récupération / RTT Chantier</span>
-                <span class="histo-count">7 j pris (24%)</span>
-              </div>
-              <div class="histo-track">
-                <div class="histo-fill" style="width: 45%; background: #10B981;"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- HISTOGRAMME 2 : TIMELINE MENSUELLE DE PRISE DES CONGÉS -->
-          <div>
-            <div style="font-size:0.8rem; font-weight:800; color:var(--text-h); margin-bottom:0.4rem;">
-              Histogramme Mensuel des Jours d'Absence (2026)
-            </div>
-            
-            <div class="monthly-chart-container">
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 25%;" title="Janvier : 2 jours"></div>
-                <div class="monthly-bar-label">Jan</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Février : 0 jour"></div>
-                <div class="monthly-bar-label">Fév</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 40%;" title="Mars : 3 jours"></div>
-                <div class="monthly-bar-label">Mar</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 15%;" title="Avril : 1 jour"></div>
-                <div class="monthly-bar-label">Avr</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Mai : 0 jour"></div>
-                <div class="monthly-bar-label">Mai</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 65%;" title="Juin : 5 jours"></div>
-                <div class="monthly-bar-label">Juin</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 15%;" title="Juil : 1 jour"></div>
-                <div class="monthly-bar-label">Juil</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 90%; background:var(--pink);" title="Août : 7 jours (En cours)"></div>
-                <div class="monthly-bar-label" style="color:var(--pink); font-weight:900;">Août</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Septembre : 0 jour"></div>
-                <div class="monthly-bar-label">Sep</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Octobre : 0 jour"></div>
-                <div class="monthly-bar-label">Oct</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Novembre : 0 jour"></div>
-                <div class="monthly-bar-label">Nov</div>
-              </div>
-              <div class="monthly-bar-col">
-                <div class="monthly-bar-pill" style="height: 0%;" title="Décembre : 0 jour"></div>
-                <div class="monthly-bar-label">Déc</div>
-              </div>
-            </div>
-            <div style="font-size:0.68rem; color:var(--text-light); text-align:center; margin-top:0.4rem;">
-              Pic d'utilisation : Août (Rotation minière &amp; congés annuels)
-            </div>
-          </div>
-
+        <div style="background: var(--white); border-radius: var(--r-card); border: 1px solid var(--gray-border); padding: 1.1rem 1.25rem; box-shadow: var(--sh-card);">
+          <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #2563EB; margin-bottom: 4px;">Validés & Consommés</div>
+          <div style="font-size: 1.4rem; font-weight: 900; color: #1E40AF;"><span id="statJoursConsommes">0</span> jours</div>
+          <div style="font-size: 0.74rem; color: var(--text-light); margin-top: 2px;">Approuvés par la Direction</div>
         </div>
       </div>
 
@@ -359,6 +261,41 @@
           </div>
         </div>
 
+        <!-- TABLEAU HISTORIQUE DES DEMANDES DU COLLABORATEUR -->
+        <div class="pro-form-card" style="margin-top: 1.5rem;">
+          <div class="panel-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="panel-card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Historique de Mes Demandes & Décisions RH
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="loadMemberLeaves()" title="Actualiser la liste">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              Actualiser
+            </button>
+          </div>
+          <div class="panel-card-body" style="padding: 0;">
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                <thead>
+                  <tr style="background: #F8FAFC; border-bottom: 1.5px solid var(--gray-border); color: var(--text-light); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 12px 16px;">Type d'Absence</th>
+                    <th style="padding: 12px 16px;">Période</th>
+                    <th style="padding: 12px 16px;">Durée</th>
+                    <th style="padding: 12px 16px;">Motif</th>
+                    <th style="padding: 12px 16px;">Date de Dépôt</th>
+                    <th style="padding: 12px 16px; text-align: right;">Statut DRH</th>
+                  </tr>
+                </thead>
+                <tbody id="memberLeavesTbody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-light);">Chargement de vos demandes...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </main>
@@ -368,6 +305,7 @@
   <script>
     let currentUserId = null;
     let currentUserProfile = null;
+    let memberLeavesList = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderNavigation('leaves');
@@ -375,12 +313,15 @@
 
       if (currentUserProfile) {
         currentUserId = currentUserProfile.id;
-        document.getElementById('leavesBalanceDisplay').textContent = currentUserProfile.solde_conges;
+        const solde = currentUserProfile.solde_conges !== undefined ? currentUserProfile.solde_conges : 22;
+        document.getElementById('leavesBalanceDisplay').textContent = solde;
+        document.getElementById('statSoldeDispo').textContent = solde;
         
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('dateDebut').min = today;
         document.getElementById('dateFin').min = today;
       }
+      await loadMemberLeaves();
     });
 
     function calculateDays() {
@@ -397,6 +338,87 @@
           document.getElementById('nbJours').value = 1;
         }
       }
+    }
+
+    async function loadMemberLeaves() {
+      const tbody = document.getElementById('memberLeavesTbody');
+      let leaves = [];
+
+      // 1. Supabase
+      try {
+        if (supabaseClient) {
+          let query = supabaseClient.from('demandes_conges').select('*').order('created_at', { ascending: false });
+          if (currentUserId && !currentUserId.startsWith('demo-')) {
+            query = query.or(`user_id.eq.${currentUserId},agent_matricule.eq.${currentUserProfile?.matricule || 'none'}`);
+          }
+          const { data, error } = await query;
+          if (!error && Array.isArray(data) && data.length > 0) {
+            leaves = data;
+          }
+        }
+      } catch (err) {
+        console.warn('[Leaves Fetch]', err);
+      }
+
+      // 2. Local fallback
+      try {
+        const local = JSON.parse(localStorage.getItem('jbf_local_conges') || '[]');
+        if (local.length > 0) {
+          leaves = [...leaves, ...local];
+        }
+      } catch(e) {}
+
+      // Dédupliquer par ID
+      const seen = new Set();
+      memberLeavesList = leaves.filter(l => {
+        if (seen.has(l.id)) return false;
+        seen.add(l.id);
+        return true;
+      });
+
+      // Update counters
+      const pending = memberLeavesList.filter(l => (l.statut || 'en_attente') === 'en_attente').length;
+      const approved = memberLeavesList.filter(l => l.statut === 'approuve');
+      const totalDaysTaken = approved.reduce((acc, curr) => acc + (parseInt(curr.nombre_jours) || 0), 0);
+
+      const elAttente = document.getElementById('statEnAttente');
+      if (elAttente) elAttente.textContent = pending;
+      const elConsommes = document.getElementById('statJoursConsommes');
+      if (elConsommes) elConsommes.textContent = totalDaysTaken;
+
+      // Render table
+      if (memberLeavesList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 28px; color: var(--text-light);"><i class="bi bi-calendar" style="font-size: 1.8rem; display:block; margin-bottom: 6px; color: #CBD5E1;"></i>Vous n\'avez aucune demande de congé en cours. Remplissez le formulaire ci-dessus pour planifier vos congés.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = memberLeavesList.map(l => {
+        const typeBadge = `<span style="font-weight:700; color:var(--text-h);">${escapeHtml(l.type_conge || 'Annuel')}</span>`;
+        let statusBadge = '<span style="background: #FEF3C7; color: #B45309; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;"><span style="width:6px;height:6px;border-radius:50%;background:#D97706;"></span>En attente</span>';
+        if (l.statut === 'approuve') {
+          statusBadge = '<span style="background: #DCFCE7; color: #15803D; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;"><span style="width:6px;height:6px;border-radius:50%;background:#16A34A;"></span>Approuvé</span>';
+        } else if (l.statut === 'rejete') {
+          statusBadge = '<span style="background: #FEE2E2; color: #B91C1C; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;"><span style="width:6px;height:6px;border-radius:50%;background:#DC2626;"></span>Refusé</span>';
+        }
+
+        const dateDepot = l.created_at ? new Date(l.created_at).toLocaleDateString('fr-FR') : 'Récent';
+
+        return `
+          <tr style="border-bottom: 1px solid var(--gray-border);">
+            <td style="padding: 12px 16px;">${typeBadge}</td>
+            <td style="padding: 12px 16px; font-size: 0.8rem; color: var(--text-h);">${l.date_debut || '—'} au ${l.date_fin || '—'}</td>
+            <td style="padding: 12px 16px; font-weight: 800; color: var(--pink);">${l.nombre_jours || 1} j</td>
+            <td style="padding: 12px 16px; font-size: 0.8rem; color: var(--text-light); max-width: 220px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHtml(l.motif || '')}</td>
+            <td style="padding: 12px 16px; font-size: 0.78rem; color: var(--text-light);">${dateDepot}</td>
+            <td style="padding: 12px 16px; text-align: right;">${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     async function submitLeaveRequest(event) {
@@ -416,6 +438,8 @@
       const newLeave = {
         id: 'conge-' + Date.now(),
         user_id: currentUserId || 'demo-user',
+        agent_nom: currentUserProfile?.nom_complet || currentUserProfile?.full_name || 'Collaborateur JBF',
+        agent_matricule: currentUserProfile?.matricule || 'JBF-MEM',
         type_conge: typeConge,
         nombre_jours: nbJours,
         date_debut: dateDebut,
@@ -426,11 +450,11 @@
       };
 
       try {
-        if (supabaseClient && currentUserId && !currentUserId.startsWith('demo-')) {
+        if (supabaseClient) {
           await supabaseClient.from('demandes_conges').insert([newLeave]);
         }
       } catch (err) {
-        console.warn("Supabase offline, enregistrement local");
+        console.warn("Supabase insert error:", err);
       }
 
       // Sauvegarde locale
@@ -448,6 +472,8 @@
       document.getElementById('nbJours').value = 1;
       btn.disabled = false;
       btn.innerHTML = '<span>Transmettre la Demande à la DRH</span>';
+      
+      await loadMemberLeaves();
     }
   </script>
 </body>

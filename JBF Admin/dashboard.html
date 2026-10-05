@@ -173,10 +173,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -426,6 +422,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="../supabase/keep-alive.js"></script>
 <script src="js/admin-core.js"></script>
@@ -757,59 +754,120 @@
     activityChart.update();
   }
 
-  // 3. Chargement des données réelles
+  function getSupabaseClient() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      const url = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+      const key = window.JBF_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+      return supabase.createClient(url, key);
+    }
+    return null;
+  }
+
+  // 3. Chargement des données réelles (Supabase direct + API backend fallback)
   async function loadDashboardData() {
-    // A. Statistiques générales
-    const statsRes = await window.adminCore.apiFetch('/api/stats');
-    if (statsRes.ok && statsRes.data && statsRes.data.stats) {
-      const s = statsRes.data.stats;
-      document.getElementById('kpiMissionsActives').textContent = s.missionsActives ?? 12;
-      document.getElementById('kpiSatisfaction').textContent = s.satisfactionClient ?? '4.9/5';
-      document.getElementById('kpiAvisTotal').textContent = `${s.totalAvis ?? 148} avis certifiés`;
+    const sb = getSupabaseClient();
+
+    // A. Devis & Pipeline Commercial
+    let devisList = [];
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('demandes_devis').select('*').order('created_at', { ascending: false });
+        if (!error && data) devisList = data;
+      } catch (e) {
+        console.warn('Erreur chargement devis Supabase:', e);
+      }
+    }
+    if (devisList.length === 0 && window.adminCore) {
+      try {
+        const devisRes = await window.adminCore.apiFetch('/api/devis?limit=100');
+        if (devisRes.ok && devisRes.data && devisRes.data.devis) {
+          devisList = devisRes.data.devis;
+        }
+      } catch (_) {}
     }
 
-    // B. Devis & Pipeline Commercial
-    const devisRes = await window.adminCore.apiFetch('/api/devis?limit=100');
-    if (devisRes.ok && devisRes.data && devisRes.data.devis) {
-      const list = devisRes.data.devis;
-      const totalCount = devisRes.data.count ?? list.length;
-      document.getElementById('kpiDevisTotal').textContent = totalCount;
+    const totalCount = devisList.length;
+    const nouveaux = devisList.filter(d => (d.statut || '').toLowerCase() === 'nouveau').length;
+    const enEtude = devisList.filter(d => (d.statut || '').toLowerCase() === 'en_etude').length;
+    const valides = devisList.filter(d => ['valide', 'approuve'].includes((d.statut || '').toLowerCase())).length;
+    const rejetes = devisList.filter(d => (d.statut || '').toLowerCase() === 'rejete').length;
 
-      const nouveaux = list.filter(d => d.statut === 'nouveau').length;
-      const enEtude = list.filter(d => d.statut === 'en_etude').length;
-      const valides = list.filter(d => d.statut === 'valide').length;
-      const rejetes = list.filter(d => d.statut === 'rejete').length;
+    document.getElementById('kpiDevisTotal').textContent = totalCount;
+    document.getElementById('kpiDevisNew').textContent = nouveaux;
+    const badgeDevis = document.getElementById('badgeDevisCount');
+    if (badgeDevis) badgeDevis.textContent = nouveaux;
+    const sumDevisEl = document.getElementById('statSumDevis');
+    if (sumDevisEl) sumDevisEl.textContent = totalCount;
 
-      document.getElementById('kpiDevisNew').textContent = nouveaux;
-      document.getElementById('badgeDevisCount').textContent = nouveaux;
+    // Mise à jour du graphique de pipeline commercial
+    if (pipelineChart) {
+      pipelineChart.data.datasets[0].data = [nouveaux, enEtude, valides, rejetes];
+      pipelineChart.update();
 
-      // Mise à jour du graphique de pipeline commercial
-      if (pipelineChart && totalCount > 0) {
-        pipelineChart.data.datasets[0].data = [nouveaux, enEtude, valides, rejetes];
-        pipelineChart.update();
+      const calcPct = (cnt) => totalCount > 0 ? Math.round((cnt / totalCount) * 100) + '%' : '0%';
+      renderPipelineLegend([
+        { label: 'En Attente d\'Étude', count: nouveaux, pct: calcPct(nouveaux), color: '#E6007E' },
+        { label: 'En Cours de Chiffrage', count: enEtude, pct: calcPct(enEtude), color: '#D97706' },
+        { label: 'Offres Validées & Transmises', count: valides, pct: calcPct(valides), color: '#059669' },
+        { label: 'Rejetées / Hors Périmètre', count: rejetes, pct: calcPct(rejetes), color: '#94A3B8' }
+      ]);
+    }
 
-        const calcPct = (cnt) => totalCount > 0 ? Math.round((cnt / totalCount) * 100) + '%' : '0%';
-        renderPipelineLegend([
-          { label: 'En Attente d\'Étude', count: nouveaux, pct: calcPct(nouveaux), color: '#E6007E' },
-          { label: 'En Cours de Chiffrage', count: enEtude, pct: calcPct(enEtude), color: '#D97706' },
-          { label: 'Offres Validées & Transmises', count: valides, pct: calcPct(valides), color: '#059669' },
-          { label: 'Rejetées / Hors Périmètre', count: rejetes, pct: calcPct(rejetes), color: '#94A3B8' }
-        ]);
+    // Répartition par secteurs réels
+    if (sectorsChart && devisList.length > 0) {
+      const sectorCounts = {};
+      devisList.forEach(d => {
+        let svcs = [];
+        if (Array.isArray(d.services)) svcs = d.services;
+        else if (typeof d.services === 'string') svcs = [d.services];
+        else if (d.service) svcs = [d.service];
+        else svcs = ['Multi-Services'];
+        svcs.forEach(s => {
+          const clean = (s || 'Multi-Services').trim();
+          sectorCounts[clean] = (sectorCounts[clean] || 0) + 1;
+        });
+      });
+      const sortedSectors = Object.entries(sectorCounts).sort((a,b) => b[1] - a[1]).slice(0, 6);
+      if (sortedSectors.length > 0) {
+        const sLabels = sortedSectors.map(s => s[0]);
+        const sData = sortedSectors.map(s => s[1]);
+        const sColors = ['#E6007E', '#0284C7', '#059669', '#D97706', '#6366F1', '#64748B'];
+        sectorsChart.data.labels = sLabels;
+        sectorsChart.data.datasets[0].data = sData;
+        sectorsChart.data.datasets[0].backgroundColor = sColors.slice(0, sLabels.length);
+        sectorsChart.update();
+
+        const totalSec = sData.reduce((a,b) => a+b, 0);
+        const legendBox = document.getElementById('sectorsLegendCustom');
+        if (legendBox) {
+          legendBox.innerHTML = sLabels.map((lbl, i) => `
+            <div class="legend-item">
+              <span style="display: flex; align-items: center; color: var(--text-primary); font-weight: 500;">
+                <span class="legend-color" style="background: ${sColors[i % sColors.length]}"></span>
+                ${escapeHtml(lbl)}
+              </span>
+              <strong style="color: var(--text-secondary);">${totalSec > 0 ? Math.round((sData[i]/totalSec)*100) : 0}%</strong>
+            </div>
+          `).join('');
+        }
       }
+    }
 
-      const tbody = document.getElementById('recentDevisTableBody');
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Aucun devis récent.</td></tr>';
+    // Tableau des devis récents
+    const tbodyDevis = document.getElementById('recentDevisTableBody');
+    if (tbodyDevis) {
+      if (devisList.length === 0) {
+        tbodyDevis.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Aucun devis reçu pour le moment.</td></tr>';
       } else {
-        tbody.innerHTML = list.slice(0, 5).map(d => `
+        tbodyDevis.innerHTML = devisList.slice(0, 5).map(d => `
           <tr>
             <td>
-              <strong style="color: var(--text-primary);">${escapeHtml(d.nom || '')}</strong>
-              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(d.societe || 'Particulier')}</div>
+              <strong style="color: var(--text-primary);">${escapeHtml(d.nom || d.nom_complet || '')}</strong>
+              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(d.societe || d.entreprise || 'Entreprise')}</div>
             </td>
-            <td><span style="font-size: 0.8rem; font-weight: 600; color: var(--brand-pink);">${Array.isArray(d.services) ? d.services.map(s => escapeHtml(s)).join(', ') : escapeHtml(d.services || 'Prestation')}</span></td>
-            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt"></i> ${escapeHtml(d.localite || 'RDC')}</span></td>
-            <td>${window.adminCore.renderBadgeStatus(d.statut)}</td>
+            <td><span style="font-size: 0.8rem; font-weight: 600; color: var(--brand-pink);">${Array.isArray(d.services) ? d.services.map(s => escapeHtml(s)).join(', ') : escapeHtml(d.services || d.service || 'Prestation')}</span></td>
+            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt"></i> ${escapeHtml(d.localite || d.ville || 'RDC')}</span></td>
+            <td>${window.adminCore.renderBadgeStatus(d.statut || 'nouveau')}</td>
             <td>
               <a href="devis.html" class="btn btn-primary btn-sm">Traiter</a>
             </td>
@@ -818,41 +876,103 @@
       }
     }
 
-    // C. Missions
-    const missionsRes = await window.adminCore.apiFetch('/api/missions');
-    if (missionsRes.ok && missionsRes.data && missionsRes.data.missions) {
-      const mList = missionsRes.data.missions;
-      const tbody = document.getElementById('recentMissionsTableBody');
-      if (mList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Aucune mission enregistrée.</td></tr>';
+    // B. Missions réelles
+    let missionsList = [];
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('missions').select('*').order('created_at', { ascending: false });
+        if (!error && data) missionsList = data;
+      } catch (e) {
+        console.warn('Erreur missions Supabase:', e);
+      }
+    }
+    if (missionsList.length === 0 && window.adminCore) {
+      try {
+        const mRes = await window.adminCore.apiFetch('/api/missions');
+        if (mRes.ok && mRes.data && mRes.data.missions) missionsList = mRes.data.missions;
+      } catch (_) {}
+    }
+
+    const activeMissions = missionsList.filter(m => ['en_cours', 'nouveau'].includes((m.statut || '').toLowerCase())).length;
+    document.getElementById('kpiMissionsActives').textContent = activeMissions > 0 ? activeMissions : (missionsList.length > 0 ? missionsList.length : '0');
+
+    // Répartition géographique réelle
+    if (regionsChart && missionsList.length > 0) {
+      const locCounts = {};
+      missionsList.forEach(m => {
+        const loc = (m.site_intervention || m.ville || 'Lubumbashi').trim();
+        locCounts[loc] = (locCounts[loc] || 0) + 1;
+      });
+      const sortedLocs = Object.entries(locCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      if (sortedLocs.length > 0) {
+        regionsChart.data.labels = sortedLocs.map(l => l[0]);
+        regionsChart.data.datasets[0].data = sortedLocs.map(l => l[1]);
+        regionsChart.data.datasets[1].data = sortedLocs.map(() => 0);
+        regionsChart.update();
+      }
+    }
+
+    const tbodyMissions = document.getElementById('recentMissionsTableBody');
+    if (tbodyMissions) {
+      if (missionsList.length === 0) {
+        tbodyMissions.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Aucune mission enregistrée pour le moment.</td></tr>';
       } else {
-        tbody.innerHTML = mList.slice(0, 5).map(m => `
+        tbodyMissions.innerHTML = missionsList.slice(0, 5).map(m => `
           <tr>
             <td>
               <strong style="color: var(--text-primary);">${escapeHtml(m.titre || '')}</strong>
-              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(m.client || 'Client JBF')}</div>
+              <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(m.client || 'Client Partenaire JBF')}</div>
             </td>
-            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(m.site_intervention || 'Lubumbashi')}</span></td>
-            <td><span class="badge-status nouveau">${escapeHtml(m.service || 'Sous-Traitance Minière')}</span></td>
+            <td><span style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(m.site_intervention || 'RDC')}</span></td>
+            <td><span class="badge-status nouveau">${escapeHtml(m.service || 'Intervention')}</span></td>
             <td>${window.adminCore.renderBadgeStatus(m.statut || 'en_cours')}</td>
           </tr>
         `).join('');
       }
     }
 
-    // D. Collaborateurs
-    const agentsRes = await window.adminCore.apiFetch('/api/admin/agents');
-    if (agentsRes.ok && agentsRes.data && agentsRes.data.agents) {
-      document.getElementById('kpiMembresTotal').textContent = agentsRes.data.agents.length;
-    } else {
-      document.getElementById('kpiMembresTotal').textContent = '24';
+    // C. Collaborateurs réels (table profiles)
+    let membresCount = 0;
+    if (sb) {
+      try {
+        const { count, error } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+        if (!error && count !== null) membresCount = count;
+      } catch (_) {}
     }
+    if (membresCount === 0 && window.adminCore) {
+      try {
+        const agentsRes = await window.adminCore.apiFetch('/api/admin/agents');
+        if (agentsRes.ok && agentsRes.data && agentsRes.data.agents) {
+          membresCount = agentsRes.data.agents.length;
+        }
+      } catch (_) {}
+    }
+    document.getElementById('kpiMembresTotal').textContent = membresCount > 0 ? membresCount : '0';
+
+    // D. Avis Clients réels
+    let avisList = [];
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('avis_clients').select('*');
+        if (!error && data) avisList = data;
+      } catch (_) {}
+    }
+    const totalAvis = avisList.length;
+    const avgRating = totalAvis > 0 ? (avisList.reduce((acc, a) => acc + (a.note || a.stars || 5), 0) / totalAvis).toFixed(1) : '--';
+    const satEl = document.getElementById('kpiSatisfaction');
+    if (satEl) satEl.textContent = totalAvis > 0 ? `${avgRating}/5` : 'En attente';
+    const avisTotalEl = document.getElementById('kpiAvisTotal');
+    if (avisTotalEl) avisTotalEl.textContent = totalAvis > 0 ? `${totalAvis} avis certifiés` : '0 avis enregistré';
 
     // E. Congés badge
-    const congesRes = await window.adminCore.apiFetch('/api/admin/conges?statut=en_attente');
-    if (congesRes.ok && congesRes.data && congesRes.data.conges) {
-      const badge = document.getElementById('badgeCongesCount');
-      if (badge) badge.textContent = congesRes.data.conges.length;
+    if (sb) {
+      try {
+        const { count, error } = await sb.from('demandes_conges').select('*', { count: 'exact', head: true }).eq('statut', 'en_attente');
+        if (!error && count !== null) {
+          const badge = document.getElementById('badgeCongesCount');
+          if (badge) badge.textContent = count;
+        }
+      } catch (_) {}
     }
   }
 

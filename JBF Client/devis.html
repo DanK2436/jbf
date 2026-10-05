@@ -79,10 +79,57 @@
     </header>
 
     <main class="client-content">
+      <!-- STATS KPI DEVIS -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--brand-pink-subtle); color: var(--brand-pink); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-file-earmark-text-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Total Devis Émis</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: var(--text-primary);" id="kpiClientTotalDevis">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Toutes prestations</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">En Chiffrage / Étude</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #B45309;" id="kpiClientEnEtude">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Réponse sous 24h</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #DCFCE7; color: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Propositions Prêtes</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #166534;" id="kpiClientPrets">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Chiffrage finalisé</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #E0F2FE; color: #0284C7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Volume Engagé</div>
+            <div style="font-size: 1.25rem; font-weight: 900; color: #0369A1;" id="kpiClientMontantTotal">$0 USD</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Offres contractuelles</div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <h2><i class="bi bi-file-earmark-text"></i> Historique & Traitement de Vos Demandes</h2>
-          <button class="btn btn-secondary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadClientQuotes()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
         </div>
         <div class="card-body">
           
@@ -327,6 +374,22 @@
 
   function renderQuotesTable(list) {
     const tbody = document.getElementById('quotesTableBody');
+
+    // Update KPIs
+    const total = (list || []).length;
+    const prets = (list || []).filter(d => ['valide', 'accepte', 'pret'].includes(d.statut)).length;
+    const enEtude = (list || []).filter(d => !['valide', 'accepte', 'pret'].includes(d.statut)).length;
+    const totalMontant = (list || []).reduce((acc, d) => acc + (Number(d.montant) || 0), 0);
+
+    const elTotal = document.getElementById('kpiClientTotalDevis');
+    if (elTotal) elTotal.textContent = total;
+    const elEtude = document.getElementById('kpiClientEnEtude');
+    if (elEtude) elEtude.textContent = enEtude;
+    const elPrets = document.getElementById('kpiClientPrets');
+    if (elPrets) elPrets.textContent = prets;
+    const elMontant = document.getElementById('kpiClientMontantTotal');
+    if (elMontant) elMontant.textContent = totalMontant > 0 ? `$${totalMontant.toLocaleString()} USD` : '$0 USD';
+
     if (!list || list.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted);"><i class="bi bi-file-earmark" style="font-size: 1.8rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune demande de devis enregistrée. Cliquez sur "Demander une Nouvelle Prestation" pour initier un devis.</td></tr>';
       return;

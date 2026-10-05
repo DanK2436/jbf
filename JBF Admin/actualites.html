@@ -92,10 +92,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -236,14 +232,56 @@
           <textarea id="artContent" class="form-control" rows="6" placeholder="Rédigez l'ensemble de l'article ici (contexte, déroulement, chiffres, citations de la direction)..." required></textarea>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Image de Couverture (URL ou chemin d'accès) *</label>
-          <input type="url" id="artImage" class="form-control" placeholder="https://... ou ../assets/photos/..." required>
+        <!-- IMAGE DE COUVERTURE / ACCROCHE -->
+        <div class="form-group" style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+          <label class="form-label" style="font-weight: 700;">Image de Couverture / Accroche *</label>
+          <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="artImageSourceType" value="upload" checked onchange="toggleArtImageSourceMode()">
+              <i class="bi bi-upload"></i> Téléverser (Téléphone / PC)
+            </label>
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="artImageSourceType" value="url" onchange="toggleArtImageSourceMode()">
+              <i class="bi bi-link-45deg"></i> Lien URL Externe
+            </label>
+          </div>
+
+          <div id="artImageUploadGroup">
+            <input type="file" id="artImageFileInput" class="form-control" accept="image/*" onchange="handleArtImageSelect(event)">
+            <small style="color: var(--text-muted); font-size: 0.72rem;">Sélectionnez une photo depuis votre téléphone ou PC (JPG, PNG, WebP).</small>
+          </div>
+
+          <div id="artImageUrlGroup" style="display: none;">
+            <input type="url" id="artImage" class="form-control" placeholder="https://exemple.com/photo.jpg ou ../assets/photos/...">
+          </div>
+
+          <div id="artImagePreview" style="margin-top: 10px; display: none; text-align: center;"></div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Lien Vidéo Associé (Optionnel)</label>
-          <input type="url" id="artVideo" class="form-control" placeholder="https://youtube.com/watch?v=... ou lien MP4 direct">
+        <!-- VIDÉO ASSOCIEE -->
+        <div class="form-group" style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+          <label class="form-label" style="font-weight: 700;">Vidéo Associée (Optionnel)</label>
+          <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="artVideoSourceType" value="upload" checked onchange="toggleArtVideoSourceMode()">
+              <i class="bi bi-upload"></i> Téléverser (Téléphone / PC)
+            </label>
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="artVideoSourceType" value="url" onchange="toggleArtVideoSourceMode()">
+              <i class="bi bi-link-45deg"></i> Lien URL (YouTube / Stream / MP4)
+            </label>
+          </div>
+
+          <div id="artVideoUploadGroup">
+            <input type="file" id="artVideoFileInput" class="form-control" accept="video/*" onchange="handleArtVideoSelect(event)">
+            <small style="color: var(--text-muted); font-size: 0.72rem;">Sélectionnez un clip vidéo MP4 / WebM depuis votre appareil.</small>
+          </div>
+
+          <div id="artVideoUrlGroup" style="display: none;">
+            <input type="url" id="artVideo" class="form-control" placeholder="https://youtube.com/watch?v=... ou lien MP4 direct">
+          </div>
+
+          <div id="artVideoPreview" style="margin-top: 10px; display: none; text-align: center;"></div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
@@ -333,12 +371,71 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  let artUploadedImageDataUrl = '';
+  let artUploadedVideoDataUrl = '';
+
+  function toggleArtImageSourceMode() {
+    const isUpload = document.querySelector('input[name="artImageSourceType"]:checked')?.value === 'upload';
+    document.getElementById('artImageUploadGroup').style.display = isUpload ? 'block' : 'none';
+    document.getElementById('artImageUrlGroup').style.display = isUpload ? 'none' : 'block';
+  }
+
+  function toggleArtVideoSourceMode() {
+    const isUpload = document.querySelector('input[name="artVideoSourceType"]:checked')?.value === 'upload';
+    document.getElementById('artVideoUploadGroup').style.display = isUpload ? 'block' : 'none';
+    document.getElementById('artVideoUrlGroup').style.display = isUpload ? 'none' : 'block';
+  }
+
+  function handleArtImageSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image')) {
+      alert('Veuillez sélectionner un fichier image valide.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      artUploadedImageDataUrl = ev.target.result;
+      const preview = document.getElementById('artImagePreview');
+      preview.style.display = 'block';
+      preview.innerHTML = `<img src="${artUploadedImageDataUrl}" style="max-height: 120px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleArtVideoSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('video')) {
+      alert('Veuillez sélectionner un fichier vidéo valide.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      artUploadedVideoDataUrl = ev.target.result;
+      const preview = document.getElementById('artVideoPreview');
+      preview.style.display = 'block';
+      preview.innerHTML = `<video src="${artUploadedVideoDataUrl}" controls style="max-height: 120px; border-radius: 6px;"></video>`;
+    };
+    reader.readAsDataURL(file);
+  }
+
   function openNewArticleModal() {
     document.getElementById('articleModal').style.display = 'flex';
   }
 
   function closeArticleModal() {
     document.getElementById('articleModal').style.display = 'none';
+    artUploadedImageDataUrl = '';
+    artUploadedVideoDataUrl = '';
+    const imgInput = document.getElementById('artImageFileInput');
+    if (imgInput) imgInput.value = '';
+    const vidInput = document.getElementById('artVideoFileInput');
+    if (vidInput) vidInput.value = '';
+    const p1 = document.getElementById('artImagePreview');
+    if (p1) { p1.style.display = 'none'; p1.innerHTML = ''; }
+    const p2 = document.getElementById('artVideoPreview');
+    if (p2) { p2.style.display = 'none'; p2.innerHTML = ''; }
   }
 
   async function handleSaveArticle(e) {
@@ -347,8 +444,17 @@
     const categorie = document.getElementById('artCategory').value;
     const excerpt = document.getElementById('artExcerpt').value.trim();
     const content = document.getElementById('artContent').value.trim();
-    const image = document.getElementById('artImage').value.trim();
-    const video = document.getElementById('artVideo')?.value.trim() || '';
+    
+    const isImageUpload = document.querySelector('input[name="artImageSourceType"]:checked')?.value === 'upload';
+    const image = isImageUpload ? artUploadedImageDataUrl : document.getElementById('artImage').value.trim();
+
+    const isVideoUpload = document.querySelector('input[name="artVideoSourceType"]:checked')?.value === 'upload';
+    const video = isVideoUpload ? artUploadedVideoDataUrl : (document.getElementById('artVideo')?.value.trim() || '');
+
+    if (!image) {
+      alert(isImageUpload ? 'Veuillez téléverser une image de couverture.' : 'Veuillez saisir une URL valide pour l\'image.');
+      return;
+    }
 
     const newArt = {
       id: 'art-' + Date.now(),

@@ -82,10 +82,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -233,15 +229,45 @@
           <label>Équipe / Agents Assignés</label>
           <input type="text" id="newMissionAgents" class="form-control" placeholder="Ex: Alain T., Patrick K., Sarah M.">
         </div>
+        <!-- AJOUT PHOTO / VIDÉO DE LA MISSION (UPLOAD OU LIEN) -->
+        <div class="form-group" style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <label style="font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: block;">
+            <i class="bi bi-camera-fill" style="color: var(--pink);"></i> Photo ou Vidéo de la Mission (Terrain / Chantier)
+          </label>
+          
+          <div style="display: flex; gap: 14px; margin-bottom: 10px;">
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="missionMediaType" value="upload" checked onchange="toggleMissionMediaMode()">
+              <i class="bi bi-upload"></i> Téléverser (Téléphone / PC)
+            </label>
+            <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: 600;">
+              <input type="radio" name="missionMediaType" value="url" onchange="toggleMissionMediaMode()">
+              <i class="bi bi-link-45deg"></i> Lien URL Externe
+            </label>
+          </div>
+
+          <div id="missionUploadGroup">
+            <input type="file" id="missionMediaFile" class="form-control" accept="image/*,video/*" onchange="handleMissionFileSelect(event)">
+            <small style="color: var(--text-muted); font-size: 0.72rem;">Prend en charge photos et vidéos depuis votre smartphone ou PC.</small>
+          </div>
+
+          <div id="missionUrlGroup" style="display: none;">
+            <input type="url" id="missionMediaUrl" class="form-control" placeholder="https://exemple.com/photo-chantier.jpg ou lien vidéo YouTube / MP4">
+          </div>
+
+          <div id="missionMediaPreview" style="margin-top: 10px; display: none; text-align: center;"></div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="window.adminCore.closeModal('missionCreateModal')">Annuler</button>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Enregistrer la Mission</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitMission"><i class="bi bi-check2"></i> Enregistrer la Mission</button>
       </div>
     </form>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
@@ -314,43 +340,113 @@
     }
   ];
 
+  let selectedMissionMediaBase64 = null;
+  let selectedMissionMediaType = 'image';
+
+  function toggleMissionMediaMode() {
+    const val = document.querySelector('input[name="missionMediaType"]:checked').value;
+    const uploadGroup = document.getElementById('missionUploadGroup');
+    const urlGroup = document.getElementById('missionUrlGroup');
+    if (val === 'upload') {
+      uploadGroup.style.display = 'block';
+      urlGroup.style.display = 'none';
+    } else {
+      uploadGroup.style.display = 'none';
+      urlGroup.style.display = 'block';
+    }
+  }
+
+  function handleMissionFileSelect(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('missionMediaPreview');
+    if (!file) {
+      selectedMissionMediaBase64 = null;
+      preview.style.display = 'none';
+      return;
+    }
+
+    selectedMissionMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      selectedMissionMediaBase64 = ev.target.result;
+      preview.style.display = 'block';
+      if (selectedMissionMediaType === 'video') {
+        preview.innerHTML = `<video src="${selectedMissionMediaBase64}" controls style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid var(--border-subtle);"></video>`;
+      } else {
+        preview.innerHTML = `<img src="${selectedMissionMediaBase64}" alt="Aperçu terrain" style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid var(--border-subtle); object-fit: cover;">`;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function getSupabase() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      const url = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+      const key = window.JBF_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+      return supabase.createClient(url, key);
+    }
+    return null;
+  }
+
   async function loadMissionsList() {
     const tbody = document.getElementById('missionsTableBody');
-    try {
-      const res = await window.adminCore.apiFetch('/api/missions');
-      if (res.ok && res.data && res.data.missions && res.data.missions.length > 0) {
-        allMissions = res.data.missions;
-      } else {
-        allMissions = DEMO_MISSIONS_DATA;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des missions en cours...</td></tr>';
+    
+    let list = [];
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('missions').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          list = data;
+        }
+      } catch (e) {
+        console.warn('Erreur Supabase missions:', e);
       }
-    } catch (e) {
-      allMissions = DEMO_MISSIONS_DATA;
     }
+
+    if (list.length === 0) {
+      try {
+        const stored = localStorage.getItem('JBF_ADMIN_MISSIONS_LOCAL');
+        if (stored) list = JSON.parse(stored);
+      } catch (_) {}
+    }
+
+    allMissions = list;
     renderMissionsTable(allMissions);
   }
 
   function renderMissionsTable(list) {
     const tbody = document.getElementById('missionsTableBody');
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucune mission enregistrée.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 36px; color: var(--gray-mid);"><i class="bi bi-compass" style="font-size: 2.4rem; display:block; margin-bottom: 8px;"></i>Aucune mission enregistrée pour le moment.<br><small>Cliquez sur "Nouvelle Mission" pour planifier une intervention.</small></td></tr>';
       return;
     }
 
     tbody.innerHTML = list.map(m => {
       const agentsStr = Array.isArray(m.agents_assignes) 
         ? m.agents_assignes.join(', ') 
-        : (m.agents_assignes || 'Équipe Polyvalente (3 agents)');
+        : (m.agents_assignes || 'Équipe JBF Opérationnelle');
+
+      const mediaBadge = m.media_url ? `
+        <div style="margin-top: 6px;">
+          <a href="${m.media_url}" target="_blank" class="badge-status valide" style="text-decoration: none; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="bi ${m.media_type === 'video' ? 'bi-play-circle-fill' : 'bi-image-fill'}"></i> ${m.media_type === 'video' ? 'Vidéo Terrain' : 'Photo Chantier'}
+          </a>
+        </div>
+      ` : '';
 
       return `
         <tr>
           <td data-label="Mission">
-            <strong style="color: var(--pink-deep); font-size: 0.95rem;">${m.titre}</strong>
-            <div style="font-size: 0.75rem; color: var(--gray-mid); margin-top: 2px;">${m.description || 'Intervention programmée'}</div>
+            <strong style="color: var(--pink-deep); font-size: 0.95rem;">${escapeHtml(m.titre || '')}</strong>
+            <div style="font-size: 0.75rem; color: var(--gray-mid); margin-top: 2px;">${escapeHtml(m.description || 'Intervention programmée')}</div>
+            ${mediaBadge}
           </td>
-          <td data-label="Client / Mandataire"><strong>${m.client || 'Client JBF'}</strong></td>
-          <td data-label="Site d'Intervention"><i class="bi bi-geo-alt-fill" style="color: var(--pink);"></i> ${m.site_intervention || 'Lubumbashi'}</td>
-          <td data-label="Prestation"><span class="badge-status nouveau">${m.service || 'Prestation'}</span></td>
-          <td data-label="Effectif"><span style="font-size: 0.82rem; font-weight: 500;">${agentsStr}</span></td>
+          <td data-label="Client / Mandataire"><strong>${escapeHtml(m.client || 'Client JBF')}</strong></td>
+          <td data-label="Site d'Intervention"><i class="bi bi-geo-alt-fill" style="color: var(--pink);"></i> ${escapeHtml(m.site_intervention || 'Lubumbashi')}</td>
+          <td data-label="Prestation"><span class="badge-status nouveau">${escapeHtml(m.service || 'Prestation')}</span></td>
+          <td data-label="Effectif"><span style="font-size: 0.82rem; font-weight: 500;">${escapeHtml(agentsStr)}</span></td>
           <td data-label="Statut">${window.adminCore.renderBadgeStatus(m.statut || 'en_cours')}</td>
           <td data-label="Actions" style="text-align: right;">
             <div class="table-actions" style="justify-content: flex-end;">
@@ -365,6 +461,11 @@
         </tr>
       `;
     }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function filterMissions() {
@@ -384,38 +485,43 @@
 
   function openNewMissionModal() {
     document.getElementById('createMissionForm').reset();
+    selectedMissionMediaBase64 = null;
+    document.getElementById('missionMediaPreview').style.display = 'none';
+    document.getElementById('missionMediaPreview').innerHTML = '';
+    toggleMissionMediaMode();
     window.adminCore.openModal('missionCreateModal');
   }
 
   async function handleCreateMission(e) {
     e.preventDefault();
-    const titre = document.getElementById('newMissionTitre').value;
-    const client = document.getElementById('newMissionClient').value;
-    const site = document.getElementById('newMissionSite').value;
+    const btn = document.getElementById('btnSubmitMission');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enregistrement...';
+    }
+
+    const titre = document.getElementById('newMissionTitre').value.trim();
+    const client = document.getElementById('newMissionClient').value.trim();
+    const site = document.getElementById('newMissionSite').value.trim();
     const service = document.getElementById('newMissionService').value;
     const dateFin = document.getElementById('newMissionDateFin').value;
-    const desc = document.getElementById('newMissionDesc').value;
-    const agentsRaw = document.getElementById('newMissionAgents').value;
-
+    const desc = document.getElementById('newMissionDesc').value.trim();
+    const agentsRaw = document.getElementById('newMissionAgents').value.trim();
     const agentsList = agentsRaw ? agentsRaw.split(',').map(s => s.trim()) : ['Équipe JBF'];
 
-    try {
-      await window.adminCore.apiFetch('/api/missions', {
-        method: 'POST',
-        body: JSON.stringify({
-          titre,
-          client,
-          site_intervention: site,
-          service,
-          date_fin: dateFin || null,
-          description: desc,
-          agents_assignes: agentsList
-        })
-      });
-    } catch (err) {}
+    const mediaMode = document.querySelector('input[name="missionMediaType"]:checked').value;
+    let finalMediaUrl = '';
+    let finalMediaType = selectedMissionMediaType;
+
+    if (mediaMode === 'upload' && selectedMissionMediaBase64) {
+      finalMediaUrl = selectedMissionMediaBase64;
+    } else if (mediaMode === 'url') {
+      finalMediaUrl = document.getElementById('missionMediaUrl').value.trim();
+      finalMediaType = (finalMediaUrl.includes('youtube') || finalMediaUrl.endsWith('.mp4')) ? 'video' : 'image';
+    }
 
     const newMission = {
-      id: 'mis-' + Date.now().toString().slice(-4),
+      id: 'mis-' + Date.now(),
       titre,
       client,
       site_intervention: site,
@@ -423,26 +529,48 @@
       statut: 'en_cours',
       description: desc || 'Intervention programmée',
       agents_assignes: agentsList,
-      date_fin: dateFin
+      date_fin: dateFin || null,
+      media_url: finalMediaUrl,
+      media_type: finalMediaType,
+      created_at: new Date().toISOString()
     };
-    allMissions.unshift(newMission);
 
-    window.adminCore.showToast('Nouvelle mission planifiée avec succès', 'success');
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from('missions').insert([newMission]);
+      } catch (err) {
+        console.warn('Erreur insertion Supabase mission:', err);
+      }
+    }
+
+    allMissions.unshift(newMission);
+    localStorage.setItem('JBF_ADMIN_MISSIONS_LOCAL', JSON.stringify(allMissions));
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check2"></i> Enregistrer la Mission';
+    }
+
+    window.adminCore.showToast('Nouvelle mission planifiée avec succès.', 'success');
     window.adminCore.closeModal('missionCreateModal');
     renderMissionsTable(allMissions);
   }
 
   async function toggleMissionStatut(id, currentStatut) {
     const nextStatut = currentStatut === 'en_cours' ? 'termine' : 'en_cours';
-    try {
-      await window.adminCore.apiFetch(`/api/admin/missions/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ statut: nextStatut })
-      });
-    } catch (err) {}
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from('missions').update({ statut: nextStatut, updated_at: new Date().toISOString() }).eq('id', id);
+      } catch (err) {}
+    }
 
     const target = allMissions.find(m => m.id === id);
-    if (target) target.statut = nextStatut;
+    if (target) {
+      target.statut = nextStatut;
+      localStorage.setItem('JBF_ADMIN_MISSIONS_LOCAL', JSON.stringify(allMissions));
+    }
 
     window.adminCore.showToast(`Statut mission mis à jour : ${nextStatut === 'termine' ? 'Terminée' : 'En cours'}`, 'success');
     renderMissionsTable(allMissions);

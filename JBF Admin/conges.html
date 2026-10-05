@@ -82,10 +82,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -179,25 +175,17 @@
 <script>
   let allConges = [];
 
-  const DEMO_FALLBACK_CONGES = [
-    { id: 'cg-101', agent_nom: 'Alain Tshisekedi', type_conge: 'Congé Annuel', date_debut: '2026-09-15', date_fin: '2026-09-29', motif: 'Congé de détente annuel après mission de maintenance sur site minier Kolwezi.', statut: 'en_attente', created_at: new Date().toISOString() },
-    { id: 'cg-102', agent_nom: 'Grace Mwamba', type_conge: 'Congé Maternité', date_debut: '2026-10-01', date_fin: '2026-12-24', motif: 'Congé légal de maternité avec justificatif médical transmis aux RH.', statut: 'en_attente', created_at: new Date().toISOString() },
-    { id: 'cg-103', agent_nom: 'Patrick Kalala', type_conge: 'Récupération', date_debut: '2026-09-10', date_fin: '2026-09-14', motif: 'Récupération des astreintes et interventions nocturnes de week-end.', statut: 'approuve', created_at: new Date().toISOString() },
-    { id: 'cg-104', agent_nom: 'Eric Mukendi', type_conge: 'Circonstance Exceptionnelle', date_debut: '2026-09-08', date_fin: '2026-09-10', motif: 'Événement familial justifié conformément au code du travail RDC.', statut: 'approuve', created_at: new Date().toISOString() }
-  ];
-
   document.addEventListener('DOMContentLoaded', () => { loadCongesList(); });
 
   async function loadCongesList() {
     document.getElementById('congesTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Chargement...</td></tr>';
     try {
-      let data = null;
-      if (window.jbfSupabase && window.jbfSupabase.isConnected()) {
-        const res = await window.jbfSupabase.getConges(200);
-        if (!res.error && res.data && res.data.length > 0) data = res.data;
+      if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+        const { data, error } = await sb.from('demandes_conges').select('*').order('created_at', { ascending: false }).limit(200);
+        if (!error && Array.isArray(data)) allConges = data;
       }
-      allConges = data || DEMO_FALLBACK_CONGES;
-    } catch(e) { allConges = DEMO_FALLBACK_CONGES; }
+    } catch(e) { console.warn('[Conges Load]', e); }
     const badge = document.getElementById('badgeCongesCount');
     if (badge) badge.textContent = allConges.filter(c => c.statut === 'en_attente').length;
     renderCongesTable(allConges);

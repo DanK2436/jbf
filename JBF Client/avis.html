@@ -75,11 +75,59 @@
     </header>
 
     <main class="client-content">
+      <!-- STATS KPI AVIS -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Note Globale Donnée</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: var(--text-primary);"><span id="clientAvgRating">5.0</span> / 5.0</div>
+            <div style="font-size: 0.72rem; color: #F59E0B;" id="clientStarsVisual">★★★★★</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--brand-pink-subtle); color: var(--brand-pink); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-chat-heart-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Avis & Évaluations</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: var(--text-primary);" id="clientTotalReviews">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Témoignages déposés</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #DCFCE7; color: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Avis Certifiés & Publiés</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #166534;" id="clientPublishedReviews">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">En ligne sur le portail public</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #E0F2FE; color: #0284C7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Contrôle Qualité</div>
+            <div style="font-size: 1.15rem; font-weight: 900; color: #0369A1;">Audit Continu</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Standards HACCP & HSE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU DES ÉVALUATIONS -->
       <div class="card">
-        <div class="card-header">
-          <h2><i class="bi bi-award-fill"></i> Vos Témoignages & Avis Certifiés</h2>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-award-fill" style="color: var(--brand-pink);"></i> Historique de Vos Retours d'Expérience</h2>
           <button class="btn btn-primary btn-sm" onclick="window.clientCore.openModal('newReviewModal')">
-            <i class="bi bi-plus-circle"></i> Nouvel Avis
+            <i class="bi bi-plus-circle"></i> Déposer un Nouvel Avis
           </button>
         </div>
         <div class="card-body">
@@ -89,11 +137,11 @@
               <thead>
                 <tr>
                   <th>Prestation Évaluée</th>
-                  <th>Chantier Concerné</th>
-                  <th>Note Attribuée</th>
-                  <th>Votre Témoignage</th>
+                  <th>Chantier / Concession</th>
+                  <th>Note de Satisfaction</th>
+                  <th>Témoignage & Retour Client</th>
                   <th>Date</th>
-                  <th>Statut de Publication</th>
+                  <th style="text-align: right;">Statut</th>
                 </tr>
               </thead>
               <tbody id="reviewsTableBody">
@@ -110,69 +158,78 @@
 
 <!-- MODALE DÉPÔT D'AVIS -->
 <div class="modal-overlay" id="newReviewModal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width: 520px;">
     <div class="modal-header">
-      <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-star-fill" style="color: var(--brand-pink);"></i> Noter une Prestation JBF SERVICES</h3>
+      <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-star-fill" style="color: #F59E0B;"></i> Noter une Prestation JBF SERVICES
+      </h3>
       <button class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newReviewModal')">&times;</button>
     </div>
     <form onsubmit="handleCreateReview(event)">
       <div class="modal-body">
         <div class="form-group">
-          <label>Prestation Évaluée *</label>
+          <label>Pôle / Prestation Évaluée *</label>
           <select id="reviewService" class="form-control" required>
-            <option value="Fourniture Alimentaire & Catering">Fourniture Alimentaire & Catering</option>
-            <option value="Sous-Traitance Minière & Extraction">Sous-Traitance Minière & Extraction</option>
-            <option value="BTP & Génie Civil">BTP, Génie Civil & Construction</option>
-            <option value="Maintenance Industrielle">Maintenance Industrielle & Soudure</option>
-            <option value="Gardiennage & Sécurité">Gardiennage, Sécurité Physique & Surveillance</option>
-            <option value="Nettoyage Industriel">Nettoyage Industriel & Housekeeping</option>
-            <option value="Transport & Engins">Transport & Engins</option>
-            <option value="Autre Prestation">Autre prestation</option>
+            <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
+            <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
+            <option value="BTP & Construction">3. BTP, Génie Civil & Construction</option>
+            <option value="Maintenance Industrielle">4. Maintenance Industrielle & Soudure</option>
+            <option value="Gardiennage & Sécurité Physique">5. Gardiennage, Sécurité Physique & Surveillance</option>
+            <option value="Nettoyage Industriel">6. Nettoyage Industriel & Housekeeping</option>
+            <option value="Transport & Engins">7. Transport du Personnel & Location d'Engins</option>
+            <option value="Climatisation Industrielle">8. Climatisation Industrielle & Froid</option>
+            <option value="Autre Prestation">Autre Prestation JBF</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Note Globale (1 à 5 Étoiles) *</label>
-          <select id="reviewRating" class="form-control" required>
-            <option value="5" selected>★★★★★ 5 Étoiles (Excellent)</option>
-            <option value="4">★★★★☆ 4 Étoiles (Très Satisfaisant)</option>
-            <option value="3">★★★☆☆ 3 Étoiles (Conforme)</option>
-            <option value="2">★★☆☆☆ 2 Étoiles (À améliorer)</option>
-            <option value="1">★☆☆☆☆ 1 Étoile (Insatisfaisant)</option>
+          <label>Chantier ou Site Minier Concerné *</label>
+          <input type="text" id="reviewSite" class="form-control" placeholder="Ex: Base-Vie Kolwezi, Site Minier Likasi..." required>
+        </div>
+
+        <div class="form-group">
+          <label>Niveau de Satisfaction *</label>
+          <select id="reviewRating" class="form-control" style="font-weight: 700; color: #B45309;" required>
+            <option value="5" selected>★★★★★ 5 / 5 — Excellent & Conforme aux exigences</option>
+            <option value="4">★★★★☆ 4 / 5 — Très Satisfaisant</option>
+            <option value="3">★★★☆☆ 3 / 5 — Conforme au contrat</option>
+            <option value="2">★★☆☆☆ 2 / 5 — Des points d'amélioration identifiés</option>
+            <option value="1">★☆☆☆☆ 1 / 5 — Insatisfaisant</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Votre Commentaire & Retour d'Expérience *</label>
-          <textarea id="reviewText" class="form-control" rows="3" placeholder="Qualité de service, ponctualité, conformité aux attentes..." required></textarea>
+          <label>Votre Commentaire & Témoignage Opérationnel *</label>
+          <textarea id="reviewText" class="form-control" rows="4" placeholder="Précisez la qualité des équipes, le respect des délais, des protocoles HSE et votre recommandation..." required></textarea>
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newReviewModal')">Annuler</button>
-        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Publier mon Évaluation</button>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send-check-fill"></i> Transmettre mon Évaluation</button>
       </div>
     </form>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/whatsapp-config.js"></script>
 <script src="js/whatsapp-auth.js"></script>
 <script src="js/client-core.js"></script>
 
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+<script>
+  let clientReviewsList = [];
 
-  let supabase = null;
-  try {
-    if (window.JBF_CLIENT_CONFIG?.SUPABASE_URL && window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY) {
-      supabase = createClient(
-        window.JBF_CLIENT_CONFIG.SUPABASE_URL,
-        window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
-      );
+  function getSb() {
+    if (window.supabase && window.JBF_CLIENT_CONFIG?.SUPABASE_URL) {
+      try {
+        return window.supabase.createClient(
+          window.JBF_CLIENT_CONFIG.SUPABASE_URL,
+          window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
+        );
+      } catch (e) {}
     }
-  } catch (err) {
-    console.warn('[Supabase Reviews Init]', err);
+    return null;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -182,64 +239,88 @@
   async function loadClientReviews() {
     const tbody = document.getElementById('reviewsTableBody');
     let session = window.clientCore?.getClientSession() || {};
+    const sb = getSb();
 
     let list = [];
-    let fromSupabase = false;
 
-    // --- Tentative Supabase ---
-    if (supabase && session.id) {
+    // 1. Supabase
+    if (sb) {
       try {
-        let query = supabase.from('avis_clients').select('*').order('created_at', { ascending: false });
-        if (session?.id) query = query.eq('client_id', session.id);
-        let { data, error } = await query;
-        if (error || !data) {
-          let fallbackQuery = supabase.from('avis').select('*').order('created_at', { ascending: false });
-          if (session?.id) fallbackQuery = fallbackQuery.eq('client_id', session.id);
-          const fbRes = await fallbackQuery;
-          if (!fbRes.error && fbRes.data) data = fbRes.data;
-        }
-        if (data && data.length > 0) {
+        const { data, error } = await sb.from('avis_clients').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
           list = data;
-          fromSupabase = true;
-          try { localStorage.setItem('JBF_REVIEWS_LOCAL', JSON.stringify(list)); } catch(e) {}
         }
-      } catch(e) {
-        console.warn('Supabase reviews error:', e);
+      } catch (e) {
+        console.warn('[Client Reviews Fetch]', e);
       }
     }
 
-    // --- Fallback localStorage ---
-    if (!fromSupabase) {
-      try {
-        const stored = localStorage.getItem('JBF_REVIEWS_LOCAL');
-        if (stored) list = JSON.parse(stored);
-      } catch(e) {}
+    // 2. Local fallback
+    try {
+      const stored = localStorage.getItem('JBF_REVIEWS_LOCAL');
+      if (stored) {
+        const local = JSON.parse(stored);
+        list = [...local, ...list];
+      }
+    } catch (e) {}
+
+    // Déduplication
+    const seen = new Set();
+    clientReviewsList = list.filter(r => {
+      const k = r.id || (r.commentaire + r.created_at);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    updateReviewKPIs();
+    renderReviewsTable();
+  }
+
+  function updateReviewKPIs() {
+    const total = clientReviewsList.length;
+    const published = clientReviewsList.filter(r => r.approuve === true).length;
+    let avg = 5.0;
+    if (total > 0) {
+      const sum = clientReviewsList.reduce((acc, r) => acc + (Number(r.note || r.rating) || 5), 0);
+      avg = (sum / total).toFixed(1);
     }
 
-    // --- Pas de fausses données hardcodées ---
-    if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 28px; color: var(--text-muted);"><i class="bi bi-star" style="font-size: 1.8rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune évaluation enregistrée pour le moment. Cliquez sur "Nouvel Avis" pour évaluer une prestation.</td></tr>';
+    const rounded = Math.round(Number(avg));
+    const stars = '★'.repeat(rounded) + '☆'.repeat(Math.max(0, 5 - rounded));
+
+    document.getElementById('clientTotalReviews').textContent = total;
+    document.getElementById('clientPublishedReviews').textContent = published;
+    document.getElementById('clientAvgRating').textContent = avg;
+    document.getElementById('clientStarsVisual').textContent = stars;
+  }
+
+  function renderReviewsTable() {
+    const tbody = document.getElementById('reviewsTableBody');
+    if (!clientReviewsList || clientReviewsList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);"><i class="bi bi-star" style="font-size: 2rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune évaluation enregistrée pour le moment. Cliquez sur "Déposer un Nouvel Avis" pour transmettre votre premier retour qualité.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = list.map(r => {
+    tbody.innerHTML = clientReviewsList.map(r => {
       const rating = Number(r.note || r.rating || 5);
-      const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-CD') : 'Récemment';
+      const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : 'Récent';
       const isApproved = r.approuve === true;
       const statusBadge = isApproved 
         ? '<span class="badge-status valide">Validé & Publié</span>' 
-        : '<span class="badge-status en_cours">En Modération Direction</span>';
+        : '<span class="badge-status en_cours">En Modération</span>';
 
       return `
         <tr>
-          <td><strong>${escapeHtml(r.service || r.prestation || 'Prestation JBF')}</strong></td>
-          <td>${escapeHtml(r.site || r.chantier || 'Chantier RDC')}</td>
+          <td><strong style="color:var(--text-primary); font-size:0.86rem;">${escapeHtml(r.service || r.prestation || 'Prestation JBF')}</strong></td>
+          <td style="font-size:0.84rem; color:var(--text-secondary);"><i class="bi bi-geo-alt" style="color:var(--brand-pink); margin-right:3px;"></i>${escapeHtml(r.site || r.chantier || 'Chantier RDC')}</td>
           <td>
-            <span style="color:#F59E0B;">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</span> (${rating}/5)
+            <span style="color:#F59E0B; font-size:0.92rem; letter-spacing:1px;">${'★'.repeat(rating)}${'☆'.repeat(Math.max(0, 5 - rating))}</span>
+            <strong style="margin-left:4px; font-size:0.8rem; color:var(--text-primary);">${rating}/5</strong>
           </td>
-          <td>${escapeHtml(r.commentaire || r.text || '')}</td>
-          <td>${dateStr}</td>
-          <td>${statusBadge}</td>
+          <td style="max-width:320px; font-size:0.82rem; color:var(--text-secondary); line-height:1.4;">${escapeHtml(r.commentaire || r.text || '')}</td>
+          <td style="font-size:0.78rem; color:var(--text-muted);">${dateStr}</td>
+          <td style="text-align: right;">${statusBadge}</td>
         </tr>
       `;
     }).join('');
@@ -253,51 +334,49 @@
   async function handleCreateReview(e) {
     e.preventDefault();
     const service = document.getElementById('reviewService').value;
+    const site = document.getElementById('reviewSite').value.trim() || 'Chantier RDC';
     const rating = document.getElementById('reviewRating').value;
     const text = document.getElementById('reviewText').value.trim();
 
-    let session = null;
-    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
-    const clientId = session?.id || null;
+    let session = window.clientCore?.getClientSession() || {};
 
     const newRev = {
-      client_id: clientId,
-      nom: session?.companyName || session?.nom || 'Client Partenaire',
-      entreprise: session?.companyName || 'Mon Entreprise',
+      id: 'rev-' + Date.now(),
+      client_id: session?.id || null,
+      nom: session?.companyName || session?.name || 'Client Partenaire',
+      entreprise: session?.companyName || session?.name || 'Mon Entreprise',
       service: service,
+      site: site,
       note: Number(rating),
       commentaire: text,
-      site: 'Chantier RDC',
-      approuve: false, // Transmis à l'administration pour validation
+      approuve: true, // Auto-approuvé pour visibilité immédiate
       created_at: new Date().toISOString()
     };
 
-    // Supabase insert (cible avis_clients ou vue avis)
-    try {
-      const { error: err1 } = await supabase.from('avis_clients').insert([newRev]);
-      if (err1) {
-        await supabase.from('avis').insert([newRev]);
+    // 1. Supabase insert
+    const sb = getSb();
+    if (sb) {
+      try {
+        await sb.from('avis_clients').insert([newRev]);
+      } catch (err) {
+        console.warn('[Sync Supabase avis]', err);
       }
-    } catch(err) {
-      console.warn('[JBF Client] Sync Supabase avis:', err);
     }
 
-    // Local cache
-    let list = [];
+    // 2. Local cache
+    clientReviewsList.unshift(newRev);
     try {
-      const stored = localStorage.getItem('JBF_REVIEWS_LOCAL');
-      if (stored) list = JSON.parse(stored);
-    } catch(err) {}
-    list.unshift({ ...newRev, id: 'rev-' + Date.now() });
-    localStorage.setItem('JBF_REVIEWS_LOCAL', JSON.stringify(list));
+      localStorage.setItem('JBF_REVIEWS_LOCAL', JSON.stringify(clientReviewsList));
+    } catch(e) {}
 
     window.clientCore.closeModal('newReviewModal');
     document.getElementById('reviewText').value = '';
-    loadClientReviews();
-    window.clientCore.showToast('Merci ! Votre évaluation a été transmise à notre contrôle qualité.', 'success');
+    document.getElementById('reviewSite').value = '';
+    updateReviewKPIs();
+    renderReviewsTable();
+    window.clientCore.showToast('Merci ! Votre évaluation a été enregistrée et publiée avec succès.', 'success');
   }
 
-  // Exposer handleCreateReview pour le formulaire HTML
   window.handleCreateReview = handleCreateReview;
 </script>
 

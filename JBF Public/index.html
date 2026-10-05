@@ -119,8 +119,8 @@
             <polyline points="16 7 22 7 22 13"></polyline>
           </svg>
         </div>
-        <div class="stat-num" data-target="500" data-suffix="+">0</div>
-        <div class="stat-lbl">Missions &amp; Projets Réalisés</div>
+        <div class="stat-num" style="font-size: clamp(1.4rem, 2.5vw, 2rem);">HACCP &amp; HSE</div>
+        <div class="stat-lbl">Conformité Minière &amp; Agroalimentaire</div>
       </div>
 
       <div class="stat-block reveal delay-2">
@@ -130,8 +130,8 @@
             <polyline points="9 12 11 14 15 10"></polyline>
           </svg>
         </div>
-        <div class="stat-num" data-target="98" data-suffix="%">0</div>
-        <div class="stat-lbl">Taux de Conformité &amp; Satisfaction</div>
+        <div class="stat-num" style="font-size: clamp(1.4rem, 2.5vw, 2rem);">24h / 7j</div>
+        <div class="stat-lbl">Disponibilité &amp; Astreinte Continue</div>
       </div>
 
       <div class="stat-block reveal delay-3">
@@ -140,8 +140,8 @@
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
         </div>
-        <div class="stat-num" data-target="15" data-suffix="">0</div>
-        <div class="stat-lbl">Pôles d'Expertise Métier</div>
+        <div class="stat-num" style="font-size: clamp(1.4rem, 2.5vw, 2rem);">15 Pôles</div>
+        <div class="stat-lbl">Expertises Métiers Intégrées</div>
       </div>
 
       <div class="stat-block reveal delay-4">
@@ -153,8 +153,8 @@
             <path d="M16 3.13a4 4 0 1 1 0 7.75"></path>
           </svg>
         </div>
-        <div class="stat-num" data-target="26" data-suffix="">0</div>
-        <div class="stat-lbl">Provinces Couvertes en RDC</div>
+        <div class="stat-num" style="font-size: clamp(1.4rem, 2.5vw, 2rem);">26 Provinces</div>
+        <div class="stat-lbl">Déploiement Opérationnel en RDC</div>
       </div>
 
     </div>
@@ -448,24 +448,7 @@ const ro = new IntersectionObserver(entries => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 
-/* Counter animation */
-const co = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    const el = entry.target;
-    const target = +el.getAttribute('data-target');
-    const suffix = el.getAttribute('data-suffix') || '';
-    let current = 0;
-    const step = Math.max(1, Math.ceil(target / 60));
-    const timer = setInterval(() => {
-      current = Math.min(current + step, target);
-      el.textContent = current + suffix;
-      if (current >= target) clearInterval(timer);
-    }, 22);
-    co.unobserve(el);
-  });
-}, { threshold: 0.5 });
-document.querySelectorAll('[data-target]').forEach(el => co.observe(el));
+
 
 const navbar = document.getElementById('navbar');
 function updateNavbar() {

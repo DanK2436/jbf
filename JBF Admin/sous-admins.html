@@ -83,10 +83,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item active">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -178,6 +174,12 @@
       <div class="form-group">
         <label class="form-label">Numéro de Téléphone</label>
         <input type="tel" id="adminPhone" class="form-control" placeholder="ex: +243 81 234 5678">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mot de Passe de Connexion *</label>
+        <input type="password" id="adminPassword" class="form-control" placeholder="Minimum 6 caractères" minlength="6" autocomplete="new-password">
+        <small style="color: var(--text-muted); font-size: 0.72rem;" id="adminPasswordHint">Requis lors de la création d'un sous-administrateur.</small>
       </div>
 
       <div class="form-group">
@@ -356,6 +358,9 @@
     document.getElementById('adminFullName').value = '';
     document.getElementById('adminEmail').value = '';
     document.getElementById('adminPhone').value = '';
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminPassword').required = true;
+    document.getElementById('adminPasswordHint').textContent = "Requis lors de la création d'un nouveau compte (minimum 6 caractères).";
     document.getElementById('adminRole').value = 'sous_admin';
     document.getElementById('adminIsActive').checked = true;
 
@@ -372,6 +377,9 @@
     document.getElementById('adminFullName').value = a.full_name || '';
     document.getElementById('adminEmail').value = a.email || '';
     document.getElementById('adminPhone').value = a.phone || '';
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminPassword').required = false;
+    document.getElementById('adminPasswordHint').textContent = "Laisser vide pour conserver le mot de passe actuel.";
     document.getElementById('adminRole').value = a.role || 'sous_admin';
     document.getElementById('adminIsActive').checked = !!a.is_active;
 
@@ -392,11 +400,22 @@
     const fullName = document.getElementById('adminFullName').value.trim();
     const email = document.getElementById('adminEmail').value.trim().toLowerCase();
     const phone = document.getElementById('adminPhone').value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
     const role = document.getElementById('adminRole').value;
     const isActive = document.getElementById('adminIsActive').checked;
 
     if (!fullName || !email) {
       alert('Veuillez remplir le nom et l adresse email.');
+      return;
+    }
+
+    if (!id && (!password || password.length < 6)) {
+      alert('Veuillez définir un mot de passe d au moins 6 caractères pour le nouveau sous-administrateur.');
+      return;
+    }
+
+    if (password && password.length < 6) {
+      alert('Le mot de passe doit comporter au moins 6 caractères.');
       return;
     }
 
@@ -412,6 +431,8 @@
       }
     }
 
+    const sb = (typeof supabase !== 'undefined' && JBF_CONFIG.SUPABASE_URL) ? supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY) : null;
+
     if (id) {
       const target = adminAccounts.find(item => item.id === id);
       if (target) {
@@ -421,7 +442,26 @@
         target.role = role;
         target.permissions = permissions;
         target.is_active = isActive;
+        if (password) target.password = password;
         target.updated_at = new Date().toISOString();
+      }
+
+      if (sb) {
+        try {
+          const updatePayload = {
+            full_name: fullName,
+            email: email,
+            phone: phone,
+            role: role,
+            permissions: permissions,
+            is_active: isActive,
+            updated_at: new Date().toISOString()
+          };
+          if (password) updatePayload.password = password;
+          await sb.from('admin_accounts').update(updatePayload).eq('id', id);
+        } catch (e) {
+          console.warn('Erreur Supabase update admin:', e);
+        }
       }
     } else {
       const newAcc = {
@@ -429,12 +469,28 @@
         full_name: fullName,
         email: email,
         phone: phone,
+        password: password,
         role: role,
         permissions: permissions,
         is_active: isActive,
         created_at: new Date().toISOString()
       };
       adminAccounts.push(newAcc);
+
+      if (sb) {
+        try {
+          await sb.from('admin_accounts').insert([newAcc]);
+          try {
+            await sb.auth.signUp({
+              email: email,
+              password: password,
+              options: { data: { role: role, name: fullName, phone: phone } }
+            });
+          } catch (_) {}
+        } catch (e) {
+          console.warn('Erreur Supabase insert admin:', e);
+        }
+      }
     }
 
     localStorage.setItem('JBF_ADMIN_ACCOUNTS_LOCAL', JSON.stringify(adminAccounts));
@@ -442,7 +498,7 @@
     renderAdminsTable(adminAccounts);
 
     if (window.adminCore && typeof window.adminCore.showToast === 'function') {
-      window.adminCore.showToast('Compte enregistré avec succès', 'success');
+      window.adminCore.showToast('Compte administrateur enregistré avec succès.', 'success');
     }
   }
 

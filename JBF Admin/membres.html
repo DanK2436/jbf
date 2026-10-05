@@ -82,10 +82,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -276,8 +272,8 @@
             <input type="text" id="mb_fullname" class="form-control" placeholder="ex: Jean-Luc Kabamba" required>
           </div>
           <div class="form-group">
-            <label for="mb_email">Email Professionnel <span style="color: var(--danger);">*</span></label>
-            <input type="email" id="mb_email" class="form-control" placeholder="ex: jl.kabamba@jbf-services.cd" required>
+            <label for="mb_email">Email Professionnel ou Personnel <span style="color: var(--danger);">*</span></label>
+            <input type="email" id="mb_email" class="form-control" placeholder="ex: jeanluc@gmail.com ou email pro" required>
           </div>
         </div>
 
@@ -371,10 +367,12 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
   let allAgents = [];
+  const STORAGE_KEY = 'JBF_ADMIN_MEMBRES_LOCAL';
 
   const JBF_SECTIONS_MAP = {
     1: 'Fourniture Alimentaire & Catering',
@@ -395,10 +393,18 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Initialisation
     generateNewMatricule();
     loadAgentsList();
   });
+
+  function getSupabase() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      const url = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+      const key = window.JBF_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+      return supabase.createClient(url, key);
+    }
+    return null;
+  }
 
   function onSectionChange() {
     generateNewMatricule();
@@ -414,28 +420,43 @@
     }
   }
 
-  const DEMO_FALLBACK_MEMBRES = [
-    { id: 'mb1', full_name: 'Alain Tshimanga', email: 'a.tshimanga@jbf-services.cd', matricule: 'JBF-SEC04-4921', poste: 'Directeur de Section', section_id: 4, site_affectation: 'Kolwezi', phone: '+243 97 123 4567' },
-    { id: 'mb2', full_name: 'Grace Kanku', email: 'g.kanku@jbf-services.cd', matricule: 'JBF-SEC02-1845', poste: 'Superviseur de Pôle', section_id: 2, site_affectation: 'Lualaba', phone: '+243 82 234 5678' },
-    { id: 'mb3', full_name: 'David Kasongo', email: 'd.kasongo@jbf-services.cd', matricule: 'JBF-SEC05-7732', poste: 'Agent de Sécurité', section_id: 5, site_affectation: 'Tenke', phone: '+243 85 345 6789' },
-    { id: 'mb4', full_name: 'Marie Mwila', email: 'm.mwila@jbf-services.cd', matricule: 'JBF-SEC06-5511', poste: 'Technicienne de Surface', section_id: 6, site_affectation: 'Lubumbashi', phone: '+243 99 456 7890' },
-    { id: 'mb5', full_name: 'Eric Kabila', email: 'e.kabila@jbf-services.cd', matricule: 'JBF-SEC01-9922', poste: 'Chef Cuisinier', section_id: 1, site_affectation: 'Kibali', phone: '+243 81 567 8901' }
-  ];
-
   async function loadAgentsList() {
     const tbody = document.getElementById('agentsTableBody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des collaborateurs...</td></tr>';
     
-    try {
-      const res = await window.adminCore.apiFetch('/api/admin/agents');
-      if (res.ok && res.data && res.data.agents) {
-        allAgents = res.data.agents;
-      } else {
-        allAgents = DEMO_FALLBACK_MEMBRES;
+    let list = [];
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          list = data.map(d => ({
+            id: d.id,
+            full_name: d.nom_complet || d.full_name || d.name || 'Collaborateur',
+            email: d.email || '',
+            matricule: d.matricule || ('JBF-M' + (d.id || '').toString().slice(-4)),
+            poste: d.fonction || d.poste || 'Collaborateur',
+            fonction: d.fonction || d.poste || 'Collaborateur',
+            section_id: d.section_id || 2,
+            section_nom: d.section_nom || d.secteur || 'Opérations Multi-Services',
+            site_affectation: d.site_affectation || d.site || d.ville || 'Lubumbashi',
+            city: d.site_affectation || d.site || d.ville || 'Lubumbashi',
+            phone: d.telephone || d.phone || d.whatsapp || '-'
+          }));
+        }
+      } catch (err) {
+        console.warn('Erreur Supabase profils:', err);
       }
-    } catch (err) {
-      allAgents = DEMO_FALLBACK_MEMBRES;
     }
+
+    if (list.length === 0) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) list = JSON.parse(stored);
+      } catch(_) {}
+    }
+
+    allAgents = list;
     updateKpis(allAgents);
     renderAgentsTable(allAgents);
   }
@@ -463,7 +484,7 @@
   function renderAgentsTable(list) {
     const tbody = document.getElementById('agentsTableBody');
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Aucun collaborateur trouvé correspondant aux critères.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 36px; color: var(--gray-mid);"><i class="bi bi-people" style="font-size: 2.4rem; display:block; margin-bottom: 8px;"></i>Aucun collaborateur enregistré pour le moment.<br><small>Cliquez sur "Créer un Compte Collaborateur" pour en enregistrer un.</small></td></tr>';
       return;
     }
 
@@ -484,7 +505,7 @@
               </div>
               <div>
                 <strong style="color: var(--gray-dark); font-size: 0.92rem;">${escapeHtml(ag.full_name || '')}</strong>
-                <div style="font-size: 0.76rem; color: var(--gray-mid);">${escapeHtml(ag.email || 'agent@jbf-services.cd')}</div>
+                <div style="font-size: 0.76rem; color: var(--gray-mid);">${escapeHtml(ag.email || '')}</div>
               </div>
             </div>
           </td>
@@ -567,52 +588,58 @@
     const sectionId = parseInt(secSelect.value);
     const sectionNom = selectedOption.getAttribute('data-nom') || JBF_SECTIONS_MAP[sectionId];
 
-    const payload = {
-      full_name: document.getElementById('mb_fullname').value.trim(),
-      email: document.getElementById('mb_email').value.trim(),
-      password: document.getElementById('mb_password').value,
-      phone: document.getElementById('mb_phone').value.trim(),
+    const fullName = document.getElementById('mb_fullname').value.trim();
+    const email = document.getElementById('mb_email').value.trim().toLowerCase();
+    const password = document.getElementById('mb_password').value;
+    const phone = document.getElementById('mb_phone').value.trim();
+    const fonction = document.getElementById('mb_fonction').value;
+    const site = document.getElementById('mb_site').value;
+    const matricule = document.getElementById('mb_matricule').value.trim();
+
+    const newAgent = {
+      id: 'ag-' + Date.now(),
+      nom_complet: fullName,
+      full_name: fullName,
+      name: fullName,
+      email: email,
+      phone: phone,
+      telephone: phone,
       section_id: sectionId,
       section_nom: sectionNom,
-      fonction: document.getElementById('mb_fonction').value,
-      site_affectation: document.getElementById('mb_site').value,
-      matricule: document.getElementById('mb_matricule').value.trim()
+      secteur: sectionNom,
+      poste: fonction,
+      fonction: fonction,
+      site_affectation: site,
+      site: site,
+      ville: site,
+      matricule: matricule,
+      role: 'membre',
+      created_at: new Date().toISOString()
     };
 
-    let success = false;
-    try {
-      const res = await window.adminCore.apiFetch('/api/admin/membres', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      if (res.ok && res.data && res.data.success) success = true;
-    } catch (e) {
-      success = false;
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from('profiles').insert([newAgent]);
+        try {
+          await sb.auth.signUp({
+            email: email,
+            password: password,
+            options: { data: { role: 'membre', name: fullName, phone: phone, matricule: matricule } }
+          });
+        } catch(_) {}
+      } catch (err) {
+        console.warn('Erreur insertion Supabase profil:', err);
+      }
     }
+
+    allAgents.unshift(newAgent);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
 
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
 
-    if (!success) {
-      // Fallback local démo
-      const newAgent = {
-        id: 'ag-' + Date.now().toString().slice(-4),
-        full_name: payload.full_name,
-        email: payload.email,
-        phone: payload.phone || '+243 81 000 0000',
-        section_id: payload.section_id,
-        section_nom: payload.section_nom,
-        poste: payload.fonction,
-        fonction: payload.fonction,
-        matricule: payload.matricule,
-        site_affectation: payload.site_affectation,
-        city: payload.site_affectation,
-        created_at: new Date().toISOString()
-      };
-      allAgents.unshift(newAgent);
-    }
-
-    window.adminCore.showToast('Collaborateur créé avec succès. Accès chat activé.', 'success');
+    window.adminCore.showToast(`Collaborateur ${fullName} créé avec succès. Accès activé.`, 'success');
     closeCreateMemberModal();
     renderAgentsTable(allAgents);
     updateKpis(allAgents);

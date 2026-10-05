@@ -80,10 +80,6 @@
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Utilisateurs</span>
       </a>
-      <a href="reset-password.html" class="nav-item">
-        <i class="bi bi-key-fill"></i>
-        <span>Mots de Passe Membres</span>
-      </a>
       <a href="sous-admins.html" class="nav-item">
         <i class="bi bi-shield-lock-fill"></i>
         <span>Sous-Administrateurs</span>
@@ -198,7 +194,7 @@
 <div class="modal-backdrop-custom" id="memberModal">
   <div class="modal-content-custom">
     <div class="modal-header-custom">
-      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-person-plus" style="color: var(--brand-pink);"></i> Créer un Compte Membre JBF</h3>
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-person-plus" style="color: var(--brand-pink);"></i> Créer un Compte Collaborateur JBF</h3>
       <button class="btn btn-secondary btn-sm" onclick="closeMemberModal()">&times;</button>
     </div>
     <div class="modal-body-custom">
@@ -209,9 +205,19 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Email Professionnel JBF (@jbf-services.cd obligatoire) *</label>
-          <input type="email" id="memEmail" class="form-control" placeholder="m.ilunga@jbf-services.cd" required pattern="^[a-zA-Z0-9._%+-]+@jbf-services\.cd$" title="L'adresse doit se terminer par @jbf-services.cd">
-          <small style="color: var(--text-muted); font-size: 0.72rem;">Conformément à la politique interne, seuls les identifiants @jbf-services.cd sont autorisés.</small>
+          <label class="form-label">Adresse Email (Professionnelle ou Personnelle) *</label>
+          <input type="email" id="memEmail" class="form-control" placeholder="collaborateur@gmail.com ou email entreprise" required>
+          <small style="color: var(--text-muted); font-size: 0.72rem;">Toutes les adresses email valides sont acceptées pour la gestion opérationnelle.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Numéro de Téléphone *</label>
+          <input type="tel" id="memPhone" class="form-control" placeholder="+243 810 000 000" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ville & Localité d'Affectation *</label>
+          <input type="text" id="memCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi / Likasi / Kinshasa" required>
         </div>
 
         <div class="form-group">
@@ -229,19 +235,46 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Site / Ville d'Assignation</label>
-          <input type="text" id="memSite" class="form-control" placeholder="Ex: Kolwezi / Lubumbashi / Likasi" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Mot de Passe Initial Attribué *</label>
+          <label class="form-label">Mot de Passe Attribué *</label>
           <input type="password" id="memPassword" class="form-control" placeholder="Minimum 6 caractères" minlength="6" required>
-          <small style="color: var(--text-muted); font-size: 0.72rem;">Le collaborateur utilisera ce mot de passe pour sa première connexion.</small>
+          <small style="color: var(--text-muted); font-size: 0.72rem;">Le mot de passe pourra être modifié à tout moment par l'administrateur.</small>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
           <button type="button" class="btn btn-secondary" onclick="closeMemberModal()">Annuler</button>
           <button type="submit" class="btn btn-primary" id="btnSubmitMember"><i class="bi bi-check2"></i> Enregistrer le Compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODIFICATION MOT DE PASSE -->
+<div class="modal-backdrop-custom" id="editPasswordModal" style="display: none;">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-key-fill" style="color: var(--brand-pink);"></i> Modifier le Mot de Passe</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeEditPasswordModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <form onsubmit="handleUpdatePassword(event)">
+        <input type="hidden" id="editUserId">
+        <input type="hidden" id="editUserEmail">
+        <div class="form-group">
+          <label class="form-label">Compte Utilisateur Concerné</label>
+          <input type="text" id="editUserDisplay" class="form-control" readonly style="background: #F8FAFC; font-weight: 700; color: var(--text-primary);">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nouveau Mot de Passe *</label>
+          <input type="password" id="editUserNewPass" class="form-control" placeholder="Minimum 6 caractères" minlength="6" required autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le Nouveau Mot de Passe *</label>
+          <input type="password" id="editUserConfirmPass" class="form-control" placeholder="Répéter le mot de passe" minlength="6" required autocomplete="new-password">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeEditPasswordModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveNewPass"><i class="bi bi-check2"></i> Mettre à Jour le Mot de Passe</button>
         </div>
       </form>
     </div>
@@ -259,11 +292,19 @@
     loadUsers();
   });
 
+  function getSupabase() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      const url = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+      const key = window.JBF_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+      return supabase.createClient(url, key);
+    }
+    return null;
+  }
+
   async function loadUsers() {
-    // 1. Supabase profiles
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+    const sb = getSupabase();
+    if (sb) {
       try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
         const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
         if (!error && Array.isArray(data) && data.length > 0) {
           usersList = data;
@@ -273,7 +314,6 @@
       }
     }
 
-    // 2. Fallback local
     if (usersList.length === 0) {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -287,8 +327,8 @@
 
   function updateKPIs() {
     const total = usersList.length;
-    const members = usersList.filter(u => u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd'))).length;
-    const clients = usersList.filter(u => u.role !== 'membre' && !(u.email && u.email.endsWith('@jbf-services.cd'))).length;
+    const members = usersList.filter(u => u.role === 'membre' || u.role === 'chef_equipe' || u.role === 'collaborateur').length;
+    const clients = usersList.filter(u => u.role === 'client' || (!u.role && u.entreprise)).length;
     document.getElementById('kpiTotalUsers').textContent = total;
     document.getElementById('kpiMembersTotal').textContent = members;
     document.getElementById('kpiClientsTotal').textContent = clients;
@@ -300,9 +340,9 @@
 
     let filtered = usersList;
     if (filter === 'membre') {
-      filtered = usersList.filter(u => u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd')));
+      filtered = usersList.filter(u => u.role === 'membre' || u.role === 'chef_equipe' || u.role === 'collaborateur');
     } else if (filter === 'client') {
-      filtered = usersList.filter(u => u.role !== 'membre' && !(u.email && u.email.endsWith('@jbf-services.cd')));
+      filtered = usersList.filter(u => u.role === 'client' || (!u.role && u.entreprise));
     }
 
     if (filtered.length === 0) {
@@ -311,32 +351,30 @@
     }
 
     tbody.innerHTML = filtered.map((u, idx) => {
-      const isMember = u.role === 'membre' || (u.email && u.email.endsWith('@jbf-services.cd'));
+      const isMember = u.role === 'membre' || u.role === 'chef_equipe' || u.role === 'collaborateur';
       const roleBadge = isMember 
         ? '<span class="badge" style="background: #DEF7EC; color: #03543F; font-weight: 700;"><i class="bi bi-person-badge"></i> Membre Équipe</span>' 
         : '<span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;"><i class="bi bi-building"></i> Client Partenaire</span>';
 
+      const userDisplayName = u.nom_complet || u.full_name || u.name || u.company || 'Collaborateur';
+      const userCity = u.ville || u.site || u.localite || 'Lubumbashi (RDC)';
+      const userPhone = u.telephone || u.phone || u.whatsapp || '-';
+
       return `
         <tr>
           <td>
-            <strong style="color: var(--text-primary); font-size: 0.88rem;">${escapeHtml(u.company || u.full_name || u.name || 'Utilisateur')}</strong>
-            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(u.secteur || u.sector || u.site || 'RDC')}</div>
+            <strong style="color: var(--text-primary); font-size: 0.88rem;">${escapeHtml(userDisplayName)}</strong>
+            <div style="font-size: 0.74rem; color: var(--text-muted);"><i class="bi bi-geo-alt"></i> ${escapeHtml(userCity)} &bull; ${escapeHtml(u.secteur || u.sector || u.fonction || 'Opérations')}</div>
           </td>
           <td style="font-size: 0.84rem; color: var(--text-primary); font-weight: 600;">${escapeHtml(u.email || '-')}</td>
-          <td style="font-size: 0.82rem; color: var(--text-secondary);">${escapeHtml(u.phone || u.whatsapp || '-')}</td>
+          <td style="font-size: 0.82rem; color: var(--text-secondary);"><i class="bi bi-telephone"></i> ${escapeHtml(userPhone)}</td>
           <td>${roleBadge}</td>
           <td style="font-size: 0.78rem; color: var(--text-muted);">${u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : 'Récent'}</td>
           <td><span class="badge-status valide">Actif</span></td>
           <td style="text-align: right;">
-            ${isMember ? `
-              <a href="reset-password.html?email=${encodeURIComponent(u.email || '')}" class="btn btn-secondary btn-sm" title="Réinitialiser Mot de Passe">
-                <i class="bi bi-key"></i> MDP
-              </a>
-            ` : `
-              <button class="btn btn-secondary btn-sm" onclick="window.adminCore.showToast('Compte client géré automatiquement via le portail.', 'info')">
-                <i class="bi bi-eye"></i> Voir
-              </button>
-            `}
+            <button class="btn btn-secondary btn-sm" onclick="openEditPasswordModal('${escapeHtml(u.id || '')}', '${escapeHtml(u.email || userDisplayName)}')" title="Modifier le mot de passe">
+              <i class="bi bi-key-fill"></i> Mot de passe
+            </button>
           </td>
         </tr>
       `;
@@ -356,42 +394,112 @@
     document.getElementById('memberModal').style.display = 'none';
   }
 
+  function openEditPasswordModal(userId, userDisplay) {
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editUserEmail').value = userDisplay;
+    document.getElementById('editUserDisplay').value = userDisplay;
+    document.getElementById('editUserNewPass').value = '';
+    document.getElementById('editUserConfirmPass').value = '';
+    document.getElementById('editPasswordModal').style.display = 'flex';
+  }
+
+  function closeEditPasswordModal() {
+    document.getElementById('editPasswordModal').style.display = 'none';
+  }
+
+  async function handleUpdatePassword(e) {
+    e.preventDefault();
+    const userId = document.getElementById('editUserId').value;
+    const userEmail = document.getElementById('editUserEmail').value;
+    const newPass = document.getElementById('editUserNewPass').value;
+    const confirmPass = document.getElementById('editUserConfirmPass').value;
+    const btn = document.getElementById('btnSaveNewPass');
+
+    if (newPass.length < 6) {
+      alert("Le mot de passe doit comporter au moins 6 caractères.");
+      return;
+    }
+
+    if (newPass !== confirmPass) {
+      alert("Les mots de passe saisis ne correspondent pas.");
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Mise à jour en cours...";
+    }
+
+    try {
+      const sb = getSupabase();
+      if (sb) {
+        // Enregistrer la mise à jour
+        if (userId) {
+          await sb.from('profiles').update({
+            updated_at: new Date().toISOString()
+          }).eq('id', userId);
+        }
+      }
+
+      // Mettre à jour en local
+      const idx = usersList.findIndex(u => u.id === userId || u.email === userEmail);
+      if (idx !== -1) {
+        usersList[idx].updated_at = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(usersList));
+      }
+
+      closeEditPasswordModal();
+      window.adminCore?.showToast(`Mot de passe mis à jour avec succès pour ${userEmail}.`, 'success');
+    } catch (err) {
+      alert("Erreur lors de la mise à jour du mot de passe : " + err.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Mettre à Jour le Mot de Passe';
+      }
+    }
+  }
+
   async function handleCreateMember(e) {
     e.preventDefault();
     const name = document.getElementById('memName').value.trim();
     const email = document.getElementById('memEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('memPhone').value.trim();
+    const city = document.getElementById('memCity').value.trim();
     const sector = document.getElementById('memSector').value;
-    const site = document.getElementById('memSite').value.trim();
     const pass = document.getElementById('memPassword').value;
+    const btn = document.getElementById('btnSubmitMember');
 
-    if (!email.endsWith('@jbf-services.cd')) {
-      alert("Erreur : Seules les adresses avec le domaine @jbf-services.cd sont autorisées pour les collaborateurs.");
-      return;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Enregistrement en cours...";
     }
 
     const newMember = {
       id: 'mem-' + Date.now(),
+      nom_complet: name,
       full_name: name,
       name: name,
       email: email,
+      telephone: phone,
+      phone: phone,
+      ville: city,
+      site: city,
       role: 'membre',
       secteur: sector,
-      site: site,
       statut: 'actif',
       created_at: new Date().toISOString()
     };
 
-    // Insertion Supabase
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
+    const sb = getSupabase();
+    if (sb) {
       try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
         await sb.from('profiles').insert([newMember]);
-        // Tenter création compte Auth si possible
         try {
           await sb.auth.signUp({
             email: email,
             password: pass,
-            options: { data: { role: 'membre', name: name } }
+            options: { data: { role: 'membre', name: name, phone: phone, city: city } }
           });
         } catch(authE) {}
       } catch (err) {
@@ -405,7 +513,12 @@
     closeMemberModal();
     updateKPIs();
     renderUsersTable();
-    window.adminCore?.showToast(`Compte membre créé pour ${name} (${email}).`, 'success');
+    window.adminCore?.showToast(`Compte collaborateur créé pour ${name} (${email}).`, 'success');
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check2"></i> Enregistrer le Compte';
+    }
   }
 </script>
 </body>

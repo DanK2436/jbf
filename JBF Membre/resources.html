@@ -204,10 +204,14 @@
       </div>
 
       <!-- RESULTS HEADER -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 0.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 0.25rem; flex-wrap:wrap; gap:0.5rem;">
         <div style="font-size:0.85rem; font-weight:800; color:var(--text-h);" id="resultsCountLabel">
           Ressources Disponibles
         </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openMemberUploadModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Partager / Téléverser une Ressource
+        </button>
       </div>
 
       <!-- RESOURCES GRID -->
@@ -222,67 +226,84 @@
     </main>
   </div>
 
+  <!-- MODALE PARTAGE RESSOURCE (MANUEL PC/MOBILE OU LIEN URL) -->
+  <div id="memberUploadModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(3px);">
+    <div style="background:#fff; border-radius:12px; max-width:540px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.2); overflow:hidden;">
+      <div style="padding:1.2rem 1.5rem; border-bottom:1px solid var(--gray-border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:800; margin:0; color:var(--text-h); display:flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Partager un Document ou Formation
+        </h3>
+        <button type="button" onclick="closeMemberUploadModal()" style="border:none; background:none; font-size:1.4rem; cursor:pointer; color:var(--text-light);">&times;</button>
+      </div>
+      <form onsubmit="handleMemberSubmitResource(event)" style="padding:1.2rem 1.5rem;">
+        <div class="fc-group" style="margin-bottom:1rem;">
+          <label class="fc-label">Titre du document *</label>
+          <input type="text" id="memResTitre" class="fc-input" placeholder="Ex: Consignes d'urgence incendie Hangar Kolwezi" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="fc-group">
+            <label class="fc-label">Pôle / Domaine *</label>
+            <select id="memResCat" class="fc-input" required>
+              <option value="HSE & Sécurité">HSE & Sécurité</option>
+              <option value="Prestations Minières">Prestations Minières</option>
+              <option value="Qualité & Hygiène">Qualité & Hygiène (HACCP)</option>
+              <option value="BTP & Construction">BTP & Construction</option>
+              <option value="Technique & Soudure">Technique & Soudure</option>
+              <option value="Ressources Humaines">Ressources Humaines</option>
+            </select>
+          </div>
+          <div class="fc-group">
+            <label class="fc-label">Service Concerné</label>
+            <input type="text" id="memResSection" class="fc-input" placeholder="Ex: Tous Services, Maintenance...">
+          </div>
+        </div>
+
+        <!-- SOURCE (FICHIER PC/MOBILE OU LIEN) -->
+        <div style="background:#F8FAFC; border:1px solid var(--gray-border); border-radius:8px; padding:12px; margin-bottom:1rem;">
+          <label class="fc-label" style="margin-bottom:8px; font-weight:800;">Source du document (Fichier ou Lien) *</label>
+          <div style="display:flex; gap:14px; margin-bottom:8px;">
+            <label style="font-size:0.8rem; display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:700;">
+              <input type="radio" name="memResSourceType" value="upload" checked onchange="toggleMemResSourceMode()"> Téléverser (PC / Téléphone)
+            </label>
+            <label style="font-size:0.8rem; display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:700;">
+              <input type="radio" name="memResSourceType" value="url" onchange="toggleMemResSourceMode()"> Lien URL Externe
+            </label>
+          </div>
+
+          <div id="memResUploadGroup">
+            <input type="file" id="memResFileInput" class="fc-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.mp4,.webm" onchange="handleMemResFileSelect(event)">
+            <small style="color:var(--text-light); font-size:0.72rem;">PDF, Word, Excel ou vidéo MP4 depuis votre appareil.</small>
+          </div>
+
+          <div id="memResUrlGroup" style="display:none;">
+            <input type="url" id="memResUrl" class="fc-input" placeholder="https://storage.jbf-services.cd/... ou lien Cloud">
+          </div>
+
+          <div id="memResFileInfo" style="margin-top:6px; font-size:0.78rem; color:var(--pink); font-weight:700; display:none;"></div>
+        </div>
+
+        <div class="fc-group" style="margin-bottom:1.2rem;">
+          <label class="fc-label">Description ou Directives Pédagogiques</label>
+          <textarea id="memResDesc" class="fc-input" rows="2" placeholder="Brève note explicative sur l'utilisation du document..."></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeMemberUploadModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitMemRes">Publier la Ressource</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="js/shared.js"></script>
   <script>
-    // Liste complète et officielle des ressources par domaines JBF
-    const defaultResources = [
-      {
-        id: 1,
-        titre: "Manuel des Normes de Sécurité sur Chantiers Miniers",
-        categorie: "HSE & Sécurité",
-        section_nom: "Prestations Minières (Section 4)",
-        type_fichier: "PDF",
-        taille: "4.2 MB",
-        description: "Directives obligatoires sur le port des EPI coqués, isolation des convoyeurs et protocoles d'urgence en fosse minière."
-      },
-      {
-        id: 2,
-        titre: "Protocole HACCP & Chaîne du Froid Alimentaire",
-        categorie: "Qualité & Hygiène",
-        section_nom: "Catering & Restauration (Section 9)",
-        type_fichier: "PDF",
-        taille: "2.8 MB",
-        description: "Règles strictes de traçabilité, désinfection et conservation des denrées pour bases-vie et cantines industrielles."
-      },
-      {
-        id: 3,
-        titre: "Standard Technique Soudure TIG/MIG & Métallurgie",
-        categorie: "Technique",
-        section_nom: "Soudure & Tuyauterie (Section 6)",
-        type_fichier: "PDF",
-        taille: "5.1 MB",
-        description: "Fiches d'instructions pour soudage haute pression, contrôle non destructif et sécurité des travaux à chaud."
-      },
-      {
-        id: 4,
-        titre: "Guide de Prévention & Plan d'Évacuation Médicale",
-        categorie: "HSE & Sécurité",
-        section_nom: "Tous Services JBF",
-        type_fichier: "PDF",
-        taille: "1.9 MB",
-        description: "Procédure d'évacuation rapide, coordination avec les ambulances du site et premiers secours d'urgence."
-      },
-      {
-        id: 5,
-        titre: "Cahier des Charges Génie Civil & Béton Armé",
-        categorie: "BTP & Construction",
-        section_nom: "Construction (Section 8)",
-        type_fichier: "PDF",
-        taille: "6.4 MB",
-        description: "Spécifications des dosages de béton, coffrage lourd et terrassement pour infrastructures industrielles."
-      },
-      {
-        id: 6,
-        titre: "Charte de Ponctualité & Pointage Certifié",
-        categorie: "Règlement",
-        section_nom: "Ressources Humaines (Section 2)",
-        type_fichier: "PDF",
-        taille: "1.2 MB",
-        description: "Modalités d'enregistrement des heures, relevés biométriques et politique d'intégrité anti-fraude."
-      }
-    ];
-
     let allResources = [];
+    let memUploadedDataUrl = '';
+    let memUploadedFileName = '';
+    let memUploadedFileSize = '';
+    let memUploadedFileType = 'PDF';
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderNavigation('resources');
@@ -290,7 +311,100 @@
       loadHseResources();
     });
 
+    function openMemberUploadModal() {
+      document.getElementById('memberUploadModal').style.display = 'flex';
+    }
+
+    function closeMemberUploadModal() {
+      document.getElementById('memberUploadModal').style.display = 'none';
+      memUploadedDataUrl = '';
+      memUploadedFileName = '';
+      const fi = document.getElementById('memResFileInput');
+      if (fi) fi.value = '';
+      const info = document.getElementById('memResFileInfo');
+      if (info) { info.style.display = 'none'; info.textContent = ''; }
+    }
+
+    function toggleMemResSourceMode() {
+      const isUpload = document.querySelector('input[name="memResSourceType"]:checked')?.value === 'upload';
+      document.getElementById('memResUploadGroup').style.display = isUpload ? 'block' : 'none';
+      document.getElementById('memResUrlGroup').style.display = isUpload ? 'none' : 'block';
+    }
+
+    function handleMemResFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      memUploadedFileName = file.name;
+      const ext = file.name.split('.').pop().toUpperCase();
+      memUploadedFileType = ['MP4', 'WEBM'].includes(ext) ? 'MP4' : (ext || 'PDF');
+      const sizeKB = (file.size / 1024).toFixed(0);
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      memUploadedFileSize = sizeKB > 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        memUploadedDataUrl = ev.target.result;
+        const info = document.getElementById('memResFileInfo');
+        if (info) {
+          info.style.display = 'block';
+          info.textContent = `✔ ${file.name} (${memUploadedFileSize}) prêt à être téléversé`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function handleMemberSubmitResource(e) {
+      e.preventDefault();
+      const titre = document.getElementById('memResTitre').value.trim();
+      const cat = document.getElementById('memResCat').value;
+      const section = document.getElementById('memResSection').value.trim() || 'Tous Services JBF';
+      const desc = document.getElementById('memResDesc').value.trim();
+
+      const isUpload = document.querySelector('input[name="memResSourceType"]:checked')?.value === 'upload';
+      const fichierUrl = isUpload ? memUploadedDataUrl : (document.getElementById('memResUrl')?.value.trim() || '#');
+
+      if (!fichierUrl || fichierUrl === '#') {
+        alert(isUpload ? 'Veuillez sélectionner un fichier depuis votre téléphone ou PC.' : 'Veuillez saisir un lien URL valide.');
+        return;
+      }
+
+      const newRes = {
+        id: 'res-' + Date.now(),
+        titre: titre,
+        categorie: cat,
+        section_nom: section,
+        type_fichier: isUpload ? memUploadedFileType : 'LIEN',
+        taille: isUpload ? memUploadedFileSize : 'Cloud',
+        fichier_url: fichierUrl,
+        description: desc,
+        publie: true,
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Supabase
+      try {
+        if (supabaseClient) {
+          await supabaseClient.from('ressources_hse').insert([newRes]);
+        }
+      } catch (err) {
+        console.warn('[Supabase Insert Ressource]', err);
+      }
+
+      // 2. Local fallback
+      allResources.unshift(newRes);
+      try {
+        const stored = JSON.parse(localStorage.getItem('JBF_RESSOURCES_LOCAL') || '[]');
+        stored.unshift(newRes);
+        localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(stored));
+      } catch(e) {}
+
+      closeMemberUploadModal();
+      renderResources();
+      alert('Votre ressource a été mise en ligne avec succès.');
+    }
+
     async function loadHseResources() {
+      let loaded = [];
       try {
         if (supabaseClient) {
           const { data, error } = await supabaseClient
@@ -300,16 +414,21 @@
             .order('created_at', { ascending: false });
 
           if (!error && data && data.length > 0) {
-            allResources = data;
-          } else {
-            allResources = defaultResources;
+            loaded = data;
           }
-        } else {
-          allResources = defaultResources;
         }
       } catch (e) {
-        allResources = defaultResources;
+        console.warn('Supabase fetch ressources error:', e);
       }
+
+      if (loaded.length === 0) {
+        try {
+          const stored = localStorage.getItem('JBF_RESSOURCES_LOCAL');
+          if (stored) loaded = JSON.parse(stored);
+        } catch(e) {}
+      }
+
+      allResources = loaded || [];
       renderResources();
     }
 
@@ -338,7 +457,7 @@
         );
       }
 
-      countLabel.textContent = `${filtered.length} document${filtered.length > 1 ? 's' : ''} trouvé${filtered.length > 1 ? 's' : ''}`;
+      countLabel.textContent = `${filtered.length} document${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -346,14 +465,12 @@
             <div style="text-align:center; padding:3.5rem 1.5rem;">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="margin-bottom:0.75rem;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <div style="font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; color:var(--text-h); margin-bottom:0.35rem;">
-                Aucune ressource trouvée pour "${searchVal}"
+                ${searchVal ? `Aucune ressource trouvée pour "${searchVal}"` : 'Aucune ressource enregistrée pour le moment'}
               </div>
               <div style="font-size:0.85rem; color:var(--text-light); max-width:420px; margin:0 auto 1.25rem;">
-                Essayez d'utiliser des termes plus généraux ou cliquez sur l'un des domaines suggérés ci-dessus.
+                ${searchVal ? "Essayez d'utiliser des termes plus généraux ou cliquez sur un filtre ci-dessus." : "Cliquez sur 'Partager / Téléverser une Ressource' pour ajouter le premier document officiel."}
               </div>
-              <button class="btn btn-outline btn-sm" onclick="setSearchTag('')">
-                Réinitialiser la recherche
-              </button>
+              ${searchVal ? '<button class="btn btn-outline btn-sm" onclick="setSearchTag(\'\')">Réinitialiser la recherche</button>' : ''}
             </div>
           </div>
         `;
@@ -365,6 +482,7 @@
           ${filtered.map(r => {
             const fileType = r.type_fichier || 'PDF';
             const fileSize = r.taille || 'Documentation';
+            const downloadUrl = r.fichier_url && r.fichier_url !== '#' ? r.fichier_url : null;
 
             return `
               <div class="resource-card">
@@ -378,26 +496,38 @@
                     </span>
                   </div>
                   <h3 style="font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--text-h); margin-bottom:0.45rem; line-height:1.35;">
-                    ${r.titre}
+                    ${escapeHtml(r.titre)}
                   </h3>
                   <p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">
-                    ${r.description || 'Protocole officiel de conformité et directives techniques certifiées.'}
+                    ${escapeHtml(r.description || 'Protocole officiel de conformité et directives techniques certifiées.')}
                   </p>
                 </div>
                 <div class="resource-card-footer">
                   <span style="font-size:0.72rem; color:var(--text-light); font-weight:700;">
-                    ${r.section_nom || 'Tous Services JBF'}
+                    ${escapeHtml(r.section_nom || 'Tous Services JBF')}
                   </span>
-                  <a href="#" onclick="event.preventDefault(); alert('Téléchargement du document certifié : ' + '${r.titre.replace(/'/g, "\\'")}');" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Télécharger
-                  </a>
+                  ${downloadUrl ? `
+                    <a href="${downloadUrl}" target="_blank" download class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      Ouvrir / Télécharger
+                    </a>
+                  ` : `
+                    <button type="button" onclick="alert('Document certifié en consultation interne.')" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      Consulter
+                    </button>
+                  `}
                 </div>
               </div>
             `;
           }).join('')}
         </div>
       `;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
   </script>
 </body>
