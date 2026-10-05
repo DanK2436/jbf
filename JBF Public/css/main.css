@@ -3,9 +3,7 @@
    Palette : 90% Rose Vif #E6007E (principal) · 10% Blanc #FFFFFF
    Inspiré de jbf-services.preview.emergentagent.com
    ============================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@700;800;900&display=swap');
-
+/* Typographie chargée de façon asynchrone non-bloquante via HTML */
 /* ============================================================
    TOKENS
    ============================================================ */

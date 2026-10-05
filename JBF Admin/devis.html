@@ -208,6 +208,11 @@
         <div id="modalClientMessage" style="background: var(--gray-light); padding: 12px; border-radius: var(--r-md); font-size: 0.88rem; min-height: 60px;">--</div>
       </div>
 
+      <div class="form-group" id="modalDocsGroup" style="display: none;">
+        <label><i class="bi bi-paperclip"></i> Documents & Fichiers joints :</label>
+        <div id="modalClientDocsList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;"></div>
+      </div>
+
       <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--gray-border);">
 
       <div class="form-group">
@@ -231,7 +236,9 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
+<script src="../supabase/jbf-storage-cache.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
   let allDevis = [];
@@ -408,7 +415,69 @@
     document.getElementById('modalDevisBadge').innerHTML = window.adminCore.renderBadgeStatus(d.statut);
     document.getElementById('modalNewStatusSelect').value = d.statut || 'nouveau';
 
+    // Gestion des pièces jointes et cache local
+    const docsGroup = document.getElementById('modalDocsGroup');
+    const docsList = document.getElementById('modalClientDocsList');
+    if (docsGroup && docsList) {
+      docsList.innerHTML = '';
+      const urlMatches = (d.message || '').match(/https?:\/\/[^\s)\],]+/g) || [];
+      if (urlMatches.length > 0) {
+        docsGroup.style.display = 'block';
+        urlMatches.forEach((url, idx) => {
+          const cleanName = url.split('/').pop().replace(/^[a-f0-9]+_/, '') || `Document_${idx + 1}`;
+          const item = document.createElement('div');
+          item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; background:#fff; padding:10px 14px; border:1px solid var(--gray-border); border-radius:8px;';
+          item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+              <i class="bi bi-file-earmark-check-fill" style="font-size:1.3rem; color:var(--pink);"></i>
+              <div style="font-size:0.85rem; font-weight:700; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${cleanName}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="downloadAndCacheFile('${url}', '${cleanName}')" title="Sauvegarder dans le cache local de ce PC">
+                <i class="bi bi-hdd-fill"></i> Stocker sur ce PC
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="resendOrCopyLink('${url}', '${cleanName}')" title="Renvoyer ce même fichier instantanément sans ré-upload">
+                <i class="bi bi-lightning-charge-fill"></i> Renvoyer (0 ms)
+              </button>
+            </div>
+          `;
+          docsList.appendChild(item);
+        });
+      } else {
+        docsGroup.style.display = 'none';
+      }
+    }
+
     window.adminCore.openModal('devisDetailModal');
+  }
+
+  async function downloadAndCacheFile(url, fileName) {
+    if (window.JbfDocStorage) {
+      try {
+        const res = await window.JbfDocStorage.getOrDownloadDocument(url, fileName);
+        if (res && res.url) {
+          const a = document.createElement('a');
+          a.href = res.url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.adminCore.showToast(`Document "${fileName}" stocké sur ce PC avec succès.`, 'success');
+          return;
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    window.open(url, '_blank');
+  }
+
+  function resendOrCopyLink(url, fileName) {
+    navigator.clipboard.writeText(url).then(() => {
+      window.adminCore.showToast(`Lien exact du fichier "${fileName}" copié ! Prêt à être réexpédié instantanément sans ré-upload.`, 'success');
+    }).catch(() => {
+      prompt('Lien exact du fichier prêt à être réexpédié :', url);
+    });
   }
 
   async function saveDevisStatus() {

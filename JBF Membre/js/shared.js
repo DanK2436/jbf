@@ -311,3 +311,22 @@ async function handleLogout() {
   const inAuthDir = window.location.pathname.includes('/auth/');
   window.location.href = inAuthDir ? 'login.html' : 'auth/login.html';
 }
+
+// Keep-Alive Supabase (anti-mise en pause 7 jours)
+(function() {
+  try {
+    const K_KEY = 'JBF_SUPABASE_LAST_PING';
+    const now = Date.now();
+    const last = parseInt(localStorage.getItem(K_KEY) || '0', 10);
+    if (now - last > 24 * 60 * 60 * 1000) {
+      fetch('https://dvzwqxcaiagczyonrhsg.supabase.co/rest/v1/profiles?select=id&limit=1', {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        }
+      }).then(r => {
+        if (r.ok) localStorage.setItem(K_KEY, Date.now().toString());
+      }).catch(() => {});
+    }
+  } catch (_) {}
+})();

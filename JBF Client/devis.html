@@ -188,6 +188,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
+<script src="../supabase/jbf-storage-cache.js"></script>
 <script src="js/whatsapp-config.js"></script>
 <script src="js/whatsapp-auth.js"></script>
 <script src="js/client-core.js"></script>
@@ -394,6 +395,29 @@
     }
 
     const filesMeta = selectedQuoteFiles.map(f => ({ name: f.name, size: f.size, type: f.type }));
+    const uploadedDocs = [];
+
+    // Transfert intelligent vers Supabase Storage avec déduplication et cache local immédiat
+    if (window.JbfDocStorage && selectedQuoteFiles.length > 0) {
+      for (const file of selectedQuoteFiles) {
+        try {
+          const res = await window.JbfDocStorage.sendDocument({
+            file: file,
+            targetType: 'devis',
+            targetId: 'dev-' + Date.now(),
+            uploadedBy: (session.email || '').toLowerCase(),
+            role: 'client'
+          });
+          uploadedDocs.push(res);
+        } catch (upErr) {
+          console.warn('[JBF Storage] Erreur upload document:', upErr);
+        }
+      }
+    }
+
+    const docsNote = uploadedDocs.length > 0
+      ? `\n[Documents joints sécurisés:\n${uploadedDocs.map(d => `• ${d.fileName} (${(d.size/1024).toFixed(0)} Ko) : ${d.publicUrl}`).join('\n')}]`
+      : (filesMeta.length > 0 ? `\n[Fichiers joints: ${filesMeta.map(f => f.name).join(', ')}]` : '');
 
     const newDevis = {
       id: 'dev-' + Date.now(),
@@ -402,8 +426,8 @@
       site: site,
       localite: site,
       description: desc,
-      message: desc,
-      fichiers: filesMeta,
+      message: `${desc}${docsNote}`,
+      fichiers: uploadedDocs.length > 0 ? uploadedDocs : filesMeta,
       statut: 'en_etude',
       email: (session.email || '').toLowerCase(),
       nom: session.contactName || session.name || 'Client',
@@ -423,7 +447,7 @@
           email: newDevis.email,
           services: [service],
           localite: site,
-          message: `${desc}${filesMeta.length > 0 ? `\n[Fichiers joints: ${filesMeta.map(f => f.name).join(', ')}]` : ''}`,
+          message: newDevis.message,
           statut: 'nouveau'
         }]);
       } catch (err) {

@@ -1,0 +1,48 @@
+name: Keep Supabase Project Active
+
+on:
+  schedule:
+    # S'exécute automatiquement tous les 2 jours à 06:00 UTC
+    # Empêche la mise en pause automatique des 7 jours d'inactivité de Supabase Free Tier
+    - cron: '0 6 */2 * *'
+  workflow_dispatch: # Permet également un déclenchement manuel depuis l'interface GitHub
+  push:
+    branches:
+      - main
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: "https://dvzwqxcaiagczyonrhsg.supabase.co"
+          SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o"
+        run: |
+          echo "=========================================================="
+          echo "🔄 Ping de maintien d'activité pour le projet JBF Supabase..."
+          echo "Date d'exécution : $(date -u)"
+          echo "=========================================================="
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "Code HTTP retourné : $HTTP_STATUS"
+          echo "Corps de la réponse : $BODY"
+          
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ Succès : Requête enregistrée par Supabase. Compteur d'inactivité réinitialisé !"
+          else
+            echo "⚠️ Attention : Code HTTP inattendu ($HTTP_STATUS). Seconde tentative sur la table demandes_devis..."
+            FALLBACK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${SUPABASE_URL}/rest/v1/demandes_devis?select=id&limit=1" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            echo "Code HTTP fallback : $FALLBACK_STATUS"
+          fi
+          echo "=========================================================="

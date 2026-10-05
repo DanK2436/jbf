@@ -162,8 +162,8 @@
     <!-- MODE: PASSWORD ONLY -->
     <form id="passwordForm" onsubmit="handlePasswordLogin(event)">
       <div class="form-group">
-        <label class="form-label">Email professionnel JBF</label>
-        <input type="email" id="passEmail" class="form-control" required placeholder="collaborateur@jbf-services.cd" pattern="^[a-zA-Z0-9._%+-]+@jbf-services\.cd$" title="Adresse email JBF (ex: collaborateur@jbf-services.cd)">
+        <label class="form-label">Email professionnel (ou autorisé JBF)</label>
+        <input type="email" id="passEmail" class="form-control" required placeholder="collaborateur@jbf-services.cd ou votre email" autocomplete="username">
       </div>
       <div class="form-group">
         <label class="form-label">Mot de passe</label>
@@ -211,9 +211,8 @@
     const pass = document.getElementById('passPassword').value;
     const btn = document.getElementById('btnPassSubmit');
 
-    // Enforce JBF member domain only
-    if (!email.endsWith('@jbf-services.cd')) {
-      showError('Seules les adresses @jbf-services.cd sont autorisées (comptes créés par l\'administration).');
+    if (!email || !email.includes('@')) {
+      showError('Veuillez saisir une adresse email valide.');
       return;
     }
 
@@ -221,27 +220,62 @@
     btn.textContent = 'Connexion...';
 
     try {
+      let authUser = null;
+      let session = null;
+
       if (window.JBFAuth) {
         const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
-        showSuccess('Connexion réussie. Redirection...');
-        setTimeout(() => {
-          window.location.href = res.redirect || '../dashboard.html';
-        }, 600);
-      } else {
-        const memberUser = {
-          nom: 'Collaborateur JBF',
-          email: email,
-          role: 'Membre',
-          statut_equipe: 'Membre'
-        };
-        localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
-        showSuccess('Connexion réussie. Redirection...');
-        setTimeout(() => {
-          window.location.href = '../dashboard.html';
-        }, 600);
+        if (res && res.user) {
+          authUser = res.user;
+          session = res.session;
+        }
+      } else if (window.supabase) {
+        const client = window.supabase.createClient(
+          'https://dvzwqxcaiagczyonrhsg.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        );
+        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        authUser = data.user;
+        session = data.session;
       }
+
+      if (!authUser) {
+        throw new Error('Identifiants collaborateur incorrects.');
+      }
+
+      // Vérifier le rôle dans les profils
+      let role = 'Membre';
+      let nom = authUser.user_metadata?.full_name || email.split('@')[0];
+      try {
+        const client = window.JBFAuth?.client || (window.supabase ? window.supabase.createClient('https://dvzwqxcaiagczyonrhsg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o') : null);
+        if (client) {
+          const { data: prof } = await client.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+          if (prof) {
+            nom = prof.nom_complet || prof.full_name || nom;
+            role = prof.role || role;
+          }
+        }
+      } catch (_) {}
+
+      const memberUser = {
+        id: authUser.id,
+        nom: nom,
+        email: email,
+        role: role,
+        statut_equipe: 'Actif',
+        token: session?.access_token || ('jbf-session-' + Date.now())
+      };
+      localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
+      localStorage.setItem('jbf_member_session', JSON.stringify(memberUser));
+
+      showSuccess('Connexion réussie. Redirection vers le tableau de bord...');
+      setTimeout(() => {
+        window.location.href = '../dashboard.html';
+      }, 500);
+
     } catch (err) {
-      showError(err.message || 'Identifiants collaborateur incorrects. Contactez l\'administration si le compte n\'est pas créé.');
+      showError(err.message || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
       btn.disabled = false;
       btn.textContent = 'Connexion Espace Membre';
     }

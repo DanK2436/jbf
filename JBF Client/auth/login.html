@@ -501,58 +501,28 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Connexion en cours...';
 
     try {
-      // 1. Essai avec Supabase Auth
+      // 1. Authentification stricte via Supabase Auth
       if (window.JBFAuth && window.JBFAuth.client) {
-        try {
-          const res = await window.JBFAuth.loginWithPassword(email, pass, 'client');
-          if (res && res.user) {
-            persistSession(res.user);
-            showSuccess('Connexion réussie. Redirection...');
-            setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
-            return;
-          }
-        } catch (authErr) {
-          console.warn('[Supabase Auth]', authErr.message);
+        const res = await window.JBFAuth.loginWithPassword(email, pass, 'client');
+        if (res && res.user) {
+          persistSession(res.user);
+          showSuccess('Connexion réussie. Redirection...');
+          setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+          return;
         }
-      }
-
-      // 2. Vérification session locale existante
-      const existingUser = localStorage.getItem('JBF_CLIENT_SESSION') || localStorage.getItem('jbf_client_session');
-      if (existingUser) {
-        try {
-          const parsed = JSON.parse(existingUser);
-          if (parsed.email && parsed.email.toLowerCase() === email) {
-            persistSession(parsed);
-            showSuccess('Connexion réussie. Redirection...');
-            setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
-            return;
-          }
-        } catch (e) {}
-      }
-
-      // 3. Vérification dans la table profiles Supabase
-      if (window.supabase) {
-        try {
-          const { data: prof } = await window.supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-
-          if (prof) {
-            persistSession({
-              id: prof.id,
-              name: prof.nom || 'Client Partenaire',
-              companyName: prof.nom || 'Société Partenaire JBF',
-              email: prof.email,
-              phone: prof.telephone || '',
-              role: 'client'
-            });
-            showSuccess('Connexion réussie. Redirection...');
-            setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
-            return;
-          }
-        } catch(e) {}
+      } else if (window.supabase) {
+        const client = window.supabase.createClient(
+          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
+          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        );
+        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        if (data && data.user) {
+          persistSession(data.user);
+          showSuccess('Connexion réussie. Redirection...');
+          setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+          return;
+        }
       }
 
       showError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');

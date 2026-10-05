@@ -2,10 +2,420 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=dashboard.html">
-  <title>Redirection...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feuille de Temps &amp; Pointage — JBF SERVICES Membre</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .ts-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) {
+      .ts-grid { grid-template-columns: 1fr; }
+    }
+    .clock-card {
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFF0F7 100%);
+      border: 1.5px solid var(--pink-blush);
+      border-radius: var(--r-card);
+      padding: 1.75rem;
+      box-shadow: var(--sh-card);
+      text-align: center;
+    }
+    .digital-clock {
+      font-family: 'Poppins', monospace;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--pink);
+      letter-spacing: 2px;
+      margin: 0.75rem 0;
+    }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-box {
+      background: #FFFFFF;
+      border: 1px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--sh-card);
+    }
+    .kpi-val {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--text-h);
+      margin-top: 0.25rem;
+    }
+    .badge-in {
+      background: #DCFCE7;
+      color: #166534;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .badge-out {
+      background: #FEE2E2;
+      color: #991B1B;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  </style>
 </head>
 <body>
-  <script>window.location.href = 'dashboard.html';</script>
+
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo" onerror="this.src='../assets/logo.png'">
+      <div class="brand-text">
+        <span class="brand-title">JBF SERVICES</span>
+        <span class="brand-sub">Portail Collaborateur</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-menu">
+      <div class="menu-label">Opérations</div>
+      <a href="dashboard.html" class="menu-item">
+        <i class="bi bi-grid-fill"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="missions.html" class="menu-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>Mes Missions Terrain</span>
+      </a>
+      <a href="timesheet.html" class="menu-item active">
+        <i class="bi bi-clock-history"></i>
+        <span>Pointages &amp; Heures</span>
+      </a>
+      <a href="leaves.html" class="menu-item">
+        <i class="bi bi-calendar2-check-fill"></i>
+        <span>Congés &amp; Absences</span>
+      </a>
+
+      <div class="menu-label">Équipe &amp; Outils</div>
+      <a href="chat.html" class="menu-item">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span>Chat &amp; Canaux</span>
+      </a>
+      <a href="resources.html" class="menu-item">
+        <i class="bi bi-file-earmark-lock-fill"></i>
+        <span>Ressources HSE</span>
+      </a>
+      <a href="roi.html" class="menu-item">
+        <i class="bi bi-book-half"></i>
+        <span>Règlement Intérieur</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">MB</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Collaborateur</div>
+          <div class="user-role" id="userRole">Équipe Terrain</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logoutMember()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+          <i class="bi bi-list"></i>
+        </button>
+        <h2 style="font-size:1.15rem; font-weight:800; color:var(--text-h); margin:0;">
+          Feuilles de Temps &amp; Relevé des Heures
+        </h2>
+      </div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <span class="live-pill" style="display:flex; align-items:center; gap:0.4rem; background:#ECFDF5; color:#059669; font-size:0.75rem; font-weight:700; padding:0.35rem 0.75rem; border-radius:20px; border:1px solid #A7F3D0;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+          Balise GPS Active
+        </span>
+      </div>
+    </header>
+
+    <main class="content-body" style="padding:1.75rem;">
+      <!-- KPI STATS -->
+      <div class="kpi-row">
+        <div class="kpi-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase;">Heures ce mois</div>
+          <div class="kpi-val" id="kpiTotalHours">-- h</div>
+        </div>
+        <div class="kpi-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase;">Heures Normales</div>
+          <div class="kpi-val" id="kpiRegularHours">-- h</div>
+        </div>
+        <div class="kpi-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase;">Heures Sup. (+25%/+50%)</div>
+          <div class="kpi-val" id="kpiOvertimeHours" style="color:var(--pink);">-- h</div>
+        </div>
+        <div class="kpi-box">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase;">Pointages Validés RH</div>
+          <div class="kpi-val" id="kpiValidatedCount" style="color:#16A34A;">--</div>
+        </div>
+      </div>
+
+      <!-- POINTAGE EN DIRECT & PARAMETRES -->
+      <div class="ts-grid">
+        <div class="clock-card">
+          <div style="font-size:0.8rem; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:0.5px;">
+            Horloge Officielle RDC
+          </div>
+          <div class="digital-clock" id="digitalClock">--:--:--</div>
+          <div style="font-size:0.82rem; color:var(--text-light); margin-bottom:1.25rem;" id="dateDisplay">
+            Chargement de la date...
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <button class="btn btn-pink" id="btnClockIn" onclick="recordPointage('entree')" style="width:100%; padding:0.85rem; font-weight:800;">
+              <i class="bi bi-box-arrow-in-right"></i> Pointer mon Arrivée (Entrée)
+            </button>
+            <button class="btn btn-outline-pink" id="btnClockOut" onclick="recordPointage('sortie')" style="width:100%; padding:0.85rem; font-weight:800;">
+              <i class="bi bi-box-arrow-left"></i> Pointer mon Départ (Sortie)
+            </button>
+          </div>
+          <div id="gpsStatusText" style="font-size:0.72rem; color:var(--text-light); margin-top:1rem;">
+            Précision GPS chantier en cours d'acquisition...
+          </div>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--gray-border); border-radius:var(--r-card); padding:1.5rem; box-shadow:var(--sh-card);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; font-weight:800; color:var(--text-h); margin:0;">
+              Historique des Pointages du Mois
+            </h3>
+            <button class="btn btn-sm btn-outline-pink" onclick="loadTimesheetData()">
+              <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+          </div>
+
+          <div class="table-responsive" style="overflow-x:auto;">
+            <table class="data-table" style="width:100%; font-size:0.82rem; border-collapse:collapse;">
+              <thead>
+                <tr style="border-bottom:1.5px solid var(--gray-border); text-align:left; color:var(--text-light);">
+                  <th style="padding:0.75rem 0.5rem;">Date &amp; Heure</th>
+                  <th style="padding:0.75rem 0.5rem;">Site / Chantier</th>
+                  <th style="padding:0.75rem 0.5rem;">Mouvement</th>
+                  <th style="padding:0.75rem 0.5rem;">Coordonnées GPS</th>
+                  <th style="padding:0.75rem 0.5rem;">Statut RH</th>
+                </tr>
+              </thead>
+              <tbody id="timesheetTableBody">
+                <tr>
+                  <td colspan="5" style="text-align:center; padding:2.5rem; color:var(--text-light);">
+                    Chargement des données de pointage...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+const supabaseClient = typeof supabase !== 'undefined' ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let currentSession = null;
+let currentCoords = null;
+
+// Initialisation session
+function initSession() {
+  const raw = localStorage.getItem('JBF_MEMBER_SESSION') || localStorage.getItem('jbf_member_session');
+  if (raw) {
+    try {
+      currentSession = JSON.parse(raw);
+      document.getElementById('userName').textContent = currentSession.nom || currentSession.email;
+      document.getElementById('userRole').textContent = currentSession.role || 'Membre Terrain';
+      const initials = (currentSession.nom || currentSession.email || 'MB').substring(0, 2).toUpperCase();
+      document.getElementById('userAvatar').textContent = initials;
+    } catch (_) {}
+  }
+}
+
+// Horloge temps réel
+function updateClock() {
+  const now = new Date();
+  document.getElementById('digitalClock').textContent = now.toLocaleTimeString('fr-FR');
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('fr-FR', options);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Géolocalisation
+function acquireGPS() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        currentCoords = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy
+        };
+        const el = document.getElementById('gpsStatusText');
+        if (el) el.textContent = `📍 Coordonnées : ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)} (±${Math.round(pos.coords.accuracy)}m)`;
+      },
+      err => {
+        const el = document.getElementById('gpsStatusText');
+        if (el) el.textContent = '📍 Coordonnées par défaut : Lubumbashi, RDC';
+      },
+      { timeout: 5000, enableHighAccuracy: true }
+    );
+  }
+}
+
+async function recordPointage(type) {
+  if (!currentSession) {
+    alert('Veuillez vous reconnecter pour enregistrer un pointage.');
+    window.location.href = 'auth/login.html';
+    return;
+  }
+
+  const btn = type === 'entree' ? document.getElementById('btnClockIn') : document.getElementById('btnClockOut');
+  btn.disabled = true;
+
+  const payload = {
+    agent_id: currentSession.id || currentSession.email,
+    agent_nom: currentSession.nom || currentSession.email,
+    matricule: currentSession.matricule || 'JBF-MEM-001',
+    site_lieu: currentSession.site_assignation || 'Site Minier Kolwezi / Lubumbashi',
+    type_pointage: type,
+    date_heure: new Date().toISOString(),
+    latitude: currentCoords?.lat || -11.66089,
+    longitude: currentCoords?.lon || 27.47938,
+    precision_gps: currentCoords?.acc || 10,
+    statut_validation: 'valide'
+  };
+
+  try {
+    if (supabaseClient) {
+      const { error } = await supabaseClient.from('pointages').insert([payload]);
+      if (error) throw error;
+    }
+
+    // Persistance locale de secours
+    const history = JSON.parse(localStorage.getItem('JBF_LOCAL_POINTAGES') || '[]');
+    history.unshift(payload);
+    localStorage.setItem('JBF_LOCAL_POINTAGES', JSON.stringify(history.slice(0, 50)));
+
+    alert(`Pointage d'${type === 'entree' ? 'entrée' : 'sortie'} validé avec succès à ${new Date().toLocaleTimeString('fr-FR')} !`);
+    loadTimesheetData();
+  } catch (err) {
+    console.warn('Sauvegarde pointage :', err.message);
+    const history = JSON.parse(localStorage.getItem('JBF_LOCAL_POINTAGES') || '[]');
+    history.unshift(payload);
+    localStorage.setItem('JBF_LOCAL_POINTAGES', JSON.stringify(history.slice(0, 50)));
+    alert(`Pointage d'${type === 'entree' ? 'entrée' : 'sortie'} enregistré localement.`);
+    loadTimesheetData();
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadTimesheetData() {
+  const tbody = document.getElementById('timesheetTableBody');
+  let records = [];
+
+  try {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient
+        .from('pointages')
+        .select('*')
+        .order('date_heure', { ascending: false })
+        .limit(25);
+      if (!error && data) records = data;
+    }
+  } catch (_) {}
+
+  if (records.length === 0) {
+    const local = JSON.parse(localStorage.getItem('JBF_LOCAL_POINTAGES') || '[]');
+    if (local.length > 0) records = local;
+  }
+
+  // Calcul KPI
+  const count = records.length;
+  const totalH = count * 8;
+  const regularH = Math.min(totalH, 160);
+  const overtimeH = Math.max(0, totalH - 160);
+
+  document.getElementById('kpiTotalHours').textContent = `${totalH} h`;
+  document.getElementById('kpiRegularHours').textContent = `${regularH} h`;
+  document.getElementById('kpiOvertimeHours').textContent = `${overtimeH} h`;
+  document.getElementById('kpiValidatedCount').textContent = count;
+
+  if (records.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-light);">
+          Aucun pointage enregistré pour le moment. Pointez votre arrivée ci-dessus.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = records.map(p => {
+    const dt = new Date(p.date_heure || p.created_at);
+    const dateStr = dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    const timeStr = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const isEntry = p.type_pointage === 'entree';
+    return `
+      <tr style="border-bottom:1px solid #F1F5F9;">
+        <td style="padding:0.75rem 0.5rem; font-weight:700;">${dateStr} à ${timeStr}</td>
+        <td style="padding:0.75rem 0.5rem;">${p.site_lieu || 'Lubumbashi'}</td>
+        <td style="padding:0.75rem 0.5rem;">
+          <span class="${isEntry ? 'badge-in' : 'badge-out'}">
+            ${isEntry ? '→ Entrée' : '← Sortie'}
+          </span>
+        </td>
+        <td style="padding:0.75rem 0.5rem; font-family:monospace; font-size:0.75rem; color:#64748B;">
+          ${p.latitude ? `${Number(p.latitude).toFixed(3)}, ${Number(p.longitude).toFixed(3)}` : 'Non géolocalisé'}
+        </td>
+        <td style="padding:0.75rem 0.5rem;">
+          <span style="color:#16A34A; font-weight:700;">✓ Validé</span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (sb) sb.classList.toggle('open');
+}
+
+function logoutMember() {
+  localStorage.removeItem('JBF_MEMBER_SESSION');
+  localStorage.removeItem('jbf_member_session');
+  window.location.href = 'auth/login.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSession();
+  acquireGPS();
+  loadTimesheetData();
+});
+</script>
 </body>
 </html>

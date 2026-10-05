@@ -63,9 +63,7 @@
   // 1. Envoi direct via API REST Brevo (ex-Sendinblue)
   async function sendViaBrevo(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
     const sendersToTry = [
-      { name: senderName, email: senderEmail || 'dankande3@gmail.com' },
-      { name: senderName, email: 'dankande3@gmail.com' },
-      { name: senderName, email: 'contact@jbf-services.com' }
+      { name: senderName, email: 'dankande3@gmail.com' }
     ];
 
     let lastError = null;

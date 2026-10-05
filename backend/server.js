@@ -1018,52 +1018,11 @@ app.get('/api/admin/conges', async (req, res) => {
 
     res.json({ success: true, count: data ? data.length : 0, conges: data || [] });
   } catch (err) {
-    console.error('Erreur GET /api/admin/conges (mode fallback activé):', err.message);
+    console.error('Erreur GET /api/admin/conges:', err.message);
     res.json({
       success: true,
-      count: 4,
-      conges: [
-        {
-          id: 'cg-101',
-          agent_nom: 'Alain Tshisekedi',
-          type_conge: 'Congé Annuel',
-          date_debut: '2026-09-15',
-          date_fin: '2026-09-29',
-          motif: 'Congé de détente annuel après mission de maintenance sur site minier Kolwezi.',
-          statut: 'en_attente',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'cg-102',
-          agent_nom: 'Grace Mwamba',
-          type_conge: 'Congé Maternité',
-          date_debut: '2026-10-01',
-          date_fin: '2026-12-24',
-          motif: 'Congé légal de maternité avec justificatif médical transmis aux RH.',
-          statut: 'en_attente',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'cg-103',
-          agent_nom: 'Patrick Kalala',
-          type_conge: 'Récupération',
-          date_debut: '2026-09-10',
-          date_fin: '2026-09-14',
-          motif: 'Récupération des astreintes et interventions nocturnes de week-end.',
-          statut: 'approuve',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'cg-104',
-          agent_nom: 'Eric Mukendi',
-          type_conge: 'Circonstance Exceptionnelle',
-          date_debut: '2026-09-08',
-          date_fin: '2026-09-10',
-          motif: 'Événement familial justifié conformément au code du travail RDC.',
-          statut: 'approuve',
-          created_at: new Date().toISOString()
-        }
-      ]
+      count: 0,
+      conges: []
     });
   }
 });
@@ -1148,15 +1107,8 @@ app.get('/api/admin/agents', async (req, res) => {
     console.error('Erreur GET /api/admin/agents:', err.message);
     res.json({
       success: true,
-      count: 6,
-      agents: [
-        { id: 'ag-1', full_name: 'Alain Tshisekedi', role: 'membre', poste: 'Directeur de Section', secteur: 'Prestations de sous-traitance dans le domaine minier', section_id: 2, section_nom: 'Sous-Traitance Minière & Extraction', phone: '+243 99 123 4567', email: 'alain.t@jbf-services.cd', matricule: 'JBF-SEC02-1042' },
-        { id: 'ag-2', full_name: 'Grace Mwamba', role: 'membre', poste: 'Superviseur de Pôle', secteur: 'Fourniture de produits alimentaires', section_id: 1, section_nom: 'Fourniture Alimentaire & Catering', phone: '+243 81 234 5678', email: 'grace.m@jbf-services.cd', matricule: 'JBF-SEC01-2098' },
-        { id: 'ag-3', full_name: 'Jonathan Ilunga', role: 'membre', poste: 'Directeur de Section', secteur: 'BTP & Génie Civil', section_id: 3, section_nom: 'BTP, Génie Civil & Construction', phone: '+243 82 345 6789', email: 'jonathan.i@jbf-services.cd', matricule: 'JBF-SEC03-3112' },
-        { id: 'ag-4', full_name: 'Patrick Kalala', role: 'membre', poste: 'Employé / Technicien', secteur: 'Maintenance Industrielle', section_id: 4, section_nom: 'Maintenance Industrielle & Soudure', phone: '+243 97 456 7890', email: 'patrick.k@jbf-services.cd', matricule: 'JBF-SEC04-4501' },
-        { id: 'ag-5', full_name: 'Sarah Mutombo', role: 'membre', poste: 'Superviseur de Pôle', secteur: 'Transport du personnel', section_id: 7, section_nom: 'Transport du Personnel & Location d\'Engins', phone: '+243 85 567 8901', email: 'sarah.m@jbf-services.cd', matricule: 'JBF-SEC07-7819' },
-        { id: 'ag-6', full_name: 'Eric Mukendi', role: 'membre', poste: 'Employé / Technicien', secteur: 'Gardiennage & Sécurité', section_id: 5, section_nom: 'Gardiennage, Sécurité Physique & Surveillance', phone: '+243 90 678 9012', email: 'eric.m@jbf-services.cd', matricule: 'JBF-SEC05-5920' }
-      ]
+      count: 0,
+      agents: []
     });
   }
 });
@@ -1306,27 +1258,8 @@ app.get('/api/admin/sous-admins', async (req, res) => {
     console.error('Erreur GET /api/admin/sous-admins:', err.message);
     res.json({
       success: true,
-      count: 2,
-      sous_admins: [
-        {
-          id: 'admin-super-1',
-          full_name: 'Direction Générale JBF',
-          email: 'direction@jbf-services.cd',
-          phone: '+243 99 000 0001',
-          role: 'direction',
-          permissions: ['*'],
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'admin-sub-1',
-          full_name: 'Superviseur Commercial & Devis',
-          email: 'devis@jbf-services.cd',
-          phone: '+243 81 555 4321',
-          role: 'sous_admin',
-          permissions: ['dashboard', 'devis'],
-          created_at: new Date().toISOString()
-        }
-      ]
+      count: 0,
+      sous_admins: []
     });
   }
 });
@@ -1612,9 +1545,27 @@ app.post('/api/mail/send', async (req, res) => {
 // =============================================================
 // 10.5 FICHIERS STATIQUES & PLATEFORME WEB
 // =============================================================
+// Protection stricte contre l'exposition de fichiers sensibles et de secrets
+app.use((req, res, next) => {
+  const cleanUrl = req.url.toLowerCase().split('?')[0];
+  if (
+    cleanUrl.includes('.env') ||
+    cleanUrl.includes('/.git') ||
+    cleanUrl.includes('.sql') ||
+    cleanUrl.startsWith('/backend') ||
+    cleanUrl.includes('init-keys.js')
+  ) {
+    return res.status(403).json({ success: false, error: 'Accès interdit.' });
+  }
+  next();
+});
+
 const path = require('path');
 const webRoot = path.resolve(__dirname, '..');
-app.use(express.static(webRoot));
+app.use(express.static(webRoot, {
+  dotfiles: 'deny',
+  index: false
+}));
 
 app.get('/', (req, res) => {
   res.redirect('/JBF%20Public/index.html');
@@ -1639,3 +1590,23 @@ app.listen(PORT, () => {
   console.log(`URL API : http://localhost:${PORT}`);
   console.log(`=============================================================`);
 });
+
+// =============================================================
+// 12. KEEP-ALIVE AUTOMATIQUE SUPABASE (Anti-mise en veille 7 jours)
+// =============================================================
+const KEEP_ALIVE_INTERVAL = 24 * 60 * 60 * 1000; // Toutes les 24 heures
+async function pingSupabaseKeepAlive() {
+  try {
+    if (supabase) {
+      const { data, error } = await supabase.from('profiles').select('id').limit(1);
+      if (!error) {
+        console.log('[Supabase Keep-Alive] Base active, compteur d\'inactivité réinitialisé.');
+      }
+    }
+  } catch (e) {
+    console.warn('[Supabase Keep-Alive] Ping échoué:', e.message);
+  }
+}
+setInterval(pingSupabaseKeepAlive, KEEP_ALIVE_INTERVAL);
+setTimeout(pingSupabaseKeepAlive, 5000);
+
