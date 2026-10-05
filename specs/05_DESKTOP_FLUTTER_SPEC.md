@@ -8,20 +8,23 @@
 
 ### A. `JBF Admin Desktop` (Logiciel Administration & Supervision)
 - **Fonctionnalités Clés** :
-  - **Tableau de bord exécutif** : Métriques en temps réel sur les 15 prestations à travers la RDC.
+  - **Tableau de bord exécutif** : Métriques en temps réel issues de Supabase sur les 15 prestations à travers la RDC.
   - **Gestion des demandes de devis** : Validation, tarification et émission des offres commerciales.
-  - **Gestion des contrats & facturation** : Suivi des contrats miniers, catering et BTP.
-  - **Supervision HSE & Certifications** : Suivi du respect des normes de sécurité sur les chantiers.
-  - **Modération des avis clients** : Approbation et publication des avis soumis sur la plateforme.
-- **Interface UI** : Thème 90% Rose Vif (`#E6007E`) / 10% Blanc (`#FFFFFF`), navigation latérale *Fluent Sidebar*.
+  - **Gestion des utilisateurs & Membres** : Création libre sans restriction de domaine email (`@jbf-services.cd` supprimé), avec téléphone et ville obligatoires, et modification de mot de passe intégrée.
+  - **Gestion des Sous-Administrateurs** : Saisie du mot de passe directement à la création et assignation granulaire des accès.
+  - **Missions & Galerie Multimédia** : Double mode d'ajout de médias (téléversement de fichier local ou lien URL externe/stream) avec prévisualisation.
+  - **Actualités & Blog** : Accroches, images de couverture et vidéos avec double source (upload direct ou URL).
+  - **Validation des Congés RH** : Décision directe (Approuver / Rejeter) sur les demandes d'absence avec mise à jour instantanée.
+  - **Ressources & Fiches Métiers** : Téléversement direct (PDF, Word, Excel, MP4) ou lien externe avec statut de publication.
+- **Interface UI** : Thème 90% Rose Vif (`#E6007E`) / 10% Blanc (`#FFFFFF`), navigation latérale *Fluent Sidebar* (sans lien vers une page isolée de mot de passe).
 
 ### B. `JBF Membre Desktop` (Logiciel Collaborateur)
 - **Fonctionnalités Clés** :
   - **Espace de pointage & Timesheet** : Saisie et validation des heures travaillées.
   - **Suivi des missions** : Attribution des chantiers et ordre de mission.
-  - **Gestion des congés** : Soumission et suivi des demandes de congés.
+  - **Gestion des congés** : Soumission de demandes et consultation du tableau historique avec statuts RH (*En attente*, *Approuvé*, *Refusé*).
   - **Messagerie interne & Chat** : Communication sécurisée avec les équipes.
-  - **Bibliothèque de ressources** : Procédures opérationnelles, formulaires et normes JBF.
+  - **Bibliothèque de ressources** : Consultation et téléchargement des documents certifiés, avec possibilité de partage direct (upload ou lien).
 
 ---
 
@@ -37,6 +40,8 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.2.3
   intl: ^0.19.0
+  file_picker: ^8.0.0
 ```
-- **Intégration Supabase** : Utilisation du SDK `supabase_flutter` initialisé avec la clé publique `Anon Key` fournie par le serveur API Node.js.
+- **Intégration Supabase & OTP** : Authentification par OTP Email gérée via le service transactionnel Brevo (primaire) et Resend (fallback).
 - **Sécurité des jetons** : Stockage chiffré des jetons de session d'authentification utilisateur (`Secure Storage`).
+- **Gestion des Fichiers** : Prise en charge universelle du sélecteur de fichier (`file_picker`) et des URL distantes.

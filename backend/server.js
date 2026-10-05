@@ -1373,6 +1373,75 @@ app.delete('/api/admin/sous-admins/:id', async (req, res) => {
   }
 });
 
+// PUT /api/admin/users/:id/password — Modification directe du mot de passe d'un utilisateur existant
+app.put('/api/admin/users/:id/password', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { new_password, password } = req.body;
+    const finalPassword = new_password || password;
+
+    if (!finalPassword || finalPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'Le nouveau mot de passe doit comporter au moins 6 caractères.' });
+    }
+
+    // 1. Chercher par ID auth direct ou via profile email
+    let authUserId = id;
+    const { data: prof } = await supabaseAdmin.from('profiles').select('email, id').eq('id', id).maybeSingle();
+    
+    if (prof?.email) {
+      const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();
+      const targetUser = usersList?.users?.find(u => u.id === id || u.email?.toLowerCase() === prof.email.toLowerCase());
+      if (targetUser) authUserId = targetUser.id;
+    }
+
+    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+      password: finalPassword
+    });
+
+    if (authErr) throw authErr;
+
+    // Enregistrer date de modification
+    await supabaseAdmin.from('profiles').update({ updated_at: new Date().toISOString() }).eq('id', id);
+
+    res.json({ success: true, message: 'Mot de passe modifié avec succès.' });
+  } catch (err) {
+    console.error('Erreur PUT /api/admin/users/:id/password:', err.message);
+    res.status(500).json({ success: false, error: err.message || 'Impossible de mettre à jour le mot de passe.' });
+  }
+});
+
+// PUT /api/admin/users/:id — Mise à jour des coordonnées (téléphone, ville, nom)
+app.put('/api/admin/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { full_name, phone, city, ville, role, poste, section_nom } = req.body;
+
+    const payload = { updated_at: new Date().toISOString() };
+    if (full_name) payload.full_name = full_name;
+    if (phone !== undefined) payload.phone = phone;
+    if (city || ville) {
+      payload.city = city || ville;
+      payload.ville = city || ville;
+    }
+    if (role) payload.role = role;
+    if (poste) payload.poste = poste;
+    if (section_nom) payload.section_nom = section_nom;
+
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update(payload)
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+
+    res.json({ success: true, message: 'Profil utilisateur mis à jour avec succès.', profile: data[0] });
+  } catch (err) {
+    console.error('Erreur PUT /api/admin/users/:id:', err.message);
+    res.status(500).json({ success: false, error: 'Erreur lors de la mise à jour de l\'utilisateur.' });
+  }
+});
+
 // PUT /api/admin/missions/:id — Mise à jour d'une mission (statut, affectations, dates)
 app.put('/api/admin/missions/:id', async (req, res) => {
   try {
@@ -1594,17 +1663,20 @@ app.listen(PORT, () => {
 // =============================================================
 // 12. KEEP-ALIVE AUTOMATIQUE SUPABASE (Anti-mise en veille 7 jours)
 // =============================================================
-const KEEP_ALIVE_INTERVAL = 24 * 60 * 60 * 1000; // Toutes les 24 heures
+const KEEP_ALIVE_INTERVAL = 12 * 60 * 60 * 1000; // Toutes les 12 heures
 async function pingSupabaseKeepAlive() {
   try {
-    if (supabase) {
-      const { data, error } = await supabase.from('profiles').select('id').limit(1);
+    const sb = supabaseAdmin || supabasePublic;
+    if (sb) {
+      const { data, error } = await sb.from('profiles').select('id').limit(1);
       if (!error) {
         console.log('[Supabase Keep-Alive] Base active, compteur d\'inactivité réinitialisé.');
+      } else {
+        console.warn('[Supabase Keep-Alive] Ping notice:', error.message);
       }
     }
   } catch (e) {
-    console.warn('[Supabase Keep-Alive] Ping échoué:', e.message);
+    console.warn('[Supabase Keep-Alive] Ping exception:', e.message);
   }
 }
 setInterval(pingSupabaseKeepAlive, KEEP_ALIVE_INTERVAL);
