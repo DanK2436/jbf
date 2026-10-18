@@ -420,32 +420,49 @@
     }
   }
 
+  function mapProfileToAgent(d) {
+    return {
+      id: d.id,
+      full_name: d.nom_complet || d.full_name || d.name || 'Collaborateur',
+      email: d.email || '',
+      matricule: d.matricule || ('JBF-M' + (d.id || '').toString().slice(-4)),
+      poste: d.poste || d.fonction || 'Collaborateur',
+      fonction: d.fonction || d.poste || 'Collaborateur',
+      section_id: d.section_id || 2,
+      section_nom: d.section_nom || d.secteur || 'Opérations Multi-Services',
+      site_affectation: d.site_affectation || d.city || d.site || d.ville || 'Lubumbashi',
+      city: d.city || d.site_affectation || d.site || d.ville || 'Lubumbashi',
+      phone: d.telephone || d.phone || d.whatsapp || '-'
+    };
+  }
+
+  function isMemberProfile(d) {
+    const role = (d.role || '').toLowerCase();
+    return !role || role === 'membre' || role === 'chef_equipe' || role === 'collaborateur';
+  }
+
   async function loadAgentsList() {
     const tbody = document.getElementById('agentsTableBody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des collaborateurs...</td></tr>';
     
     let list = [];
-    const sb = getSupabase();
-    if (sb) {
-      try {
-        const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          list = data.map(d => ({
-            id: d.id,
-            full_name: d.nom_complet || d.full_name || d.name || 'Collaborateur',
-            email: d.email || '',
-            matricule: d.matricule || ('JBF-M' + (d.id || '').toString().slice(-4)),
-            poste: d.fonction || d.poste || 'Collaborateur',
-            fonction: d.fonction || d.poste || 'Collaborateur',
-            section_id: d.section_id || 2,
-            section_nom: d.section_nom || d.secteur || 'Opérations Multi-Services',
-            site_affectation: d.site_affectation || d.site || d.ville || 'Lubumbashi',
-            city: d.site_affectation || d.site || d.ville || 'Lubumbashi',
-            phone: d.telephone || d.phone || d.whatsapp || '-'
-          }));
+
+    const apiRes = await window.adminCore.apiFetch('/api/admin/agents');
+    if (apiRes.ok && Array.isArray(apiRes.data?.agents) && apiRes.data.agents.length > 0) {
+      list = apiRes.data.agents.filter(isMemberProfile).map(mapProfileToAgent);
+    }
+
+    if (list.length === 0) {
+      const sb = getSupabase();
+      if (sb) {
+        try {
+          const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            list = data.filter(isMemberProfile).map(mapProfileToAgent);
+          }
+        } catch (err) {
+          console.warn('Erreur Supabase profils:', err);
         }
-      } catch (err) {
-        console.warn('Erreur Supabase profils:', err);
       }
     }
 
@@ -596,53 +613,33 @@
     const site = document.getElementById('mb_site').value;
     const matricule = document.getElementById('mb_matricule').value.trim();
 
-    const newAgent = {
-      id: 'ag-' + Date.now(),
-      nom_complet: fullName,
-      full_name: fullName,
-      name: fullName,
-      email: email,
-      phone: phone,
-      telephone: phone,
-      section_id: sectionId,
-      section_nom: sectionNom,
-      secteur: sectionNom,
-      poste: fonction,
-      fonction: fonction,
-      site_affectation: site,
-      site: site,
-      ville: site,
-      matricule: matricule,
-      role: 'membre',
-      created_at: new Date().toISOString()
-    };
-
-    const sb = getSupabase();
-    if (sb) {
-      try {
-        await sb.from('profiles').insert([newAgent]);
-        try {
-          await sb.auth.signUp({
-            email: email,
-            password: password,
-            options: { data: { role: 'membre', name: fullName, phone: phone, matricule: matricule } }
-          });
-        } catch(_) {}
-      } catch (err) {
-        console.warn('Erreur insertion Supabase profil:', err);
-      }
-    }
-
-    allAgents.unshift(newAgent);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
+    const apiRes = await window.adminCore.apiFetch('/api/admin/membres', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        password,
+        full_name: fullName,
+        phone,
+        section_id: sectionId,
+        section_nom: sectionNom,
+        fonction,
+        matricule,
+        site_affectation: site
+      })
+    });
 
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
 
-    window.adminCore.showToast(`Collaborateur ${fullName} créé avec succès. Accès activé.`, 'success');
+    if (!apiRes.ok || !apiRes.data?.success) {
+      const errMsg = apiRes.data?.error || apiRes.error || 'Impossible de créer le collaborateur.';
+      window.adminCore.showToast(errMsg, 'error');
+      return;
+    }
+
+    window.adminCore.showToast(apiRes.data.message || `Collaborateur ${fullName} créé avec succès.`, 'success');
     closeCreateMemberModal();
-    renderAgentsTable(allAgents);
-    updateKpis(allAgents);
+    await loadAgentsList();
   }
 
   function viewAgentDetail(ag) {
