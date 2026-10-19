@@ -149,24 +149,7 @@ body {
   padding: 4px 8px;
 }
 
-.sidebar-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  z-index: 995;
-  opacity: 0;
-  pointer-events: none;
-  transition: var(--t-smooth);
-}
-
-.sidebar-backdrop.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+/* .sidebar-backdrop — règles unifiées dans la section RESPONSIVE */
 
 .brand-text h2 {
   font-size: 1.05rem;
@@ -840,39 +823,58 @@ body {
 
 .sidebar-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(4px);
-  z-index: 999;
+  z-index: 1090;
   display: none;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.25s ease;
 }
+
 .sidebar-backdrop.active {
-  display: block !important;
+  display: block;
   opacity: 1;
+  pointer-events: auto;
 }
 
 @media (max-width: 992px) {
   .admin-sidebar {
     transform: translateX(-100%);
-    z-index: 1050;
+    z-index: 1100;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .admin-sidebar.open {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
   }
 
   .admin-main {
     margin-left: 0;
+    width: 100%;
+    max-width: 100vw;
   }
 
   .btn-menu-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
+    position: relative;
+    z-index: 1101;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  body.admin-nav-open {
+    overflow: hidden;
   }
 
   .kpi-grid {

@@ -70,8 +70,12 @@ function initAdminAuthCheck() {
 }
 
 function getAdminSession() {
+  const key = (window.JBF_CONFIG && JBF_CONFIG.ADMIN_USER_KEY) || 'jbf_admin_session';
   try {
-    const raw = localStorage.getItem(JBF_CONFIG.ADMIN_USER_KEY);
+    const raw =
+      localStorage.getItem(key) ||
+      localStorage.getItem('JBF_ADMIN_USER') ||
+      localStorage.getItem('jbf_admin_session');
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
     return null;
@@ -192,42 +196,64 @@ function initClock() {
   setInterval(update, 1000);
 }
 
-// 4. Gestion Sidebar Responsive, Logo Officiel et Filtrage Dynamique des Droits
+// 5. Gestion Sidebar Responsive, Logo Officiel et Filtrage Dynamique des Droits
 function initSidebar() {
-  const toggleBtn = document.getElementById('btnMenuToggle');
   const sidebar = document.querySelector('.admin-sidebar');
   if (!sidebar) return;
 
-  // Création ou récupération du backdrop pour mobile
+  if (sidebar.dataset.sidebarInit === '1') return;
+  sidebar.dataset.sidebarInit = '1';
+
   let backdrop = document.querySelector('.sidebar-backdrop');
   if (!backdrop) {
     backdrop = document.createElement('div');
     backdrop.className = 'sidebar-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
     document.body.appendChild(backdrop);
   }
 
-  function openSidebar() {
-    sidebar.classList.add('open');
-    backdrop.classList.add('active');
-    document.body.style.overflow = window.innerWidth <= 1024 ? 'hidden' : '';
+  function setSidebarOpen(isOpen) {
+    sidebar.classList.toggle('open', isOpen);
+    backdrop.classList.toggle('active', isOpen);
+    document.body.classList.toggle('admin-nav-open', isOpen);
+    backdrop.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    if (!isOpen) {
+      document.body.style.overflow = '';
+    } else if (window.innerWidth <= 1024) {
+      document.body.style.overflow = 'hidden';
+    }
+    const toggleBtn = document.getElementById('btnMenuToggle');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+  }
+
+  function toggleSidebar() {
+    setSidebarOpen(!sidebar.classList.contains('open'));
   }
 
   function closeSidebar() {
-    sidebar.classList.remove('open');
-    backdrop.classList.remove('active');
-    document.body.style.overflow = '';
+    setSidebarOpen(false);
   }
 
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (sidebar.classList.contains('open')) {
-        closeSidebar();
-      } else {
-        openSidebar();
-      }
-    });
+  function openSidebar() {
+    setSidebarOpen(true);
   }
+
+  window.jbfAdminNav = { openSidebar, closeSidebar, toggleSidebar };
+
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('#btnMenuToggle, .btn-menu-toggle');
+    if (toggle) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSidebar();
+      return;
+    }
+    if (e.target === backdrop || (backdrop.classList.contains('active') && backdrop.contains(e.target))) {
+      closeSidebar();
+    }
+  }, true);
 
   backdrop.addEventListener('click', closeSidebar);
 
