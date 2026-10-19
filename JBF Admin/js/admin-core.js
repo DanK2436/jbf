@@ -88,6 +88,8 @@ function setAdminSession(data) {
 
 function logoutAdmin() {
   localStorage.removeItem(JBF_CONFIG.ADMIN_USER_KEY);
+  localStorage.removeItem('JBF_ADMIN_USER');
+  localStorage.removeItem('jbf_admin_token');
   showToast('Déconnexion effectuée avec succès', 'info');
   setTimeout(() => {
     window.location.href = window.location.pathname.includes('/auth/') ? 'login.html' : 'auth/login.html';
