@@ -108,88 +108,100 @@
       <div class="topbar-left">
         <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
         <div class="page-title">
-          <h1>Annuaire des Collaborateurs & Chefs de Section</h1>
+          <h1>Collaborateurs &amp; équipes terrain</h1>
         </div>
       </div>
       <div class="topbar-right">
+        <div class="live-indicator">
+          <div class="pulse-dot"></div>
+          <span>RH &amp; déploiement</span>
+        </div>
         <div class="topbar-clock" id="liveClock">--:--:-- RDC</div>
         <button class="btn btn-primary" onclick="openCreateMemberModal()" title="Créer un nouveau collaborateur">
-          <i class="bi bi-person-plus-fill"></i> <span class="btn-label-desktop">Nouveau Collaborateur</span><span class="btn-label-mobile">Nouveau</span>
+          <i class="bi bi-person-plus-fill"></i> <span class="btn-label-desktop">Nouveau collaborateur</span><span class="btn-label-mobile">Nouveau</span>
         </button>
       </div>
     </header>
 
-    <main class="admin-content">
-      <!-- STATS HIÉRARCHIE RAPIDES -->
+    <main class="admin-content membres-page">
+      <section class="membres-hero">
+        <div>
+          <p class="membres-eyebrow">Capital humain JBF SERVICES</p>
+          <h2 class="membres-hero-title">Annuaire des collaborateurs déployés</h2>
+          <p class="membres-hero-desc">
+            Gérez les accès Espace Membre, les chefs d'équipe par domaine et le déploiement sur les sites RDC (Lubumbashi, Kolwezi, Kinshasa…).
+          </p>
+        </div>
+        <div class="membres-hero-meta">
+          <span class="membres-meta-pill"><i class="bi bi-cloud-check"></i> Sync portail Supabase</span>
+          <span class="membres-meta-pill"><i class="bi bi-shield-lock"></i> Accès par domaine</span>
+        </div>
+      </section>
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon primary">
             <i class="bi bi-people-fill"></i>
           </div>
           <div class="kpi-details">
-            <h3>Total Effectif</h3>
+            <h3>Effectif total</h3>
             <div class="kpi-value" id="kpiTotalMembers">--</div>
-            <div class="kpi-sub"><i class="bi bi-shield-check"></i> Actifs terrain</div>
+            <div class="kpi-sub">Collaborateurs enregistrés</div>
           </div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: #FDF2F8; color: #BE185D; border: 1px solid #FBCFE8;">
-            <i class="bi bi-award-fill"></i>
+          <div class="kpi-icon success">
+            <i class="bi bi-person-badge-fill"></i>
           </div>
           <div class="kpi-details">
-            <h3>Directeurs Section</h3>
-            <div class="kpi-value" id="kpiDirecteurs">--</div>
-            <div class="kpi-sub"><i class="bi bi-briefcase"></i> Responsables</div>
+            <h3>Chefs d'équipe</h3>
+            <div class="kpi-value" id="kpiChefsEquipe">--</div>
+            <div class="kpi-sub">Devis &amp; chiffrage pro</div>
           </div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE;">
+          <div class="kpi-icon info">
             <i class="bi bi-person-check-fill"></i>
           </div>
           <div class="kpi-details">
-            <h3>Superviseurs Pôle</h3>
-            <div class="kpi-value" id="kpiSuperviseurs">--</div>
-            <div class="kpi-sub"><i class="bi bi-geo-alt"></i> Coordination</div>
+            <h3>Membres simples</h3>
+            <div class="kpi-value" id="kpiMembresSimples">--</div>
+            <div class="kpi-sub">Accès collaborateur</div>
           </div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">
-            <i class="bi bi-tools"></i>
+          <div class="kpi-icon warning">
+            <i class="bi bi-diagram-3-fill"></i>
           </div>
           <div class="kpi-details">
-            <h3>Employés / Tech</h3>
-            <div class="kpi-value" id="kpiEmployes">--</div>
-            <div class="kpi-sub"><i class="bi bi-check2-circle"></i> Exécution</div>
+            <h3>Domaines actifs</h3>
+            <div class="kpi-value" id="kpiDomainesActifs">--</div>
+            <div class="kpi-sub">Pôles techniques couverts</div>
           </div>
         </div>
       </div>
 
-      <!-- CARD TABLE -->
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <h2><i class="bi bi-person-badge"></i> Effectifs JBF Déployés en RDC</h2>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">
-              <i class="bi bi-person-plus-fill"></i> <span class="btn-label-desktop">Nouveau Collaborateur</span><span class="btn-label-mobile">Nouveau</span>
-            </button>
+        <div class="card-header">
+          <h2><i class="bi bi-table"></i> Registre des effectifs</h2>
+          <div class="card-header-actions">
             <button class="btn btn-secondary btn-sm" onclick="loadAgentsList()">
               <i class="bi bi-arrow-clockwise"></i> Actualiser
             </button>
           </div>
         </div>
         <div class="card-body">
-          
-          <div class="table-controls">
-            <div class="search-box">
+          <div class="membres-toolbar">
+            <div class="membres-search">
               <i class="bi bi-search"></i>
-              <input type="text" id="agentsSearchInput" placeholder="Rechercher par nom, matricule, email..." oninput="filterAgents()">
+              <input type="text" id="agentsSearchInput" placeholder="Rechercher nom, matricule, email…" oninput="filterAgents()" aria-label="Rechercher">
             </div>
-            <div class="filter-group">
-              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Domaine :</label>
-              <select class="filter-select" id="agentsSecteurFilter" onchange="filterAgents()">
+            <div class="membres-filters">
+              <span class="membres-filter-label">Domaine</span>
+              <select class="membres-filter-select" id="agentsSecteurFilter" onchange="filterAgents()" aria-label="Filtrer par domaine">
                 <option value="all">Tous les 15 Domaines d'Activité</option>
                 <option value="1">1. Fourniture Alimentaire & Catering</option>
                 <option value="2">2. Sous-Traitance Minière & Extraction</option>
@@ -207,36 +219,38 @@
                 <option value="14">14. Fournitures Générales de Bureau</option>
                 <option value="15">15. Import-Export & Transit</option>
               </select>
-            </div>
-            <div class="filter-group">
-              <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray);">Fonction :</label>
-              <select class="filter-select" id="agentsFonctionFilter" onchange="filterAgents()">
+              <span class="membres-filter-label">Statut</span>
+              <select class="membres-filter-select" id="agentsStatutFilter" onchange="filterAgents()" aria-label="Filtrer par statut">
+                <option value="all">Tous les statuts</option>
+                <option value="chef_equipe">Chefs d'équipe</option>
+                <option value="membre">Membres simples</option>
+              </select>
+              <span class="membres-filter-label">Fonction</span>
+              <select class="membres-filter-select" id="agentsFonctionFilter" onchange="filterAgents()" aria-label="Filtrer par fonction">
                 <option value="all">Toutes les fonctions</option>
-                <option value="directeur_section">Directeurs de Section</option>
-                <option value="superviseur">Superviseurs de Pôle</option>
-                <option value="employe_simple">Employés / Techniciens</option>
+                <option value="directeur_section">Directeurs de section</option>
+                <option value="superviseur">Superviseurs</option>
+                <option value="employe_simple">Employés / techniciens</option>
               </select>
             </div>
           </div>
 
-
-          <!-- TABLE -->
           <div class="table-responsive">
             <table class="admin-table table-membres">
               <thead>
                 <tr>
                   <th>Collaborateur</th>
                   <th>Matricule</th>
-                  <th>Fonction Hiérarchique</th>
-                  <th>Domaine / Section</th>
-                  <th>Site d'Affectation</th>
-                  <th>Contact Direct</th>
-                  <th>Accès Groupes</th>
+                  <th>Rôle &amp; statut</th>
+                  <th>Domaine</th>
+                  <th>Site</th>
+                  <th>Contact</th>
+                  <th>Portail</th>
                   <th style="text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody id="agentsTableBody">
-                <tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des collaborateurs...</td></tr>
+                <tr><td colspan="8" class="membres-empty">Chargement des collaborateurs…</td></tr>
               </tbody>
             </table>
           </div>
@@ -259,30 +273,30 @@
         
         <div id="memberFormDecor"></div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="membres-form-grid">
           <div class="form-group">
-            <label for="mb_fullname">Nom et Prénom <span style="color: var(--danger);">*</span></label>
+            <label class="form-label" for="mb_fullname">Nom et prénom <span style="color: var(--danger);">*</span></label>
             <input type="text" id="mb_fullname" class="form-control" placeholder="ex: Jean-Luc Kabamba" required>
           </div>
           <div class="form-group">
-            <label for="mb_email">Email Professionnel ou Personnel <span style="color: var(--danger);">*</span></label>
+            <label class="form-label" for="mb_email">Email professionnel ou personnel <span style="color: var(--danger);">*</span></label>
             <input type="email" id="mb_email" class="form-control" placeholder="ex: jeanluc@gmail.com ou email pro" required>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="membres-form-grid">
           <div class="form-group">
-            <label for="mb_password">Mot de Passe Initial <span style="color: var(--danger);">*</span></label>
+            <label class="form-label" for="mb_password">Mot de passe initial <span style="color: var(--danger);">*</span></label>
             <input type="password" id="mb_password" class="form-control" placeholder="Minimum 8 caractères" minlength="8" required>
           </div>
           <div class="form-group">
-            <label for="mb_phone">Numéro Téléphone / WhatsApp</label>
+            <label class="form-label" for="mb_phone">Téléphone / WhatsApp</label>
             <input type="tel" id="mb_phone" class="form-control" placeholder="ex: +243 99 123 4567">
           </div>
         </div>
 
         <div class="form-group">
-          <label for="mb_section">Domaine d'Activité / Pôle Technique <span style="color: var(--danger);">*</span></label>
+          <label class="form-label" for="mb_section">Domaine d'activité / pôle <span style="color: var(--danger);">*</span></label>
           <select id="mb_section" class="form-control" onchange="onSectionChange()" required>
             <option value="1" data-nom="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
             <option value="2" data-nom="Sous-Traitance Minière & Extraction" selected>2. Sous-Traitance Minière & Extraction</option>
@@ -302,9 +316,9 @@
           </select>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="membres-form-grid">
           <div class="form-group">
-            <label for="mb_statut_equipe">Statut dans le domaine <span style="color: var(--danger);">*</span></label>
+            <label class="form-label" for="mb_statut_equipe">Statut dans le domaine <span style="color: var(--danger);">*</span></label>
             <select id="mb_statut_equipe" class="form-control" required>
               <option value="membre" selected>Membre simple (accès collaborateur)</option>
               <option value="chef_equipe">Chef d'équipe (+ outil devis professionnel)</option>
@@ -312,7 +326,7 @@
             <small style="color: var(--gray-mid); font-size: 0.75rem;">Le chef d'équipe accède au chiffrage devis (CDF → USD) pour son pôle.</small>
           </div>
           <div class="form-group">
-            <label for="mb_site">Site d'Affectation</label>
+            <label class="form-label" for="mb_site">Site d'affectation</label>
             <select id="mb_site" class="form-control">
               <option value="Kolwezi">Kolwezi (Lualaba Mining)</option>
               <option value="Lubumbashi" selected>Lubumbashi (Haut-Katanga)</option>
@@ -324,7 +338,7 @@
         </div>
 
         <div class="form-group">
-          <label for="mb_matricule">Matricule Interne (Généré automatiquement)</label>
+          <label class="form-label" for="mb_matricule">Matricule interne (auto)</label>
           <div style="display: flex; gap: 8px;">
             <input type="text" id="mb_matricule" class="form-control" style="font-family: monospace; font-weight: 700;">
             <button type="button" class="btn btn-secondary" onclick="generateNewMatricule()" title="Régénérer">
@@ -355,15 +369,15 @@
       <!-- Rendu dynamique -->
     </div>
     <div class="modal-footer" style="flex-wrap: wrap; gap: 8px;">
-      <div id="detailPortalSyncBlock" style="display:none; flex: 1 1 100%; text-align: left; padding: 0 4px 8px;">
-        <label style="font-size: 0.75rem; font-weight: 600; color: var(--gray-mid);">Mot de passe Espace Membre (resync Supabase)</label>
-        <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-          <input type="password" id="detailPortalPassword" class="form-control" placeholder="Mot de passe portail" style="flex: 1; min-width: 180px;">
+      <div id="detailPortalSyncBlock" class="membres-detail-sync" style="display:none;">
+        <label>Mot de passe Espace Membre (resync Supabase)</label>
+        <div class="membres-detail-sync-row">
+          <input type="password" id="detailPortalPassword" class="form-control" placeholder="Mot de passe portail (min. 6 car.)">
           <button type="button" class="btn btn-primary btn-sm" onclick="resyncDetailMemberPortal()">
-            <i class="bi bi-cloud-arrow-up"></i> Resynchroniser connexion membre
+            <i class="bi bi-cloud-arrow-up"></i> Resynchroniser
           </button>
         </div>
-        <small style="color: var(--gray-mid); font-size: 0.72rem;">Obligatoire si la connexion échoue sur un autre appareil (sans SQL exécuté ou mot de passe jamais poussé).</small>
+        <small style="color: var(--text-muted); font-size: 0.72rem; display:block; margin-top:8px;">Attendez le message « Connexion testée avec succès » avant de tester la connexion membre.</small>
       </div>
       <button type="button" class="btn btn-secondary" onclick="closeDetailMemberModal()">Fermer</button>
     </div>
@@ -500,7 +514,7 @@
 
   async function loadAgentsList() {
     const tbody = document.getElementById('agentsTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des collaborateurs...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="membres-empty">Chargement des collaborateurs…</td></tr>';
 
     let list = [];
     const sb = getSupabase();
@@ -563,27 +577,22 @@
   function updateKpis(list) {
     document.getElementById('kpiTotalMembers').textContent = list.length;
 
-    const directeurs = list.filter(a => {
-      const f = (a.fonction || a.poste || '').toLowerCase();
-      return f.includes('directeur');
+    const chefs = list.filter((a) => {
+      const s = a.statut_equipe || a.role;
+      return s === 'chef_equipe';
     }).length;
+    const membres = list.length - chefs;
+    const domaines = new Set(list.map((a) => String(a.section_id || '')).filter(Boolean)).size;
 
-    const superviseurs = list.filter(a => {
-      const f = (a.fonction || a.poste || '').toLowerCase();
-      return f.includes('superviseur');
-    }).length;
-
-    const employes = list.length - (directeurs + superviseurs);
-
-    document.getElementById('kpiDirecteurs').textContent = directeurs;
-    document.getElementById('kpiSuperviseurs').textContent = superviseurs;
-    document.getElementById('kpiEmployes').textContent = employes >= 0 ? employes : 0;
+    document.getElementById('kpiChefsEquipe').textContent = chefs;
+    document.getElementById('kpiMembresSimples').textContent = membres >= 0 ? membres : 0;
+    document.getElementById('kpiDomainesActifs').textContent = domaines;
   }
 
   function renderAgentsTable(list) {
     const tbody = document.getElementById('agentsTableBody');
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 36px; color: var(--gray-mid);"><i class="bi bi-people" style="font-size: 2.4rem; display:block; margin-bottom: 8px;"></i>Aucun collaborateur enregistré pour le moment.<br><small>Cliquez sur "Créer un Compte Collaborateur" pour en enregistrer un.</small></td></tr>';
+      tbody.innerHTML = `<tr><td colspan="8" class="membres-empty"><i class="bi bi-people"></i><strong>Aucun collaborateur</strong>Créez un compte pour activer l'Espace Membre et le déploiement par domaine.</td></tr>`;
       return;
     }
 
@@ -592,52 +601,47 @@
       const statutEquipe = ag.statut_equipe || (ag.role === 'chef_equipe' ? 'chef_equipe' : 'membre');
       const fonctionBadge = window.adminCore.renderBadgeFonction(statutEquipe === 'chef_equipe' ? 'chef_equipe' : (ag.poste || ag.fonction));
       const statutBadge = statutEquipe === 'chef_equipe'
-        ? '<span class="badge-status valide" style="margin-top:4px; display:inline-block;"><i class="bi bi-person-badge"></i> Chef d\'équipe</span>'
-        : '<span class="badge-status" style="margin-top:4px; display:inline-block; background:#F1F5F9; color:#64748B;"><i class="bi bi-person"></i> Membre simple</span>';
+        ? '<span class="membres-statut-pill chef"><i class="bi bi-person-badge"></i> Chef</span>'
+        : '<span class="membres-statut-pill membre"><i class="bi bi-person"></i> Membre</span>';
       const sectionNom = ag.section_nom || ag.secteur || (ag.section_id ? JBF_SECTIONS_MAP[ag.section_id] : 'Prestations Générales');
       const sectionId = ag.section_id || 1;
       const matricule = ag.matricule || `JBF-SEC${sectionId.toString().padStart(2, '0')}-0000`;
       const site = ag.city || ag.site_affectation || 'Lubumbashi';
+      const hasPortalHint = !!(ag._authPassword || ag.email);
+      const portailCell = hasPortalHint
+        ? '<span class="membres-portail-ok"><i class="bi bi-box-arrow-in-right"></i> Espace membre</span>'
+        : '<span class="membres-contact-muted">À synchroniser</span>';
+      const phone = ag.phone || ag.telephone;
+      const contactCell = phone
+        ? `<span class="membres-contact"><i class="bi bi-telephone"></i> ${escapeHtml(phone)}</span>`
+        : '<span class="membres-contact-muted">Non renseigné</span>';
 
       return `
-        <tr>
+        <tr class="membres-row-main">
           <td data-label="Collaborateur">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--pink-pale); color: var(--pink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid var(--pink-border);">
-                ${initials}
-              </div>
+            <div class="membres-person">
+              <div class="membres-avatar">${initials}</div>
               <div>
-                <strong style="color: var(--gray-dark); font-size: 0.92rem;">${escapeHtml(ag.full_name || '')}</strong>
-                <div style="font-size: 0.76rem; color: var(--gray-mid);">${escapeHtml(ag.email || '')}</div>
+                <div class="membres-person-name">${escapeHtml(ag.full_name || '')}</div>
+                <div class="membres-person-email">${escapeHtml(ag.email || '')}</div>
               </div>
             </div>
           </td>
-          <td data-label="Matricule"><code style="background: #F1F5F9; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; color: #334155;">${escapeHtml(matricule)}</code></td>
-          <td data-label="Fonction / Statut">${fonctionBadge}${statutBadge}</td>
-          <td data-label="Domaine / Section">
-            <div style="font-weight: 600; font-size: 0.84rem; color: var(--gray-dark);">${escapeHtml(sectionNom)}</div>
-            <div style="font-size: 0.72rem; color: var(--gray-mid);">Pôle N°${sectionId}</div>
+          <td data-label="Matricule"><span class="membres-matricule">${escapeHtml(matricule)}</span></td>
+          <td data-label="Rôle & statut"><div class="membres-role-stack">${fonctionBadge}${statutBadge}</div></td>
+          <td data-label="Domaine">
+            <div class="membres-domain-title">${escapeHtml(sectionNom)}</div>
+            <div class="membres-domain-sub">Pôle ${sectionId}</div>
           </td>
-          <td data-label="Site d'Affectation"><span class="badge-status valide"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(site)}</span></td>
-          <td data-label="Contact Direct" style="font-size: 0.82rem; color: var(--pink-deep); font-weight: 600;">
-            <i class="bi bi-telephone"></i> ${escapeHtml(ag.phone || 'Non renseigné')}
-          </td>
-          <td data-label="Accès Groupes">
-            <div style="display: flex; flex-direction: column; gap: 3px;">
-              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #047857; font-weight: 600;">
-                <i class="bi bi-chat-dots-fill"></i> #general
-              </span>
-              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--pink); font-weight: 600;">
-                <i class="bi bi-hash"></i> section-${sectionId}
-              </span>
-            </div>
-          </td>
+          <td data-label="Site"><span class="badge-status valide"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(site)}</span></td>
+          <td data-label="Contact">${contactCell}</td>
+          <td data-label="Portail">${portailCell}</td>
           <td data-label="Actions" style="text-align: right;">
-            <div class="table-actions" style="justify-content: flex-end;">
+            <div class="table-actions">
               <button class="btn btn-secondary btn-sm" onclick="viewAgentDetailById('${escapeHtml(String(ag.id || ag.email))}')" title="Voir la fiche">
                 <i class="bi bi-eye"></i>
               </button>
-              <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteMemberAgent('${escapeHtml(String(ag.id || ''))}', '${escapeHtml(ag.email || '')}')" title="Supprimer">
+              <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.25);" onclick="deleteMemberAgent('${escapeHtml(String(ag.id || ''))}', '${escapeHtml(ag.email || '')}')" title="Supprimer">
                 <i class="bi bi-trash"></i>
               </button>
             </div>
@@ -651,6 +655,7 @@
     const q = document.getElementById('agentsSearchInput').value.toLowerCase().trim();
     const secFilter = document.getElementById('agentsSecteurFilter').value;
     const fctFilter = document.getElementById('agentsFonctionFilter').value;
+    const statutFilter = document.getElementById('agentsStatutFilter')?.value || 'all';
 
     const filtered = allAgents.filter(ag => {
       const nom = (ag.full_name || '').toLowerCase();
@@ -667,7 +672,10 @@
       else if (fctFilter === 'superviseur') matchFct = fct.includes('superviseur');
       else if (fctFilter === 'employe_simple') matchFct = fct.includes('employ') || fct.includes('technicien');
 
-      return matchQ && matchSec && matchFct;
+      const statut = ag.statut_equipe || (ag.role === 'chef_equipe' ? 'chef_equipe' : 'membre');
+      const matchStatut = statutFilter === 'all' || statut === statutFilter;
+
+      return matchQ && matchSec && matchFct && matchStatut;
     });
 
     renderAgentsTable(filtered);
@@ -901,64 +909,38 @@
     const sectionNom = ag.section_nom || ag.secteur || (ag.section_id ? JBF_SECTIONS_MAP[ag.section_id] : 'Prestation Générale');
     const sectionId = ag.section_id || 1;
 
+    const statutLabel = (ag.statut_equipe || ag.role) === 'chef_equipe' ? "Chef d'équipe" : 'Membre simple';
+
     body.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-border);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--pink-pale); color: var(--pink); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; border: 2px solid var(--pink-border);">
-          ${initials}
-        </div>
+      <div class="membres-person" style="margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle);">
+        <div class="membres-avatar" style="width:56px;height:56px;font-size:1.1rem;">${initials}</div>
         <div>
-          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--gray-dark); margin: 0 0 4px 0;">${escapeHtml(ag.full_name || '')}</h3>
-          <div style="font-size: 0.82rem; color: var(--gray-mid); margin-bottom: 6px;">${escapeHtml(ag.email || '')}</div>
-          <div>${fonctionBadge}</div>
+          <h3 style="font-size: 1.12rem; font-weight: 800; margin: 0 0 4px; color: var(--text-primary);">${escapeHtml(ag.full_name || '')}</h3>
+          <div class="membres-person-email">${escapeHtml(ag.email || '')}</div>
+          <div style="margin-top: 8px;">${fonctionBadge}</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.88rem;">
-        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
-          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Matricule</div>
-          <div style="font-weight: 700; color: var(--gray-dark); font-family: monospace;">${escapeHtml(ag.matricule || 'N/A')}</div>
+      <div class="membres-detail-grid">
+        <div class="membres-detail-cell">
+          <div class="membres-detail-cell-label">Matricule</div>
+          <div class="membres-detail-cell-value">${escapeHtml(ag.matricule || 'N/A')}</div>
         </div>
-
-        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
-          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Téléphone</div>
-          <div style="font-weight: 700; color: var(--gray-dark);">${escapeHtml(ag.phone || 'Non renseigné')}</div>
+        <div class="membres-detail-cell">
+          <div class="membres-detail-cell-label">Téléphone</div>
+          <div class="membres-detail-cell-value">${escapeHtml(ag.phone || 'Non renseigné')}</div>
         </div>
-
-        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
-          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Site / Déploiement</div>
-          <div style="font-weight: 700; color: var(--gray-dark);">${escapeHtml(ag.city || ag.site_affectation || 'Lubumbashi')}</div>
+        <div class="membres-detail-cell">
+          <div class="membres-detail-cell-label">Site</div>
+          <div class="membres-detail-cell-value">${escapeHtml(ag.city || ag.site_affectation || 'Lubumbashi')}</div>
         </div>
-
-        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
-          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Statut dans le domaine</div>
-          <div style="font-weight: 700; color: var(--gray-dark);">${(ag.statut_equipe || ag.role) === 'chef_equipe' ? "<i class=\"bi bi-person-badge\"></i> Chef d'équipe" : '<i class="bi bi-person-check"></i> Membre simple'}</div>
+        <div class="membres-detail-cell">
+          <div class="membres-detail-cell-label">Statut domaine</div>
+          <div class="membres-detail-cell-value">${statutLabel}</div>
         </div>
-        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
-          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Statut Compte</div>
-          <div style="font-weight: 700; color: #047857;"><i class="bi bi-check-circle-fill"></i> Actif & Vérifié</div>
-        </div>
-      </div>
-
-      <div style="margin-top: 16px; background: #F8FAFC; border: 1px solid var(--gray-border); padding: 14px; border-radius: var(--r-md);">
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--gray-dark); text-transform: uppercase; margin-bottom: 6px;">
-          Domaine & Pôle d'Affectation
-        </div>
-        <div style="font-weight: 700; font-size: 0.95rem; color: var(--pink-deep);">
-          Section ${sectionId} : ${escapeHtml(sectionNom)}
-        </div>
-      </div>
-
-      <div style="margin-top: 16px; background: #FDF2F8; border: 1px solid var(--pink-border); padding: 14px; border-radius: var(--r-md);">
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--pink-deep); text-transform: uppercase; margin-bottom: 6px;">
-          Salons de Discussion Assignés
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <span style="background: #FFFFFF; border: 1px solid #A7F3D0; color: #065F46; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">
-            <i class="bi bi-chat-dots-fill"></i> #general (Tous les membres)
-          </span>
-          <span style="background: #FFFFFF; border: 1px solid var(--pink-border); color: var(--pink-deep); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem;">
-            <i class="bi bi-hash"></i> #section-${sectionId} (${escapeHtml(sectionNom)})
-          </span>
+        <div class="membres-detail-cell" style="grid-column: 1 / -1;">
+          <div class="membres-detail-cell-label">Pôle technique</div>
+          <div class="membres-detail-cell-value" style="color: var(--brand-pink);">Section ${sectionId} — ${escapeHtml(sectionNom)}</div>
         </div>
       </div>
     `;
