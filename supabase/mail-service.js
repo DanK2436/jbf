@@ -62,6 +62,9 @@
             if (row.cle_nom === 'RESEND_API_KEY' && row.cle_valeur) {
               window.ENV_RESEND_API_KEY = row.cle_valeur;
             }
+            if (row.cle_nom === 'API_PUBLIC_BASE_URL' && row.cle_valeur && window.JBF_CLIENT_CONFIG) {
+              window.JBF_CLIENT_CONFIG.API_BASE_URL = row.cle_valeur.replace(/\/+$/, '');
+            }
           });
         }
       } catch (_) {}
@@ -73,9 +76,16 @@
     const clientCfg = window.JBF_CLIENT_CONFIG || {};
     const adminCfg = window.JBF_CONFIG || {};
 
+    const pickKey = (...candidates) => {
+      for (const c of candidates) {
+        if (typeof c === 'string' && c.trim().length > 0) return c.trim();
+      }
+      return '';
+    };
+
     return {
-      brevoApiKey: window.ENV_BREVO_API_KEY || clientCfg.BREVO_API_KEY || adminCfg.BREVO_API_KEY || localStorage.getItem('JBF_BREVO_API_KEY') || DEFAULT_BREVO_KEY,
-      resendApiKey: window.ENV_RESEND_API_KEY || clientCfg.RESEND_API_KEY || adminCfg.RESEND_API_KEY || localStorage.getItem('JBF_RESEND_API_KEY') || DEFAULT_RESEND_KEY,
+      brevoApiKey: pickKey(window.ENV_BREVO_API_KEY, clientCfg.BREVO_API_KEY, adminCfg.BREVO_API_KEY, localStorage.getItem('JBF_BREVO_API_KEY'), DEFAULT_BREVO_KEY),
+      resendApiKey: pickKey(window.ENV_RESEND_API_KEY, clientCfg.RESEND_API_KEY, adminCfg.RESEND_API_KEY, localStorage.getItem('JBF_RESEND_API_KEY'), DEFAULT_RESEND_KEY),
       senderName: clientCfg.MAIL_SENDER_NAME || 'JBF SERVICES',
       senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'dankande3@gmail.com',
       backendEndpoints: ['/api/mail/send', 'http://localhost:3001/api/mail/send']
@@ -160,7 +170,8 @@
   }
 
   // Dispatcher multi-provider intelligent
-  async function dispatchEmail(toEmail, subject, htmlContent) {
+  async function dispatchEmail(toEmail, subject, htmlContent, options = {}) {
+    const requireRealDelivery = options.requireRealDelivery === true;
     const stats = getDailyStats();
     if (stats.total >= DAILY_MAX_EMAILS) {
       console.warn(`[JBF Mail] Quota quotidien de ${DAILY_MAX_EMAILS} emails atteint.`);
@@ -226,8 +237,15 @@
       }
     }
 
-    // Tentative 4 : Mode résilient démonstration
-    console.info('[JBF Mail] Mode résilient local actif. Pour activer l\'envoi direct par email réel, configurez votre clé Brevo ou Resend via JBF_CLIENT_CONFIG.BREVO_API_KEY ou JBF_CLIENT_CONFIG.RESEND_API_KEY.');
+    if (requireRealDelivery) {
+      throw new Error(
+        'Impossible d\'envoyer l\'email (Brevo/Resend/backend). ' +
+        (errors.length ? errors.join(' · ') : 'Vérifiez votre connexion ou réessayez.')
+      );
+    }
+
+    // Mode démonstration (connexion locale uniquement)
+    console.info('[JBF Mail] Mode résilient local actif.');
     recordEmailSent('simulation-locale');
     return {
       success: true,
@@ -307,7 +325,7 @@
         resetCode,
         'Voici votre code sécurisé pour réinitialiser le mot de passe de votre compte client :'
       );
-      return await dispatchEmail(email, subject, html);
+      return await dispatchEmail(email, subject, html, { requireRealDelivery: true });
     }
   };
 

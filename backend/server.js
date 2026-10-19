@@ -511,6 +511,7 @@ app.post('/api/admin/login', async (req, res) => {
 // 4.2 GESTIONNAIRE OTP EMAIL MULTI-PROVIDER (BREVO / RESEND)
 // =============================================================
 const activeOtpStore = new Map();
+const resetOtpStore = new Map();
 
 async function sendTransactionalEmail(to, subject, html, preferredProvider = null) {
   const brevoKey = process.env.BREVO_API_KEY;
@@ -681,6 +682,45 @@ app.post('/api/auth/otp/verify', async (req, res) => {
   }
 });
 
+// POST /api/auth/reset-otp/send — Envoi OTP réinitialisation mot de passe (Brevo / Resend)
+app.post('/api/auth/reset-otp/send', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Adresse email requise.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    resetOtpStore.set(cleanEmail, { code: otpCode, expiresAt });
+
+    const html = buildOtpHtmlEmail(
+      'Réinitialisation de Mot de Passe',
+      otpCode,
+      'Voici votre code sécurisé à 6 chiffres pour réinitialiser le mot de passe de votre compte client JBF :'
+    );
+
+    const sendRes = await sendTransactionalEmail(
+      cleanEmail,
+      `Code de réinitialisation : ${otpCode}`,
+      html
+    );
+
+    console.log(`[Backend Reset OTP] Code envoyé à ${cleanEmail} via ${sendRes.provider}`);
+
+    res.json({
+      success: true,
+      provider: sendRes.provider,
+      message: `Code de réinitialisation envoyé à ${cleanEmail}.`
+    });
+  } catch (err) {
+    console.error('Erreur reset-otp/send:', err.message);
+    res.status(500).json({ success: false, error: err.message || 'Impossible d\'envoyer le code OTP.' });
+  }
+});
+
 // POST /api/auth/reset-password — Réinitialisation par Brevo/Resend OTP
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
@@ -692,14 +732,14 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanToken = token.trim();
 
-    const stored = activeOtpStore.get(cleanEmail);
+    const stored = resetOtpStore.get(cleanEmail);
     let isValid = (stored && stored.code === cleanToken && Date.now() <= stored.expiresAt);
 
     if (!isValid) {
       return res.status(400).json({ success: false, error: 'Code OTP incorrect ou expiré.' });
     }
 
-    activeOtpStore.delete(cleanEmail);
+    resetOtpStore.delete(cleanEmail);
 
     // Mettre à jour le mot de passe via Supabase Admin si l'utilisateur existe dans auth.users
     const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();

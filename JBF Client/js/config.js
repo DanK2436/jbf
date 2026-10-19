@@ -5,7 +5,9 @@
 const JBF_CLIENT_CONFIG = {
   APP_NAME: 'JBF Client Enterprise',
   VERSION: '1.0.0',
-  API_BASE_URL: 'http://localhost:3001/api',
+  API_BASE_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001/api'
+    : (window.ENV_API_BASE_URL || ''),
   CLIENT_SESSION_KEY: 'jbf_client_session',
   SUPABASE_URL: window.ENV_SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
   SUPABASE_ANON_KEY: window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
