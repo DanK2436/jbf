@@ -468,6 +468,21 @@ function renderBadgeFonction(fonction) {
       label: 'Employé / Technicien',
       class: 'employe',
       icon: 'bi-person'
+    },
+    membre: {
+      label: 'Membre simple',
+      class: 'employe',
+      icon: 'bi-person-check'
+    },
+    chef_equipe: {
+      label: "Chef d'équipe",
+      class: 'superviseur',
+      icon: 'bi-person-badge'
+    },
+    member: {
+      label: 'Membre simple',
+      class: 'employe',
+      icon: 'bi-person-check'
     }
   };
 
