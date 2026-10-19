@@ -9,19 +9,29 @@
     return url.replace(/\/+$/, '');
   }
 
+  function isGitHubPagesHost() {
+    return window.location.hostname.endsWith('github.io');
+  }
+
   function getClientApiBases() {
     const cfg = window.JBF_CLIENT_CONFIG || {};
     const bases = [];
     const seen = new Set();
+    const origin = normalizeBase(window.location.origin);
 
     function add(base) {
       const n = normalizeBase(base);
       if (!n || seen.has(n)) return;
+      if (isGitHubPagesHost() && (n === '/api' || n === `${origin}/api` || n.endsWith('/jbf/api'))) {
+        return;
+      }
       seen.add(n);
       bases.push(n);
     }
 
-    if (cfg.API_BASE_URL) add(cfg.API_BASE_URL.replace(/\/api\/?$/, '') + '/api');
+    if (cfg.API_BASE_URL && String(cfg.API_BASE_URL).trim()) {
+      add(String(cfg.API_BASE_URL).replace(/\/api\/?$/, '') + '/api');
+    }
 
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') {
@@ -29,11 +39,6 @@
       add('http://127.0.0.1:3001/api');
     }
 
-    if (host.endsWith('github.io')) {
-      add('/api');
-    }
-
-    add('/api');
     return bases;
   }
 
@@ -59,6 +64,7 @@
   }
 
   window.JBFClientApi = {
+    isGitHubPagesHost,
     getClientApiBases,
     postJson
   };

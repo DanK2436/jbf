@@ -273,12 +273,22 @@
     btn.textContent = 'Vérification en cours...';
 
     try {
+      const isGitHubPages = window.location.hostname.endsWith('github.io');
+
+      if (isGitHubPages && tryOfficialAdminStaticLogin(cleanEmail, pass)) {
+        redirectToDashboard();
+        return;
+      }
+
       const apiBase = (window.JBF_CONFIG && JBF_CONFIG.API_BASE_URL) ? JBF_CONFIG.API_BASE_URL.replace(/\/+$/, '') : '';
-      const endpoints = [
-        '/api/admin/login',
-        apiBase ? `${apiBase}/api/admin/login` : '',
-        'http://localhost:3001/api/admin/login'
-      ].filter(Boolean);
+      const endpoints = [];
+      if (apiBase && !apiBase.includes('github.io')) {
+        endpoints.push(`${apiBase}/api/admin/login`);
+      }
+      if (!isGitHubPages) {
+        endpoints.push('/api/admin/login');
+        endpoints.push('http://localhost:3001/api/admin/login');
+      }
 
       let lastErr = null;
 
@@ -336,14 +346,21 @@
         }
       }
 
-      if (tryOfficialAdminStaticLogin(cleanEmail, pass)) {
+      if (!isGitHubPages && tryOfficialAdminStaticLogin(cleanEmail, pass)) {
         redirectToDashboard();
         return;
       }
 
+      const errMsg = lastErr?.message || '';
+      if (/failed to fetch/i.test(errMsg)) {
+        throw new Error(
+          'Connexion au serveur impossible. Sur GitHub Pages, utilisez services@admin.jbf / Services+243JBF (rechargement forcé Ctrl+Shift+R).'
+        );
+      }
+
       throw new Error(
-        lastErr?.message
-        || 'Identifiants incorrects. Utilisez services@admin.jbf et vérifiez le mot de passe, ou initialisez Supabase (init-admin.js).'
+        errMsg
+        || 'Identifiants incorrects. Email : services@admin.jbf — vérifiez le mot de passe ou initialisez Supabase (init-admin.js).'
       );
     } catch (err) {
       showError(err.message || 'Échec de connexion administrateur.');

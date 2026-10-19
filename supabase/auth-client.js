@@ -33,7 +33,13 @@
             } catch(e) {}
         }
         if (window.supabase && typeof window.supabase.createClient === 'function' && SUPABASE_ANON_KEY) {
-            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: {
+                    detectSessionInUrl: true,
+                    persistSession: true,
+                    autoRefreshToken: true
+                }
+            });
         }
         return _supabase;
     }
@@ -41,7 +47,13 @@
     function getSupabase() {
         if (!_supabase) {
             if (window.supabase && typeof window.supabase.createClient === 'function' && SUPABASE_ANON_KEY) {
-                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    auth: {
+                        detectSessionInUrl: true,
+                        persistSession: true,
+                        autoRefreshToken: true
+                    }
+                });
             } else {
                 initAuthSupabase();
             }
