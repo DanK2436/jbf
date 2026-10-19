@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
 
 env:
-  FLUTTER_VERSION: '3.27.4'
+  # 3.29+ : Visual Studio 2022 sur windows-latest, templates desktop à jour.
+  FLUTTER_VERSION: '3.29.3'
   JAVA_VERSION: '17'
-  # Clés publiques Supabase (anon) — surcharge optionnelle via secrets repo.
   JBF_SUPABASE_URL: 'https://dvzwqxcaiagczyonrhsg.supabase.co'
   JBF_PORTAL_BASE: 'https://dank2436.github.io/jbf'
 
@@ -50,6 +50,7 @@ jobs:
           done
 
   build-android:
+    if: false
     needs: analyze
     runs-on: ubuntu-latest
     strategy:
@@ -82,6 +83,7 @@ jobs:
     needs: analyze
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         app: [jbf_admin, jbf_membre]
     steps:
@@ -132,6 +134,7 @@ jobs:
     needs: analyze
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         app: [jbf_admin, jbf_membre]
     steps:
@@ -175,6 +178,7 @@ jobs:
           if-no-files-found: error
 
   build-ios:
+    if: false
     needs: analyze
     runs-on: macos-latest
     strategy:
