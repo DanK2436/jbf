@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/member-login.js"></script>
   <script src="../../supabase/auth-client.js"></script>
   <style>
     body {
@@ -220,62 +222,37 @@
     btn.textContent = 'Connexion...';
 
     try {
-      let authUser = null;
-      let session = null;
+      if (window.JBFMemberLogin?.tryLocalMemberLogin) {
+        const localUser = window.JBFMemberLogin.tryLocalMemberLogin(email, pass);
+        if (localUser) {
+          localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(localUser));
+          localStorage.setItem('jbf_member_session', JSON.stringify(localUser));
+          showSuccess('Connexion réussie. Redirection...');
+          setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+          return;
+        }
+      }
 
       if (window.JBFAuth) {
         const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
-        if (res && res.user) {
-          authUser = res.user;
-          session = res.session;
+        if (res && (res.success || res.user)) {
+          showSuccess('Connexion réussie. Redirection...');
+          setTimeout(() => {
+            window.location.href = res.redirect || '../dashboard.html';
+          }, 500);
+          return;
         }
-      } else if (window.supabase) {
-        const client = window.supabase.createClient(
-          'https://dvzwqxcaiagczyonrhsg.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
-        );
-        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
-        authUser = data.user;
-        session = data.session;
       }
 
-      if (!authUser) {
-        throw new Error('Identifiants collaborateur incorrects.');
-      }
-
-      // Vérifier le rôle dans les profils
-      let role = 'Membre';
-      let nom = authUser.user_metadata?.full_name || email.split('@')[0];
-      try {
-        const client = window.JBFAuth?.client || (window.supabase ? window.supabase.createClient('https://dvzwqxcaiagczyonrhsg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o') : null);
-        if (client) {
-          const { data: prof } = await client.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
-          if (prof) {
-            nom = prof.nom_complet || prof.full_name || nom;
-            role = prof.role || role;
-          }
-        }
-      } catch (_) {}
-
-      const memberUser = {
-        id: authUser.id,
-        nom: nom,
-        email: email,
-        role: role,
-        statut_equipe: 'Actif',
-        token: session?.access_token || ('jbf-session-' + Date.now())
-      };
-      localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
-      localStorage.setItem('jbf_member_session', JSON.stringify(memberUser));
-
-      showSuccess('Connexion réussie. Redirection vers le tableau de bord...');
-      setTimeout(() => {
-        window.location.href = '../dashboard.html';
-      }, 500);
+      throw new Error('Identifiants collaborateur incorrects.');
 
     } catch (err) {
-      showError(err.message || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
+      const msg = err.message || '';
+      if (/failed to fetch/i.test(msg)) {
+        showError('Connexion au serveur impossible. Si vous venez d\'être créé par l\'admin, réessayez avec l\'email et le mot de passe initial exacts, ou ouvrez le site après rechargement forcé (Ctrl+Shift+R).');
+      } else {
+        showError(msg || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
+      }
       btn.disabled = false;
       btn.textContent = 'Connexion Espace Membre';
     }

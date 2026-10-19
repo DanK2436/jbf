@@ -1,0 +1,44 @@
+/* Motifs SVG — formulaires admin (remplace les blocs texte longs) */
+.admin-form-decor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(230, 0, 126, 0.06) 0%, #fff 55%);
+  border: 1px solid rgba(230, 0, 126, 0.14);
+}
+
+.admin-form-decor svg {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+}
+
+.admin-form-decor .decor-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--brand-pink, #e6007e);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.admin-form-decor .decor-caption {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.modal-body .form-group label,
+.modal-body-custom .form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.form-control::placeholder,
+.form-select::placeholder {
+  color: #94a3b8;
+  font-size: 0.82rem;
+}

@@ -240,6 +240,28 @@
   }
 
   /** GitHub Pages : pas de backend Node ; Supabase parfois non provisionné */
+  function tryLocalSubAdminLogin(cleanEmail, password) {
+    try {
+      const list = JSON.parse(localStorage.getItem('JBF_ADMIN_ACCOUNTS_LOCAL') || '[]');
+      const acc = list.find((a) => String(a.email || '').toLowerCase() === cleanEmail && a.is_active !== false);
+      if (!acc || acc.role === 'super_admin') return false;
+      const pwd = acc.password || '';
+      if (pwd !== password && pwd !== password.trim()) return false;
+      persistAdminSession({
+        id: acc.id || ('adm-local-' + Date.now()),
+        email: cleanEmail,
+        name: acc.full_name || 'Sous-Administrateur JBF',
+        role: 'Sous-Administrateur',
+        permissions: Array.isArray(acc.permissions) ? acc.permissions : ['dashboard'],
+        avatar: 'SA',
+        token: 'jbf-subadmin-local-' + Date.now()
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function tryOfficialAdminStaticLogin(cleanEmail, password) {
     const onStaticHost = window.location.hostname.includes('github.io')
       || window.location.protocol === 'file:';
@@ -344,6 +366,11 @@
         } catch (supErr) {
           lastErr = supErr;
         }
+      }
+
+      if (tryLocalSubAdminLogin(cleanEmail, pass)) {
+        redirectToDashboard();
+        return;
       }
 
       if (!isGitHubPages && tryOfficialAdminStaticLogin(cleanEmail, pass)) {

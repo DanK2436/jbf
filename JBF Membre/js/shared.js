@@ -12,7 +12,10 @@ async function initMemberSupabase() {
   if (supabaseClient) return supabaseClient;
   if (!SUPABASE_ANON_KEY) {
     try {
-      const endpoints = ['/api/config', 'http://localhost:3001/api/config', 'http://127.0.0.1:8080/api/config'];
+      const endpoints = [];
+      if (!window.location.hostname.endsWith('github.io')) {
+        endpoints.push('/api/config', 'http://localhost:3001/api/config', 'http://127.0.0.1:8080/api/config');
+      }
       for (const ep of endpoints) {
         try {
           const res = await fetch(ep);

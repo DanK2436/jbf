@@ -4,7 +4,9 @@
 // =============================================================
 
 (function () {
-  const API_ENDPOINT = 'http://localhost:3001/api/verify-security';
+  const API_ENDPOINT = (window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:')
+    ? ''
+    : 'http://localhost:3001/api/verify-security';
   let isVpnActive = false;
   let clientSecurityInfo = null;
 
@@ -98,6 +100,10 @@
 
   // Contrôle de sécurité via l'API Backend
   async function checkSecurity() {
+    if (!API_ENDPOINT) {
+      removeBlockingOverlay();
+      return;
+    }
     try {
       const res = await fetch(API_ENDPOINT, {
         method: 'GET',

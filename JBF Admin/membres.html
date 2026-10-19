@@ -257,14 +257,7 @@
     <form id="createMemberForm" onsubmit="submitCreateMember(event)">
       <div class="modal-body">
         
-        <div style="background: #FDF2F8; border-left: 4px solid var(--pink); border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 20px;">
-          <div style="font-weight: 700; font-size: 0.85rem; color: var(--pink-deep); margin-bottom: 2px;">
-            <i class="bi bi-info-circle-fill"></i> Attributions Automatiques
-          </div>
-          <div style="font-size: 0.8rem; color: #831843;">
-            À la création, ce membre recevra automatiquement un accès au portail collaborateur, au <strong>Canal Général (#general)</strong> ainsi qu'au <strong>Canal Thématique (#section-X)</strong> correspondant à son domaine d'activité.
-          </div>
-        </div>
+        <div id="memberFormDecor"></div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
@@ -369,6 +362,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
+<script src="js/admin-form-decor.js"></script>
+<script src="js/staff-provision.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
   let allAgents = [];
@@ -393,6 +388,10 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    const decorEl = document.getElementById('memberFormDecor');
+    if (decorEl && window.JBFAdminFormDecor) {
+      decorEl.innerHTML = window.JBFAdminFormDecor.decorHtml('member', 'Portail collaborateur', 'Accès membre + canal section');
+    }
     generateNewMatricule();
     loadAgentsList();
   });
@@ -589,8 +588,51 @@
     const site = document.getElementById('mb_site').value;
     const matricule = document.getElementById('mb_matricule').value.trim();
 
+    let agentId = 'ag-' + Date.now();
+    const sb = getSupabase();
+
+    if (window.JBFStaffProvision?.invokeStaffProvision) {
+      const prov = await window.JBFStaffProvision.invokeStaffProvision({
+        type: 'membre',
+        full_name: fullName,
+        email,
+        password,
+        phone,
+        poste: fonction,
+        extraProfile: {
+          section_id: sectionId,
+          section_nom: sectionNom,
+          matricule,
+          site_affectation: site
+        }
+      });
+      if (prov.ok && prov.data?.userId) agentId = prov.data.userId;
+    } else if (sb) {
+      try {
+        const { data: signData, error: signErr } = await sb.auth.signUp({
+          email,
+          password,
+          options: { data: { role: 'membre', name: fullName, phone, matricule } }
+        });
+        if (!signErr && signData?.user?.id) agentId = signData.user.id;
+        await sb.from('profiles').upsert([{
+          id: agentId,
+          email,
+          full_name: fullName,
+          nom_complet: fullName,
+          phone,
+          role: 'membre',
+          poste: fonction,
+          matricule,
+          is_verified: true
+        }]);
+      } catch (err) {
+        console.warn('Erreur création membre Supabase:', err);
+      }
+    }
+
     const newAgent = {
-      id: 'ag-' + Date.now(),
+      id: agentId,
       nom_complet: fullName,
       full_name: fullName,
       name: fullName,
@@ -607,24 +649,9 @@
       ville: site,
       matricule: matricule,
       role: 'membre',
+      _authPassword: password,
       created_at: new Date().toISOString()
     };
-
-    const sb = getSupabase();
-    if (sb) {
-      try {
-        await sb.from('profiles').insert([newAgent]);
-        try {
-          await sb.auth.signUp({
-            email: email,
-            password: password,
-            options: { data: { role: 'membre', name: fullName, phone: phone, matricule: matricule } }
-          });
-        } catch(_) {}
-      } catch (err) {
-        console.warn('Erreur insertion Supabase profil:', err);
-      }
-    }
 
     allAgents.unshift(newAgent);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));

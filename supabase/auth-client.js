@@ -128,10 +128,6 @@
             if (!client) throw new Error('Supabase SDK indisponible');
             const cleanEmail = email.trim().toLowerCase();
 
-            if (targetSpace === 'admin' && cleanEmail !== ADMIN_STRICT_EMAIL) {
-                throw new Error('Accès refusé : Seul le compte Super Admin officiel est autorisé.');
-            }
-
             const { data, error } = await client.auth.signInWithPassword({
                 email: cleanEmail,
                 password: password
@@ -169,21 +165,57 @@
 
             if (targetSpace === 'admin') {
                 const emailLower = (user.email || '').toLowerCase();
-                if (emailLower !== ADMIN_STRICT_EMAIL && role !== 'admin') {
+                let adminAccount = null;
+                try {
+                    const { data: accRow } = await client
+                        .from('admin_accounts')
+                        .select('*')
+                        .eq('email', emailLower)
+                        .maybeSingle();
+                    adminAccount = accRow;
+                } catch (_) {}
+
+                const roleNorm = String(role || '').toLowerCase();
+                const metaRole = String(user.user_metadata?.role || '').toLowerCase();
+                const isSuper = emailLower === ADMIN_STRICT_EMAIL;
+                const isSubAdmin = adminAccount?.is_active !== false && (
+                    roleNorm === 'admin' || roleNorm === 'sous_admin' || roleNorm === 'super_admin' ||
+                    metaRole === 'sous_admin' || metaRole === 'super_admin' || adminAccount
+                );
+
+                if (!isSuper && !isSubAdmin) {
                     await client.auth.signOut();
-                    throw new Error("Accès interdit : Vous n'avez pas les droits Administrateur.");
+                    throw new Error("Accès interdit : compte non autorisé dans l'espace admin.");
                 }
+
                 const displayName = profileData?.full_name
+                    || adminAccount?.full_name
                     || (profileData?.nom ? `${profileData.nom} ${profileData.prenom || ''}`.trim() : '')
-                    || 'Direction Générale JBF SERVICES';
+                    || 'Administrateur JBF';
+
+                let permissions = ['*'];
+                let roleLabel = 'Super Administrateur';
+                if (isSuper) {
+                    permissions = ['*'];
+                } else if (adminAccount?.permissions) {
+                    permissions = Array.isArray(adminAccount.permissions) ? adminAccount.permissions : ['dashboard'];
+                    roleLabel = adminAccount.role === 'super_admin' ? 'Super Administrateur' : 'Sous-Administrateur';
+                } else if (Array.isArray(profileData?.permissions)) {
+                    permissions = profileData.permissions;
+                    roleLabel = 'Sous-Administrateur';
+                } else {
+                    permissions = ['dashboard'];
+                    roleLabel = 'Sous-Administrateur';
+                }
+
                 const adminSession = {
                     id: user.id,
                     email: user.email,
                     name: displayName,
                     nom: displayName,
-                    role: 'Super Administrateur',
-                    permissions: ['*'],
-                    avatar: 'DG',
+                    role: roleLabel,
+                    permissions: permissions,
+                    avatar: isSuper ? 'DG' : 'SA',
                     token: session.access_token
                 };
                 localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminSession));
@@ -197,20 +229,38 @@
             }
 
             if (targetSpace === 'membre') {
-                if (role !== 'membre' && role !== 'admin') {
+                const roleNorm = String(role || user.user_metadata?.role || '').toLowerCase();
+                const metaRole = String(user.user_metadata?.role || '').toLowerCase();
+                const allowed = ['membre', 'member', 'chef_equipe', 'chef', 'admin', 'sous_admin', ''];
+                const blockedClient = roleNorm === 'client' && metaRole === 'client' && !profileData?.matricule;
+                if (blockedClient) {
                     await client.auth.signOut();
-                    throw new Error("Accès interdit : Ce compte n'est pas enregistré comme Membre.");
+                    throw new Error("Accès interdit : ce compte est réservé à l'espace client.");
                 }
+                if (!allowed.includes(roleNorm) && !profileData && metaRole !== 'membre' && metaRole !== 'member') {
+                    await client.auth.signOut();
+                    throw new Error("Accès interdit : ce compte n'est pas enregistré comme collaborateur.");
+                }
+                const displayName = profileData?.full_name || profileData?.nom_complet
+                    || (profileData?.prenom && profileData?.nom ? `${profileData.prenom} ${profileData.nom}` : '')
+                    || user.user_metadata?.full_name || user.user_metadata?.name
+                    || user.email;
                 const memberUser = {
                     id: user.id,
                     email: user.email,
-                    nom: profileData ? (profileData.prenom + ' ' + profileData.nom) : user.email,
+                    nom: displayName,
                     role: profileData?.role || 'Membre',
-                    statut_equipe: profileData?.statut_equipe || 'Membre',
+                    statut_equipe: profileData?.statut_equipe || 'Actif',
                     token: session.access_token
                 };
                 localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(memberUser));
-                return { user: memberUser, redirect: '/JBF Membre/dashboard.html' };
+                localStorage.setItem('jbf_member_session', JSON.stringify(memberUser));
+                return {
+                    success: true,
+                    user: memberUser,
+                    session,
+                    redirect: '../dashboard.html'
+                };
             }
 
             // Client par défaut
