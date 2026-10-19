@@ -14,6 +14,9 @@ on:
 env:
   FLUTTER_VERSION: '3.27.4'
   JAVA_VERSION: '17'
+  # Clés publiques Supabase (anon) — surcharge optionnelle via secrets repo.
+  JBF_SUPABASE_URL: 'https://dvzwqxcaiagczyonrhsg.supabase.co'
+  JBF_PORTAL_BASE: 'https://dank2436.github.io/jbf'
 
 jobs:
   analyze:
@@ -90,15 +93,39 @@ jobs:
           cache: true
       - name: Enable Windows desktop
         run: flutter config --enable-windows-desktop
+      - name: Pub get shell
+        run: cd flutter/packages/jbf_portal_shell && flutter pub get
       - name: Build Windows
         working-directory: flutter/${{ matrix.app }}
+        env:
+          JBF_SUPABASE_ANON_KEY: ${{ secrets.JBF_SUPABASE_ANON_KEY }}
+        shell: pwsh
         run: |
           flutter pub get
-          flutter build windows --release
+          $defines = @(
+            "--dart-define=JBF_PORTAL_BASE=$env:JBF_PORTAL_BASE",
+            "--dart-define=JBF_SUPABASE_URL=$env:JBF_SUPABASE_URL"
+          )
+          if ($env:JBF_SUPABASE_ANON_KEY) {
+            $defines += "--dart-define=JBF_SUPABASE_ANON_KEY=$env:JBF_SUPABASE_ANON_KEY"
+          }
+          flutter build windows --release @defines
+      - name: Zip Windows bundle
+        if: matrix.app == 'jbf_admin'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "flutter/jbf_admin/build/windows/x64/runner/Release/*" -DestinationPath "JBF-Admin-Windows-x64.zip" -Force
       - uses: actions/upload-artifact@v4
+        if: matrix.app == 'jbf_admin'
         with:
-          name: windows-${{ matrix.app }}
-          path: flutter/${{ matrix.app }}/build/windows/x64/runner/Release/
+          name: windows-jbf_admin
+          path: JBF-Admin-Windows-x64.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: matrix.app == 'jbf_membre'
+        with:
+          name: windows-jbf_membre
+          path: flutter/jbf_membre/build/windows/x64/runner/Release/
           if-no-files-found: error
 
   build-macos-admin-membre:
@@ -116,15 +143,35 @@ jobs:
           cache: true
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
+      - name: Pub get shell
+        run: cd flutter/packages/jbf_portal_shell && flutter pub get
       - name: Build macOS
         working-directory: flutter/${{ matrix.app }}
+        env:
+          JBF_SUPABASE_ANON_KEY: ${{ secrets.JBF_SUPABASE_ANON_KEY }}
         run: |
           flutter pub get
-          flutter build macos --release
+          DEFINES="--dart-define=JBF_PORTAL_BASE=${JBF_PORTAL_BASE} --dart-define=JBF_SUPABASE_URL=${JBF_SUPABASE_URL}"
+          if [ -n "${JBF_SUPABASE_ANON_KEY}" ]; then
+            DEFINES="$DEFINES --dart-define=JBF_SUPABASE_ANON_KEY=${JBF_SUPABASE_ANON_KEY}"
+          fi
+          flutter build macos --release $DEFINES
+      - name: Zip macOS Admin app
+        if: matrix.app == 'jbf_admin'
+        run: |
+          cd flutter/jbf_admin/build/macos/Build/Products/Release
+          zip -r "$GITHUB_WORKSPACE/JBF-Admin-macOS.zip" "JBF Admin.app"
       - uses: actions/upload-artifact@v4
+        if: matrix.app == 'jbf_admin'
         with:
-          name: macos-${{ matrix.app }}
-          path: flutter/${{ matrix.app }}/build/macos/Build/Products/Release/
+          name: macos-jbf_admin
+          path: JBF-Admin-macOS.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: matrix.app == 'jbf_membre'
+        with:
+          name: macos-jbf_membre
+          path: flutter/jbf_membre/build/macos/Build/Products/Release/
           if-no-files-found: error
 
   build-ios:

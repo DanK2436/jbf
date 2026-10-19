@@ -1,17 +1,45 @@
-# jbf_admin
+# JBF Admin — application bureau & mobile
 
-A new Flutter project.
+Application native **JBF Admin** (Windows, macOS, Android, iOS) qui embarque le portail web d’administration avec :
 
-## Getting Started
+- **Logo JBF** dans la barre de navigation
+- **Clés Supabase** injectées au build (`--dart-define`) et dans la WebView (`ENV_SUPABASE_*`)
+- **Notifications bureau** pour les nouveaux messages directs des chefs d’équipe (polling Supabase `messages_chat`)
+- Accès rapide à **Messagerie équipes** depuis l’icône cloche dans la barre
 
-This project is a starting point for a Flutter application.
+## Compilation locale
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+cd flutter/packages/jbf_portal_shell && flutter pub get
+cd ../../jbf_admin && flutter pub get
+flutter run -d windows   # ou macos
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Variables optionnelles :
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run -d macos \
+  --dart-define=JBF_PORTAL_BASE=https://dank2436.github.io/jbf \
+  --dart-define=JBF_SUPABASE_URL=https://dvzwqxcaiagczyonrhsg.supabase.co \
+  --dart-define=JBF_SUPABASE_ANON_KEY=votre_cle_anon
+```
+
+## CI GitHub Actions
+
+Workflow [`.github/workflows/flutter-build.yml`](../../.github/workflows/flutter-build.yml) :
+
+- **Windows** : artefact `JBF-Admin-Windows-x64.zip`
+- **macOS** : artefact `JBF-Admin-macOS.zip` (`JBF Admin.app`)
+
+Déclenchement : push sur `flutter/**`, branche `main` / `cursor/**`, ou **Actions → Run workflow**.
+
+### Secrets GitHub (optionnels)
+
+| Secret | Usage |
+|--------|--------|
+| `JBF_SUPABASE_ANON_KEY` | Surcharge la clé anon au build (sinon défaut = site web) |
+
+## Prérequis utilisateur
+
+- **Windows** : [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
+- **macOS** : 11+ ; autoriser l’app si build CI non signé

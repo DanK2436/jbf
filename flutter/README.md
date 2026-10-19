@@ -31,7 +31,11 @@ flutter run -d windows     # si SDK desktop installé
 
 Les builds release sont déclenchés par [`.github/workflows/flutter-build.yml`](../.github/workflows/flutter-build.yml) (push sur `flutter/**` ou `workflow_dispatch`).
 
-Artefacts : APK Android, IPA (sans signature store), `.exe`/zip Windows, `.app`/zip macOS.
+Artefacts : APK Android, IPA (sans signature store), **JBF-Admin-Windows-x64.zip**, **JBF-Admin-macOS.zip**, builds membre Windows/macOS.
+
+### Admin — API & notifications
+
+L’app `jbf_admin` injecte Supabase dans la WebView et affiche des **notifications** pour les nouveaux messages `messages_chat` (canal `direct`, hors signaux WebRTC). Voir [`jbf_admin/README.md`](jbf_admin/README.md).
 
 ### Prérequis postes utilisateurs
 

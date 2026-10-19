@@ -3,12 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'admin_message_notifier.dart';
 import 'portal_config.dart';
+import 'portal_runtime.dart';
 
 class PortalApp extends StatelessWidget {
-  const PortalApp({super.key, required this.config});
+  const PortalApp({
+    super.key,
+    required this.config,
+    this.runtime = const PortalRuntime(),
+    this.messageNotifier,
+  });
 
   final PortalConfig config;
+  final PortalRuntime runtime;
+  final AdminMessageNotifier? messageNotifier;
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +37,26 @@ class PortalApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: PortalHomePage(config: config),
+      home: PortalHomePage(
+        config: config,
+        runtime: runtime,
+        messageNotifier: messageNotifier,
+      ),
     );
   }
 }
 
 class PortalHomePage extends StatefulWidget {
-  const PortalHomePage({super.key, required this.config});
+  const PortalHomePage({
+    super.key,
+    required this.config,
+    this.runtime = const PortalRuntime(),
+    this.messageNotifier,
+  });
 
   final PortalConfig config;
+  final PortalRuntime runtime;
+  final AdminMessageNotifier? messageNotifier;
 
   @override
   State<PortalHomePage> createState() => _PortalHomePageState();
@@ -49,6 +69,25 @@ class _PortalHomePageState extends State<PortalHomePage> {
   bool _canGoBack = false;
 
   PortalConfig get config => widget.config;
+  PortalRuntime get runtime => widget.runtime;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.messageNotifier?.startPolling();
+  }
+
+  @override
+  void dispose() {
+    widget.messageNotifier?.stopPolling();
+    super.dispose();
+  }
+
+  Future<void> _injectRuntimeConfig(InAppWebViewController controller) async {
+    final js = runtime.configInjectionJavaScript;
+    if (js.isEmpty) return;
+    await controller.evaluateJavascript(source: js);
+  }
 
   Future<void> _openExternal(Uri uri) async {
     if (await canLaunchUrl(uri)) {
@@ -60,8 +99,38 @@ class _PortalHomePageState extends State<PortalHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(config.appName),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/logo.png',
+                package: 'jbf_portal_shell',
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(Icons.business, size: 22),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(config.appName),
+          ],
+        ),
         actions: [
+          if (widget.messageNotifier != null)
+            IconButton(
+              tooltip: 'Messagerie équipes',
+              onPressed: () {
+                final base = config.githubPagesBase.replaceAll(RegExp(r'/+$'), '');
+                _webController?.loadUrl(
+                  urlRequest: URLRequest(
+                    url: WebUri('$base/JBF%20Admin/messagerie.html'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.mark_chat_unread_outlined),
+            ),
           IconButton(
             tooltip: 'Accueil portail',
             onPressed: () => _webController?.loadUrl(
@@ -130,7 +199,9 @@ class _PortalHomePageState extends State<PortalHomePage> {
               ),
               onWebViewCreated: (controller) {
                 _webController = controller;
+                _injectRuntimeConfig(controller);
               },
+              onLoadStop: (controller, _) => _injectRuntimeConfig(controller),
               onProgressChanged: (_, progress) {
                 setState(() => _progress = progress / 100);
               },
