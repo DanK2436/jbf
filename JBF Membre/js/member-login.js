@@ -17,13 +17,13 @@
         full_name: fullName,
         initials,
         email,
-        role: ag.role || 'Membre',
+        role: ag.statut_equipe === 'chef_equipe' || ag.role === 'chef_equipe' ? 'chef_equipe' : (ag.role || 'membre'),
         poste: ag.poste || ag.fonction || 'Collaborateur',
         matricule: ag.matricule || '',
         section_id: ag.section_id || 4,
         section_nom: ag.section_nom || ag.secteur || '',
         solde_conges: ag.solde_conges ?? 0,
-        statut_equipe: 'Actif',
+        statut_equipe: ag.statut_equipe || (ag.role === 'chef_equipe' ? 'chef_equipe' : 'membre'),
         token: 'jbf-member-local-' + Date.now()
       };
     } catch (_) {

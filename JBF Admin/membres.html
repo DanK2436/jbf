@@ -304,12 +304,12 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
-            <label for="mb_fonction">Fonction Hiérarchique <span style="color: var(--danger);">*</span></label>
-            <select id="mb_fonction" class="form-control" required>
-              <option value="directeur_section">Directeur de Section</option>
-              <option value="superviseur">Superviseur de Pôle</option>
-              <option value="employe_simple" selected>Employé / Technicien</option>
+            <label for="mb_statut_equipe">Statut dans le domaine <span style="color: var(--danger);">*</span></label>
+            <select id="mb_statut_equipe" class="form-control" required>
+              <option value="membre" selected>Membre simple (accès collaborateur)</option>
+              <option value="chef_equipe">Chef d'équipe (+ outil devis professionnel)</option>
             </select>
+            <small style="color: var(--gray-mid); font-size: 0.75rem;">Le chef d'équipe accède au chiffrage devis (CDF → USD) pour son pôle.</small>
           </div>
           <div class="form-group">
             <label for="mb_site">Site d'Affectation</label>
@@ -473,7 +473,8 @@
             site_affectation: d.site_affectation || d.site || d.ville || 'Lubumbashi',
             city: d.site_affectation || d.site || d.ville || 'Lubumbashi',
             phone: d.telephone || d.phone || d.whatsapp || '-',
-            role: d.role || 'membre'
+            role: d.role || 'membre',
+            statut_equipe: d.statut_equipe || (d.role === 'chef_equipe' ? 'chef_equipe' : 'membre')
           }));
         }
       } catch (err) {
@@ -519,7 +520,11 @@
 
     tbody.innerHTML = list.map(ag => {
       const initials = ag.full_name ? ag.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AG';
-      const fonctionBadge = window.adminCore.renderBadgeFonction(ag.poste || ag.fonction);
+      const statutEquipe = ag.statut_equipe || (ag.role === 'chef_equipe' ? 'chef_equipe' : 'membre');
+      const fonctionBadge = window.adminCore.renderBadgeFonction(statutEquipe === 'chef_equipe' ? 'chef_equipe' : (ag.poste || ag.fonction));
+      const statutBadge = statutEquipe === 'chef_equipe'
+        ? '<span class="badge-status valide" style="margin-top:4px; display:inline-block;"><i class="bi bi-person-badge"></i> Chef d\'équipe</span>'
+        : '<span class="badge-status" style="margin-top:4px; display:inline-block; background:#F1F5F9; color:#64748B;"><i class="bi bi-person"></i> Membre simple</span>';
       const sectionNom = ag.section_nom || ag.secteur || (ag.section_id ? JBF_SECTIONS_MAP[ag.section_id] : 'Prestations Générales');
       const sectionId = ag.section_id || 1;
       const matricule = ag.matricule || `JBF-SEC${sectionId.toString().padStart(2, '0')}-0000`;
@@ -539,7 +544,7 @@
             </div>
           </td>
           <td data-label="Matricule"><code style="background: #F1F5F9; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; color: #334155;">${escapeHtml(matricule)}</code></td>
-          <td data-label="Fonction">${fonctionBadge}</td>
+          <td data-label="Fonction / Statut">${fonctionBadge}${statutBadge}</td>
           <td data-label="Domaine / Section">
             <div style="font-weight: 600; font-size: 0.84rem; color: var(--gray-dark);">${escapeHtml(sectionNom)}</div>
             <div style="font-size: 0.72rem; color: var(--gray-mid);">Pôle N°${sectionId}</div>
@@ -560,8 +565,11 @@
           </td>
           <td data-label="Actions" style="text-align: right;">
             <div class="table-actions" style="justify-content: flex-end;">
-              <button class="btn btn-secondary btn-sm" onclick='viewAgentDetail(${JSON.stringify(ag).replace(/'/g, "&apos;")})' title="Voir la fiche">
-                <i class="bi bi-eye"></i> Voir la Fiche
+              <button class="btn btn-secondary btn-sm" onclick="viewAgentDetailById('${escapeHtml(String(ag.id || ag.email))}')" title="Voir la fiche">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteMemberAgent('${escapeHtml(String(ag.id || ''))}', '${escapeHtml(ag.email || '')}')" title="Supprimer">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </td>
@@ -624,6 +632,8 @@
     const fonction = document.getElementById('mb_fonction').value;
     const site = document.getElementById('mb_site').value;
     const matricule = document.getElementById('mb_matricule').value.trim();
+    const statutEquipe = document.getElementById('mb_statut_equipe').value || 'membre';
+    const rolePortal = statutEquipe === 'chef_equipe' ? 'chef_equipe' : 'membre';
 
     let agentId = 'ag-' + Date.now();
     const sb = getSupabase();
@@ -649,7 +659,7 @@
         const { data: signData, error: signErr } = await sb.auth.signUp({
           email,
           password,
-          options: { data: { role: 'membre', name: fullName, phone, matricule } }
+          options: { data: { role: rolePortal, name: fullName, phone, matricule, statut_equipe: statutEquipe } }
         });
         if (!signErr && signData?.user?.id) agentId = signData.user.id;
         await sb.from('profiles').upsert([{
@@ -658,9 +668,11 @@
           full_name: fullName,
           nom_complet: fullName,
           phone,
-          role: 'membre',
+          role: rolePortal,
           poste: fonction,
           matricule,
+          section_id: sectionId,
+          section_nom: sectionNom,
           is_verified: true
         }]);
       } catch (err) {
@@ -685,7 +697,8 @@
       site: site,
       ville: site,
       matricule: matricule,
-      role: 'membre',
+      role: rolePortal,
+      statut_equipe: statutEquipe,
       _authPassword: password,
       created_at: new Date().toISOString()
     };
@@ -713,6 +726,51 @@
     closeCreateMemberModal();
     renderAgentsTable(allAgents);
     updateKpis(allAgents);
+  }
+
+  function viewAgentDetailById(idOrEmail) {
+    const key = String(idOrEmail || '').toLowerCase();
+    const ag = allAgents.find((a) => String(a.id || '') === idOrEmail || String(a.email || '').toLowerCase() === key);
+    if (!ag) {
+      window.adminCore.showToast('Collaborateur introuvable.', 'error');
+      return;
+    }
+    viewAgentDetail(ag);
+  }
+
+  async function deleteMemberAgent(id, email) {
+    const ag = allAgents.find((a) => (id && String(a.id) === String(id)) || (email && String(a.email || '').toLowerCase() === String(email).toLowerCase()));
+    const label = ag?.full_name || email || 'ce collaborateur';
+    if (!confirm(`Supprimer définitivement ${label} ?\n\nL'accès Espace Membre et le compte portail seront retirés.`)) {
+      return;
+    }
+
+    if (email && window.JBFMemberPortalSync?.deleteMemberAccount) {
+      const del = await window.JBFMemberPortalSync.deleteMemberAccount(email);
+      if (!del.ok) {
+        console.warn('[Member delete RPC]', del.error);
+      }
+    }
+
+    const sb = getSupabase();
+    const profileId = ag?.id || id;
+    if (sb && profileId && !String(profileId).startsWith('ag-') && !String(profileId).startsWith('mem-')) {
+      try {
+        await sb.from('profiles').delete().eq('id', profileId);
+      } catch (err) {
+        console.warn('Suppression profil:', err);
+      }
+    }
+
+    allAgents = allAgents.filter((a) => {
+      if (email && String(a.email || '').toLowerCase() === String(email).toLowerCase()) return false;
+      if (id && String(a.id) === String(id)) return false;
+      return true;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
+    renderAgentsTable(allAgents);
+    updateKpis(allAgents);
+    window.adminCore.showToast(`${label} a été supprimé.`, 'success');
   }
 
   function viewAgentDetail(ag) {
@@ -751,6 +809,10 @@
           <div style="font-weight: 700; color: var(--gray-dark);">${escapeHtml(ag.city || ag.site_affectation || 'Lubumbashi')}</div>
         </div>
 
+        <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
+          <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Statut dans le domaine</div>
+          <div style="font-weight: 700; color: var(--gray-dark);">${(ag.statut_equipe || ag.role) === 'chef_equipe' ? "<i class=\"bi bi-person-badge\"></i> Chef d'équipe" : '<i class="bi bi-person-check"></i> Membre simple'}</div>
+        </div>
         <div style="background: var(--gray-light); padding: 10px 14px; border-radius: var(--r-sm);">
           <div style="font-size: 0.75rem; color: var(--gray-mid); font-weight: 600;">Statut Compte</div>
           <div style="font-weight: 700; color: #047857;"><i class="bi bi-check-circle-fill"></i> Actif & Vérifié</div>

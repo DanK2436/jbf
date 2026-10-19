@@ -31,8 +31,11 @@
           </p>
         </div>
         <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" onclick="openChefDevisModal()" id="btnChefDevis">
-            + Établir un Devis Technique (Chef d'équipe)
+          <a href="devis-chiffrage.html" class="btn btn-primary btn-sm" id="btnChefDevisPro" style="display:none; text-decoration:none;">
+            Chiffrage devis pro (CDF → USD)
+          </a>
+          <button class="btn btn-outline btn-sm" onclick="openChefDevisModal()" id="btnChefDevis" style="display:none;">
+            Devis rapide (formulaire)
           </button>
           <div class="filter-scroll-wrapper">
             <button class="btn btn-outline btn-sm active" id="filterAll" onclick="filterMissions('all')">Toutes</button>
@@ -151,6 +154,12 @@
       const profile = await initMemberSession();
       if (profile) {
         loadUserMissions(profile.id);
+        if (isChefEquipe(profile)) {
+          const pro = document.getElementById('btnChefDevisPro');
+          const quick = document.getElementById('btnChefDevis');
+          if (pro) pro.style.display = '';
+          if (quick) quick.style.display = '';
+        }
       }
     });
 

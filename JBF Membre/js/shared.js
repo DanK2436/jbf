@@ -61,6 +61,12 @@ function getServiceById(id) {
   return JBF_15_SERVICES.find(s => s.id === parseInt(id)) || JBF_15_SERVICES[3]; // défaut Section 4 Mines
 }
 
+function isChefEquipe(profile) {
+  if (!profile) return false;
+  const s = String(profile.statut_equipe || profile.role || '').toLowerCase();
+  return s === 'chef_equipe' || s === 'chef';
+}
+
 // Session & Profil utilisateur actuel
 let currentMemberProfile = null;
 
@@ -105,7 +111,8 @@ async function initMemberSession() {
         matricule: raw.matricule || '',
         poste: raw.poste || raw.fonction || raw.role || 'Collaborateur',
         solde_conges: raw.solde_conges !== undefined ? raw.solde_conges : 0,
-        role: raw.role || 'membre'
+        role: raw.role || 'membre',
+        statut_equipe: raw.statut_equipe || (raw.role === 'chef_equipe' ? 'chef_equipe' : 'membre')
       };
     }
 
@@ -144,7 +151,8 @@ async function initMemberSession() {
             matricule: profile.matricule || 'JBF-EMP-007',
             poste: profile.poste || 'Superviseur Opérations Minières',
             solde_conges: profile.solde_conges !== undefined ? profile.solde_conges : 18,
-            role: profile.role || 'membre'
+            role: profile.role || 'membre',
+            statut_equipe: profile.statut_equipe || (profile.role === 'chef_equipe' ? 'chef_equipe' : 'membre')
           };
         }
       } catch (_) {}
@@ -173,6 +181,18 @@ async function initMemberSession() {
     localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(currentMemberProfile));
 
     updateMemberUI(currentMemberProfile);
+    if (typeof renderNavigation === 'function' && document.getElementById('memberSidebarContainer')) {
+      const path = window.location.pathname || '';
+      let pageKey = document.body.dataset.memberPage || 'dashboard';
+      if (path.includes('missions')) pageKey = 'missions';
+      else if (path.includes('devis-chiffrage')) pageKey = 'devis-chiffrage';
+      else if (path.includes('leaves')) pageKey = 'leaves';
+      else if (path.includes('chat')) pageKey = 'chat';
+      else if (path.includes('resources')) pageKey = 'resources';
+      else if (path.includes('roi')) pageKey = 'roi';
+      else if (path.includes('dashboard')) pageKey = 'dashboard';
+      renderNavigation(pageKey, currentMemberProfile);
+    }
     return currentMemberProfile;
 
   } catch (err) {
@@ -196,7 +216,8 @@ function updateMemberUI(profile) {
   });
 
   document.querySelectorAll('.user-meta-role').forEach(el => {
-    el.textContent = `${profile.poste || 'Collaborateur'} • ${profile.section_cat || 'JBF RDC'}`;
+    const chefLabel = isChefEquipe(profile) ? "Chef d'équipe • " : '';
+    el.textContent = `${chefLabel}${profile.poste || 'Collaborateur'} • ${profile.section_cat || 'JBF RDC'}`;
     el.title = profile.section_nom || '';
   });
 
@@ -208,12 +229,14 @@ function updateMemberUI(profile) {
 /**
  * Injection globale du Header et Sidebar cohérents (sans pointage)
  */
-function renderNavigation(activePage) {
+function renderNavigation(activePage, profileOverride) {
   const headerContainer = document.getElementById('memberHeaderContainer');
   const sidebarContainer = document.getElementById('memberSidebarContainer');
 
   const inAuthDir = window.location.pathname.includes('/auth/');
   const rootPath = inAuthDir ? '../' : '';
+  const navProfile = profileOverride || currentMemberProfile;
+  const showChefDevis = isChefEquipe(navProfile);
 
   if (headerContainer) {
     headerContainer.innerHTML = `
@@ -269,6 +292,14 @@ function renderNavigation(activePage) {
               Mes Missions
             </a>
           </li>
+          ${showChefDevis ? `
+          <li>
+            <a href="${rootPath}devis-chiffrage.html" class="${activePage === 'devis-chiffrage' ? 'active' : ''}" onclick="if(window.innerWidth<1024) closeSidebar()" style="border-left:3px solid var(--pink);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M9 7h6M9 11h6"></path></svg>
+              Chiffrage Devis Pro (CDF → USD)
+            </a>
+          </li>
+          ` : ''}
           <li>
             <a href="${rootPath}leaves.html" class="${activePage === 'leaves' ? 'active' : ''}" onclick="if(window.innerWidth<1024) closeSidebar()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>

@@ -42,8 +42,8 @@
         section_nom: payload.section_nom || '',
         poste: payload.poste || 'Collaborateur',
         phone: payload.phone || '',
-        role: 'Membre',
-        statut_equipe: 'Actif',
+        role: payload.statut_equipe === 'chef_equipe' ? 'chef_equipe' : 'membre',
+        statut_equipe: payload.statut_equipe || 'membre',
         token: 'jbf-member-rpc-' + Date.now()
       };
     } catch (e) {

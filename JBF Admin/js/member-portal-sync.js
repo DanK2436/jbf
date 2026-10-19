@@ -29,7 +29,8 @@
         p_section_nom: agent.section_nom || null,
         p_poste: agent.poste || agent.fonction || null,
         p_phone: agent.phone || agent.telephone || null,
-        p_profile_id: String(agent.id || '').startsWith('ag-') ? null : agent.id
+        p_profile_id: String(agent.id || '').startsWith('ag-') ? null : agent.id,
+        p_statut_equipe: agent.statut_equipe || agent.role || 'membre'
       });
       if (error) return { ok: false, error: error.message };
       const payload = typeof data === 'string' ? JSON.parse(data) : data;
@@ -44,5 +45,25 @@
     return (window.JBF_CONFIG && window.JBF_CONFIG.MEMBER_SYNC_KEY) || 'jbf-member-sync-v1';
   }
 
-  window.JBFMemberPortalSync = { syncMemberAccount };
+  async function deleteMemberAccount(email) {
+    const client = getClient();
+    const syncKey = cfgKey();
+    if (!client || !email) {
+      return { ok: false, error: 'missing_client_or_email' };
+    }
+    try {
+      const { data, error } = await client.rpc('admin_delete_member_account', {
+        p_email: email.trim().toLowerCase(),
+        p_sync_key: syncKey
+      });
+      if (error) return { ok: false, error: error.message };
+      const payload = typeof data === 'string' ? JSON.parse(data) : data;
+      if (payload?.ok) return { ok: true };
+      return { ok: false, error: payload?.error || 'delete_failed' };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  window.JBFMemberPortalSync = { syncMemberAccount, deleteMemberAccount };
 })(window);
