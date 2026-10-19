@@ -6,7 +6,7 @@
   <title>Gestion des Collaborateurs & Équipes — JBF Admin</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/main.css?v=20261019b">
-  <link rel="stylesheet" href="css/membres.css?v=4">
+  <link rel="stylesheet" href="css/membres.css?v=5">
   <style>
     /* Secours si cache CSS : masquer modales tant qu'elles ne sont pas ouvertes */
     .modal-overlay:not(.active) { display: none !important; }
@@ -129,53 +129,37 @@
     </header>
 
     <main class="admin-content membres-page">
-      <section class="membres-hero-banner">
-        <div class="membres-hero-inner">
-          <div>
-            <p class="membres-eyebrow">Capital humain · JBF SERVICES RDC</p>
-            <h2 class="membres-hero-title">Gestion des collaborateurs</h2>
-            <p class="membres-hero-desc">
-              Création des comptes Espace Membre, chefs d'équipe par domaine et déploiement terrain (Lubumbashi, Kolwezi, Kinshasa…).
-            </p>
-          </div>
-          <div class="membres-hero-meta">
-            <span class="membres-meta-pill"><i class="bi bi-cloud-check"></i> Portail Supabase</span>
-            <span class="membres-meta-pill"><i class="bi bi-shield-lock"></i> Accès sécurisés</span>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="bi bi-people-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Effectif total</h3>
+            <div class="kpi-value" id="kpiTotalMembers">--</div>
+            <div class="kpi-sub">Collaborateurs</div>
           </div>
         </div>
-      </section>
-
-      <div class="membres-kpi-strip">
-        <div class="membres-kpi-tile">
-          <div class="membres-kpi-icon pink"><i class="bi bi-people-fill"></i></div>
-          <div>
-            <div class="membres-kpi-label">Effectif total</div>
-            <div class="membres-kpi-num" id="kpiTotalMembers">--</div>
-            <div class="membres-kpi-hint">Collaborateurs</div>
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="bi bi-person-badge-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Chefs d'équipe</h3>
+            <div class="kpi-value" id="kpiChefsEquipe">--</div>
+            <div class="kpi-sub">Devis pro</div>
           </div>
         </div>
-        <div class="membres-kpi-tile">
-          <div class="membres-kpi-icon green"><i class="bi bi-person-badge-fill"></i></div>
-          <div>
-            <div class="membres-kpi-label">Chefs d'équipe</div>
-            <div class="membres-kpi-num" id="kpiChefsEquipe">--</div>
-            <div class="membres-kpi-hint">Devis pro</div>
+        <div class="kpi-card">
+          <div class="kpi-icon info"><i class="bi bi-person-check-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Membres</h3>
+            <div class="kpi-value" id="kpiMembresSimples">--</div>
+            <div class="kpi-sub">Accès standard</div>
           </div>
         </div>
-        <div class="membres-kpi-tile">
-          <div class="membres-kpi-icon blue"><i class="bi bi-person-check-fill"></i></div>
-          <div>
-            <div class="membres-kpi-label">Membres</div>
-            <div class="membres-kpi-num" id="kpiMembresSimples">--</div>
-            <div class="membres-kpi-hint">Accès standard</div>
-          </div>
-        </div>
-        <div class="membres-kpi-tile">
-          <div class="membres-kpi-icon amber"><i class="bi bi-diagram-3-fill"></i></div>
-          <div>
-            <div class="membres-kpi-label">Domaines</div>
-            <div class="membres-kpi-num" id="kpiDomainesActifs">--</div>
-            <div class="membres-kpi-hint">Pôles actifs</div>
+        <div class="kpi-card">
+          <div class="kpi-icon warning"><i class="bi bi-diagram-3-fill"></i></div>
+          <div class="kpi-details">
+            <h3>Domaines</h3>
+            <div class="kpi-value" id="kpiDomainesActifs">--</div>
+            <div class="kpi-sub">Pôles actifs</div>
           </div>
         </div>
       </div>
@@ -245,7 +229,7 @@
 
 <!-- MODAL CRÉATION COLLABORATEUR -->
 <div class="modal-overlay" id="createMemberModal" role="dialog" aria-modal="true" aria-labelledby="createMemberTitle" onclick="closeCreateMemberModal()">
-  <div class="modal-box" style="max-width: 680px;" onclick="event.stopPropagation()">
+  <div class="modal-box modal-box--membre" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 id="createMemberTitle"><i class="bi bi-person-plus-fill"></i> Créer un compte collaborateur</h3>
       <button class="btn-modal-close" onclick="closeCreateMemberModal()">&times;</button>
@@ -321,9 +305,9 @@
 
         <div class="form-group">
           <label class="form-label" for="mb_matricule">Matricule interne (auto)</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="mb_matricule" class="form-control" style="font-family: monospace; font-weight: 700;">
-            <button type="button" class="btn btn-secondary" onclick="generateNewMatricule()" title="Régénérer">
+          <div class="membres-matricule-row">
+            <input type="text" id="mb_matricule" class="form-control membres-matricule-input">
+            <button type="button" class="btn btn-secondary membres-matricule-btn" onclick="generateNewMatricule()" title="Régénérer">
               <i class="bi bi-arrow-repeat"></i>
             </button>
           </div>
@@ -342,7 +326,7 @@
 
 <!-- MODAL DÉTAILS DU MEMBRE -->
 <div class="modal-overlay" id="detailMemberModal" role="dialog" aria-modal="true" onclick="closeDetailMemberModal()">
-  <div class="modal-box" style="max-width: 580px;" onclick="event.stopPropagation()">
+  <div class="modal-box modal-box--membre" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3><i class="bi bi-person-lines-fill"></i> Fiche Collaborateur</h3>
       <button class="btn-modal-close" onclick="closeDetailMemberModal()">&times;</button>
@@ -401,9 +385,6 @@
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.remove('active');
-      if (id === 'createMemberModal') {
-        el.addEventListener('click', () => closeCreateMemberModal());
-      }
     });
     document.body.style.overflow = '';
   }
