@@ -75,8 +75,7 @@
                 <div style="font-size: 0.75rem; color: var(--text-muted);" id="adminChatPeerMeta">—</div>
               </div>
               <div style="display: flex; gap: 6px;">
-                <button type="button" class="btn btn-secondary btn-sm" id="btnAdminCallAudio" disabled onclick="startAdminCall('audio')"><i class="bi bi-telephone-fill"></i></button>
-                <button type="button" class="btn btn-primary btn-sm" id="btnAdminCallVideo" disabled onclick="startAdminCall('video')"><i class="bi bi-camera-video-fill"></i></button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnAdminCallAudio" disabled onclick="startAdminCall('audio')" title="Appel vocal"><i class="bi bi-telephone-fill"></i> Appel</button>
               </div>
             </div>
             <div class="chat-messages" id="adminChatMessages"><div style="text-align:center;color:var(--text-muted);padding:2rem;">Choisissez un contact à gauche.</div></div>
@@ -96,10 +95,8 @@
     <div style="font-weight:800;font-size:1.1rem;" id="adminCallStatus">Appel en cours…</div>
     <div style="font-size:0.85rem;opacity:0.85;" id="adminCallPeerName">—</div>
   </div>
-  <div class="admin-call-videos">
-    <video id="adminLocalVideo" autoplay playsinline muted></video>
-    <video id="adminRemoteVideo" autoplay playsinline></video>
-  </div>
+  <p style="color:#94A3B8;font-size:0.85rem;margin-bottom:1rem;">Appel vocal uniquement (micro). Autorisez le micro dans le navigateur.</p>
+  <audio id="adminRemoteAudio" autoplay playsinline></audio>
   <div class="admin-call-actions">
     <button type="button" class="btn btn-danger" onclick="endAdminCall()"><i class="bi bi-telephone-x-fill"></i> Raccrocher</button>
   </div>
@@ -205,7 +202,6 @@
     document.getElementById('adminChatInput').disabled = !selectedChef;
     document.getElementById('btnAdminSend').disabled = !selectedChef;
     document.getElementById('btnAdminCallAudio').disabled = !selectedChef;
-    document.getElementById('btnAdminCallVideo').disabled = !selectedChef;
     if (selectedChef) {
       document.getElementById('adminChatPeerLabel').textContent = selectedChef.name;
       document.getElementById('adminChatPeerMeta').textContent = `${selectedChef.section} · ${selectedChef.email}`;
@@ -313,7 +309,7 @@
           const chef = chefContacts.find((c) => c.email === p.from);
           if (chef && confirm(`Appel entrant de ${chef.name}. Répondre ?`)) {
             selectChefContact(chef.email);
-            startAdminCall('video', true, p);
+            startAdminCall('audio', true, p);
           }
         }
       });
@@ -321,6 +317,7 @@
   }
 
   async function startAdminCall(mode, acceptIncoming, incomingSignal) {
+    mode = 'audio';
     if (!selectedChef) return;
     document.getElementById('adminCallOverlay').classList.add('active');
     document.getElementById('adminCallPeerName').textContent = selectedChef.name;
@@ -329,9 +326,10 @@
     adminPeerCall = new window.JBFWebRTC.JbfPeerCall({
       myId: ADMIN_CALL_ID,
       peerId: selectedChef.email,
-      isVideo: mode === 'video',
+      isVideo: false,
       onRemoteStream: (stream) => {
-        document.getElementById('adminRemoteVideo').srcObject = stream;
+        const aud = document.getElementById('adminRemoteAudio');
+        if (aud) aud.srcObject = stream;
         document.getElementById('adminCallStatus').textContent = 'En communication';
       },
       onStateChange: (st) => { document.getElementById('adminCallStatus').textContent = st; },
@@ -344,9 +342,6 @@
       } else {
         await adminPeerCall.startOutgoing(incomingSignal?.callId);
       }
-      if (adminPeerCall.localStream) {
-        document.getElementById('adminLocalVideo').srcObject = adminPeerCall.localStream;
-      }
     } catch (e) {
       window.adminCore?.showToast('Micro/caméra refusé : ' + e.message, 'error');
       endAdminCall();
@@ -355,8 +350,8 @@
 
   function endAdminCall() {
     document.getElementById('adminCallOverlay').classList.remove('active');
-    document.getElementById('adminLocalVideo').srcObject = null;
-    document.getElementById('adminRemoteVideo').srcObject = null;
+    const aud = document.getElementById('adminRemoteAudio');
+    if (aud) aud.srcObject = null;
     if (adminPeerCall) adminPeerCall.hangup(true);
     adminPeerCall = null;
   }

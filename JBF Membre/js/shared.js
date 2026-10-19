@@ -61,6 +61,28 @@ function getServiceById(id) {
   return JBF_15_SERVICES.find(s => s.id === parseInt(id)) || JBF_15_SERVICES[3]; // défaut Section 4 Mines
 }
 
+function decodeHtmlEntities(value) {
+  if (value == null || value === '') return '';
+  let s = String(value);
+  if (!/&(?:#x?[0-9a-f]+|[a-z]+);/i.test(s)) return s;
+  try {
+    const el = document.createElement('textarea');
+    el.innerHTML = s;
+    return el.value || s;
+  } catch (_) {
+    return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+  }
+}
+
+function displayUiLabel(value, fallback) {
+  const decoded = decodeHtmlEntities(value);
+  if (!decoded) return fallback || '';
+  if (/^data:[\w/+.-]+;base64,/i.test(decoded.trim())) return fallback || '';
+  return decoded;
+}
+
+window.JBFTextDisplay = window.JBFTextDisplay || { decodeHtmlEntities, displayLabel: displayUiLabel };
+
 function isChefEquipe(profile) {
   if (!profile) return false;
   const s = String(profile.statut_equipe || profile.role || '').toLowerCase();
@@ -212,17 +234,19 @@ function updateMemberUI(profile) {
   });
 
   document.querySelectorAll('.user-meta-name').forEach(el => {
-    el.textContent = profile.full_name || profile.nom || 'Collaborateur';
+    el.textContent = displayUiLabel(profile.full_name || profile.nom, 'Collaborateur');
   });
 
   document.querySelectorAll('.user-meta-role').forEach(el => {
     const chefLabel = isChefEquipe(profile) ? "Chef d'équipe • " : '';
-    el.textContent = `${chefLabel}${profile.poste || 'Collaborateur'} • ${profile.section_cat || 'JBF RDC'}`;
-    el.title = profile.section_nom || '';
+    const poste = displayUiLabel(profile.poste, 'Collaborateur');
+    const sec = displayUiLabel(profile.section_cat, 'JBF RDC');
+    el.textContent = `${chefLabel}${poste} • ${sec}`;
+    el.title = displayUiLabel(profile.section_nom, '');
   });
 
   document.querySelectorAll('.member-section-display').forEach(el => {
-    el.textContent = `${profile.section_nom || 'Département des Opérations Minières'}`;
+    el.textContent = displayUiLabel(profile.section_nom, 'Votre pôle JBF');
   });
 }
 

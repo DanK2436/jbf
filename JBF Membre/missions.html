@@ -144,6 +144,7 @@
     </div>
   </div>
 
+  <script src="../js/jbf-devis-sync.js"></script>
   <script src="js/shared.js"></script>
   <script>
     let allUserMissions = [];
@@ -351,8 +352,12 @@
         const stored = localStorage.getItem('JBF_DEVIS_EQUIPES_LOCAL');
         if (stored) localList = JSON.parse(stored);
       } catch (_) {}
-      localList.unshift(newDevis);
-      localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(localList));
+      if (window.JBFDevisSync) {
+        window.JBFDevisSync.pushDevisFromChef(newDevis);
+      } else {
+        localList.unshift(newDevis);
+        localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(localList));
+      }
 
       // 2. Synchronisation Supabase si disponible
       try {

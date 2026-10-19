@@ -269,6 +269,8 @@
   </div>
 </div>
 
+<script src="../js/jbf-devis-sync.js"></script>
+<script src="../js/jbf-text-display.js"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
@@ -276,33 +278,33 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadDevisEquipes();
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'JBF_DEVIS_EQUIPES_LOCAL' || e.key === (window.JBFDevisSync && JBFDevisSync.DEVIS_LOCAL_KEY)) {
+        loadDevisEquipes();
+      }
+    });
   });
 
   async function loadDevisEquipes() {
     const tbody = document.getElementById('devisEquipesTableBody');
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des devis d\'équipes...</td></tr>';
 
-    let loaded = [];
+    let remote = [];
     try {
       if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
         const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
         const { data, error } = await client.from('devis_equipes').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
-          loaded = data;
-        }
+        if (!error && Array.isArray(data)) remote = data;
       }
     } catch (e) {
       console.warn('Supabase devis_equipes:', e);
     }
 
-    if (loaded.length === 0) {
-      const stored = localStorage.getItem('JBF_DEVIS_EQUIPES_LOCAL');
-      if (stored) {
-        try { loaded = JSON.parse(stored); } catch (e) {}
-      }
-    }
-
-    devisList = loaded || [];
+    const local = window.JBFDevisSync ? window.JBFDevisSync.readLocalDevis() : [];
+    devisList = window.JBFDevisSync
+      ? window.JBFDevisSync.mergeDevisLists(remote, local)
+      : (remote.length ? remote : local);
+    if (window.JBFDevisSync) window.JBFDevisSync.writeLocalDevis(devisList);
     updateKPIs();
     renderDevisEquipesTable(devisList);
   }
@@ -318,6 +320,10 @@
     document.getElementById('kpiDevisAcceptes').textContent = acceptes;
     document.getElementById('kpiMontantTotal').textContent = '$' + totalMontant.toLocaleString() + ' USD';
     document.getElementById('badgeDevisEquipesCount').textContent = attente;
+  }
+
+  function label(v, fb) {
+    return window.JBFTextDisplay ? window.JBFTextDisplay.displayLabel(v, fb) : (v || fb || '');
   }
 
   function renderDevisEquipesTable(list) {
@@ -337,8 +343,8 @@
       return `
         <tr>
           <td>
-            <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(d.titre)}</div>
-            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(d.domaine || 'Prestation')}</div>
+            <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(label(d.titre, 'Devis'))}</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(label(d.domaine, 'Prestation'))}</div>
           </td>
           <td>
             <div style="font-weight: 600; color: var(--brand-pink);">${escapeHtml(d.chef_equipe_nom)}</div>

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/jbf-webrtc-call.js"></script>
+  <script src="../js/jbf-text-display.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ============================================================
@@ -1325,6 +1326,7 @@
         </span>
       </div>
     </div>
+    <audio id="remoteCallAudio" autoplay playsinline style="display:none;"></audio>
     <div class="call-middle-area">
       <!-- DYNAMIC PARTICIPANT TILES CONTAINER -->
       <div class="call-grid-area" id="callParticipantsGrid" data-count="2">
@@ -1476,7 +1478,7 @@
         roleTag: 'Pôle Métier',
         avatar: 'S4',
         avatarClass: 'group',
-        status: 'Équipes de terrain Fungurume &amp; Kolwezi',
+        status: 'Équipes de terrain Fungurume & Kolwezi',
         lastMsg: 'Briefing 07h00 validé pour le secteur minier.',
         lastTime: '08:15',
         unread: 1
@@ -1484,11 +1486,11 @@
       {
         id: 'hse_comm',
         type: 'group',
-        name: 'Comité HSE &amp; Sécurité',
+        name: 'Comité HSE & Sécurité',
         roleTag: 'HSE',
         avatar: 'HSE',
         avatarClass: 'hse',
-        status: 'Superviseurs &amp; Délégués Sécurité',
+        status: 'Superviseurs & Délégués Sécurité',
         lastMsg: 'Rappel port des EPI coqués sur chantiers.',
         lastTime: 'Hier',
         unread: 0
@@ -1496,11 +1498,11 @@
       {
         id: 'direction',
         type: 'group',
-        name: 'Direction &amp; Superviseurs',
+        name: 'Direction & Superviseurs',
         roleTag: 'Coordination',
         avatar: 'DIR',
         avatarClass: 'dir',
-        status: 'Cadres &amp; Chefs de Pôles',
+        status: 'Cadres & Chefs de Pôles',
         lastMsg: 'Réunion de coordination des plannings.',
         lastTime: 'Hier',
         unread: 0
@@ -1602,7 +1604,7 @@
           const conv = CONVERSATIONS.find((c) => getConvPeerEmail(c) === s.from);
           if (conv && confirm(`Appel entrant de ${conv.name}. Répondre ?`)) {
             selectConversation(conv.id);
-            startGroupCall('video', true, s);
+            startGroupCall('audio', true, s);
           }
         }
       });
@@ -1735,13 +1737,13 @@
           <div class="wa-item-avatar ${c.avatarClass}">${c.avatar}</div>
           <div class="wa-item-content">
             <div class="wa-item-top">
-              <div class="wa-item-name">${c.name}</div>
+              <div class="wa-item-name">${escapeHtml(window.JBFTextDisplay ? JBFTextDisplay.displayLabel(c.name, c.name) : c.name)}</div>
               <div class="wa-item-time">${c.lastTime}</div>
             </div>
             <div class="wa-item-bottom">
               <div class="wa-item-msg">
-                <span class="wa-item-role-tag">${c.roleTag}</span>
-                <span>${c.lastMsg}</span>
+                <span class="wa-item-role-tag">${escapeHtml(window.JBFTextDisplay ? JBFTextDisplay.displayLabel(c.roleTag, '') : c.roleTag)}</span>
+                <span>${escapeHtml(window.JBFTextDisplay ? JBFTextDisplay.displayLabel(c.lastMsg, '') : c.lastMsg)}</span>
               </div>
               ${c.unread > 0 ? `<div class="wa-item-badge">${c.unread}</div>` : ''}
             </div>
@@ -1759,8 +1761,8 @@
       conv.unread = 0;
 
       // Update Header
-      document.getElementById('currentChatTitle').textContent = conv.name;
-      document.getElementById('currentChatStatus').textContent = conv.status;
+      document.getElementById('currentChatTitle').textContent = window.JBFTextDisplay ? JBFTextDisplay.displayLabel(conv.name, conv.name) : conv.name;
+      document.getElementById('currentChatStatus').textContent = window.JBFTextDisplay ? JBFTextDisplay.displayLabel(conv.status, '') : conv.status;
       const avatarEl = document.getElementById('currentChatAvatar');
       avatarEl.textContent = conv.avatar;
       avatarEl.className = `wa-item-avatar ${conv.avatarClass}`;
@@ -2145,13 +2147,14 @@
     }
 
     async function startGroupCall(mode, acceptIncoming, incomingSignal) {
+      mode = 'audio';
       const conv = CONVERSATIONS.find(c => c.id === currentChatId);
       const peerId = getConvPeerEmail(conv);
       if (!peerId) {
-        alert('Choisissez un contact (discussion directe : Direction ou chef d\'équipe) pour lancer un appel réel.');
+        alert('Choisissez un contact (discussion directe : Direction ou chef d\'équipe) pour lancer un appel vocal.');
         return;
       }
-      currentCallMode = mode;
+      currentCallMode = 'audio';
       document.getElementById('callOverlayHeaderTitle').textContent = `Appel — ${conv.name}`;
       document.getElementById('groupCallOverlay').classList.add('active');
       callSeconds = 0;
@@ -2171,10 +2174,10 @@
       activePeerCall = new window.JBFWebRTC.JbfPeerCall({
         myId: myCallId(),
         peerId,
-        isVideo: mode === 'video',
+        isVideo: false,
         onRemoteStream: (stream) => {
-          const ve = document.getElementById('remoteCameraVideo');
-          if (ve) { ve.srcObject = stream; ve.style.display = 'block'; }
+          const aud = document.getElementById('remoteCallAudio');
+          if (aud) aud.srcObject = stream;
         },
         onStateChange: (st) => {
           if (st === 'ended') endGroupCall();
@@ -2191,8 +2194,7 @@
         }
         localStream = activePeerCall.localStream;
         const ve = document.getElementById('localCameraVideo');
-        if (ve && localStream) { ve.srcObject = localStream; ve.style.display = mode === 'video' ? 'block' : 'none'; }
-        isCamMuted = mode !== 'video';
+        isCamMuted = true;
       } catch (e) {
         alert('Impossible d\'accéder au micro/caméra : ' + e.message);
         endGroupCall();

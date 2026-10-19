@@ -9,6 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="../js/jbf-devis-sync.js"></script>
+  <script src="../js/jbf-text-display.js"></script>
   <style>
     .devis-grid { display: grid; gap: 1.25rem; }
     @media (min-width: 1024px) {
@@ -421,8 +423,12 @@
         const stored = localStorage.getItem('JBF_DEVIS_EQUIPES_LOCAL');
         if (stored) localList = JSON.parse(stored);
       } catch (_) {}
-      localList.unshift(newDevis);
-      localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(localList));
+      if (window.JBFDevisSync) {
+        window.JBFDevisSync.pushDevisFromChef(newDevis);
+      } else {
+        localList.unshift(newDevis);
+        localStorage.setItem('JBF_DEVIS_EQUIPES_LOCAL', JSON.stringify(localList));
+      }
 
       try {
         if (supabaseClient) {
@@ -445,7 +451,7 @@
         console.warn('[Devis chiffrage] Supabase:', err);
       }
 
-      alert('Devis ' + ext.toUpperCase() + ' transmis à l\'administration JBF (' + window.JBFDevisChiffrage.formatUsd(totalUsd) + ' USD). Une copie a été téléchargée sur cet appareil.');
+      alert('Devis ' + ext.toUpperCase() + ' enregistré (' + window.JBFDevisChiffrage.formatUsd(totalUsd) + ' USD).\n\nCôté admin : ouvrez « Devis Chefs d\'équipe » sur le même navigateur (ou actualisez la page) pour le voir apparaître.\n\nUne copie PDF/Excel a été téléchargée sur cet appareil.');
       document.getElementById('dvTitre').value = '';
       document.getElementById('dvClient').value = '';
       document.getElementById('dvNotes').value = '';
