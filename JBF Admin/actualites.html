@@ -299,6 +299,8 @@
 <script src="js/db-bridge.js"></script>
 <script>
   let articles = [];
+  let editingArticleId = null;
+  let editingArticleSourceTable = null;
   const STORAGE_KEY = 'JBF_ADMIN_ARTICLES';
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -316,6 +318,10 @@
         if (stored) articles = JSON.parse(stored);
       } catch (e) {}
     }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+    } catch (e) {}
 
     updateKPIs();
     renderNewsTable();
@@ -335,7 +341,9 @@
       return;
     }
 
-    tbody.innerHTML = articles.map((a, idx) => `
+    tbody.innerHTML = articles.map((a) => {
+      const safeId = encodeURIComponent(String(a.id));
+      return `
       <tr>
         <td>
           <img src="${a.image || '../assets/logo.png'}" alt="Thumb" class="news-thumb" onerror="this.src='../assets/logo.png'">
@@ -349,12 +357,17 @@
         <td style="font-size: 0.78rem; color: var(--text-muted);">${a.created_at ? new Date(a.created_at).toLocaleDateString('fr-FR') : 'Récent'}</td>
         <td><span class="badge-status valide">En Ligne</span></td>
         <td style="text-align: right;">
-          <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.2);" onclick="deleteArticle(${idx})">
-            <i class="bi bi-trash"></i>
-          </button>
+          <div style="display:inline-flex; gap:6px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openEditArticle(decodeURIComponent('${safeId}'))">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.2);" onclick="deleteArticleById(decodeURIComponent('${safeId}'))">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
   }
 
   function escapeHtml(str) {
@@ -412,11 +425,57 @@
   }
 
   function openNewArticleModal() {
+    editingArticleId = null;
+    editingArticleSourceTable = null;
+    document.getElementById('artTitle').value = '';
+    document.getElementById('artExcerpt').value = '';
+    document.getElementById('artContent').value = '';
+    document.getElementById('artImage').value = '';
+    document.getElementById('artVideo').value = '';
+    document.querySelector('input[name="artImageSourceType"][value="upload"]').checked = true;
+    document.querySelector('input[name="artVideoSourceType"][value="upload"]').checked = true;
+    toggleArtImageSourceMode();
+    toggleArtVideoSourceMode();
+    document.querySelector('#articleModal h3').innerHTML = '<i class="bi bi-pencil-square" style="color: var(--brand-pink);"></i> Publier une Nouvelle Actualité';
+    document.getElementById('btnSubmitArticle').innerHTML = '<i class="bi bi-send-check-fill"></i> Publier l\'Actualité';
+    document.getElementById('articleModal').style.display = 'flex';
+  }
+
+  function openEditArticle(id) {
+    const art = articles.find((a) => String(a.id) === String(id));
+    if (!art) return;
+    editingArticleId = art.id;
+    editingArticleSourceTable = art._sourceTable || null;
+    document.getElementById('artTitle').value = art.titre || '';
+    document.getElementById('artCategory').value = art.categorie || 'Vie de l\'Entreprise';
+    document.getElementById('artExcerpt').value = art.excerpt || art.description_courte || '';
+    document.getElementById('artContent').value = art.contenu || art.description_detaillee || '';
+    document.querySelector('input[name="artImageSourceType"][value="url"]').checked = true;
+    toggleArtImageSourceMode();
+    document.getElementById('artImage').value = art.image || '';
+    const imgPreview = document.getElementById('artImagePreview');
+    if (imgPreview && art.image) {
+      imgPreview.style.display = 'block';
+      imgPreview.innerHTML = `<img src="${art.image}" style="max-height: 120px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">`;
+    }
+    const videoUrl = art.video || '';
+    if (videoUrl && !videoUrl.startsWith('data:')) {
+      document.querySelector('input[name="artVideoSourceType"][value="url"]').checked = true;
+      toggleArtVideoSourceMode();
+      document.getElementById('artVideo').value = videoUrl;
+    } else {
+      document.querySelector('input[name="artVideoSourceType"][value="upload"]').checked = true;
+      toggleArtVideoSourceMode();
+    }
+    document.querySelector('#articleModal h3').innerHTML = '<i class="bi bi-pencil-square" style="color: var(--brand-pink);"></i> Modifier l\'actualité';
+    document.getElementById('btnSubmitArticle').innerHTML = '<i class="bi bi-check2"></i> Enregistrer';
     document.getElementById('articleModal').style.display = 'flex';
   }
 
   function closeArticleModal() {
     document.getElementById('articleModal').style.display = 'none';
+    editingArticleId = null;
+    editingArticleSourceTable = null;
     artUploadedImageDataUrl = '';
     artUploadedVideoDataUrl = '';
     const imgInput = document.getElementById('artImageFileInput');
@@ -442,6 +501,46 @@
     const isVideoUpload = document.querySelector('input[name="artVideoSourceType"]:checked')?.value === 'upload';
     const video = isVideoUpload ? artUploadedVideoDataUrl : (document.getElementById('artVideo')?.value.trim() || '');
 
+    if (!image && !editingArticleId) {
+      alert(isImageUpload ? 'Veuillez téléverser une image de couverture.' : 'Veuillez saisir une URL valide pour l\'image.');
+      return;
+    }
+
+    if (editingArticleId) {
+      const idx = articles.findIndex((a) => String(a.id) === String(editingArticleId));
+      if (idx === -1) return;
+      const prev = articles[idx];
+      const imageFinal = image || prev.image;
+      const videoFinal = video || prev.video || '';
+      const updated = {
+        ...prev,
+        titre,
+        categorie,
+        excerpt,
+        description_courte: excerpt,
+        contenu: content,
+        description_detaillee: content,
+        image: imageFinal,
+        video: videoFinal,
+        statut: 'publie'
+      };
+
+      if (window.jbfDbBridge?.updateBlogArticleAdmin) {
+        const up = await window.jbfDbBridge.updateBlogArticleAdmin(editingArticleId, updated, editingArticleSourceTable);
+        if (!up.ok) {
+          window.adminCore?.showToast(up.error || 'Échec mise à jour Supabase.', 'error');
+        } else if (up.table) updated._sourceTable = up.table;
+      }
+
+      articles[idx] = updated;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+      closeArticleModal();
+      updateKPIs();
+      renderNewsTable();
+      window.adminCore?.showToast('Actualité modifiée avec succès.', 'success');
+      return;
+    }
+
     if (!image) {
       alert(isImageUpload ? 'Veuillez téléverser une image de couverture.' : 'Veuillez saisir une URL valide pour l\'image.');
       return;
@@ -464,7 +563,12 @@
 
     if (window.jbfDbBridge) {
       const insertRes = await window.jbfDbBridge.insertBlogArticleAdmin(newArt);
-      if (!insertRes.ok) console.warn('[News Insert]', insertRes.error);
+      if (!insertRes.ok) {
+        window.adminCore?.showToast('Publication locale OK ; Supabase : ' + (insertRes.error?.message || 'erreur'), 'info');
+      } else if (insertRes.data?.[0]?.id) {
+        newArt.id = insertRes.data[0].id;
+        newArt._sourceTable = insertRes.table || 'blog_posts';
+      }
     }
 
     articles.unshift(newArt);
@@ -476,9 +580,17 @@
     window.adminCore?.showToast('Article publié en ligne avec succès.', 'success');
   }
 
-  function deleteArticle(index) {
+  async function deleteArticleById(id) {
     if (!confirm('Supprimer définitivement cet article ?')) return;
-    articles.splice(index, 1);
+    const art = articles.find((a) => String(a.id) === String(id));
+    if (window.jbfDbBridge?.deleteBlogArticleAdmin && art) {
+      const del = await window.jbfDbBridge.deleteBlogArticleAdmin(art.id, art._sourceTable);
+      if (!del.ok && String(art.id).startsWith('art-') === false) {
+        window.adminCore?.showToast(del.error || 'Suppression Supabase échouée.', 'error');
+        return;
+      }
+    }
+    articles = articles.filter((a) => String(a.id) !== String(id));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
     updateKPIs();
     renderNewsTable();

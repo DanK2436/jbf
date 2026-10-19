@@ -313,7 +313,18 @@
 <script src="js/db-bridge.js"></script>
 <script>
   let galleryItems = [];
+  let editingMediaId = null;
+  let editingSourceTable = null;
   const STORAGE_KEY = 'JBF_ADMIN_GALLERY';
+
+  function persistGalleryLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadGalleryItems();
@@ -331,6 +342,7 @@
       } catch (e) {}
     }
 
+    persistGalleryLocal();
     updateKPIs();
     renderMediaGrid();
   }
@@ -353,10 +365,12 @@
       return;
     }
 
-    grid.innerHTML = items.map((m, idx) => `
+    grid.innerHTML = items.map((m) => {
+      const safeId = encodeURIComponent(String(m.id));
+      return `
       <div class="gallery-admin-card">
         <div class="gallery-thumb-container">
-          <img src="${m.url || '../assets/logo.png'}" alt="${m.titre || 'Média'}" onerror="this.src='../assets/logo.png'">
+          <img src="${m.url || '../assets/logo.png'}" alt="${escapeHtml(m.titre || 'Média')}" onerror="this.src='../assets/logo.png'">
           <div class="gallery-type-badge">
             <i class="bi bi-${m.type === 'video' ? 'play-circle-fill' : 'image'}"></i>
             ${m.type === 'video' ? 'VIDÉO' : 'PHOTO'}
@@ -364,19 +378,24 @@
         </div>
         <div class="gallery-card-body">
           <div>
-            <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-pink); text-transform: uppercase;">${m.categorie || 'Général'}</span>
-            <h4 style="font-size: 0.9rem; font-weight: 700; margin: 4px 0 6px; color: var(--text-primary);">${m.titre || 'Sans titre'}</h4>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">${(m.description || '').slice(0, 80)}${(m.description || '').length > 80 ? '...' : ''}</p>
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-pink); text-transform: uppercase;">${escapeHtml(m.categorie || 'Général')}</span>
+            <h4 style="font-size: 0.9rem; font-weight: 700; margin: 4px 0 6px; color: var(--text-primary);">${escapeHtml(m.titre || 'Sans titre')}</h4>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">${escapeHtml((m.description || '').slice(0, 80))}${(m.description || '').length > 80 ? '...' : ''}</p>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
             <span style="font-size: 0.7rem; color: var(--text-muted);">${m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : 'Récent'}</span>
-            <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.2);" onclick="deleteMedia(${idx})">
-              <i class="bi bi-trash"></i> Supprimer
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMedia(decodeURIComponent('${safeId}'))">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteMediaById(decodeURIComponent('${safeId}'))">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   let galerieUploadedDataUrl = '';
@@ -417,11 +436,44 @@
   }
 
   function openNewMediaModal() {
+    editingMediaId = null;
+    editingSourceTable = null;
+    document.getElementById('mediaTitle').value = '';
+    document.getElementById('mediaDescription').value = '';
+    document.getElementById('mediaUrl').value = '';
+    document.querySelector('#mediaModal h3').innerHTML = '<i class="bi bi-cloud-arrow-up" style="color: var(--brand-pink);"></i> Publier un Média dans la Galerie';
+    document.getElementById('btnSubmitMedia').innerHTML = '<i class="bi bi-check2"></i> Mettre en Ligne';
+    document.getElementById('mediaModal').style.display = 'flex';
+  }
+
+  function openEditMedia(id) {
+    const item = galleryItems.find((m) => String(m.id) === String(id));
+    if (!item) return;
+    editingMediaId = item.id;
+    editingSourceTable = item._sourceTable || null;
+    document.getElementById('mediaTitle').value = item.titre || '';
+    document.getElementById('mediaCategory').value = item.categorie || 'Sous-Traitance Minière';
+    document.getElementById('mediaType').value = item.type || 'photo';
+    document.getElementById('mediaDescription').value = item.description || '';
+    document.querySelector('input[name="galerieSourceType"][value="url"]').checked = true;
+    toggleGalerieSourceMode();
+    document.getElementById('mediaUrl').value = item.url || '';
+    const preview = document.getElementById('galerieMediaPreview');
+    if (preview && item.url) {
+      preview.style.display = 'block';
+      preview.innerHTML = item.type === 'video'
+        ? `<video src="${item.url}" controls style="max-height: 140px; border-radius: 6px;"></video>`
+        : `<img src="${item.url}" style="max-height: 140px; border-radius: 6px;">`;
+    }
+    document.querySelector('#mediaModal h3').innerHTML = '<i class="bi bi-pencil-square" style="color: var(--brand-pink);"></i> Modifier le média';
+    document.getElementById('btnSubmitMedia').innerHTML = '<i class="bi bi-check2"></i> Enregistrer';
     document.getElementById('mediaModal').style.display = 'flex';
   }
 
   function closeMediaModal() {
     document.getElementById('mediaModal').style.display = 'none';
+    editingMediaId = null;
+    editingSourceTable = null;
     galerieUploadedDataUrl = '';
     const fileInput = document.getElementById('galerieFileInput');
     if (fileInput) fileInput.value = '';
@@ -443,6 +495,35 @@
       return;
     }
 
+    if (editingMediaId) {
+      const idx = galleryItems.findIndex((m) => String(m.id) === String(editingMediaId));
+      if (idx === -1) return;
+      const updated = {
+        ...galleryItems[idx],
+        titre,
+        categorie,
+        type,
+        url,
+        description: desc,
+        publie: true
+      };
+
+      if (window.jbfDbBridge?.updateGalleryItemAdmin) {
+        const up = await window.jbfDbBridge.updateGalleryItemAdmin(editingMediaId, updated, editingSourceTable);
+        if (!up.ok) {
+          window.adminCore?.showToast(up.error || 'Échec mise à jour Supabase.', 'error');
+        } else if (up.table) updated._sourceTable = up.table;
+      }
+
+      galleryItems[idx] = updated;
+      persistGalleryLocal();
+      closeMediaModal();
+      updateKPIs();
+      renderMediaGrid();
+      window.adminCore?.showToast('Média modifié avec succès.', 'success');
+      return;
+    }
+
     const newItem = {
       id: 'med-' + Date.now(),
       titre: titre,
@@ -456,11 +537,16 @@
 
     if (window.jbfDbBridge) {
       const insertRes = await window.jbfDbBridge.insertGalleryItemAdmin(newItem);
-      if (!insertRes.ok) console.warn('[Gallery Insert]', insertRes.error);
+      if (!insertRes.ok) {
+        window.adminCore?.showToast('Publication locale OK ; Supabase : ' + (insertRes.error?.message || 'erreur'), 'warning');
+      } else if (insertRes.data?.[0]?.id) {
+        newItem.id = insertRes.data[0].id;
+        newItem._sourceTable = insertRes.table || 'gallery_images';
+      }
     }
 
     galleryItems.unshift(newItem);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+    persistGalleryLocal();
 
     closeMediaModal();
     updateKPIs();
@@ -468,10 +554,18 @@
     window.adminCore?.showToast('Média publié dans la galerie avec succès.', 'success');
   }
 
-  function deleteMedia(index) {
+  async function deleteMediaById(id) {
     if (!confirm('Êtes-vous sûr de vouloir retirer ce média de la galerie ?')) return;
-    galleryItems.splice(index, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+    const item = galleryItems.find((m) => String(m.id) === String(id));
+    if (window.jbfDbBridge?.deleteGalleryItemAdmin && item) {
+      const del = await window.jbfDbBridge.deleteGalleryItemAdmin(item.id, item._sourceTable);
+      if (!del.ok && String(item.id).startsWith('med-') === false) {
+        window.adminCore?.showToast(del.error || 'Suppression Supabase échouée.', 'error');
+        return;
+      }
+    }
+    galleryItems = galleryItems.filter((m) => String(m.id) !== String(id));
+    persistGalleryLocal();
     updateKPIs();
     renderMediaGrid();
     window.adminCore?.showToast('Média retiré de la galerie.', 'info');
