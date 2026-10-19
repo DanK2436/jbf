@@ -6,6 +6,7 @@
   <title>Messagerie d'Équipe — JBF SERVICES Membre</title>
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/jbf-webrtc-call.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ============================================================
@@ -1455,7 +1456,7 @@
     }
 
     // Defined enterprise channels & direct discussions
-    const CONVERSATIONS = [
+    let CONVERSATIONS = [
       {
         id: 'general',
         type: 'group',
@@ -1503,69 +1504,138 @@
         lastMsg: 'Réunion de coordination des plannings.',
         lastTime: 'Hier',
         unread: 0
-      },
-      {
-        id: 'marc_mwamba',
-        type: 'direct',
-        name: 'Ing. Marc Mwamba',
-        roleTag: 'Directeur Technique',
-        avatar: 'MM',
-        avatarClass: '',
-        status: 'En ligne &middot; Direction Technique',
-        lastMsg: 'Rapport technique transmis à la direction.',
-        lastTime: '09:30',
-        unread: 0
-      },
-      {
-        id: 'superviseur_hse',
-        type: 'direct',
-        name: 'Superviseur Sécurité HSE',
-        roleTag: 'Coordination HSE',
-        avatar: 'SH',
-        avatarClass: 'hse',
-        status: 'Actif sur site minier',
-        lastMsg: 'Fiches d\'intervention auditées.',
-        lastTime: '07:50',
-        unread: 0
-      },
-      {
-        id: 'rh_admin',
-        type: 'direct',
-        name: 'Secrétariat RH &amp; Paie',
-        roleTag: 'Ressources Humaines',
-        avatar: 'RH',
-        avatarClass: 'dir',
-        status: 'Administration du personnel',
-        lastMsg: 'Attestation de congés traitée.',
-        lastTime: 'Lundi',
-        unread: 0
       }
     ];
+
+    let activePeerCall = null;
+    const handledCallSignals = new Set();
+
+    function dmKey(emailA, emailB) {
+      const a = String(emailA || '').toLowerCase();
+      const b = String(emailB || '').toLowerCase();
+      return a < b ? `${a}|${b}` : `${b}|${a}`;
+    }
+
+    function myCallId() {
+      return String(currentProfile?.email || currentProfile?.id || 'member').toLowerCase();
+    }
+
+    function getConvPeerEmail(conv) {
+      if (!conv) return null;
+      if (conv.peerEmail) return String(conv.peerEmail).toLowerCase();
+      if (conv.id && String(conv.id).startsWith('direct:')) return conv.id.slice(7).toLowerCase();
+      return null;
+    }
+
+    function loadRegistryAgents() {
+      try {
+        return JSON.parse(localStorage.getItem('JBF_ADMIN_MEMBRES_LOCAL') || '[]');
+      } catch (_) { return []; }
+    }
+
+    function injectContactConversations() {
+      const groups = CONVERSATIONS.filter((c) => c.type === 'group');
+      const directs = [{
+        id: 'direct:admin-jbf',
+        type: 'direct',
+        peerEmail: 'admin-jbf',
+        name: 'Direction JBF',
+        roleTag: 'Administration',
+        avatar: 'DG',
+        avatarClass: 'dir',
+        status: 'Messagerie & appels',
+        lastMsg: 'Contactez la direction.',
+        lastTime: '—',
+        unread: 0
+      }];
+      const me = myCallId();
+      loadRegistryAgents().forEach((a) => {
+        const email = String(a.email || '').toLowerCase();
+        if (!email || email === me) return;
+        const isChef = String(a.statut_equipe || a.role || '').toLowerCase() === 'chef_equipe' || String(a.role || '').toLowerCase() === 'chef';
+        if (!isChef) return;
+        const name = a.full_name || a.nom_complet || a.name || email;
+        const initials = name.split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+        directs.push({
+          id: 'direct:' + email,
+          type: 'direct',
+          peerEmail: email,
+          name,
+          roleTag: `Chef · ${a.section_nom || 'Section ' + (a.section_id || '')}`,
+          avatar: initials || 'CE',
+          avatarClass: '',
+          status: a.section_nom || 'Pôle JBF',
+          lastMsg: 'Message direct',
+          lastTime: '—',
+          unread: 0
+        });
+      });
+      CONVERSATIONS = [...groups, ...directs];
+    }
+
+    window.JBFCallSignaling = {
+      publish(payload) {
+        const text = window.JBFWebRTC.encodeSignalMessage(payload);
+        const msg = {
+          id: 'sig-' + Date.now(),
+          user_id: currentProfile?.id,
+          expediteur_nom: currentProfile?.full_name,
+          canal_type: 'signal',
+          peer_email: payload.to,
+          message: text,
+          created_at: new Date().toISOString()
+        };
+        pushChatLocal(msg);
+        if (supabaseClient) supabaseClient.from('messages_chat').insert([msg]).catch(() => {});
+      }
+    };
+
+    function pollCallSignals() {
+      if (!window.JBFWebRTC) return;
+      window.JBFWebRTC.readLocalSignals().forEach((s) => {
+        const key = JSON.stringify(s);
+        if (handledCallSignals.has(key)) return;
+        if (s.to !== myCallId()) return;
+        handledCallSignals.add(key);
+        if (activePeerCall) activePeerCall.handleSignal(s);
+        else if (s.type === 'offer') {
+          const conv = CONVERSATIONS.find((c) => getConvPeerEmail(c) === s.from);
+          if (conv && confirm(`Appel entrant de ${conv.name}. Répondre ?`)) {
+            selectConversation(conv.id);
+            startGroupCall('video', true, s);
+          }
+        }
+      });
+      readChatLocal().forEach((m) => {
+        const p = window.JBFWebRTC.parseSignalMessage(m.message);
+        if (!p || p.to !== myCallId()) return;
+        const key = 'm-' + (m.id || m.created_at);
+        if (handledCallSignals.has(key)) return;
+        handledCallSignals.add(key);
+        if (activePeerCall) activePeerCall.handleSignal(p);
+      });
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderNavigation('chat');
       currentProfile = await initMemberSession();
 
       if (currentProfile) {
-        // Multi-role setup for the employee
         userAssignedRoles = [
-          { id: 1, title: currentProfile.poste || 'Superviseur Opérations Minières', pole: `Section ${currentProfile.section_id} : ${currentProfile.section_nom}` },
-          { id: 2, title: 'Délégué Sécurité HSE Terrain', pole: 'Comité Hygiène, Sécurité & Environnement' },
-          { id: 3, title: 'Chef d\'Équipe de Relève', pole: 'Direction des Prestations Techniques' }
+          { id: 1, title: currentProfile.poste || 'Collaborateur', pole: currentProfile.section_nom || 'JBF SERVICES' }
         ];
-
         activeRoleTitle = userAssignedRoles[0].title;
         renderRolesUI();
-
-        // Update Section conversation name
-        const secChat = CONVERSATIONS.find(c => c.id === 'section');
-        if (secChat) {
-          secChat.name = `Section ${currentProfile.section_id} — ${currentProfile.section_nom}`;
-          secChat.status = `Collaborateurs du pôle ${currentProfile.section_nom}`;
-        }
+      }
+      injectContactConversations();
+      const secChat = CONVERSATIONS.find(c => c.id === 'section');
+      if (secChat && currentProfile) {
+        secChat.name = `Section ${currentProfile.section_id} — ${currentProfile.section_nom}`;
+        secChat.status = `Canal du pôle ${currentProfile.section_nom}`;
       }
 
       renderConversationsList();
+      setInterval(pollCallSignals, 1200);
       if (window.innerWidth < 820) {
         document.getElementById('waSidebar').classList.remove('mobile-hidden');
         document.getElementById('waMain').classList.add('mobile-hidden');
@@ -1716,23 +1786,43 @@
       area.innerHTML = '<div style="text-align:center; padding:2rem; color:#667781; font-size:0.8rem;">Chargement des messages...</div>';
 
       try {
-        let channelTypeQuery = currentChatId === 'section' ? 'section' : 'general';
-        let query = supabaseClient.from('messages_chat').select('*').eq('canal_type', channelTypeQuery).order('created_at', { ascending: true }).limit(80);
-        if (currentChatId === 'section' && currentProfile) {
-          query = query.eq('section_id', currentProfile.section_id);
+        const conv = CONVERSATIONS.find((c) => c.id === currentChatId);
+        const peer = getConvPeerEmail(conv);
+        let remote = [];
+        if (supabaseClient) {
+          if (peer) {
+            const { data: messages, error } = await supabaseClient.from('messages_chat').select('*').eq('canal_type', 'direct').order('created_at', { ascending: true }).limit(120);
+            if (!error && messages) remote = messages;
+          } else {
+            let channelTypeQuery = currentChatId === 'section' ? 'section' : 'general';
+            let query = supabaseClient.from('messages_chat').select('*').eq('canal_type', channelTypeQuery).order('created_at', { ascending: true }).limit(80);
+            if (currentChatId === 'section' && currentProfile) {
+              query = query.eq('section_id', currentProfile.section_id);
+            }
+            const { data: messages, error } = await query;
+            if (error) throw error;
+            remote = messages || [];
+          }
         }
-        const { data: messages, error } = await query;
-        if (error) throw error;
 
-        const localAll = readChatLocal();
+        const localAll = readChatLocal().filter((m) => !String(m.message || '').startsWith(window.JBFWebRTC?.SIGNAL_PREFIX || '[CALL_SIGNAL]'));
         const localFiltered = localAll.filter((m) => {
+          if (peer) {
+            const key = dmKey(myCallId(), peer);
+            return m.canal_type === 'direct' && (m.dm_key === key || m.peer_email === peer || m.peer_email === myCallId());
+          }
           const t = m.canal_type || 'general';
           if (currentChatId === 'section') {
             return t === 'section' && (!currentProfile || m.section_id == null || m.section_id === currentProfile.section_id);
           }
           return t === 'general' || currentChatId === 'general';
         });
-        const remote = messages || [];
+        if (peer) {
+          remote = remote.filter((m) => {
+            const key = dmKey(myCallId(), peer);
+            return m.dm_key === key || m.peer_email === peer || m.peer_email === myCallId();
+          });
+        }
         const map = new Map();
         [...localFiltered, ...remote].forEach((m) => {
           if (!m) return;
@@ -1775,6 +1865,7 @@
       let lastDate = null;
 
       messages.forEach(m => {
+        if (String(m.message || '').startsWith(window.JBFWebRTC?.SIGNAL_PREFIX || '[CALL_SIGNAL]')) return;
         const msgDate = m.created_at ? new Date(m.created_at).toDateString() : null;
         if (msgDate && msgDate !== lastDate) {
           lastDate = msgDate;
@@ -1856,13 +1947,17 @@
       const text = input.value.trim();
       if (!text || !currentProfile) return;
 
+      const conv = CONVERSATIONS.find((c) => c.id === currentChatId);
+      const peer = getConvPeerEmail(conv);
       const newMsg = {
         user_id: currentProfile.id,
         expediteur_nom: currentProfile.full_name,
         expediteur_avatar: currentProfile.initials || 'DK',
-        expediteur_poste: activeRoleTitle, // Employee's active company post!
-        canal_type: currentChatId === 'section' ? 'section' : 'general',
-        section_id: currentChatId === 'section' ? currentProfile.section_id : null,
+        expediteur_poste: activeRoleTitle,
+        canal_type: peer ? 'direct' : (currentChatId === 'section' ? 'section' : 'general'),
+        section_id: !peer && currentChatId === 'section' ? currentProfile.section_id : null,
+        peer_email: peer || null,
+        dm_key: peer ? dmKey(myCallId(), peer) : null,
         message: text,
         created_at: new Date().toISOString()
       };
@@ -2049,45 +2144,58 @@
       closeInviteParticipantModal();
     }
 
-    async function startGroupCall(mode) {
+    async function startGroupCall(mode, acceptIncoming, incomingSignal) {
+      const conv = CONVERSATIONS.find(c => c.id === currentChatId);
+      const peerId = getConvPeerEmail(conv);
+      if (!peerId) {
+        alert('Choisissez un contact (discussion directe : Direction ou chef d\'équipe) pour lancer un appel réel.');
+        return;
+      }
       currentCallMode = mode;
-      const conv = CONVERSATIONS.find(c => c.id === currentChatId) || CONVERSATIONS[0];
-      document.getElementById('callOverlayHeaderTitle').textContent = `Appel Vocal — ${conv.name}`;
+      document.getElementById('callOverlayHeaderTitle').textContent = `Appel — ${conv.name}`;
       document.getElementById('groupCallOverlay').classList.add('active');
-
-      callTranscriptHistory = [];
-      callSeconds = 0; updateCallTimer();
+      callSeconds = 0;
+      updateCallTimer();
       clearInterval(callTimerInterval);
       callTimerInterval = setInterval(() => { callSeconds++; updateCallTimer(); }, 1000);
+      handledCallSignals.clear();
 
-      if (speechRecognition) { try { speechRecognition.start(); } catch (_) {} }
-
-      // Build initial participant list based on the active conversation
-      const myName = currentProfile ? currentProfile.full_name : 'David Kasongo';
-      const myInit = currentProfile ? currentProfile.initials : 'DK';
-      
+      const myName = currentProfile ? currentProfile.full_name : 'Collaborateur';
+      const myInit = currentProfile ? currentProfile.initials : 'JB';
       activeCallParticipants = [
-        { id: 'me', name: myName, role: activeRoleTitle, avatar: myInit, isMe: true, grad: 'linear-gradient(135deg,#E6007E,#C8006E)' }
+        { id: 'me', name: myName, role: activeRoleTitle, avatar: myInit, isMe: true, grad: 'linear-gradient(135deg,#E6007E,#C8006E)' },
+        { id: peerId, name: conv.name, role: conv.roleTag, avatar: conv.avatar, isMe: false, grad: 'linear-gradient(135deg,#334155,#1E293B)' }
       ];
-
       await renderCallParticipants(mode);
 
-      if (mode === 'video') {
-        isCamMuted = false;
-        try {
-          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          const ve = document.getElementById('localCameraVideo');
-          if (ve) { ve.srcObject = localStream; ve.style.display = 'block'; }
-          const ab = document.getElementById('myAvatarBox');
-          if (ab) ab.style.display = 'none';
-          document.getElementById('toggleCamBtn').classList.remove('active-off');
-        } catch {
-          isCamMuted = true;
-          document.getElementById('toggleCamBtn').classList.add('active-off');
+      activePeerCall = new window.JBFWebRTC.JbfPeerCall({
+        myId: myCallId(),
+        peerId,
+        isVideo: mode === 'video',
+        onRemoteStream: (stream) => {
+          const ve = document.getElementById('remoteCameraVideo');
+          if (ve) { ve.srcObject = stream; ve.style.display = 'block'; }
+        },
+        onStateChange: (st) => {
+          if (st === 'ended') endGroupCall();
+        },
+        onError: (err) => console.warn('[Appel]', err)
+      });
+
+      try {
+        if (acceptIncoming && incomingSignal) {
+          activePeerCall.callId = incomingSignal.callId;
+          await activePeerCall.handleSignal(incomingSignal);
+        } else {
+          await activePeerCall.startOutgoing();
         }
-      } else {
-        isCamMuted = true;
-        document.getElementById('toggleCamBtn').classList.add('active-off');
+        localStream = activePeerCall.localStream;
+        const ve = document.getElementById('localCameraVideo');
+        if (ve && localStream) { ve.srcObject = localStream; ve.style.display = mode === 'video' ? 'block' : 'none'; }
+        isCamMuted = mode !== 'video';
+      } catch (e) {
+        alert('Impossible d\'accéder au micro/caméra : ' + e.message);
+        endGroupCall();
       }
     }
 
@@ -2119,7 +2227,8 @@
           `;
         } else {
           card.innerHTML = `
-            <div class="participant-avatar-box">
+            <video class="participant-video" id="remoteCameraVideo" autoplay playsinline style="display:none;"></video>
+            <div class="participant-avatar-box" id="remoteAvatarBox">
               <div class="participant-avatar-circle" style="background:${p.grad};">${p.avatar}</div>
               <div class="participant-name-tag">${escapeHtml(p.name)}</div>
               <div class="participant-role-tag">${escapeHtml(p.role)}</div>
@@ -2191,9 +2300,12 @@
       clearInterval(callTimerInterval);
       callTimerInterval = null;
       if (speechRecognition) { try { speechRecognition.stop(); } catch (_) {} }
+      if (activePeerCall) { activePeerCall.hangup(true); activePeerCall = null; }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
       const ve = document.getElementById('localCameraVideo');
+      const re = document.getElementById('remoteCameraVideo');
       if (ve) ve.srcObject = null;
+      if (re) re.srcObject = null;
       activeCallParticipants = [];
       callTranscriptHistory = [];
       currentMeetingData = null;

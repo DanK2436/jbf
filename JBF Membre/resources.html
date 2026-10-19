@@ -297,6 +297,7 @@
     </div>
   </div>
 
+  <script src="../js/jbf-resource-display.js"></script>
   <script src="js/shared.js"></script>
   <script>
     let allResources = [];
@@ -428,7 +429,10 @@
         } catch(e) {}
       }
 
-      allResources = loaded || [];
+      let rows = (loaded || []).filter((r) => r.publie !== false);
+      allResources = window.JBFResourceDisplay
+        ? window.JBFResourceDisplay.normalizeResourceList(rows)
+        : rows;
       renderResources();
     }
 
@@ -496,10 +500,10 @@
                     </span>
                   </div>
                   <h3 style="font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--text-h); margin-bottom:0.45rem; line-height:1.35;">
-                    ${escapeHtml(r.titre)}
+                    ${escapeHtml(window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.titre, 'Ressource JBF') : r.titre)}
                   </h3>
                   <p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">
-                    ${escapeHtml(r.description || 'Protocole officiel de conformité et directives techniques certifiées.')}
+                    ${escapeHtml(window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.description, 'Document de référence JBF.') : (r.description || 'Document de référence JBF.'))}
                   </p>
                 </div>
                 <div class="resource-card-footer">

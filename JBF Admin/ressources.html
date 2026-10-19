@@ -314,6 +314,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/jbf-resource-display.js"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
@@ -379,9 +380,14 @@
       const key = String(r.id || r.titre || Math.random());
       byId.set(key, { ...byId.get(key), ...r, id: r.id || key });
     });
-    allRessources = Array.from(byId.values()).sort(
-      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
-    );
+    allRessources = window.JBFResourceDisplay
+      ? window.JBFResourceDisplay.normalizeResourceList(Array.from(byId.values()).sort(
+          (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+        ))
+      : Array.from(byId.values());
+    try {
+      localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(allRessources));
+    } catch (_) {}
     updateKPIs();
     renderRessourcesTable(allRessources);
   }
@@ -562,6 +568,9 @@
       allRessources.unshift(newRes);
     }
 
+    if (window.JBFResourceDisplay) {
+      allRessources = window.JBFResourceDisplay.normalizeResourceList(allRessources);
+    }
     localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(allRessources));
     closeRessourceModal();
     updateKPIs();
