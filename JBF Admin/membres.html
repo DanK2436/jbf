@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestion des Collaborateurs & Équipes — JBF Admin</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="css/main.css?v=20261019">
-  <link rel="stylesheet" href="css/membres.css?v=3">
+  <link rel="stylesheet" href="css/main.css?v=20261019b">
+  <link rel="stylesheet" href="css/membres.css?v=4">
+  <style>
+    /* Secours si cache CSS : masquer modales tant qu'elles ne sont pas ouvertes */
+    .modal-overlay:not(.active) { display: none !important; }
+  </style>
 </head>
 <body class="page-membres">
 
@@ -240,10 +244,10 @@
 </div>
 
 <!-- MODAL CRÉATION COLLABORATEUR -->
-<div class="modal-overlay" id="createMemberModal">
-  <div class="modal-container" style="max-width: 680px;">
+<div class="modal-overlay" id="createMemberModal" role="dialog" aria-modal="true" aria-labelledby="createMemberTitle" onclick="closeCreateMemberModal()">
+  <div class="modal-box" style="max-width: 680px;" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h3><i class="bi bi-person-plus-fill"></i> Créer un Compte Collaborateur</h3>
+      <h3 id="createMemberTitle"><i class="bi bi-person-plus-fill"></i> Créer un compte collaborateur</h3>
       <button class="btn-modal-close" onclick="closeCreateMemberModal()">&times;</button>
     </div>
     <form id="createMemberForm" onsubmit="submitCreateMember(event)">
@@ -337,8 +341,8 @@
 </div>
 
 <!-- MODAL DÉTAILS DU MEMBRE -->
-<div class="modal-overlay" id="detailMemberModal">
-  <div class="modal-container" style="max-width: 580px;">
+<div class="modal-overlay" id="detailMemberModal" role="dialog" aria-modal="true" onclick="closeDetailMemberModal()">
+  <div class="modal-box" style="max-width: 580px;" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3><i class="bi bi-person-lines-fill"></i> Fiche Collaborateur</h3>
       <button class="btn-modal-close" onclick="closeDetailMemberModal()">&times;</button>
@@ -392,7 +396,20 @@
     15: 'Import-Export & Transit'
   };
 
+  function initMembresModals() {
+    ['createMemberModal', 'detailMemberModal'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('active');
+      if (id === 'createMemberModal') {
+        el.addEventListener('click', () => closeCreateMemberModal());
+      }
+    });
+    document.body.style.overflow = '';
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    initMembresModals();
     const decorEl = document.getElementById('memberFormDecor');
     if (decorEl && window.JBFAdminFormDecor) {
       decorEl.innerHTML = window.JBFAdminFormDecor.decorHtml('member', 'Portail collaborateur', 'Accès membre + canal section');
@@ -674,11 +691,25 @@
   function openCreateMemberModal() {
     document.getElementById('createMemberForm').reset();
     generateNewMatricule();
-    document.getElementById('createMemberModal').classList.add('active');
+    if (window.adminCore?.openModal) {
+      window.adminCore.openModal('createMemberModal');
+    } else if (window.openModal) {
+      window.openModal('createMemberModal');
+    } else {
+      document.getElementById('createMemberModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   function closeCreateMemberModal() {
-    document.getElementById('createMemberModal').classList.remove('active');
+    if (window.adminCore?.closeModal) {
+      window.adminCore.closeModal('createMemberModal');
+    } else if (window.closeModal) {
+      window.closeModal('createMemberModal');
+    } else {
+      document.getElementById('createMemberModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
   }
 
   async function submitCreateMember(e) {
@@ -935,11 +966,21 @@
       </div>
     `;
 
-    modal.classList.add('active');
+    if (window.adminCore?.openModal) {
+      window.adminCore.openModal('detailMemberModal');
+    } else {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   function closeDetailMemberModal() {
-    document.getElementById('detailMemberModal').classList.remove('active');
+    if (window.adminCore?.closeModal) {
+      window.adminCore.closeModal('detailMemberModal');
+    } else {
+      document.getElementById('detailMemberModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
   }
 
   function escapeHtml(text) {
