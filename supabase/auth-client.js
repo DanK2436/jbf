@@ -124,6 +124,7 @@
         },
 
         async loginWithPassword(email, password, targetSpace) {
+            await initAuthSupabase();
             const client = getSupabase();
             if (!client) throw new Error('Supabase SDK indisponible');
             const cleanEmail = email.trim().toLowerCase();
@@ -229,15 +230,18 @@
             }
 
             if (targetSpace === 'membre') {
-                const roleNorm = String(role || user.user_metadata?.role || '').toLowerCase();
+                const roleNorm = String(profileData?.role || role || user.user_metadata?.role || '').toLowerCase();
                 const metaRole = String(user.user_metadata?.role || '').toLowerCase();
-                const allowed = ['membre', 'member', 'chef_equipe', 'chef', 'admin', 'sous_admin', ''];
-                const blockedClient = roleNorm === 'client' && metaRole === 'client' && !profileData?.matricule;
-                if (blockedClient) {
+                const hasMatricule = !!(profileData?.matricule || user.user_metadata?.matricule);
+                const isMembreLike = ['membre', 'member', 'chef_equipe', 'chef', 'admin', 'sous_admin', ''].includes(roleNorm)
+                    || ['membre', 'member', 'chef_equipe', 'chef'].includes(metaRole)
+                    || hasMatricule;
+                const isExplicitClient = roleNorm === 'client' && metaRole === 'client' && !hasMatricule;
+                if (isExplicitClient) {
                     await client.auth.signOut();
                     throw new Error("Accès interdit : ce compte est réservé à l'espace client.");
                 }
-                if (!allowed.includes(roleNorm) && !profileData && metaRole !== 'membre' && metaRole !== 'member') {
+                if (!isMembreLike && roleNorm === 'client') {
                     await client.auth.signOut();
                     throw new Error("Accès interdit : ce compte n'est pas enregistré comme collaborateur.");
                 }

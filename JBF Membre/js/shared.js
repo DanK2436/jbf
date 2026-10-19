@@ -82,12 +82,31 @@ async function initMemberSession() {
     }
 
     // 2. Vérifier session locale persistée
-    const localSessionStr = localStorage.getItem('jbf_member_session');
+    const localSessionStr =
+      localStorage.getItem('jbf_member_session') ||
+      localStorage.getItem('JBF_MEMBER_SESSION');
     let localProfile = null;
     if (localSessionStr) {
       try {
         localProfile = JSON.parse(localSessionStr);
       } catch (_) {}
+    }
+
+    function normalizeMemberProfile(raw) {
+      if (!raw) return null;
+      const fullName = raw.full_name || raw.nom || raw.name || raw.email || 'Collaborateur';
+      const initials = raw.initials || fullName.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+      return {
+        ...raw,
+        full_name: fullName,
+        initials,
+        section_id: parseInt(raw.section_id, 10) || 4,
+        section_nom: raw.section_nom || getServiceById(parseInt(raw.section_id, 10) || 4).name,
+        matricule: raw.matricule || '',
+        poste: raw.poste || raw.fonction || raw.role || 'Collaborateur',
+        solde_conges: raw.solde_conges !== undefined ? raw.solde_conges : 0,
+        role: raw.role || 'membre'
+      };
     }
 
     // Si aucune session
@@ -131,30 +150,27 @@ async function initMemberSession() {
       } catch (_) {}
     }
 
-    // Si pas de profil Supabase, utiliser le profil local ou les valeurs par défaut
     if (!currentMemberProfile) {
       if (localProfile) {
-        currentMemberProfile = localProfile;
-      } else {
-        const sec = getServiceById(4);
-        currentMemberProfile = {
-          id: user ? user.id : 'demo-member-id',
-          email: user ? user.email : 'test.membre@jbfservices.cd',
-          full_name: 'David Kasongo',
-          initials: 'DK',
-          section_id: 4,
-          section_nom: 'Département des Opérations Minières & Ingénierie de Chantier',
-          section_cat: 'Industrie & Mines',
-          matricule: 'JBF-EMP-007',
-          poste: 'Superviseur Opérations Minières',
-          solde_conges: 18,
-          role: 'membre'
-        };
+        currentMemberProfile = normalizeMemberProfile(localProfile);
+      } else if (user) {
+        currentMemberProfile = normalizeMemberProfile({
+          id: user.id,
+          email: user.email,
+          nom: user.user_metadata?.full_name || user.email
+        });
       }
     }
 
-    // Sauvegarder dans localStorage pour fluidité
+    if (!currentMemberProfile) {
+      if (!window.location.pathname.includes('/auth/login.html')) {
+        window.location.href = window.location.pathname.includes('/auth/') ? 'login.html' : 'auth/login.html';
+      }
+      return null;
+    }
+
     localStorage.setItem('jbf_member_session', JSON.stringify(currentMemberProfile));
+    localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(currentMemberProfile));
 
     updateMemberUI(currentMemberProfile);
     return currentMemberProfile;
@@ -176,11 +192,11 @@ function updateMemberUI(profile) {
   });
 
   document.querySelectorAll('.user-meta-name').forEach(el => {
-    el.textContent = profile.full_name || 'David Kasongo';
+    el.textContent = profile.full_name || profile.nom || 'Collaborateur';
   });
 
   document.querySelectorAll('.user-meta-role').forEach(el => {
-    el.textContent = `${profile.poste || 'Superviseur Opérations Minières'} • Mines & BTP`;
+    el.textContent = `${profile.poste || 'Collaborateur'} • ${profile.section_cat || 'JBF RDC'}`;
     el.title = profile.section_nom || '';
   });
 

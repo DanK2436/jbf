@@ -221,19 +221,23 @@
     btn.disabled = true;
     btn.textContent = 'Connexion...';
 
+    function finishLocalLogin(localUser) {
+      localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(localUser));
+      localStorage.setItem('jbf_member_session', JSON.stringify(localUser));
+      showSuccess('Connexion réussie. Redirection...');
+      setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+    }
+
     try {
       if (window.JBFMemberLogin?.tryLocalMemberLogin) {
         const localUser = window.JBFMemberLogin.tryLocalMemberLogin(email, pass);
         if (localUser) {
-          localStorage.setItem('JBF_MEMBER_SESSION', JSON.stringify(localUser));
-          localStorage.setItem('jbf_member_session', JSON.stringify(localUser));
-          showSuccess('Connexion réussie. Redirection...');
-          setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+          finishLocalLogin(localUser);
           return;
         }
       }
 
-      if (window.JBFAuth) {
+      if (window.JBFAuth?.loginWithPassword) {
         const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
         if (res && (res.success || res.user)) {
           showSuccess('Connexion réussie. Redirection...');
@@ -247,9 +251,14 @@
       throw new Error('Identifiants collaborateur incorrects.');
 
     } catch (err) {
+      const localRetry = window.JBFMemberLogin?.tryLocalMemberLogin?.(email, pass);
+      if (localRetry) {
+        finishLocalLogin(localRetry);
+        return;
+      }
       const msg = err.message || '';
-      if (/failed to fetch/i.test(msg)) {
-        showError('Connexion au serveur impossible. Si vous venez d\'être créé par l\'admin, réessayez avec l\'email et le mot de passe initial exacts, ou ouvrez le site après rechargement forcé (Ctrl+Shift+R).');
+      if (/failed to fetch|network|load failed/i.test(msg)) {
+        showError('Connexion au serveur impossible. Utilisez l\'email et le mot de passe définis par l\'admin (même appareil que la création si le compte n\'est pas encore sur Supabase). Rechargez la page (Ctrl+Shift+R) puis réessayez.');
       } else {
         showError(msg || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
       }

@@ -419,17 +419,48 @@
     }
   }
 
+  function loadLocalAgents() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function isMemberProfileRow(d) {
+    const role = String(d.role || '').toLowerCase();
+    if (['client'].includes(role) && !d.matricule) return false;
+    return ['membre', 'member', 'chef_equipe', 'chef', 'admin', 'sous_admin', ''].includes(role)
+      || !!d.matricule;
+  }
+
+  function mergeAgentsRemoteLocal(remote, local) {
+    const map = new Map();
+    (local || []).forEach((a) => {
+      const key = String(a.email || a.id || '').toLowerCase();
+      if (key) map.set(key, a);
+    });
+    (remote || []).forEach((a) => {
+      const key = String(a.email || a.id || '').toLowerCase();
+      if (!key) return;
+      const prev = map.get(key);
+      map.set(key, prev ? { ...a, _authPassword: prev._authPassword || prev.password } : a);
+    });
+    return Array.from(map.values());
+  }
+
   async function loadAgentsList() {
     const tbody = document.getElementById('agentsTableBody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--gray-mid);">Chargement des collaborateurs...</td></tr>';
-    
+
     let list = [];
     const sb = getSupabase();
     if (sb) {
       try {
         const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          list = data.map(d => ({
+        if (!error && Array.isArray(data)) {
+          list = data.filter(isMemberProfileRow).map(d => ({
             id: d.id,
             full_name: d.nom_complet || d.full_name || d.name || 'Collaborateur',
             email: d.email || '',
@@ -440,7 +471,8 @@
             section_nom: d.section_nom || d.secteur || 'Opérations Multi-Services',
             site_affectation: d.site_affectation || d.site || d.ville || 'Lubumbashi',
             city: d.site_affectation || d.site || d.ville || 'Lubumbashi',
-            phone: d.telephone || d.phone || d.whatsapp || '-'
+            phone: d.telephone || d.phone || d.whatsapp || '-',
+            role: d.role || 'membre'
           }));
         }
       } catch (err) {
@@ -448,7 +480,11 @@
       }
     }
 
-    allAgents = list;
+    const local = loadLocalAgents();
+    allAgents = mergeAgentsRemoteLocal(list, local);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
+    } catch (e) {}
     updateKpis(allAgents);
     renderAgentsTable(allAgents);
   }

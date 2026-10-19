@@ -8,12 +8,21 @@
       const ag = list.find((a) => String(a.email || '').toLowerCase() === email);
       if (!ag) return null;
       const pwd = ag._authPassword || ag.password || '';
-      if (pwd !== password && pwd !== password.trim()) return null;
+      if (!pwd || (pwd !== password && pwd !== password.trim())) return null;
+      const fullName = ag.full_name || ag.nom_complet || ag.name || email;
+      const initials = fullName.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase();
       return {
         id: ag.id || ('mem-' + Date.now()),
-        nom: ag.full_name || ag.nom_complet || ag.name || email,
-        email: email,
+        nom: fullName,
+        full_name: fullName,
+        initials,
+        email,
         role: ag.role || 'Membre',
+        poste: ag.poste || ag.fonction || 'Collaborateur',
+        matricule: ag.matricule || '',
+        section_id: ag.section_id || 4,
+        section_nom: ag.section_nom || ag.secteur || '',
+        solde_conges: ag.solde_conges ?? 0,
         statut_equipe: 'Actif',
         token: 'jbf-member-local-' + Date.now()
       };

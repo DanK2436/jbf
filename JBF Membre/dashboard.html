@@ -498,7 +498,7 @@
 
       if (profile) {
         const subEl = document.getElementById('heroSectionSubtitle');
-        if (subEl) subEl.textContent = 'Département des Opérations Minières & Ingénierie de Chantier';
+        if (subEl) subEl.textContent = profile.section_nom || 'Votre pôle JBF SERVICES';
         
         const leavesEl = document.getElementById('radialLeavesVal');
         if (leavesEl) leavesEl.textContent = profile.solde_conges;
