@@ -811,7 +811,7 @@ app.post('/api/avis', async (req, res) => {
         service: service.trim(),
         note: noteNum,
         commentaire: commentaire.trim(),
-        approuve: true
+        approuve: false
       }])
       .select();
 
@@ -819,7 +819,7 @@ app.post('/api/avis', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Votre avis a été enregistré avec succès.',
+      message: 'Votre avis a été enregistré et sera publié après modération.',
       avis: data[0]
     });
   } catch (err) {

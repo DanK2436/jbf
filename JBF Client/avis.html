@@ -349,7 +349,7 @@
       site: site,
       note: Number(rating),
       commentaire: text,
-      approuve: true, // Auto-approuvé pour visibilité immédiate
+      approuve: false,
       created_at: new Date().toISOString()
     };
 
@@ -374,7 +374,7 @@
     document.getElementById('reviewSite').value = '';
     updateReviewKPIs();
     renderReviewsTable();
-    window.clientCore.showToast('Merci ! Votre évaluation a été enregistrée et publiée avec succès.', 'success');
+    window.clientCore.showToast('Merci ! Votre avis a été transmis et sera publié sur le site après modération.', 'success');
   }
 
   window.handleCreateReview = handleCreateReview;

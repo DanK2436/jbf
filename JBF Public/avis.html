@@ -294,6 +294,61 @@
     @media (max-width: 600px) {
       .reviews-masonry { grid-template-columns: 1fr; }
     }
+
+    .avis-form-panel {
+      background: #fff;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--r-card);
+      padding: 2rem 2.25rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--sh-card);
+    }
+    .avis-form-panel h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 0.35rem;
+    }
+    .avis-form-intro {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      max-width: 720px;
+    }
+    .avis-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 1.25rem;
+    }
+    .avis-form-grid .fg-full { grid-column: 1 / -1; }
+    .avis-consent {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      line-height: 1.5;
+      margin: 1rem 0 1.25rem;
+    }
+    .avis-consent input { margin-top: 0.2rem; accent-color: var(--pink); }
+    .avis-form-note {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+    .reviews-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-h);
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 700px) {
+      .avis-form-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -328,7 +383,7 @@
   <div class="container">
     <h1 class="avis-hero-title">Avis &amp; Évaluations Clients</h1>
     <p class="avis-hero-sub">
-      Consultez les témoignages certifiés de directeurs des opérations, chefs de projets miniers et acheteurs industriels ayant fait confiance à JBF SERVICES en RDC.
+      Retours d'expérience réels, publiés uniquement après vérification par notre équipe. Aucun témoignage fictif ou généré automatiquement.
     </p>
   </div>
 </section>
@@ -374,34 +429,23 @@
       </div>
 
       <div class="leave-review-cta">
-        <button class="btn btn-pink" onclick="openAvisModal()" id="btnOpenAvisModal">
-          Déposer une Évaluation →
+        <button type="button" class="btn btn-pink" onclick="scrollToAvisForm()" id="btnOpenAvisModal">
+          Laisser un avis →
         </button>
-        <p style="font-size: 0.74rem; color: var(--text-light); margin-top: 0.6rem;">Évaluation certifiée et vérifiée</p>
+        <p style="font-size: 0.74rem; color: var(--text-light); margin-top: 0.6rem;">Publication après modération JBF</p>
       </div>
     </div>
 
-    <!-- Reviews Grid -->
-    <div class="reviews-masonry" id="reviewsGrid">
-      <!-- Injected via JavaScript -->
-    </div>
+    <!-- Formulaire avis (page, sans modal) -->
+    <section class="avis-form-panel reveal visible" id="depot-avis" aria-labelledby="avisFormTitle">
+      <h2 id="avisFormTitle">Partager votre expérience avec JBF SERVICES</h2>
+      <p class="avis-form-intro">
+        Remplissez ce formulaire si vous avez collaboré avec nos équipes. Votre avis est enregistré tel quel, relu par la direction, puis publié s'il est conforme à nos conditions (pas de contenu diffamatoire ni de données personnelles sensibles).
+      </p>
 
-  </div>
-</section>
-
-<!-- MODAL DÉPÔT D'AVIS AVEC SÉLECTEUR 5 ÉTOILES -->
-<div class="avis-modal-overlay" id="avisModalOverlay" onclick="closeAvisModal()">
-  <div class="avis-modal-card" onclick="event.stopPropagation()">
-    <div class="avis-modal-header">
-      <button class="avis-modal-close" onclick="closeAvisModal()" aria-label="Fermer">&times;</button>
-      <h2 class="avis-modal-title">Déposer votre Évaluation Client</h2>
-    </div>
-    <div class="avis-modal-body">
-      <form id="avisForm" onsubmit="submitAvis(event)">
-
-        <!-- Star Picker Component -->
+      <form id="avisForm" onsubmit="submitAvis(event)" novalidate>
         <div class="star-picker-wrap">
-          <div class="star-picker-label">Votre Note Globale (Sélectionnez de 1 à 5 étoiles)</div>
+          <div class="star-picker-label">Note globale *</div>
           <div class="star-picker-stars" id="starPicker">
             <button type="button" class="star-btn" data-star="1" onclick="selectStar(1)" onmouseenter="hoverStar(1)" onmouseleave="resetStarHover()" aria-label="1 étoile">
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -419,55 +463,86 @@
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </button>
           </div>
-          <div class="star-feedback-text" id="starFeedbackText">Cliquez sur une étoile pour noter</div>
+          <div class="star-feedback-text" id="starFeedbackText">Choisissez une note de 1 à 5 étoiles</div>
         </div>
 
-        <div class="row-2">
+        <div class="avis-form-grid">
           <div class="fg">
-            <label class="fl" for="avisNom">Nom &amp; Prénom</label>
-            <input type="text" id="avisNom" class="fc-input" placeholder="Ex: Patrick Mwamba" required>
+            <label class="fl" for="avisPrenom">Prénom *</label>
+            <input type="text" id="avisPrenom" class="fc-input" autocomplete="given-name" required>
           </div>
           <div class="fg">
-            <label class="fl" for="avisSociete">Entreprise &amp; Fonction</label>
-            <input type="text" id="avisSociete" class="fc-input" placeholder="Ex: Directeur QHSE, Mining SARL" required>
+            <label class="fl" for="avisNom">Nom *</label>
+            <input type="text" id="avisNom" class="fc-input" autocomplete="family-name" required>
           </div>
-        </div>
-
-        <div class="row-2">
           <div class="fg">
-            <label class="fl" for="avisDomaine">Domaine concerné</label>
-            <select id="avisDomaine" class="fc-input" required>
-              <option value="">Sélectionnez un domaine</option>
-              <option value="Catering &amp; Restauration">Catering &amp; Restauration</option>
-              <option value="Sous-traitance Minière">Sous-traitance Minière</option>
-              <option value="BTP &amp; Génie Civil">BTP &amp; Génie Civil</option>
-              <option value="Maintenance Industrielle">Maintenance Industrielle</option>
-              <option value="Sécurité &amp; Gardiennage">Sécurité &amp; Gardiennage</option>
-              <option value="Logistique &amp; Transport">Logistique &amp; Transport</option>
-              <option value="Facilities Management">Facilities Management</option>
+            <label class="fl" for="avisEntreprise">Entreprise / organisation *</label>
+            <input type="text" id="avisEntreprise" class="fc-input" autocomplete="organization" required>
+          </div>
+          <div class="fg">
+            <label class="fl" for="avisFonction">Fonction *</label>
+            <input type="text" id="avisFonction" class="fc-input" placeholder="Ex: Responsable QHSE" required>
+          </div>
+          <div class="fg">
+            <label class="fl" for="avisProvince">Province *</label>
+            <select id="avisProvince" class="fc-input" required>
+              <option value="">Choisir une province</option>
+              <option value="Haut-Katanga">Haut-Katanga</option>
+              <option value="Lualaba">Lualaba</option>
+              <option value="Kinshasa">Kinshasa</option>
+              <option value="Kongo Central">Kongo Central</option>
+              <option value="Nord-Kivu">Nord-Kivu</option>
+              <option value="Sud-Kivu">Sud-Kivu</option>
+              <option value="Ituri">Ituri</option>
+              <option value="Autre province RDC">Autre province RDC</option>
             </select>
           </div>
           <div class="fg">
-            <label class="fl" for="avisVille">Ville / Province (RDC)</label>
-            <input type="text" id="avisVille" class="fc-input" placeholder="Ex: Kolwezi, Lualaba" required>
+            <label class="fl" for="avisVille">Ville ou site *</label>
+            <input type="text" id="avisVille" class="fc-input" placeholder="Ex: Kolwezi, Lubumbashi…" required>
+          </div>
+          <div class="fg fg-full">
+            <label class="fl" for="avisService">Prestation JBF évaluée *</label>
+            <select id="avisService" class="fc-input" required>
+              <option value="">Sélectionnez la prestation concernée</option>
+              <option value="Catering & Restauration HACCP">Catering &amp; Restauration HACCP</option>
+              <option value="Sous-traitance Minière & Extraction">Sous-traitance Minière &amp; Extraction</option>
+              <option value="BTP & Génie Civil">BTP &amp; Génie Civil</option>
+              <option value="Maintenance Industrielle & Soudure">Maintenance Industrielle &amp; Soudure</option>
+              <option value="Gardiennage & Sécurité">Gardiennage &amp; Sécurité</option>
+              <option value="Nettoyage Industriel">Nettoyage Industriel</option>
+              <option value="Transport & Location d'engins">Transport &amp; Location d'engins</option>
+              <option value="Climatisation & Froid industriel">Climatisation &amp; Froid industriel</option>
+              <option value="Facilities & Services généraux">Facilities &amp; Services généraux</option>
+              <option value="Autre prestation JBF">Autre prestation JBF</option>
+            </select>
+          </div>
+          <div class="fg fg-full">
+            <label class="fl" for="avisComment">Votre témoignage *</label>
+            <textarea id="avisComment" class="fc-input" rows="5" minlength="40" maxlength="2000" placeholder="Décrivez concrètement la mission (dates, site, équipes), les points forts et ce qui peut être amélioré. Minimum 40 caractères." required></textarea>
           </div>
         </div>
 
-        <div class="fg">
-          <label class="fl" for="avisComment">Votre Témoignage &amp; Retour d'Expérience</label>
-          <textarea id="avisComment" class="fc-input" rows="4" placeholder="Décrivez la qualité de la prestation, la réactivité des équipes et la conformité des livrables..." required></textarea>
-        </div>
+        <label class="avis-consent">
+          <input type="checkbox" id="avisConsent" required>
+          <span>J'autorise JBF SERVICES à publier mon prénom, nom, entreprise et commentaire sur le site public après modération. Je confirme que cet avis reflète une collaboration réelle.</span>
+        </label>
 
-        <button type="submit" class="btn btn-pink" style="width: 100%; padding: 0.9rem;">
-          Publier mon Évaluation →
+        <button type="submit" class="btn btn-pink" style="width: 100%; padding: 0.95rem;" id="avisSubmitBtn">
+          Envoyer mon avis pour modération
         </button>
+        <p class="avis-form-note">Délai habituel de publication : 1 à 3 jours ouvrables. Vous recevrez une confirmation à l'écran.</p>
       </form>
-    </div>
+    </section>
+
+    <h2 class="reviews-section-title">Avis publiés</h2>
+    <div class="reviews-masonry" id="reviewsGrid"></div>
+
   </div>
-</div>
+</section>
 
 <!-- TOAST MESSAGE -->
-<div class="toast-msg" id="toastMsg">Votre évaluation a été enregistrée avec succès. Merci pour votre confiance !</div>
+<div class="toast-msg" id="toastMsg">Merci — votre avis a été transmis et sera publié après modération.</div>
 
 <!-- FOOTER UNIFIÉ -->
 <footer class="footer">
@@ -545,14 +620,28 @@
 <script>
 let REVIEWS_DATA = [];
 
-let selectedRating = 5;
+let selectedRating = 0;
 const ratingLabels = {
+  0: "Choisissez une note de 1 à 5 étoiles",
   1: "1/5 — Insuffisant",
   2: "2/5 — Passable",
   3: "3/5 — Satisfaisant",
-  4: "4/5 — Très Bon",
-  5: "5/5 — Prestation Exceptionnelle"
+  4: "4/5 — Très bon",
+  5: "5/5 — Excellent"
 };
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function scrollToAvisForm() {
+  const el = document.getElementById('depot-avis');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function toggleNav() {
   const menu = document.getElementById('navMenu');
@@ -573,27 +662,34 @@ document.querySelectorAll('#navMenu .nav-link').forEach(link => {
 function renderReviews() {
   const grid = document.getElementById('reviewsGrid');
   if (!REVIEWS_DATA || REVIEWS_DATA.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 24px;color:#94a3b8;"><i class="bi bi-star" style="font-size:2.5rem;margin-bottom:12px;display:block;"></i><p style="font-size:0.95rem;font-weight:600;">Aucun avis client pour le moment.</p><p style="font-size:0.82rem;margin-top:4px;">Soyez le premier à partager votre expérience !</p></div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 24px;color:#94a3b8;">
+      <div style="font-size:2.2rem;margin-bottom:12px;">★</div>
+      <p style="font-size:0.95rem;font-weight:600;">Aucun avis publié pour le moment.</p>
+      <p style="font-size:0.82rem;margin-top:6px;">Utilisez le formulaire ci-dessus pour déposer le premier témoignage vérifié.</p>
+    </div>`;
     return;
   }
-  grid.innerHTML = REVIEWS_DATA.map(r => `
+  grid.innerHTML = REVIEWS_DATA.map(r => {
+    const initials = escapeHtml(r.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase());
+    const stars = Math.max(1, Math.min(5, r.stars || 5));
+    return `
     <div class="review-box reveal visible">
       <div>
         <div class="review-top">
-          <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</div>
-          <span class="review-cat-tag">${r.category}</span>
+          <div class="review-stars">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</div>
+          <span class="review-cat-tag">${escapeHtml(r.category)}</span>
         </div>
-        <p class="review-quote">« ${r.text} »</p>
+        <p class="review-quote">« ${escapeHtml(r.text)} »</p>
       </div>
       <div class="reviewer-info">
-        <div class="reviewer-avatar">${r.name.split(' ').map(n => n[0]).join('').substring(0,2)}</div>
+        <div class="reviewer-avatar">${initials}</div>
         <div>
-          <div class="reviewer-name">${r.name}</div>
-          <div class="reviewer-company">${r.role} &bull; <strong>${r.company}</strong> (${r.loc})</div>
+          <div class="reviewer-name">${escapeHtml(r.name)}</div>
+          <div class="reviewer-company">${escapeHtml(r.role)}${r.loc ? ` · ${escapeHtml(r.loc)}` : ''}</div>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function updateStarDisplay(val) {
@@ -633,111 +729,92 @@ if (typeof supabase !== 'undefined') {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-function openAvisModal() {
-  selectStar(5);
-  const modal = document.getElementById('avisModalOverlay');
-  if (modal) {
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function closeAvisModal() {
-  const modal = document.getElementById('avisModalOverlay');
-  if (modal) {
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-}
-
-// Close modal on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeAvisModal();
-});
-
-// Close modal when clicking overlay
-document.addEventListener('click', (e) => {
-  const modal = document.getElementById('avisModalOverlay');
-  if (e.target === modal) closeAvisModal();
-});
-
 async function submitAvis(e) {
   e.preventDefault();
-  const nom = document.getElementById('avisNom').value.trim();
-  const societe = document.getElementById('avisSociete').value.trim();
-  const domaine = document.getElementById('avisDomaine').value;
+  const prenom = document.getElementById('avisPrenom').value.trim();
+  const nomFam = document.getElementById('avisNom').value.trim();
+  const entreprise = document.getElementById('avisEntreprise').value.trim();
+  const fonction = document.getElementById('avisFonction').value.trim();
+  const province = document.getElementById('avisProvince').value;
   const ville = document.getElementById('avisVille').value.trim();
+  const service = document.getElementById('avisService').value;
   const comment = document.getElementById('avisComment').value.trim();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const consent = document.getElementById('avisConsent').checked;
+  const submitBtn = document.getElementById('avisSubmitBtn');
 
-  if (!nom || !societe || !domaine || !comment) return;
+  if (!selectedRating || selectedRating < 1) {
+    alert('Veuillez sélectionner une note entre 1 et 5 étoiles.');
+    return;
+  }
+  if (comment.length < 40) {
+    alert('Votre témoignage doit contenir au moins 40 caractères.');
+    return;
+  }
+  if (!consent) {
+    alert('Veuillez cocher la case d\'autorisation de publication.');
+    return;
+  }
+
+  const displayNom = `${prenom} ${nomFam}`.trim();
+  const payload = {
+    prenom,
+    nom: nomFam,
+    fonction,
+    entreprise,
+    ville,
+    province,
+    service,
+    categorie: service,
+    note: selectedRating,
+    stars: selectedRating,
+    commentaire: comment,
+    approuve: false
+  };
 
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = "Publication en cours...";
+    submitBtn.textContent = 'Envoi en cours…';
   }
 
+  let saved = false;
   try {
     if (supabaseClient) {
-      let insertRes = await supabaseClient
-        .from('avis_clients')
-        .insert([{
-          nom: nom,
-          entreprise: societe + (ville ? ` (${ville})` : ''),
-          service: domaine,
-          categorie: domaine,
+      const insertRes = await supabaseClient.from('avis_clients').insert([payload]);
+      if (!insertRes.error) {
+        saved = true;
+      } else {
+        const retry = await supabaseClient.from('avis_clients').insert([{
+          nom: displayNom,
+          entreprise,
+          service,
           note: selectedRating,
-          stars: selectedRating,
           commentaire: comment,
-          approuve: true
+          approuve: false
         }]);
-
-      if (insertRes.error) {
-        // Fallback retry with minimal columns
-        await supabaseClient
-          .from('avis_clients')
-          .insert([{
-            nom: nom,
-            entreprise: societe + (ville ? ` (${ville})` : ''),
-            service: domaine,
-            note: selectedRating,
-            commentaire: comment,
-            approuve: true
-          }]);
+        saved = !retry.error;
+        if (retry.error) console.warn('[Avis]', retry.error);
       }
     }
-  } catch(err) {
-    console.warn("Supabase avis save:", err);
+  } catch (err) {
+    console.warn('Supabase avis save:', err);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Publier mon Évaluation →";
+      submitBtn.textContent = 'Envoyer mon avis pour modération';
     }
   }
 
-  // Ajout immédiat en local pour feedback direct
-  const newLocalReview = {
-    id: 'local-' + Date.now(),
-    name: nom,
-    role: societe + (ville ? ` (${ville})` : ''),
-    company: 'Client Partenaire JBF',
-    loc: ville || 'RDC',
-    stars: selectedRating,
-    category: domaine,
-    text: comment
-  };
-  REVIEWS_DATA = [newLocalReview, ...REVIEWS_DATA];
-  renderReviews();
-  updateReviewsStats();
-
-  closeAvisModal();
   document.getElementById('avisForm').reset();
+  selectedRating = 0;
+  updateStarDisplay(0);
 
   const toast = document.getElementById('toastMsg');
   if (toast) {
-    toast.textContent = "Merci ! Votre évaluation a été publiée avec succès sur notre plateforme.";
+    toast.textContent = saved
+      ? 'Merci ! Votre avis a été enregistré et sera visible après validation par notre équipe.'
+      : 'Votre avis n\'a pas pu être enregistré en ligne. Contactez-nous via la page Contact avec votre témoignage.';
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 5000);
+    setTimeout(() => toast.classList.remove('show'), 6000);
   }
 }
 
@@ -773,73 +850,49 @@ function updateReviewsStats() {
 }
 
 async function loadSupabaseReviews() {
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    REVIEWS_DATA = [];
+    renderReviews();
+    updateReviewsStats();
+    return;
+  }
   try {
     const { data, error } = await supabaseClient
       .from('avis_clients')
       .select('*')
-      .neq('approuve', false)
+      .eq('approuve', true)
       .order('created_at', { ascending: false });
 
-    if (!error && data && data.length > 0) {
-      REVIEWS_DATA = data.map(d => ({
-        id: d.id,
-        name: d.nom || 'Partenaire Industriel',
-        role: d.entreprise || 'Entreprise Partenaire',
-        company: 'Client JBF',
-        loc: 'RDC',
-        stars: d.note || d.stars || 5,
-        category: d.service || d.categorie || 'Multi-Services',
-        text: d.commentaire || 'Excellente prestation réalisée par les équipes de JBF Services.'
-      }));
-      renderReviews();
-      updateReviewsStats();
+    if (!error && Array.isArray(data)) {
+      REVIEWS_DATA = data.map(d => {
+        const fullName = [d.prenom, d.nom].filter(Boolean).join(' ').trim() || d.nom || 'Client JBF';
+        const roleParts = [d.fonction, d.entreprise].filter(Boolean);
+        const loc = [d.ville, d.province].filter(Boolean).join(', ') || 'RDC';
+        return {
+          id: d.id,
+          name: fullName,
+          role: roleParts.join(' — ') || d.entreprise || '',
+          loc,
+          stars: d.note || d.stars || 5,
+          category: d.service || d.categorie || 'Prestation JBF',
+          text: d.commentaire || ''
+        };
+      }).filter(r => r.text);
     } else {
-      // Avis de référence partenaires réels si la table est vierge
-      REVIEWS_DATA = [
-        {
-          id: 'ref-1',
-          name: 'Direction Logistique',
-          role: 'Opérateur Minier Haut-Katanga',
-          company: 'Partenaire Industriel',
-          loc: 'Kolwezi, RDC',
-          stars: 5,
-          category: 'Sous-traitance Minière',
-          text: 'Intervention exemplaire pour la gestion de nos équipes et des équipements lourds sur site. Respect rigoureux des protocoles de sécurité HSE.'
-        },
-        {
-          id: 'ref-2',
-          name: 'Responsable Approvisionnement',
-          role: 'Complexe Hôtelier & Événementiel',
-          company: 'Client Entreprise',
-          loc: 'Lubumbashi, RDC',
-          stars: 5,
-          category: 'Catering & Restauration',
-          text: 'Qualité alimentaire et traçabilité HACCP irréprochables pour nos cantines de chantier. Des repas chauds et équilibrés chaque jour.'
-        },
-        {
-          id: 'ref-3',
-          name: 'Chef de Projet BTP',
-          role: 'Infrastructures Industrielles',
-          company: 'Partenaire BTP',
-          loc: 'Kinshasa, RDC',
-          stars: 5,
-          category: 'Génie Civil & Construction',
-          text: 'Travaux de coffrage et de bétonnage réalisés dans les délais impartis avec une rigueur technique remarquable.'
-        }
-      ];
-      renderReviews();
-      updateReviewsStats();
+      REVIEWS_DATA = [];
     }
-  } catch(err) {
-    console.warn("Erreur chargement avis Supabase:", err);
+  } catch (err) {
+    console.warn('Erreur chargement avis Supabase:', err);
+    REVIEWS_DATA = [];
   }
+  renderReviews();
+  updateReviewsStats();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderReviews();
   loadSupabaseReviews();
-  selectStar(5);
+  updateStarDisplay(0);
 });
 
 const navbar = document.getElementById('navbar');
