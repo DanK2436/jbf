@@ -315,6 +315,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/jbf-resource-display.js"></script>
+<script src="../js/jbf-resources-sync.js"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
@@ -377,8 +378,11 @@
     const byId = new Map();
     [...local, ...(remote || [])].forEach((r) => {
       if (!r) return;
-      const key = String(r.id || r.titre || Math.random());
-      byId.set(key, { ...byId.get(key), ...r, id: r.id || key });
+      const stable = window.JBFResourcesSync?.ensureStableResourceRow
+        ? window.JBFResourcesSync.ensureStableResourceRow(r)
+        : r;
+      const key = String(stable.id || Math.random());
+      byId.set(key, { ...byId.get(key), ...stable, id: key });
     });
     allRessources = window.JBFResourceDisplay
       ? window.JBFResourceDisplay.normalizeResourceList(Array.from(byId.values()).sort(

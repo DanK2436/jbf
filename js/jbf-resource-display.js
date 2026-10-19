@@ -36,13 +36,28 @@
     return s;
   }
 
+  function inferTitleFromRow(row) {
+    if (row._fileLabel) return sanitizeResourceText(row._fileLabel, 'Document partagé');
+    if (row.document_nom) return sanitizeResourceText(row.document_nom, 'Document partagé');
+    const url = String(row.fichier_url || '');
+    if (url && !looksLikeDataUrl(url)) {
+      const tail = url.split('/').pop().split('?')[0];
+      if (tail && tail.length < 120) return sanitizeResourceText(decodeURIComponent(tail), 'Document partagé');
+    }
+    return 'Ressource JBF';
+  }
+
   function normalizeResourceRow(row) {
     if (!row || typeof row !== 'object') return row;
-    const titre = sanitizeResourceText(row.titre, 'Ressource JBF');
+    let titre = sanitizeResourceText(row.titre, '');
+    if (!titre || looksLikeDataUrl(row.titre) || looksLikeBase64Blob(row.titre)) {
+      titre = inferTitleFromRow(row);
+    }
     let description = sanitizeResourceText(row.description, '');
     const url = row.fichier_url || '';
     if (description && url && description === url) description = '';
     if (description && looksLikeDataUrl(description)) description = '';
+    if (looksLikeBase64Blob(description)) description = '';
     return { ...row, titre, description };
   }
 

@@ -298,9 +298,11 @@
   </div>
 
   <script src="../js/jbf-resource-display.js"></script>
+  <script src="../js/jbf-resources-sync.js"></script>
   <script src="js/shared.js"></script>
   <script>
     let allResources = [];
+    let currentMemberProfile = null;
     let memUploadedDataUrl = '';
     let memUploadedFileName = '';
     let memUploadedFileSize = '';
@@ -308,7 +310,21 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderNavigation('resources');
-      await initMemberSession();
+      currentMemberProfile = await initMemberSession();
+      const container = document.getElementById('resourcesContainer');
+      if (container) {
+        container.addEventListener('click', (e) => {
+          const openBtn = e.target.closest('[data-action="open-resource"]');
+          if (openBtn) {
+            openResourceFile(openBtn.getAttribute('data-resource-id'));
+            return;
+          }
+          const delBtn = e.target.closest('[data-action="remove-resource"]');
+          if (delBtn) {
+            removeMemberResource(delBtn.getAttribute('data-resource-id'));
+          }
+        });
+      }
       loadHseResources();
     });
 
@@ -369,7 +385,7 @@
         return;
       }
 
-      const newRes = {
+      let newRes = {
         id: 'res-' + Date.now(),
         titre: titre,
         categorie: cat,
@@ -379,8 +395,13 @@
         fichier_url: fichierUrl,
         description: desc,
         publie: true,
+        _fileLabel: isUpload ? memUploadedFileName : '',
+        uploader_email: currentMemberProfile?.email || null,
         created_at: new Date().toISOString()
       };
+      if (window.JBFResourcesSync?.prepareResourceForSave) {
+        newRes = window.JBFResourcesSync.prepareResourceForSave(newRes);
+      }
 
       // 1. Supabase
       try {
@@ -392,12 +413,14 @@
       }
 
       // 2. Local fallback
-      allResources.unshift(newRes);
-      try {
-        const stored = JSON.parse(localStorage.getItem('JBF_RESSOURCES_LOCAL') || '[]');
+      if (window.JBFResourcesSync) {
+        const stored = window.JBFResourcesSync.readLocal();
         stored.unshift(newRes);
-        localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify(stored));
-      } catch(e) {}
+        window.JBFResourcesSync.writeLocal(stored);
+      } else {
+        allResources.unshift(newRes);
+        localStorage.setItem('JBF_RESSOURCES_LOCAL', JSON.stringify([newRes, ...JSON.parse(localStorage.getItem('JBF_RESSOURCES_LOCAL') || '[]')]));
+      }
 
       closeMemberUploadModal();
       renderResources();
@@ -405,7 +428,7 @@
     }
 
     async function loadHseResources() {
-      let loaded = [];
+      let remote = [];
       try {
         if (supabaseClient) {
           const { data, error } = await supabaseClient
@@ -413,27 +436,60 @@
             .select('*')
             .eq('publie', true)
             .order('created_at', { ascending: false });
-
-          if (!error && data && data.length > 0) {
-            loaded = data;
-          }
+          if (!error && Array.isArray(data)) remote = data;
         }
       } catch (e) {
         console.warn('Supabase fetch ressources error:', e);
       }
 
-      if (loaded.length === 0) {
-        try {
-          const stored = localStorage.getItem('JBF_RESSOURCES_LOCAL');
-          if (stored) loaded = JSON.parse(stored);
-        } catch(e) {}
+      const local = window.JBFResourcesSync ? window.JBFResourcesSync.readLocal() : [];
+      const hidden = window.JBFResourcesSync ? window.JBFResourcesSync.getHiddenMemberIds() : [];
+      if (window.JBFResourcesSync) {
+        allResources = window.JBFResourcesSync.mergeResourceLists(remote, local, hidden).filter((r) => r.publie !== false);
+        window.JBFResourcesSync.writeLocal(
+          window.JBFResourcesSync.mergeResourceLists(remote, local, hidden)
+        );
+      } else {
+        allResources = (remote.length ? remote : local).filter((r) => r.publie !== false);
       }
-
-      let rows = (loaded || []).filter((r) => r.publie !== false);
-      allResources = window.JBFResourceDisplay
-        ? window.JBFResourceDisplay.normalizeResourceList(rows)
-        : rows;
       renderResources();
+    }
+
+    async function removeMemberResource(id) {
+      const r = allResources.find((x) => String(x.id) === String(id));
+      const label = r?.titre || 'cette ressource';
+      if (!confirm(`Retirer « ${label} » de votre liste ?\n\nElle ne s'affichera plus dans l'espace membre (y compris les entrées corrompues).`)) {
+        return;
+      }
+      if (window.JBFResourcesSync) {
+        window.JBFResourcesSync.removeResourceEverywhere(id);
+      }
+      try {
+        if (supabaseClient && id) {
+          await supabaseClient.from('ressources_hse').delete().eq('id', id);
+        }
+      } catch (_) {}
+      await loadHseResources();
+    }
+
+    function openResourceFile(id) {
+      const r = allResources.find((x) => String(x.id) === String(id));
+      if (!r || !r.fichier_url || r.fichier_url === '#') {
+        alert('Fichier non disponible.');
+        return;
+      }
+      const url = r.fichier_url;
+      if (String(url).startsWith('data:')) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = r._fileLabel || r.titre || 'document-jbf';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+      window.open(url, '_blank', 'noopener');
     }
 
     function setSearchTag(tag) {
@@ -486,7 +542,11 @@
           ${filtered.map(r => {
             const fileType = r.type_fichier || 'PDF';
             const fileSize = r.taille || 'Documentation';
-            const downloadUrl = r.fichier_url && r.fichier_url !== '#' ? r.fichier_url : null;
+            const hasFile = r.fichier_url && r.fichier_url !== '#';
+            const safeId = escapeHtml(String(r.id));
+            const titre = window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.titre, 'Ressource JBF') : r.titre;
+            const desc = window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.description, '') : (r.description || '');
+            const sectionLabel = window.JBFTextDisplay ? JBFTextDisplay.displayLabel(r.section_nom, 'Tous Services JBF') : (r.section_nom || 'Tous Services JBF');
 
             return `
               <div class="resource-card">
@@ -500,27 +560,24 @@
                     </span>
                   </div>
                   <h3 style="font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--text-h); margin-bottom:0.45rem; line-height:1.35;">
-                    ${escapeHtml(window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.titre, 'Ressource JBF') : r.titre)}
+                    ${escapeHtml(titre)}
                   </h3>
-                  <p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">
-                    ${escapeHtml(window.JBFResourceDisplay ? JBFResourceDisplay.sanitizeResourceText(r.description, 'Document de référence JBF.') : (r.description || 'Document de référence JBF.'))}
-                  </p>
+                  ${desc ? `<p style="font-size:0.83rem; color:var(--text-body); line-height:1.5;">${escapeHtml(desc)}</p>` : ''}
                 </div>
                 <div class="resource-card-footer">
                   <span style="font-size:0.72rem; color:var(--text-light); font-weight:700;">
-                    ${escapeHtml(r.section_nom || 'Tous Services JBF')}
+                    ${escapeHtml(sectionLabel)}
                   </span>
-                  ${downloadUrl ? `
-                    <a href="${downloadUrl}" target="_blank" download class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                      Ouvrir / Télécharger
-                    </a>
-                  ` : `
-                    <button type="button" onclick="alert('Document certifié en consultation interne.')" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                      Consulter
+                  <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                  ${hasFile ? `
+                    <button type="button" data-action="open-resource" data-resource-id="${safeId}" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem;">
+                      Ouvrir
                     </button>
-                  `}
+                  ` : ''}
+                    <button type="button" data-action="remove-resource" data-resource-id="${safeId}" class="btn btn-outline btn-sm" style="font-size:0.76rem; padding:0.35rem 0.75rem; color:var(--pink); border-color:var(--pink-blush);" title="Retirer de la liste">
+                      Supprimer
+                    </button>
+                  </div>
                 </div>
               </div>
             `;
@@ -532,6 +589,10 @@
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
   </script>
 </body>
