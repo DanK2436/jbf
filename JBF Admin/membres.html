@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestion des Collaborateurs & Équipes — JBF Admin</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/main.css?v=20261019">
+  <link rel="stylesheet" href="css/membres.css?v=3">
 </head>
-<body>
+<body class="page-membres">
 
 <div class="admin-layout">
   <!-- SIDEBAR -->
@@ -124,76 +125,65 @@
     </header>
 
     <main class="admin-content membres-page">
-      <section class="membres-hero">
-        <div>
-          <p class="membres-eyebrow">Capital humain JBF SERVICES</p>
-          <h2 class="membres-hero-title">Annuaire des collaborateurs déployés</h2>
-          <p class="membres-hero-desc">
-            Gérez les accès Espace Membre, les chefs d'équipe par domaine et le déploiement sur les sites RDC (Lubumbashi, Kolwezi, Kinshasa…).
-          </p>
-        </div>
-        <div class="membres-hero-meta">
-          <span class="membres-meta-pill"><i class="bi bi-cloud-check"></i> Sync portail Supabase</span>
-          <span class="membres-meta-pill"><i class="bi bi-shield-lock"></i> Accès par domaine</span>
+      <section class="membres-hero-banner">
+        <div class="membres-hero-inner">
+          <div>
+            <p class="membres-eyebrow">Capital humain · JBF SERVICES RDC</p>
+            <h2 class="membres-hero-title">Gestion des collaborateurs</h2>
+            <p class="membres-hero-desc">
+              Création des comptes Espace Membre, chefs d'équipe par domaine et déploiement terrain (Lubumbashi, Kolwezi, Kinshasa…).
+            </p>
+          </div>
+          <div class="membres-hero-meta">
+            <span class="membres-meta-pill"><i class="bi bi-cloud-check"></i> Portail Supabase</span>
+            <span class="membres-meta-pill"><i class="bi bi-shield-lock"></i> Accès sécurisés</span>
+          </div>
         </div>
       </section>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon primary">
-            <i class="bi bi-people-fill"></i>
-          </div>
-          <div class="kpi-details">
-            <h3>Effectif total</h3>
-            <div class="kpi-value" id="kpiTotalMembers">--</div>
-            <div class="kpi-sub">Collaborateurs enregistrés</div>
+      <div class="membres-kpi-strip">
+        <div class="membres-kpi-tile">
+          <div class="membres-kpi-icon pink"><i class="bi bi-people-fill"></i></div>
+          <div>
+            <div class="membres-kpi-label">Effectif total</div>
+            <div class="membres-kpi-num" id="kpiTotalMembers">--</div>
+            <div class="membres-kpi-hint">Collaborateurs</div>
           </div>
         </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon success">
-            <i class="bi bi-person-badge-fill"></i>
-          </div>
-          <div class="kpi-details">
-            <h3>Chefs d'équipe</h3>
-            <div class="kpi-value" id="kpiChefsEquipe">--</div>
-            <div class="kpi-sub">Devis &amp; chiffrage pro</div>
+        <div class="membres-kpi-tile">
+          <div class="membres-kpi-icon green"><i class="bi bi-person-badge-fill"></i></div>
+          <div>
+            <div class="membres-kpi-label">Chefs d'équipe</div>
+            <div class="membres-kpi-num" id="kpiChefsEquipe">--</div>
+            <div class="membres-kpi-hint">Devis pro</div>
           </div>
         </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon info">
-            <i class="bi bi-person-check-fill"></i>
-          </div>
-          <div class="kpi-details">
-            <h3>Membres simples</h3>
-            <div class="kpi-value" id="kpiMembresSimples">--</div>
-            <div class="kpi-sub">Accès collaborateur</div>
+        <div class="membres-kpi-tile">
+          <div class="membres-kpi-icon blue"><i class="bi bi-person-check-fill"></i></div>
+          <div>
+            <div class="membres-kpi-label">Membres</div>
+            <div class="membres-kpi-num" id="kpiMembresSimples">--</div>
+            <div class="membres-kpi-hint">Accès standard</div>
           </div>
         </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon warning">
-            <i class="bi bi-diagram-3-fill"></i>
-          </div>
-          <div class="kpi-details">
-            <h3>Domaines actifs</h3>
-            <div class="kpi-value" id="kpiDomainesActifs">--</div>
-            <div class="kpi-sub">Pôles techniques couverts</div>
+        <div class="membres-kpi-tile">
+          <div class="membres-kpi-icon amber"><i class="bi bi-diagram-3-fill"></i></div>
+          <div>
+            <div class="membres-kpi-label">Domaines</div>
+            <div class="membres-kpi-num" id="kpiDomainesActifs">--</div>
+            <div class="membres-kpi-hint">Pôles actifs</div>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2><i class="bi bi-table"></i> Registre des effectifs</h2>
-          <div class="card-header-actions">
-            <button class="btn btn-secondary btn-sm" onclick="loadAgentsList()">
-              <i class="bi bi-arrow-clockwise"></i> Actualiser
-            </button>
-          </div>
+      <div class="membres-panel">
+        <div class="membres-panel-head">
+          <h2><i class="bi bi-grid-3x3-gap-fill"></i> Annuaire des effectifs</h2>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="loadAgentsList()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
         </div>
-        <div class="card-body">
+        <div class="membres-panel-body">
           <div class="membres-toolbar">
             <div class="membres-search">
               <i class="bi bi-search"></i>
@@ -235,24 +225,12 @@
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="admin-table table-membres">
-              <thead>
-                <tr>
-                  <th>Collaborateur</th>
-                  <th>Matricule</th>
-                  <th>Rôle &amp; statut</th>
-                  <th>Domaine</th>
-                  <th>Site</th>
-                  <th>Contact</th>
-                  <th>Portail</th>
-                  <th style="text-align: right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="agentsTableBody">
-                <tr><td colspan="8" class="membres-empty">Chargement des collaborateurs…</td></tr>
-              </tbody>
-            </table>
+          <div id="agentsCardGrid" class="membres-card-grid">
+            <div class="membres-empty-state">
+              <i class="bi bi-hourglass-split"></i>
+              <strong>Chargement…</strong>
+              <p>Récupération des collaborateurs</p>
+            </div>
           </div>
 
         </div>
@@ -513,8 +491,10 @@
   }
 
   async function loadAgentsList() {
-    const tbody = document.getElementById('agentsTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="membres-empty">Chargement des collaborateurs…</td></tr>';
+    const grid = document.getElementById('agentsCardGrid');
+    if (grid) {
+      grid.innerHTML = '<div class="membres-empty-state"><i class="bi bi-hourglass-split"></i><strong>Chargement…</strong><p>Récupération des collaborateurs</p></div>';
+    }
 
     let list = [];
     const sb = getSupabase();
@@ -590,63 +570,73 @@
   }
 
   function renderAgentsTable(list) {
-    const tbody = document.getElementById('agentsTableBody');
+    const grid = document.getElementById('agentsCardGrid');
+    if (!grid) return;
+
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="membres-empty"><i class="bi bi-people"></i><strong>Aucun collaborateur</strong>Créez un compte pour activer l'Espace Membre et le déploiement par domaine.</td></tr>`;
+      grid.innerHTML = `
+        <div class="membres-empty-state">
+          <i class="bi bi-people"></i>
+          <strong>Aucun collaborateur</strong>
+          <p>Cliquez sur « Nouveau collaborateur » pour créer un compte Espace Membre.</p>
+        </div>`;
       return;
     }
 
-    tbody.innerHTML = list.map(ag => {
+    grid.innerHTML = list.map((ag) => {
       const initials = ag.full_name ? ag.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AG';
       const statutEquipe = ag.statut_equipe || (ag.role === 'chef_equipe' ? 'chef_equipe' : 'membre');
-      const fonctionBadge = window.adminCore.renderBadgeFonction(statutEquipe === 'chef_equipe' ? 'chef_equipe' : (ag.poste || ag.fonction));
-      const statutBadge = statutEquipe === 'chef_equipe'
-        ? '<span class="membres-statut-pill chef"><i class="bi bi-person-badge"></i> Chef</span>'
+      const isChef = statutEquipe === 'chef_equipe';
+      const fonctionBadge = window.adminCore.renderBadgeFonction(isChef ? 'chef_equipe' : (ag.poste || ag.fonction));
+      const statutBadge = isChef
+        ? '<span class="membres-statut-pill chef"><i class="bi bi-person-badge"></i> Chef d\'équipe</span>'
         : '<span class="membres-statut-pill membre"><i class="bi bi-person"></i> Membre</span>';
       const sectionNom = ag.section_nom || ag.secteur || (ag.section_id ? JBF_SECTIONS_MAP[ag.section_id] : 'Prestations Générales');
       const sectionId = ag.section_id || 1;
       const matricule = ag.matricule || `JBF-SEC${sectionId.toString().padStart(2, '0')}-0000`;
       const site = ag.city || ag.site_affectation || 'Lubumbashi';
-      const hasPortalHint = !!(ag._authPassword || ag.email);
-      const portailCell = hasPortalHint
-        ? '<span class="membres-portail-ok"><i class="bi bi-box-arrow-in-right"></i> Espace membre</span>'
-        : '<span class="membres-contact-muted">À synchroniser</span>';
-      const phone = ag.phone || ag.telephone;
-      const contactCell = phone
-        ? `<span class="membres-contact"><i class="bi bi-telephone"></i> ${escapeHtml(phone)}</span>`
-        : '<span class="membres-contact-muted">Non renseigné</span>';
+      const phone = escapeHtml(ag.phone || ag.telephone || '—');
+      const portailLabel = ag._authPassword ? 'Portail prêt' : 'Resync requis';
+      const idKey = escapeHtml(String(ag.id || ag.email));
 
       return `
-        <tr class="membres-row-main">
-          <td data-label="Collaborateur">
-            <div class="membres-person">
-              <div class="membres-avatar">${initials}</div>
-              <div>
-                <div class="membres-person-name">${escapeHtml(ag.full_name || '')}</div>
-                <div class="membres-person-email">${escapeHtml(ag.email || '')}</div>
-              </div>
+        <article class="membres-agent-card ${isChef ? 'is-chef' : ''}">
+          <div class="membres-agent-card-top">
+            <div class="membres-avatar">${initials}</div>
+            <div>
+              <div class="membres-person-name">${escapeHtml(ag.full_name || '')}</div>
+              <div class="membres-person-email">${escapeHtml(ag.email || '')}</div>
+              <span class="membres-matricule">${escapeHtml(matricule)}</span>
             </div>
-          </td>
-          <td data-label="Matricule"><span class="membres-matricule">${escapeHtml(matricule)}</span></td>
-          <td data-label="Rôle & statut"><div class="membres-role-stack">${fonctionBadge}${statutBadge}</div></td>
-          <td data-label="Domaine">
-            <div class="membres-domain-title">${escapeHtml(sectionNom)}</div>
-            <div class="membres-domain-sub">Pôle ${sectionId}</div>
-          </td>
-          <td data-label="Site"><span class="badge-status valide"><i class="bi bi-geo-alt-fill"></i> ${escapeHtml(site)}</span></td>
-          <td data-label="Contact">${contactCell}</td>
-          <td data-label="Portail">${portailCell}</td>
-          <td data-label="Actions" style="text-align: right;">
-            <div class="table-actions">
-              <button class="btn btn-secondary btn-sm" onclick="viewAgentDetailById('${escapeHtml(String(ag.id || ag.email))}')" title="Voir la fiche">
-                <i class="bi bi-eye"></i>
-              </button>
-              <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: rgba(220,38,38,0.25);" onclick="deleteMemberAgent('${escapeHtml(String(ag.id || ''))}', '${escapeHtml(ag.email || '')}')" title="Supprimer">
-                <i class="bi bi-trash"></i>
-              </button>
+          </div>
+          <div class="membres-agent-tags">${fonctionBadge}${statutBadge}</div>
+          <div class="membres-agent-meta">
+            <div class="membres-agent-meta-item">
+              <span>Domaine</span>
+              <strong>Pôle ${sectionId} · ${escapeHtml(sectionNom)}</strong>
             </div>
-          </td>
-        </tr>
+            <div class="membres-agent-meta-item">
+              <span>Site</span>
+              <strong>${escapeHtml(site)}</strong>
+            </div>
+            <div class="membres-agent-meta-item">
+              <span>Contact</span>
+              <strong>${phone}</strong>
+            </div>
+            <div class="membres-agent-meta-item">
+              <span>Espace membre</span>
+              <strong>${portailLabel}</strong>
+            </div>
+          </div>
+          <div class="membres-agent-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="viewAgentDetailById('${idKey}')">
+              <i class="bi bi-eye"></i> Fiche
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" style="color:#dc2626;" onclick="deleteMemberAgent('${escapeHtml(String(ag.id || ''))}', '${escapeHtml(ag.email || '')}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </article>
       `;
     }).join('');
   }
