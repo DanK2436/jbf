@@ -308,9 +308,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/admin-core.js"></script>
-<script src="js/db-bridge.js"></script>
+<script src="js/config.js?v=20261019"></script>
+<script src="js/admin-core.js?v=20261019"></script>
+<script src="js/db-bridge.js?v=20261019"></script>
 <script>
   let galleryItems = [];
   let editingMediaId = null;
@@ -319,6 +319,29 @@
 
   function persistGalleryLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(galleryItems));
+  }
+
+  function mergeGalleryRemoteAndLocal(remote, local) {
+    const merged = Array.isArray(remote) ? [...remote] : [];
+    const idSet = new Set(merged.map((m) => String(m.id)));
+    const urlSet = new Set(merged.map((m) => m.url).filter(Boolean));
+    (Array.isArray(local) ? local : []).forEach((item) => {
+      if (idSet.has(String(item.id))) return;
+      if (item.url && urlSet.has(item.url)) return;
+      merged.push(item);
+      idSet.add(String(item.id));
+      if (item.url) urlSet.add(item.url);
+    });
+    return merged.sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return tb - ta;
+    });
+  }
+
+  function isLocalOnlyGalleryId(id) {
+    const s = String(id || '');
+    return s.startsWith('med-') || s.startsWith('local-');
   }
 
   function escapeHtml(str) {
@@ -331,16 +354,18 @@
   });
 
   async function loadGalleryItems() {
+    let remote = [];
     if (window.jbfDbBridge) {
-      galleryItems = await window.jbfDbBridge.loadGalleryItemsAdmin();
+      remote = await window.jbfDbBridge.loadGalleryItemsAdmin();
     }
 
-    if (galleryItems.length === 0) {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) galleryItems = JSON.parse(stored);
-      } catch (e) {}
-    }
+    let local = [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) local = JSON.parse(stored);
+    } catch (e) {}
+
+    galleryItems = mergeGalleryRemoteAndLocal(remote, local);
 
     persistGalleryLocal();
     updateKPIs();
@@ -385,11 +410,11 @@
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
             <span style="font-size: 0.7rem; color: var(--text-muted);">${m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : 'Récent'}</span>
             <div style="display:flex; gap:6px;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMedia(decodeURIComponent('${safeId}'))">
-                <i class="bi bi-pencil"></i>
+              <button type="button" class="btn btn-secondary btn-sm" title="Modifier" onclick="openEditMedia(decodeURIComponent('${safeId}'))">
+                <i class="bi bi-pencil"></i> Modifier
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="deleteMediaById(decodeURIComponent('${safeId}'))">
-                <i class="bi bi-trash"></i>
+              <button type="button" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Supprimer" onclick="deleteMediaById(decodeURIComponent('${safeId}'))">
+                <i class="bi bi-trash"></i> Suppr.
               </button>
             </div>
           </div>
@@ -539,8 +564,12 @@
       const insertRes = await window.jbfDbBridge.insertGalleryItemAdmin(newItem);
       if (!insertRes.ok) {
         window.adminCore?.showToast('Publication locale OK ; Supabase : ' + (insertRes.error?.message || 'erreur'), 'warning');
-      } else if (insertRes.data?.[0]?.id) {
-        newItem.id = insertRes.data[0].id;
+      } else if (insertRes.data?.[0]) {
+        const row = insertRes.data[0];
+        const mapped = window.jbfDbBridge.mapGalleryRow
+          ? window.jbfDbBridge.mapGalleryRow(row)
+          : { id: row.id, url: row.img_url || row.url };
+        Object.assign(newItem, mapped);
         newItem._sourceTable = insertRes.table || 'gallery_images';
       }
     }
@@ -557,9 +586,9 @@
   async function deleteMediaById(id) {
     if (!confirm('Êtes-vous sûr de vouloir retirer ce média de la galerie ?')) return;
     const item = galleryItems.find((m) => String(m.id) === String(id));
-    if (window.jbfDbBridge?.deleteGalleryItemAdmin && item) {
+    if (window.jbfDbBridge?.deleteGalleryItemAdmin && item && !isLocalOnlyGalleryId(item.id)) {
       const del = await window.jbfDbBridge.deleteGalleryItemAdmin(item.id, item._sourceTable);
-      if (!del.ok && String(item.id).startsWith('med-') === false) {
+      if (!del.ok && !del.skipped) {
         window.adminCore?.showToast(del.error || 'Suppression Supabase échouée.', 'error');
         return;
       }

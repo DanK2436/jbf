@@ -159,25 +159,33 @@ async function updateGalleryItemAdmin(id, payload, sourceTable) {
         localite: payload.localite || 'RDC',
         publie: payload.publie !== false
       };
-    const res = await client.from(table).update(patch).eq('id', id).select();
+    const res = await client.from(table).update(patch).eq('id', id).select('id');
     if (!res.error && res.data && res.data.length) {
       return { ok: true, data: res.data, table };
+    }
+    if (res.error) {
+      return { ok: false, error: res.error.message || String(res.error), table };
     }
   }
   return { ok: false, error: 'Mise à jour impossible (id ou table introuvable).' };
 }
 
 async function deleteGalleryItemAdmin(id, sourceTable) {
-  if (!window.adminCore?.resolveSupabaseClient || !id) return { ok: false };
+  if (!window.adminCore?.resolveSupabaseClient || !id) return { ok: false, skipped: true };
   const client = await window.adminCore.resolveSupabaseClient();
-  if (!client) return { ok: false };
+  if (!client) return { ok: false, skipped: true };
 
   const tables = sourceTable ? [sourceTable] : ['gallery_images', 'galerie_items'];
   for (const table of tables) {
-    const res = await client.from(table).delete().eq('id', id);
-    if (!res.error) return { ok: true, table };
+    const res = await client.from(table).delete().eq('id', id).select('id');
+    if (!res.error && res.data && res.data.length) {
+      return { ok: true, table };
+    }
+    if (res.error) {
+      return { ok: false, error: res.error.message || String(res.error), table };
+    }
   }
-  return { ok: false, error: 'Suppression Supabase impossible pour cet identifiant.' };
+  return { ok: false, error: 'Aucune ligne supprimée (vérifiez les droits RLS Supabase).' };
 }
 
 async function updateBlogArticleAdmin(id, payload, sourceTable) {
@@ -207,25 +215,33 @@ async function updateBlogArticleAdmin(id, payload, sourceTable) {
         video: payload.video || '',
         statut: payload.statut || 'publie'
       };
-    const res = await client.from(table).update(patch).eq('id', id).select();
+    const res = await client.from(table).update(patch).eq('id', id).select('id');
     if (!res.error && res.data && res.data.length) {
       return { ok: true, data: res.data, table };
+    }
+    if (res.error) {
+      return { ok: false, error: res.error.message || String(res.error), table };
     }
   }
   return { ok: false, error: 'Mise à jour article impossible.' };
 }
 
 async function deleteBlogArticleAdmin(id, sourceTable) {
-  if (!window.adminCore?.resolveSupabaseClient || !id) return { ok: false };
+  if (!window.adminCore?.resolveSupabaseClient || !id) return { ok: false, skipped: true };
   const client = await window.adminCore.resolveSupabaseClient();
-  if (!client) return { ok: false };
+  if (!client) return { ok: false, skipped: true };
 
   const tables = sourceTable ? [sourceTable] : ['blog_posts', 'actualites'];
   for (const table of tables) {
-    const res = await client.from(table).delete().eq('id', id);
-    if (!res.error) return { ok: true, table };
+    const res = await client.from(table).delete().eq('id', id).select('id');
+    if (!res.error && res.data && res.data.length) {
+      return { ok: true, table };
+    }
+    if (res.error) {
+      return { ok: false, error: res.error.message || String(res.error), table };
+    }
   }
-  return { ok: false, error: 'Suppression article impossible.' };
+  return { ok: false, error: 'Aucune ligne supprimée (vérifiez les droits RLS Supabase).' };
 }
 
 window.jbfDbBridge = {

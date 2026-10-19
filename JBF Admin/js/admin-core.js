@@ -595,6 +595,10 @@ function ensureSupabaseAdminModule() {
 
 async function resolveSupabaseClient() {
   ensureSupabaseAdminModule();
+  if (window.jbfSupabase?.getOrInitSupabaseClient) {
+    const ready = await window.jbfSupabase.getOrInitSupabaseClient();
+    if (ready) return ready;
+  }
   if (window.jbfSupabase?.client) return window.jbfSupabase.client;
   if (typeof supabase !== 'undefined' && window.JBF_CONFIG?.SUPABASE_ANON_KEY) {
     return supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);

@@ -75,6 +75,7 @@ async function ensureDb() {
 // Exposer globalement
 window.jbfSupabase = {
   get client() { return getSupabaseClient(); },
+  getOrInitSupabaseClient,
   isConnected() { return getSupabaseClient() !== null; },
 
   async getDevis(limit) {
