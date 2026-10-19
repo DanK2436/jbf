@@ -3,6 +3,7 @@
   'use strict';
 
   const SYNC_KEY = (window.JBF_MEMBER_CONFIG && window.JBF_MEMBER_CONFIG.MEMBER_SYNC_KEY) || 'jbf-member-sync-v1';
+  let lastLoginError = null;
 
   function getClient() {
     const cfg = window.JBF_MEMBER_CONFIG || {};
@@ -15,25 +16,35 @@
   }
 
   async function tryRpcMemberLogin(email, password) {
+    lastLoginError = null;
     const client = getClient();
-    if (!client) return null;
+    if (!client) {
+      lastLoginError = 'no_client';
+      return null;
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password.trim();
     try {
       const { data, error } = await client.rpc('check_member_login', {
-        p_email: email.trim().toLowerCase(),
-        p_password: password
+        p_email: cleanEmail,
+        p_password: cleanPass
       });
       if (error) {
         console.warn('[Member RPC login]', error.message);
+        lastLoginError = /could not find the function|PGRST202/i.test(error.message || '') ? 'rpc_missing' : 'rpc_error';
         return null;
       }
       const payload = typeof data === 'string' ? JSON.parse(data) : data;
-      if (!payload || !payload.ok) return null;
+      if (!payload || !payload.ok) {
+        lastLoginError = payload?.error === 'invalid_credentials' ? 'invalid_credentials' : 'login_failed';
+        return null;
+      }
 
       const fullName = payload.full_name || email;
       const initials = fullName.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase();
       return {
         id: payload.profile_id || ('rpc-' + Date.now()),
-        email: payload.email || email,
+        email: payload.email || cleanEmail,
         nom: fullName,
         full_name: fullName,
         initials,
@@ -44,12 +55,18 @@
         phone: payload.phone || '',
         role: payload.statut_equipe === 'chef_equipe' ? 'chef_equipe' : 'membre',
         statut_equipe: payload.statut_equipe || 'membre',
+        solde_conges: 0,
         token: 'jbf-member-rpc-' + Date.now()
       };
     } catch (e) {
       console.warn('[Member RPC login]', e);
+      lastLoginError = 'network';
       return null;
     }
+  }
+
+  function getLastLoginError() {
+    return lastLoginError;
   }
 
   async function syncMemberAccountToSupabase(agent) {
@@ -78,6 +95,7 @@
 
   window.JBFMemberSupabaseAuth = {
     tryRpcMemberLogin,
+    getLastLoginError,
     syncMemberAccountToSupabase,
     SYNC_KEY
   };

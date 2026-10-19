@@ -350,9 +350,9 @@
             <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">$${(Number(d.montant_estime) || 0).toLocaleString()} USD</div>
           </td>
           <td>
-            <a href="${d.document_url || '#'}" class="btn btn-secondary btn-sm" style="font-size: 0.76rem;" onclick="if(this.getAttribute('href')==='#'){alert('Document archivé : ' + '${d.document_nom}'); return false;}">
-              <i class="bi bi-file-earmark-arrow-down"></i> ${escapeHtml(d.document_nom || 'Document.pdf')}
-            </a>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.76rem;" onclick="downloadDevisEquipeDocument('${escapeHtml(String(d.id))}')">
+              <i class="bi bi-file-earmark-arrow-down"></i> ${escapeHtml(d.document_nom || 'Document')}
+            </button>
           </td>
           <td>${statusBadge}</td>
           <td style="text-align: right;">
@@ -363,6 +363,32 @@
         </tr>
       `;
     }).join('');
+  }
+
+  function downloadDevisEquipeDocument(devisId) {
+    const d = devisList.find((item) => String(item.id) === String(devisId));
+    let docs = {};
+    try {
+      docs = JSON.parse(localStorage.getItem('JBF_DEVIS_DOCS_LOCAL') || '{}');
+    } catch (_) {}
+    const pack = docs[devisId];
+    if (!pack) {
+      alert('Document non trouvé dans le cache de ce navigateur.\n\nLe chef doit envoyer le devis depuis l\'outil Chiffrage (PDF/Excel) sur un poste connecté à la même session admin, ou vous devez ouvrir l\'admin sur le même appareil que l\'envoi.\n\nRéf. : ' + (d?.document_nom || devisId));
+      return;
+    }
+    const prefer = (d?.document_format === 'xlsx' || (d?.document_nom || '').endsWith('.xlsx')) ? 'xlsx' : 'pdf';
+    const dataUrl = prefer === 'xlsx' ? pack.xlsxDataUrl : pack.pdfDataUrl;
+    const fileName = prefer === 'xlsx' ? (pack.fileNameXlsx || d?.document_nom) : (pack.fileNamePdf || d?.document_nom);
+    if (!dataUrl) {
+      alert('Format demandé indisponible. Essayez l\'autre format si présent.');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName || 'devis-jbf.' + prefer;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function filterDevisEquipes() {

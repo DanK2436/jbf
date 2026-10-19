@@ -21,7 +21,7 @@
     try {
       const { data, error } = await client.rpc('admin_sync_member_account', {
         p_email: agent.email,
-        p_password: agent._authPassword,
+        p_password: String(agent._authPassword || '').trim(),
         p_full_name: agent.full_name || agent.nom_complet || agent.name || agent.email,
         p_sync_key: syncKey,
         p_matricule: agent.matricule || null,

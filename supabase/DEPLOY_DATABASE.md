@@ -37,6 +37,8 @@ Exécuter aussi **`supabase/migrations/20261019_member_portal_login.sql`** dans 
 
 Si la migration a déjà été appliquée une première fois, ré-exécutez **uniquement** les blocs `ALTER TABLE … statut_equipe`, `admin_sync_member_account` (11 paramètres) et `admin_delete_member_account` du même fichier.
 
+Pour les erreurs de connexion intermittentes, exécutez aussi **`supabase/migrations/20261019_member_login_trim.sql`**, puis dans Admin → Collaborateurs → fiche → **Resynchroniser connexion membre** avec le mot de passe défini.
+
 Déployer l’Edge Function **`staff-provision`** (optionnel, comptes Auth natifs) :
 
 ```bash

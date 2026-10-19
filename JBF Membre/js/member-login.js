@@ -7,8 +7,9 @@
       const list = JSON.parse(localStorage.getItem('JBF_ADMIN_MEMBRES_LOCAL') || '[]');
       const ag = list.find((a) => String(a.email || '').toLowerCase() === email);
       if (!ag) return null;
-      const pwd = ag._authPassword || ag.password || '';
-      if (!pwd || (pwd !== password && pwd !== password.trim())) return null;
+      const pwd = String(ag._authPassword || ag.password || '').trim();
+      const passTry = String(password || '').trim();
+      if (!pwd || pwd !== passTry) return null;
       const fullName = ag.full_name || ag.nom_complet || ag.name || email;
       const initials = fullName.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase();
       return {

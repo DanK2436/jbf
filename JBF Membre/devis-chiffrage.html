@@ -6,6 +6,9 @@
   <title>Chiffrage Devis Professionnel — JBF SERVICES</title>
   <link rel="stylesheet" href="css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     .devis-grid { display: grid; gap: 1.25rem; }
     @media (min-width: 1024px) {
@@ -133,9 +136,14 @@
             <p style="font-size:0.82rem; color:var(--text-light); margin-bottom:1rem;">
               Le montant USD et le détail CDF seront transmis à l'administration (Devis Chefs d'Équipe).
             </p>
-            <button type="button" class="btn btn-primary" id="btnSubmitDevis" onclick="submitProfessionalDevis()" style="width:100%;">
-              Transmettre le chiffrage à JBF Admin
-            </button>
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+              <button type="button" class="btn btn-primary" onclick="submitProfessionalDevis('pdf')">
+                Envoyer à l'administration (PDF JBF)
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="submitProfessionalDevis('xlsx')">
+                Envoyer à l'administration (Excel JBF)
+              </button>
+            </div>
           </div>
         </section>
       </div>
@@ -145,6 +153,7 @@
   <script src="js/config.js"></script>
   <script src="js/shared.js"></script>
   <script src="js/devis-chiffrage.js"></script>
+  <script src="js/devis-export.js"></script>
   <script>
     let materials = [];
     let quoteLines = [];
@@ -302,21 +311,19 @@
       document.getElementById('totalUsdDisplay').textContent = window.JBFDevisChiffrage.formatUsd(totalUsd);
     }
 
-    async function submitProfessionalDevis() {
+    function collectDevisFormData() {
       const titre = document.getElementById('dvTitre').value.trim();
       const client = document.getElementById('dvClient').value.trim();
       const notes = document.getElementById('dvNotes').value.trim();
       if (!titre || !client) {
         alert('Renseignez l\'intitulé du projet et le client.');
-        return;
+        return null;
       }
-
       const totalCdf = computeTotalCdf();
       if (totalCdf <= 0) {
         alert('Ajoutez au moins une ligne avec un montant.');
-        return;
+        return null;
       }
-
       const taux = Math.max(Number(document.getElementById('dvTaux').value) || 1, 1);
       const totalUsd = Math.round((totalCdf / taux) * 100) / 100;
       const profile = currentMemberProfile || {};
@@ -326,18 +333,71 @@
         unit_price_cdf: ln.unitPrice,
         total_cdf: (Number(ln.qty) || 0) * (Number(ln.unitPrice) || 0)
       }));
+      return { titre, client, notes, totalCdf, totalUsd, taux, profile, detail };
+    }
+
+    async function submitProfessionalDevis(format) {
+      const data = collectDevisFormData();
+      if (!data) return;
+
+      const { titre, client, notes, totalCdf, totalUsd, taux, profile, detail } = data;
+      const devisId = 'dve-' + Date.now();
+      const safeTitle = titre.replace(/[^\w\-]+/g, '_').slice(0, 40);
+      const ext = format === 'xlsx' ? 'xlsx' : 'pdf';
+      const fileName = `JBF_Devis_${safeTitle}_${devisId.slice(-6)}.${ext}`;
+
+      const exportPayload = window.JBFDevisExport.buildPayload({
+        titre,
+        client,
+        chefName: profile.full_name || 'Chef d\'équipe',
+        domaine: profile.section_nom || 'Domaine chef d\'équipe',
+        matricule: profile.matricule,
+        notes,
+        lines: detail,
+        totalCdf,
+        totalUsd,
+        taux
+      });
+
+      const logo = await window.JBFDevisExport.loadJbfLogoDataUrl('');
+      let pdfDataUrl = null;
+      let xlsxDataUrl = null;
+      try {
+        if (format === 'pdf') {
+          pdfDataUrl = await window.JBFDevisExport.generatePdf(exportPayload, logo);
+        } else {
+          xlsxDataUrl = await window.JBFDevisExport.generateExcel(exportPayload, logo);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de la génération du document. Réessayez.');
+        return;
+      }
+
+      window.JBFDevisExport.saveDevisDocuments(devisId, {
+        pdfDataUrl: pdfDataUrl || undefined,
+        xlsxDataUrl: xlsxDataUrl || undefined,
+        fileNamePdf: fileName.replace(/\.xlsx$/, '.pdf'),
+        fileNameXlsx: fileName.replace(/\.pdf$/, '.xlsx'),
+        formatSent: ext
+      });
+
+      const docRef = format === 'pdf' ? pdfDataUrl : xlsxDataUrl;
+      if (docRef) {
+        window.JBFDevisExport.downloadDataUrl(docRef, fileName);
+      }
 
       const commentaires = [
         notes,
-        `--- Chiffrage auto ---`,
+        `--- Chiffrage auto (${ext.toUpperCase()} JBF) ---`,
         `Total CDF: ${totalCdf}`,
         `Taux USD: 1 USD = ${taux} CDF`,
         `Total USD: ${totalUsd}`,
-        `Lignes: ${JSON.stringify(detail)}`
+        `Document local id: ${devisId}`
       ].filter(Boolean).join('\n');
 
       const newDevis = {
-        id: 'dve-' + Date.now(),
+        id: devisId,
         titre,
         domaine: profile.section_nom || 'Domaine chef d\'équipe',
         chef_equipe_id: profile.id || null,
@@ -347,9 +407,10 @@
         montant_cdf: totalCdf,
         taux_change: taux,
         monnaie: 'USD',
-        document_nom: 'Chiffrage en ligne',
-        document_type: 'CALC',
-        document_url: '#',
+        document_nom: fileName,
+        document_type: ext.toUpperCase(),
+        document_url: 'jbf-local-doc://' + devisId,
+        document_format: ext,
         commentaires,
         statut: 'transmis_admin',
         created_at: new Date().toISOString()
@@ -384,7 +445,7 @@
         console.warn('[Devis chiffrage] Supabase:', err);
       }
 
-      alert('Chiffrage transmis à l\'administration JBF (' + window.JBFDevisChiffrage.formatUsd(totalUsd) + ' USD).');
+      alert('Devis ' + ext.toUpperCase() + ' transmis à l\'administration JBF (' + window.JBFDevisChiffrage.formatUsd(totalUsd) + ' USD). Une copie a été téléchargée sur cet appareil.');
       document.getElementById('dvTitre').value = '';
       document.getElementById('dvClient').value = '';
       document.getElementById('dvNotes').value = '';

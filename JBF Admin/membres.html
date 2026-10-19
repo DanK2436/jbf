@@ -354,7 +354,17 @@
     <div class="modal-body" id="detailMemberBody">
       <!-- Rendu dynamique -->
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="flex-wrap: wrap; gap: 8px;">
+      <div id="detailPortalSyncBlock" style="display:none; flex: 1 1 100%; text-align: left; padding: 0 4px 8px;">
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--gray-mid);">Mot de passe Espace Membre (resync Supabase)</label>
+        <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+          <input type="password" id="detailPortalPassword" class="form-control" placeholder="Mot de passe portail" style="flex: 1; min-width: 180px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="resyncDetailMemberPortal()">
+            <i class="bi bi-cloud-arrow-up"></i> Resynchroniser connexion membre
+          </button>
+        </div>
+        <small style="color: var(--gray-mid); font-size: 0.72rem;">Obligatoire si la connexion échoue sur un autre appareil (sans SQL exécuté ou mot de passe jamais poussé).</small>
+      </div>
       <button type="button" class="btn btn-secondary" onclick="closeDetailMemberModal()">Fermer</button>
     </div>
   </div>
@@ -368,6 +378,7 @@
 <script src="js/admin-core.js"></script>
 <script>
   let allAgents = [];
+  let detailAgentRef = null;
   const STORAGE_KEY = 'JBF_ADMIN_MEMBRES_LOCAL';
 
   const JBF_SECTIONS_MAP = {
@@ -436,19 +447,54 @@
       || !!d.matricule;
   }
 
+  function agentEmailKey(a) {
+    const em = String(a?.email || '').trim().toLowerCase();
+    if (em && em.includes('@')) return em;
+    return String(a?.id || '');
+  }
+
+  function dedupeAgentsByEmail(list) {
+    const map = new Map();
+    (list || []).forEach((a) => {
+      const key = agentEmailKey(a);
+      if (!key) return;
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, a);
+        return;
+      }
+      const pick = (() => {
+        const prevPwd = prev._authPassword || prev.password;
+        const nextPwd = a._authPassword || a.password;
+        if (nextPwd && !prevPwd) return a;
+        if (prevPwd && !nextPwd) return prev;
+        const prevTs = Date.parse(prev.created_at || 0) || 0;
+        const nextTs = Date.parse(a.created_at || 0) || 0;
+        return nextTs >= prevTs ? { ...prev, ...a, _authPassword: nextPwd || prevPwd } : { ...a, ...prev, _authPassword: prevPwd || nextPwd };
+      })();
+      map.set(key, pick);
+    });
+    return Array.from(map.values());
+  }
+
   function mergeAgentsRemoteLocal(remote, local) {
     const map = new Map();
     (local || []).forEach((a) => {
-      const key = String(a.email || a.id || '').toLowerCase();
+      const key = agentEmailKey(a);
       if (key) map.set(key, a);
     });
     (remote || []).forEach((a) => {
-      const key = String(a.email || a.id || '').toLowerCase();
+      const key = agentEmailKey(a);
       if (!key) return;
       const prev = map.get(key);
-      map.set(key, prev ? { ...a, _authPassword: prev._authPassword || prev.password } : a);
+      map.set(key, prev ? { ...a, _authPassword: prev._authPassword || prev.password, statut_equipe: prev.statut_equipe || a.statut_equipe } : a);
     });
-    return Array.from(map.values());
+    return dedupeAgentsByEmail(Array.from(map.values()));
+  }
+
+  function findAgentByEmail(email) {
+    const key = String(email || '').trim().toLowerCase();
+    return allAgents.find((a) => agentEmailKey(a) === key);
   }
 
   async function loadAgentsList() {
@@ -635,8 +681,24 @@
     const statutEquipe = document.getElementById('mb_statut_equipe').value || 'membre';
     const rolePortal = statutEquipe === 'chef_equipe' ? 'chef_equipe' : 'membre';
 
+    if (findAgentByEmail(email)) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
+      window.adminCore.showToast('Cet email est déjà utilisé. Ouvrez la fiche existante pour modifier ou resynchroniser le mot de passe portail.', 'error');
+      return;
+    }
+
     let agentId = 'ag-' + Date.now();
     const sb = getSupabase();
+
+    if (sb) {
+      try {
+        const { data: existingProfile } = await sb.from('profiles').select('id, email').eq('email', email).maybeSingle();
+        if (existingProfile?.id) {
+          agentId = existingProfile.id;
+        }
+      } catch (_) {}
+    }
 
     if (window.JBFStaffProvision?.invokeStaffProvision) {
       const prov = await window.JBFStaffProvision.invokeStaffProvision({
@@ -703,7 +765,7 @@
       created_at: new Date().toISOString()
     };
 
-    allAgents.unshift(newAgent);
+    allAgents = dedupeAgentsByEmail([newAgent, ...allAgents.filter((a) => agentEmailKey(a) !== email)]);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
 
     let syncOk = true;
@@ -773,9 +835,39 @@
     window.adminCore.showToast(`${label} a été supprimé.`, 'success');
   }
 
+  async function resyncDetailMemberPortal() {
+    if (!detailAgentRef?.email) return;
+    const pwd = document.getElementById('detailPortalPassword')?.value?.trim();
+    if (!pwd || pwd.length < 6) {
+      window.adminCore.showToast('Saisissez un mot de passe d\'au moins 6 caractères.', 'error');
+      return;
+    }
+    const agent = { ...detailAgentRef, _authPassword: pwd };
+    if (!window.JBFMemberPortalSync?.syncMemberAccount) {
+      window.adminCore.showToast('Sync indisponible (config Supabase).', 'error');
+      return;
+    }
+    const sync = await window.JBFMemberPortalSync.syncMemberAccount(agent);
+    if (sync.ok) {
+      detailAgentRef._authPassword = pwd;
+      const idx = allAgents.findIndex((a) => agentEmailKey(a) === agentEmailKey(detailAgentRef));
+      if (idx >= 0) {
+        allAgents[idx]._authPassword = pwd;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
+      }
+      window.adminCore.showToast('Connexion Espace Membre synchronisée pour ' + detailAgentRef.email, 'success');
+      document.getElementById('detailPortalPassword').value = '';
+    } else {
+      window.adminCore.showToast('Échec sync : ' + (sync.error || 'vérifiez le SQL member_portal_login'), 'error');
+    }
+  }
+
   function viewAgentDetail(ag) {
+    detailAgentRef = ag;
     const modal = document.getElementById('detailMemberModal');
     const body = document.getElementById('detailMemberBody');
+    const syncBlock = document.getElementById('detailPortalSyncBlock');
+    if (syncBlock) syncBlock.style.display = ag?.email ? 'block' : 'none';
     const initials = ag.full_name ? ag.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AG';
     const fonctionBadge = window.adminCore.renderBadgeFonction(ag.poste || ag.fonction);
     const sectionNom = ag.section_nom || ag.secteur || (ag.section_id ? JBF_SECTIONS_MAP[ag.section_id] : 'Prestation Générale');

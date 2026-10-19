@@ -229,59 +229,54 @@
       setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
     }
 
-    try {
-      if (window.JBFMemberLogin?.tryLocalMemberLogin) {
-        const localUser = window.JBFMemberLogin.tryLocalMemberLogin(email, pass);
-        if (localUser) {
-          finishLocalLogin(localUser);
-          return;
-        }
-      }
+    const passTrim = pass.trim();
 
+    try {
       if (window.JBFMemberSupabaseAuth?.tryRpcMemberLogin) {
-        const rpcUser = await window.JBFMemberSupabaseAuth.tryRpcMemberLogin(email, pass);
+        const rpcUser = await window.JBFMemberSupabaseAuth.tryRpcMemberLogin(email, passTrim);
         if (rpcUser) {
           finishLocalLogin(rpcUser);
           return;
         }
       }
 
-      if (window.JBFAuth?.loginWithPassword) {
-        const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
-        if (res && (res.success || res.user)) {
-          showSuccess('Connexion réussie. Redirection...');
-          setTimeout(() => {
-            window.location.href = res.redirect || '../dashboard.html';
-          }, 500);
+      if (window.JBFMemberLogin?.tryLocalMemberLogin) {
+        const localUser = window.JBFMemberLogin.tryLocalMemberLogin(email, passTrim);
+        if (localUser) {
+          finishLocalLogin(localUser);
           return;
         }
       }
 
-      throw new Error('Identifiants collaborateur incorrects.');
+      if (window.JBFAuth?.loginWithPassword) {
+        try {
+          const res = await window.JBFAuth.loginWithPassword(email, passTrim, 'membre');
+          if (res && (res.success || res.user)) {
+            showSuccess('Connexion réussie. Redirection...');
+            setTimeout(() => {
+              window.location.href = res.redirect || '../dashboard.html';
+            }, 500);
+            return;
+          }
+        } catch (authErr) {
+          console.warn('[Membre Auth Supabase]', authErr.message);
+        }
+      }
 
-    } catch (err) {
-      let localRetry = window.JBFMemberLogin?.tryLocalMemberLogin?.(email, pass);
-      if (localRetry) {
-        finishLocalLogin(localRetry);
-        return;
-      }
-      const rpcRetry = await window.JBFMemberSupabaseAuth?.tryRpcMemberLogin?.(email, pass);
-      if (rpcRetry) {
-        finishLocalLogin(rpcRetry);
-        return;
-      }
-      let msg = err.message || '';
-      if (/invalid login credentials/i.test(msg)) {
-        msg = 'Email ou mot de passe incorrect. Demandez à l\'admin de recréer le compte (Collaborateurs) ou d\'exécuter le SQL member_portal_login dans Supabase.';
-      }
-      if (/failed to fetch|network|load failed/i.test(msg)) {
-        showError('Connexion au serveur impossible. Vérifiez votre réseau, rechargez (Ctrl+Shift+R), ou réessayez plus tard.');
+      const rpcErr = window.JBFMemberSupabaseAuth?.getLastLoginError?.();
+      if (rpcErr === 'rpc_missing') {
+        showError('Connexion portail non configurée côté serveur. L\'admin doit exécuter supabase/migrations/20261019_member_portal_login.sql dans Supabase, puis resynchroniser le collaborateur (fiche → mot de passe portail).');
+      } else if (rpcErr === 'network' || rpcErr === 'rpc_error') {
+        showError('Impossible de joindre Supabase. Vérifiez le réseau ou réessayez. Si le problème persiste, l\'admin doit resynchroniser votre compte depuis Collaborateurs.');
       } else {
-        showError(msg || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
+        showError('Email ou mot de passe incorrect. Vérifiez la saisie (sans espaces). Si le compte existe dans l\'admin, ouvrez sa fiche et cliquez « Resynchroniser connexion membre » avec le bon mot de passe.');
       }
-      btn.disabled = false;
-      btn.textContent = 'Connexion Espace Membre';
+    } catch (err) {
+      showError(err.message || 'Erreur de connexion. Contactez l\'administration JBF.');
     }
+
+    btn.disabled = false;
+    btn.textContent = 'Connexion Espace Membre';
   }
 </script>
 </body>
