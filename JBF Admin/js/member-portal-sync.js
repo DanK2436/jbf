@@ -12,7 +12,17 @@
     }
   }
 
-  async function syncMemberAccount(agent) {
+  async function syncMemberAccount(agent, options) {
+    const verify = options && options.verify !== false;
+    if (window.JBFMemberPortalRpc) {
+      if (verify && window.JBFMemberPortalRpc.syncAndVerifyMemberPortal) {
+        return window.JBFMemberPortalRpc.syncAndVerifyMemberPortal(agent);
+      }
+      if (window.JBFMemberPortalRpc.syncMemberPortalAccount) {
+        return window.JBFMemberPortalRpc.syncMemberPortalAccount(agent);
+      }
+    }
+
     const client = getClient();
     const syncKey = cfgKey();
     if (!client || !agent?.email || !agent._authPassword) {
@@ -46,6 +56,17 @@
   }
 
   async function deleteMemberAccount(email) {
+    if (window.JBFMemberPortalRpc?.callRpc) {
+      const cfg = window.JBFMemberPortalRpc.readConfig();
+      const res = await window.JBFMemberPortalRpc.callRpc('admin_delete_member_account', {
+        p_email: email.trim().toLowerCase(),
+        p_sync_key: cfg.syncKey
+      });
+      if (!res.ok) return { ok: false, error: res.error };
+      if (res.data?.ok) return { ok: true };
+      return { ok: false, error: res.data?.error || 'delete_failed' };
+    }
+
     const client = getClient();
     const syncKey = cfgKey();
     if (!client || !email) {

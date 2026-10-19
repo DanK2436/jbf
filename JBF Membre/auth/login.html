@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../../supabase/member-portal-rpc.js"></script>
   <script src="../js/member-login.js"></script>
   <script src="../js/member-supabase-auth.js"></script>
   <script src="../../supabase/auth-client.js"></script>
@@ -266,10 +267,14 @@
       const rpcErr = window.JBFMemberSupabaseAuth?.getLastLoginError?.();
       if (rpcErr === 'rpc_missing') {
         showError('Connexion portail non configurée côté serveur. L\'admin doit exécuter supabase/migrations/20261019_member_portal_login.sql dans Supabase, puis resynchroniser le collaborateur (fiche → mot de passe portail).');
+      } else if (rpcErr === 'no_client') {
+        showError('Configuration Supabase introuvable sur cette page. Rechargez avec Ctrl+Shift+R ou contactez l\'administration.');
       } else if (rpcErr === 'network' || rpcErr === 'rpc_error') {
         showError('Impossible de joindre Supabase. Vérifiez le réseau ou réessayez. Si le problème persiste, l\'admin doit resynchroniser votre compte depuis Collaborateurs.');
+      } else if (rpcErr === 'invalid_credentials') {
+        showError('Aucun compte portail actif pour cet email/mot de passe. L\'admin doit ouvrir Collaborateurs → votre fiche → « Resynchroniser connexion membre », saisir exactement le même mot de passe, et attendre le message « Connexion testée avec succès ».');
       } else {
-        showError('Email ou mot de passe incorrect. Vérifiez la saisie (sans espaces). Si le compte existe dans l\'admin, ouvrez sa fiche et cliquez « Resynchroniser connexion membre » avec le bon mot de passe.');
+        showError('Connexion refusée. Vérifiez email et mot de passe (min. 6 caractères). L\'admin doit resynchroniser le compte depuis la fiche collaborateur.');
       }
     } catch (err) {
       showError(err.message || 'Erreur de connexion. Contactez l\'administration JBF.');

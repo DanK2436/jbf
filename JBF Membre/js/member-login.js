@@ -4,8 +4,9 @@
 
   function tryLocalMemberLogin(email, password) {
     try {
+      const cleanEmail = String(email || '').trim().toLowerCase();
       const list = JSON.parse(localStorage.getItem('JBF_ADMIN_MEMBRES_LOCAL') || '[]');
-      const ag = list.find((a) => String(a.email || '').toLowerCase() === email);
+      const ag = list.find((a) => String(a.email || '').trim().toLowerCase() === cleanEmail);
       if (!ag) return null;
       const pwd = String(ag._authPassword || ag.password || '').trim();
       const passTry = String(password || '').trim();

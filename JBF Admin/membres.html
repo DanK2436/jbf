@@ -374,6 +374,7 @@
 <script src="js/config.js"></script>
 <script src="js/admin-form-decor.js"></script>
 <script src="js/staff-provision.js"></script>
+<script src="../supabase/member-portal-rpc.js"></script>
 <script src="js/member-portal-sync.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
@@ -535,6 +536,28 @@
     } catch (e) {}
     updateKpis(allAgents);
     renderAgentsTable(allAgents);
+    queueAutoSyncPortalAccounts();
+  }
+
+  let autoSyncQueued = false;
+  function queueAutoSyncPortalAccounts() {
+    if (autoSyncQueued) return;
+    autoSyncQueued = true;
+    setTimeout(() => autoSyncPortalAccountsWithPassword(), 800);
+  }
+
+  async function autoSyncPortalAccountsWithPassword() {
+    if (!window.JBFMemberPortalSync?.syncMemberAccount) return;
+    const candidates = allAgents.filter((a) => a.email && a._authPassword);
+    if (!candidates.length) return;
+    let synced = 0;
+    for (const ag of candidates) {
+      const res = await window.JBFMemberPortalSync.syncMemberAccount(ag, { verify: true });
+      if (res.ok) synced += 1;
+    }
+    if (synced > 0 && window.adminCore?.showToast) {
+      window.adminCore.showToast(`${synced} compte(s) portail synchronisé(s) automatiquement avec Supabase.`, 'success');
+    }
   }
 
   function updateKpis(list) {
@@ -761,7 +784,7 @@
       matricule: matricule,
       role: rolePortal,
       statut_equipe: statutEquipe,
-      _authPassword: password,
+      _authPassword: password.trim(),
       created_at: new Date().toISOString()
     };
 
@@ -769,11 +792,13 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
 
     let syncOk = true;
+    let syncMsg = '';
     if (window.JBFMemberPortalSync?.syncMemberAccount) {
-      const sync = await window.JBFMemberPortalSync.syncMemberAccount(newAgent);
+      const sync = await window.JBFMemberPortalSync.syncMemberAccount(newAgent, { verify: true });
       syncOk = !!sync.ok;
       if (!sync.ok) {
-        console.warn('[Member sync]', sync.error);
+        console.warn('[Member sync]', sync);
+        syncMsg = sync.error || sync.hint || 'sync_failed';
       }
     }
 
@@ -781,9 +806,9 @@
     btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
 
     if (syncOk) {
-      window.adminCore.showToast(`Collaborateur ${fullName} enregistré. Connexion Espace Membre activée (email + mot de passe).`, 'success');
+      window.adminCore.showToast(`Collaborateur ${fullName} enregistré. Connexion Espace Membre testée et activée.`, 'success');
     } else {
-      window.adminCore.showToast(`Collaborateur ${fullName} enregistré localement. Exécutez le SQL supabase/migrations/20261019_member_portal_login.sql puis recréez le compte.`, 'info');
+      window.adminCore.showToast(`Collaborateur enregistré localement mais connexion portail NON active : ${syncMsg}. Ouvrez la fiche → Resynchroniser avec le mot de passe.`, 'error');
     }
     closeCreateMemberModal();
     renderAgentsTable(allAgents);
@@ -847,7 +872,7 @@
       window.adminCore.showToast('Sync indisponible (config Supabase).', 'error');
       return;
     }
-    const sync = await window.JBFMemberPortalSync.syncMemberAccount(agent);
+    const sync = await window.JBFMemberPortalSync.syncMemberAccount(agent, { verify: true });
     if (sync.ok) {
       detailAgentRef._authPassword = pwd;
       const idx = allAgents.findIndex((a) => agentEmailKey(a) === agentEmailKey(detailAgentRef));
@@ -855,10 +880,13 @@
         allAgents[idx]._authPassword = pwd;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
       }
-      window.adminCore.showToast('Connexion Espace Membre synchronisée pour ' + detailAgentRef.email, 'success');
+      window.adminCore.showToast('Connexion testée avec succès pour ' + detailAgentRef.email + '. Le membre peut se connecter immédiatement.', 'success');
       document.getElementById('detailPortalPassword').value = '';
     } else {
-      window.adminCore.showToast('Échec sync : ' + (sync.error || 'vérifiez le SQL member_portal_login'), 'error');
+      const detail = sync.step === 'verify'
+        ? (sync.hint || 'Sync OK mais test connexion échoué — exécutez les SQL member_portal_login dans Supabase.')
+        : (sync.error || 'vérifiez le SQL member_portal_login');
+      window.adminCore.showToast('Échec : ' + detail, 'error');
     }
   }
 
