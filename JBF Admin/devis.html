@@ -243,95 +243,15 @@
     loadDevisList();
   });
 
-  const DEMO_DEVIS_DATA = [
-    {
-      id: 'dev-001',
-      nom: 'Marc Vandenberg',
-      societe: 'Tenke Fungurume Mining (TFM)',
-      telephone: '+243 99 876 5432',
-      email: 'm.vandenberg@tfm.cd',
-      services: ['Maintenance Industrielle', 'Électromécanique Générateurs 500kVA'],
-      localite: 'Fungurume (Lualaba)',
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-      statut: 'nouveau',
-      message: 'Demande de contrat annuel pour la maintenance préventive et curative des groupes électrogènes de secours sur le site d\'extraction.'
-    },
-    {
-      id: 'dev-002',
-      nom: 'Chantal Kabangu',
-      societe: 'Société Minière du Lualaba',
-      telephone: '+243 81 234 9876',
-      email: 'contact@sml-katanga.cd',
-      services: ['Catering & Restauration', 'Fourniture Alimentaire'],
-      localite: 'Kolwezi (Lualaba)',
-      created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
-      statut: 'en_etude',
-      message: 'Prestation traiteur complète pour 350 agents expatriés et nationaux sur base-vie. Respect impératif des normes HACCP.'
-    },
-    {
-      id: 'dev-003',
-      nom: 'Directeur des Approvisionnements',
-      societe: 'Société Minière de Bakwanga (MIBA)',
-      telephone: '+243 85 555 1234',
-      email: 'appro@miba.cd',
-      services: ['Gardiennage & Sécurité Physique', 'Surveillance Électronique'],
-      localite: 'Mbuji-Mayi (Kasaï-Oriental)',
-      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-      statut: 'valide',
-      message: 'Mise en place d\'un cordon de sécurité de 24 agents armés et rondes motorisées pour la protection des concessions diamantifères.'
-    },
-    {
-      id: 'dev-004',
-      nom: 'Jean-Pierre Mutombo',
-      societe: 'Kamoto Copper Company (KCC)',
-      telephone: '+243 97 111 2233',
-      email: 'jp.mutombo@kcc-mining.cd',
-      services: ['BTP, Génie Civil & Construction', 'Ouvrages Béton Armé'],
-      localite: 'Kolwezi (Lualaba)',
-      created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
-      statut: 'valide',
-      message: 'Coulage de radier en béton armé haute résistance pour l\'implantation de transformateurs électriques industriels.'
-    },
-    {
-      id: 'dev-005',
-      nom: 'Paul Ilunga',
-      societe: 'Boss Mining SAS',
-      telephone: '+243 90 444 7788',
-      email: 'p.ilunga@bossmining.cd',
-      services: ['Transport du Personnel', 'Location 4x4 Miniers'],
-      localite: 'Kakanda (Haut-Katanga)',
-      created_at: new Date(Date.now() - 86400000 * 6).toISOString(),
-      statut: 'en_etude',
-      message: 'Mise à disposition de 4 minibus tout-terrain 30 places et 6 pick-up équipés d\'arceaux pour navettes quotidiennes de mineurs.'
-    },
-    {
-      id: 'dev-006',
-      nom: 'Fabrice Mwema',
-      societe: 'Chemaf SA',
-      telephone: '+243 82 999 0011',
-      email: 'f.mwema@chemaf.cd',
-      services: ['Nettoyage Industriel & Dépollution'],
-      localite: 'Lubumbashi (Haut-Katanga)',
-      created_at: new Date(Date.now() - 86400000 * 9).toISOString(),
-      statut: 'rejete',
-      message: 'Traitement spécifique des boues acides d\'électrolyse (Prestation hors de notre périmètre actuel d\'accréditation HSE).'
-    }
-  ];
-
   async function loadDevisList() {
     const tbody = document.getElementById('devisTableBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
 
-    try {
-      const res = await window.adminCore.apiFetch('/api/devis?limit=100');
-      if (res.ok && res.data && res.data.devis && res.data.devis.length > 0) {
-        allDevis = res.data.devis;
-      } else {
-        allDevis = DEMO_DEVIS_DATA;
-      }
-    } catch (e) {
-      allDevis = DEMO_DEVIS_DATA;
-    }
+    allDevis = await window.adminCore.loadAdminRows({
+      apiPath: '/api/devis?limit=100',
+      extract: (data) => data.devis || data.data || [],
+      tables: ['demandes_devis']
+    });
 
     const nouveauCount = allDevis.filter(d => d.statut === 'nouveau').length;
     const badge = document.getElementById('badgeDevisCount');
@@ -481,11 +401,18 @@
     const newStatut = document.getElementById('modalNewStatusSelect').value;
 
     try {
-      await window.adminCore.apiFetch(`/api/devis/${id}/statut`, {
+      const res = await window.adminCore.apiFetch(`/api/devis/${id}/statut`, {
         method: 'PUT',
         body: JSON.stringify({ statut: newStatut })
       });
-    } catch (e) {}
+      if (!res.ok && window.jbfSupabase?.updateDevisStatut) {
+        await window.jbfSupabase.updateDevisStatut(id, newStatut);
+      }
+    } catch (e) {
+      if (window.jbfSupabase?.updateDevisStatut) {
+        await window.jbfSupabase.updateDevisStatut(id, newStatut);
+      }
+    }
 
     const target = allDevis.find(item => item.id === id);
     if (target) {

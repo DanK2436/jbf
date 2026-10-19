@@ -563,11 +563,12 @@ async function loadBlogFromDB() {
 
   BLOG_ARTICLES = [];
 
-  // 1. Essai Supabase table actualites
+  // 1. Table canonique blog_posts (schéma Supabase)
   try {
     const { data, error } = await supabaseClient
-      .from('actualites')
+      .from('blog_posts')
       .select('*')
+      .eq('publie', true)
       .order('created_at', { ascending: false });
 
     if (!error && data && data.length > 0) {
@@ -576,25 +577,24 @@ async function loadBlogFromDB() {
         catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
         catName: row.categorie || 'Actualité',
         title: row.titre || row.title,
-        date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-        readTime: row.temps_lecture || '4 min de lecture',
-        img: row.image || row.img_url || row.image_url || 'assets/gallery_mining.jpg',
-        excerpt: row.excerpt || row.description_courte || row.resume || '',
-        content: row.contenu || row.description_detaillee || row.content || '',
+        date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+        readTime: row.temps_lecture || row.read_time || '5 min de lecture',
+        img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
+        excerpt: row.resume || row.excerpt || '',
+        content: row.contenu || row.content || '',
         ...row
       }));
     }
   } catch (err) {
-    console.warn('Blog (actualites) :', err.message);
+    console.warn('Blog (blog_posts) :', err.message);
   }
 
-  // 2. Si vide, essai blog_posts
+  // 2. Alias legacy actualites
   if (BLOG_ARTICLES.length === 0) {
     try {
       const { data, error } = await supabaseClient
-        .from('blog_posts')
+        .from('actualites')
         .select('*')
-        .eq('publie', true)
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
@@ -603,16 +603,16 @@ async function loadBlogFromDB() {
           catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
           catName: row.categorie || 'Actualité',
           title: row.titre || row.title,
-          date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-          readTime: row.temps_lecture || row.read_time || '5 min de lecture',
-          img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
-          excerpt: row.resume || row.excerpt || '',
-          content: row.contenu || row.content || '',
+          date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
+          readTime: row.temps_lecture || '4 min de lecture',
+          img: row.image || row.img_url || row.image_url || 'assets/gallery_mining.jpg',
+          excerpt: row.excerpt || row.description_courte || row.resume || '',
+          content: row.contenu || row.description_detaillee || row.content || '',
           ...row
         }));
       }
     } catch (err) {
-      console.warn('Blog (blog_posts) :', err.message);
+      console.warn('Blog (actualites) :', err.message);
     }
   }
 

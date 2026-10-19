@@ -323,6 +323,35 @@
 </section>
 
 <!-- ================================================================
+     ACTUALITÉS & AVIS (Supabase)
+     ================================================================ -->
+<section class="home-live-section" id="homeLiveSection">
+  <div class="container">
+    <div class="sh-center reveal" style="margin-bottom: 2.5rem;">
+      <div class="s-tag">DONNÉES EN TEMPS RÉEL</div>
+      <h2 class="s-title">Actualités &amp; Témoignages <span class="em">Clients</span></h2>
+      <p class="s-desc">Contenus synchronisés avec la base Supabase JBF SERVICES — mises à jour depuis l'espace admin.</p>
+    </div>
+    <div class="home-live-grid">
+      <div class="home-live-col reveal delay-1">
+        <h2>Dernières publications</h2>
+        <p class="col-lead">Analyses sectorielles, retours de chantier et annonces officielles.</p>
+        <div class="home-feed-grid" id="homeNewsGrid">
+          <p class="home-feed-empty">Chargement des actualités…</p>
+        </div>
+      </div>
+      <div class="home-live-col reveal delay-2">
+        <h2>Avis vérifiés</h2>
+        <p class="col-lead">Retours d'expérience de nos partenaires miniers et industriels en RDC.</p>
+        <div class="home-feed-grid" id="homeAvisGrid">
+          <p class="home-feed-empty">Chargement des avis…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
      CTA FINAL
      ================================================================ -->
 <section class="cta-final">
@@ -410,6 +439,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/home-feed.js"></script>
 <script>
 function toggleNav() {
   const menu = document.getElementById('navMenu');

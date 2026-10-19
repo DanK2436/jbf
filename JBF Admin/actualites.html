@@ -296,6 +296,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
+<script src="js/db-bridge.js"></script>
 <script>
   let articles = [];
   const STORAGE_KEY = 'JBF_ADMIN_ARTICLES';
@@ -305,20 +306,10 @@
   });
 
   async function loadNewsArticles() {
-    // 1. Supabase
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
-      try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
-        const { data, error } = await sb.from('actualites').select('*').order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          articles = data;
-        }
-      } catch (err) {
-        console.warn('[News Supabase Fetch]', err);
-      }
+    if (window.jbfDbBridge) {
+      articles = await window.jbfDbBridge.loadBlogArticlesAdmin();
     }
 
-    // 2. Fallback local
     if (articles.length === 0) {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -471,13 +462,9 @@
       created_at: new Date().toISOString()
     };
 
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
-      try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
-        await sb.from('actualites').insert([newArt]);
-      } catch (err) {
-        console.warn('[News Insert]', err);
-      }
+    if (window.jbfDbBridge) {
+      const insertRes = await window.jbfDbBridge.insertBlogArticleAdmin(newArt);
+      if (!insertRes.ok) console.warn('[News Insert]', insertRes.error);
     }
 
     articles.unshift(newArt);

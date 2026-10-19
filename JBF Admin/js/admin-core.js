@@ -471,16 +471,7 @@ function initTableScrollControls() {
   });
 }
 
-// 10. Observer l'apparition de tableaux dynamiques pour y attacher les contrôleurs de défilement
-if (typeof MutationObserver !== 'undefined') {
-  let scrollCtrlTimer = null;
-  const tableScrollObserver = new MutationObserver(() => {
-    clearTimeout(scrollCtrlTimer);
-    scrollCtrlTimer = setTimeout(() => {
-      initTableScrollControls();
-    }, 100);
-  });
-// 11. Helper pour injecter data-label sur les cellules de tableau (responsive mobile)
+// 10. Helper pour injecter data-label sur les cellules de tableau (responsive mobile)
 function applyTableDataLabels(tableSelector) {
   const tables = document.querySelectorAll(tableSelector || '.admin-table');
   tables.forEach(table => {
@@ -494,6 +485,95 @@ function applyTableDataLabels(tableSelector) {
         }
       });
     });
+  });
+}
+
+function getSupabaseScriptBase() {
+  const scripts = document.getElementsByTagName('script');
+  for (const sc of scripts) {
+    if (sc.src && sc.src.includes('admin-core.js')) {
+      return sc.src.replace(/admin-core\.js(\?.*)?$/, '');
+    }
+  }
+  return 'js/';
+}
+
+function ensureSupabaseAdminModule() {
+  if (window.jbfSupabase) return;
+  if (document.querySelector('script[src*="supabase-admin.js"]')) return;
+  const s = document.createElement('script');
+  s.src = `${getSupabaseScriptBase()}supabase-admin.js`;
+  s.async = true;
+  document.head.appendChild(s);
+}
+
+async function resolveSupabaseClient() {
+  ensureSupabaseAdminModule();
+  if (window.jbfSupabase?.client) return window.jbfSupabase.client;
+  if (typeof supabase !== 'undefined' && window.JBF_CONFIG?.SUPABASE_ANON_KEY) {
+    return supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
+  }
+  return null;
+}
+
+async function querySupabaseTable(table, options = {}) {
+  const client = await resolveSupabaseClient();
+  if (!client) return { data: null, error: new Error('Supabase indisponible') };
+
+  let q = client.from(table).select(options.select || '*');
+  if (options.eq) {
+    Object.entries(options.eq).forEach(([col, val]) => { q = q.eq(col, val); });
+  }
+  if (options.order) {
+    q = q.order(options.order.column, { ascending: options.order.ascending !== false });
+  }
+  if (options.limit) q = q.limit(options.limit);
+  return await q;
+}
+
+/** Charge des lignes : API backend d'abord, puis Supabase (première table qui répond). */
+async function loadAdminRows({ apiPath, extract, tables }) {
+  if (apiPath) {
+    const apiRes = await apiFetch(apiPath);
+    if (apiRes.ok && apiRes.data) {
+      const rows = typeof extract === 'function' ? extract(apiRes.data) : apiRes.data;
+      if (Array.isArray(rows) && rows.length > 0) return rows;
+    }
+  }
+
+  ensureSupabaseAdminModule();
+  for (const table of tables || []) {
+    try {
+      const { data, error } = await querySupabaseTable(table, { order: { column: 'created_at', ascending: false }, limit: 500 });
+      if (!error && Array.isArray(data) && data.length > 0) return data;
+    } catch (err) {
+      console.warn(`[JBF Admin] Lecture ${table}:`, err.message || err);
+    }
+  }
+  return [];
+}
+
+function scheduleTableEnhancements() {
+  initTableScrollControls();
+  applyTableDataLabels();
+}
+
+if (typeof MutationObserver !== 'undefined') {
+  let scrollCtrlTimer = null;
+  const tableScrollObserver = new MutationObserver(() => {
+    clearTimeout(scrollCtrlTimer);
+    scrollCtrlTimer = setTimeout(scheduleTableEnhancements, 120);
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    ensureSupabaseAdminModule();
+    scheduleTableEnhancements();
+    const target = document.querySelector('.admin-main') || document.body;
+    tableScrollObserver.observe(target, { childList: true, subtree: true });
+  });
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    ensureSupabaseAdminModule();
+    scheduleTableEnhancements();
   });
 }
 
@@ -521,7 +601,12 @@ window.adminCore = {
   renderBadgeFonction,
   initTableScrollControls,
   scrollTable,
-  applyTableDataLabels
+  applyTableDataLabels,
+  loadAdminRows,
+  querySupabaseTable,
+  resolveSupabaseClient,
+  ensureSupabaseAdminModule
 };
+
 
 

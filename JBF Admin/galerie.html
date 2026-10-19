@@ -310,6 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/admin-core.js"></script>
+<script src="js/db-bridge.js"></script>
 <script>
   let galleryItems = [];
   const STORAGE_KEY = 'JBF_ADMIN_GALLERY';
@@ -319,20 +320,10 @@
   });
 
   async function loadGalleryItems() {
-    // 1. Supabase
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
-      try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
-        const { data, error } = await sb.from('galerie_items').select('*').order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          galleryItems = data;
-        }
-      } catch (err) {
-        console.warn('[Gallery Supabase Fetch]', err);
-      }
+    if (window.jbfDbBridge) {
+      galleryItems = await window.jbfDbBridge.loadGalleryItemsAdmin();
     }
 
-    // 2. Fallback local
     if (galleryItems.length === 0) {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -463,14 +454,9 @@
       created_at: new Date().toISOString()
     };
 
-    // Supabase insert
-    if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
-      try {
-        const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
-        await sb.from('galerie_items').insert([newItem]);
-      } catch (err) {
-        console.warn('[Gallery Insert]', err);
-      }
+    if (window.jbfDbBridge) {
+      const insertRes = await window.jbfDbBridge.insertGalleryItemAdmin(newItem);
+      if (!insertRes.ok) console.warn('[Gallery Insert]', insertRes.error);
     }
 
     galleryItems.unshift(newItem);
