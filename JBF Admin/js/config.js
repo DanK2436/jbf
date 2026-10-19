@@ -10,6 +10,7 @@ const JBF_CONFIG = {
     ? 'http://localhost:3001'
     : (window.location.hostname.endsWith('github.io') ? '' : (window.location.origin || '')),
   ADMIN_USER_KEY: 'jbf_admin_session',
+  MEMBER_SYNC_KEY: window.ENV_MEMBER_SYNC_KEY || 'jbf-member-sync-v1',
   BRAND: {
     name: 'JBF SERVICES',
     edition: 'Supervision & Administration Web',

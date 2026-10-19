@@ -364,6 +364,7 @@
 <script src="js/config.js"></script>
 <script src="js/admin-form-decor.js"></script>
 <script src="js/staff-provision.js"></script>
+<script src="js/member-portal-sync.js"></script>
 <script src="js/admin-core.js"></script>
 <script>
   let allAgents = [];
@@ -692,10 +693,23 @@
     allAgents.unshift(newAgent);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allAgents));
 
+    let syncOk = true;
+    if (window.JBFMemberPortalSync?.syncMemberAccount) {
+      const sync = await window.JBFMemberPortalSync.syncMemberAccount(newAgent);
+      syncOk = !!sync.ok;
+      if (!sync.ok) {
+        console.warn('[Member sync]', sync.error);
+      }
+    }
+
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
 
-    window.adminCore.showToast(`Collaborateur ${fullName} créé avec succès. Accès activé.`, 'success');
+    if (syncOk) {
+      window.adminCore.showToast(`Collaborateur ${fullName} enregistré. Connexion Espace Membre activée (email + mot de passe).`, 'success');
+    } else {
+      window.adminCore.showToast(`Collaborateur ${fullName} enregistré localement. Exécutez le SQL supabase/migrations/20261019_member_portal_login.sql puis recréez le compte.`, 'info');
+    }
     closeCreateMemberModal();
     renderAgentsTable(allAgents);
     updateKpis(allAgents);

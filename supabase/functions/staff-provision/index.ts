@@ -31,19 +31,32 @@ Deno.serve(async (req) => {
     const role = staffType === 'sub_admin' || staffType === 'sous_admin' ? 'sous_admin' : 'membre';
     const poste = role === 'sous_admin' ? 'Sous-Administrateur Délégué' : String(body.poste || body.fonction || 'Collaborateur JBF');
 
-    const { data: usersList } = await admin.auth.admin.listUsers();
-    let userId = usersList?.users?.find((u) => u.email?.toLowerCase() === email)?.id;
+    let userId: string | undefined;
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName, phone, role, permissions },
+    });
 
-    if (!userId) {
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName, phone, role, permissions },
-      });
-      if (createErr) throw createErr;
-      userId = created.user?.id;
-    } else {
+    if (!createErr && created.user?.id) {
+      userId = created.user.id;
+    } else if (createErr) {
+      const msg = createErr.message || '';
+      const alreadyExists = /already|registered|exists/i.test(msg);
+      if (!alreadyExists) throw createErr;
+
+      let page = 1;
+      const perPage = 200;
+      while (!userId && page <= 10) {
+        const { data: listData } = await admin.auth.admin.listUsers({ page, perPage });
+        const found = listData?.users?.find((u) => u.email?.toLowerCase() === email);
+        if (found?.id) userId = found.id;
+        if (!listData?.users?.length || listData.users.length < perPage) break;
+        page += 1;
+      }
+      if (!userId) throw createErr;
+
       await admin.auth.admin.updateUserById(userId, {
         password,
         email_confirm: true,

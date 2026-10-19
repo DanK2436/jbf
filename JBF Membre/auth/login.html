@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
   <script src="../js/member-login.js"></script>
+  <script src="../js/member-supabase-auth.js"></script>
   <script src="../../supabase/auth-client.js"></script>
   <style>
     body {
@@ -237,6 +238,14 @@
         }
       }
 
+      if (window.JBFMemberSupabaseAuth?.tryRpcMemberLogin) {
+        const rpcUser = await window.JBFMemberSupabaseAuth.tryRpcMemberLogin(email, pass);
+        if (rpcUser) {
+          finishLocalLogin(rpcUser);
+          return;
+        }
+      }
+
       if (window.JBFAuth?.loginWithPassword) {
         const res = await window.JBFAuth.loginWithPassword(email, pass, 'membre');
         if (res && (res.success || res.user)) {
@@ -251,14 +260,22 @@
       throw new Error('Identifiants collaborateur incorrects.');
 
     } catch (err) {
-      const localRetry = window.JBFMemberLogin?.tryLocalMemberLogin?.(email, pass);
+      let localRetry = window.JBFMemberLogin?.tryLocalMemberLogin?.(email, pass);
       if (localRetry) {
         finishLocalLogin(localRetry);
         return;
       }
-      const msg = err.message || '';
+      const rpcRetry = await window.JBFMemberSupabaseAuth?.tryRpcMemberLogin?.(email, pass);
+      if (rpcRetry) {
+        finishLocalLogin(rpcRetry);
+        return;
+      }
+      let msg = err.message || '';
+      if (/invalid login credentials/i.test(msg)) {
+        msg = 'Email ou mot de passe incorrect. Demandez à l\'admin de recréer le compte (Collaborateurs) ou d\'exécuter le SQL member_portal_login dans Supabase.';
+      }
       if (/failed to fetch|network|load failed/i.test(msg)) {
-        showError('Connexion au serveur impossible. Utilisez l\'email et le mot de passe définis par l\'admin (même appareil que la création si le compte n\'est pas encore sur Supabase). Rechargez la page (Ctrl+Shift+R) puis réessayez.');
+        showError('Connexion au serveur impossible. Vérifiez votre réseau, rechargez (Ctrl+Shift+R), ou réessayez plus tard.');
       } else {
         showError(msg || 'Identifiants collaborateur incorrects. Contactez l\'administration.');
       }

@@ -134,7 +134,16 @@
                 password: password
             });
 
-            if (error) throw error;
+            if (error) {
+                const raw = error.message || '';
+                if (/invalid login credentials/i.test(raw)) {
+                    throw new Error('Email ou mot de passe incorrect.');
+                }
+                if (/email not confirmed/i.test(raw)) {
+                    throw new Error('Compte non confirmé. Contactez l\'administration JBF pour activer votre accès.');
+                }
+                throw error;
+            }
             if (!data.user) throw new Error('Identifiants incorrects.');
 
             return await this.handlePostLogin(data.user, data.session, targetSpace);
