@@ -9,7 +9,10 @@ supabase db push   # migration password_reset_challenges
 supabase secrets set BREVO_API_KEY=votre_cle_brevo
 supabase functions deploy send-client-reset-otp
 supabase functions deploy client-reset-password
+supabase functions deploy staff-provision
 ```
+
+`staff-provision` : création comptes **membre** et **sous-admin** (Auth + profiles + admin_accounts) depuis l’admin web sur GitHub Pages.
 
 Variables automatiques : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
