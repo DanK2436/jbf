@@ -402,14 +402,18 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
   background-color: #1a0010;
   background-image:
     linear-gradient(118deg, rgba(230, 0, 126, 0.42) 0%, rgba(139, 0, 74, 0.35) 38%, rgba(0, 0, 0, 0.55) 100%),
-    url('../assets/gallery_mining.jpg');
+    url('../assets/gallery_catering.jpg');
   background-size: cover;
   background-position: center 35%;
   background-repeat: no-repeat;
   opacity: 1;
   transform: scale(1.06);
-  transition: transform 10s cubic-bezier(0.25, 0.8, 0.25, 1);
-  will-change: transform;
+  transition: transform 10s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.85s ease;
+  will-change: transform, opacity;
+}
+.hero-bg-photo.hero-bg-fading {
+  opacity: 0.88;
+  transform: scale(1.02);
 }
 .hero-bg-photo::after {
   content: '';
@@ -418,7 +422,62 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
   background: radial-gradient(ellipse 80% 60% at 20% 50%, rgba(230, 0, 126, 0.22), transparent 70%);
   pointer-events: none;
 }
-.hero:hover .hero-bg-photo { transform: scale(1); }
+.hero:hover .hero-bg-photo:not(.hero-bg-fading) { transform: scale(1); }
+
+.hero-service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+  padding: 0.45rem 0.85rem 0.45rem 0.55rem;
+  background: rgba(230, 0, 126, 0.92);
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(230, 0, 126, 0.35);
+  max-width: 100%;
+}
+.hero-chip-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.06em;
+}
+.hero-chip-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+  padding-right: 0.25rem;
+}
+.hero-service-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.35rem;
+  max-width: 320px;
+}
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.35);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.hero-dot.active {
+  background: var(--pink);
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
 .hero-overlay {
   position: absolute;
   inset: 0;

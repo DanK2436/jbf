@@ -203,12 +203,13 @@
             return { user: clientUser, redirect: '/JBF Client/dashboard.html' };
         },
 
-        async sendPasswordReset(email) {
+        async sendPasswordReset(email, options = {}) {
             const client = getSupabase();
             if (!client) throw new Error('Supabase SDK indisponible');
             const cleanEmail = email.trim().toLowerCase();
+            const redirectTo = options.redirectTo || (window.location.origin + '/JBF%20Client/auth/forgot-password.html');
 
-            const { data, error } = await client.auth.resetPasswordForEmail(cleanEmail);
+            const { data, error } = await client.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
             if (error) throw error;
             return data;
         },

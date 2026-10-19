@@ -84,10 +84,14 @@
 
 <!-- HERO -->
 <section class="hero" id="hero">
-  <div class="hero-bg-photo"></div>
+  <div class="hero-bg-photo" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
   <div class="hero-inner">
     <div class="hero-left">
+      <div class="hero-service-chip reveal" id="heroServiceChip" aria-live="polite">
+        <span class="hero-chip-code">01</span>
+        <span class="hero-chip-title">Alimentaire &amp; Catering</span>
+      </div>
       <h1 class="hero-h1">
         L'Excellence Opérationnelle à<br>
         <span class="pink-line">votre service</span>
@@ -95,6 +99,7 @@
       <p class="hero-lead">
         Votre partenaire polyvalent certifié pour le secteur minier, l'agroalimentaire, le génie civil, la maintenance et la logistique. 15 domaines d'expertise intégrés sur toute la République Démocratique du Congo.
       </p>
+      <div class="hero-service-dots" id="heroServiceDots" aria-label="Navigation des 15 services"></div>
       <div class="hero-btns">
         <a href="services.html" class="btn btn-outline-white btn-lg">
           Consulter nos 15 Services →
@@ -440,6 +445,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/hero-slideshow.js"></script>
 <script src="js/home-feed.js"></script>
 <script>
 function toggleNav() {
