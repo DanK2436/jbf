@@ -81,13 +81,17 @@ jobs:
 
   build-windows-admin-membre:
     needs: analyze
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
         app: [jbf_admin, jbf_membre]
     steps:
       - uses: actions/checkout@v4
+      - name: Enable MSVC (Visual Studio 2022)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -103,6 +107,7 @@ jobs:
           JBF_SUPABASE_ANON_KEY: ${{ secrets.JBF_SUPABASE_ANON_KEY }}
         shell: pwsh
         run: |
+          flutter clean
           flutter pub get
           $defines = @(
             "--dart-define=JBF_PORTAL_BASE=$env:JBF_PORTAL_BASE",
