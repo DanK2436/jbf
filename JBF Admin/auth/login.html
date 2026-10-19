@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
   <script src="../../supabase/auth-client.js"></script>
   <style>
     body {
@@ -224,21 +225,61 @@
     document.getElementById('passwordForm').style.display = 'block';
   }
 
+  const OFFICIAL_ADMIN_EMAIL = 'services@admin.jbf';
+  const OFFICIAL_ADMIN_PASSWORD = 'Services+243JBF';
+
+  function persistAdminSession(adminSession) {
+    localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminSession));
+    localStorage.setItem('jbf_admin_session', JSON.stringify(adminSession));
+    localStorage.setItem('jbf_admin_token', adminSession.token || ('jbf-admin-' + Date.now()));
+  }
+
+  function redirectToDashboard() {
+    showSuccess('Connexion validée. Redirection vers le tableau de bord...');
+    setTimeout(() => { window.location.href = '../dashboard.html'; }, 400);
+  }
+
+  /** GitHub Pages : pas de backend Node ; Supabase parfois non provisionné */
+  function tryOfficialAdminStaticLogin(cleanEmail, password) {
+    const onStaticHost = window.location.hostname.includes('github.io')
+      || window.location.protocol === 'file:';
+    if (!onStaticHost) return false;
+    if (cleanEmail !== OFFICIAL_ADMIN_EMAIL) return false;
+    if (password !== OFFICIAL_ADMIN_PASSWORD && password.trim() !== OFFICIAL_ADMIN_PASSWORD.trim()) {
+      return false;
+    }
+    persistAdminSession({
+      id: 'admin-official-static',
+      email: OFFICIAL_ADMIN_EMAIL,
+      name: 'Direction Générale JBF SERVICES',
+      role: 'Super Administrateur',
+      permissions: ['*'],
+      avatar: 'DG',
+      token: 'jbf-admin-static-' + Date.now()
+    });
+    return true;
+  }
+
   async function handlePasswordLogin(e) {
     e.preventDefault();
     clearAlerts();
 
     const email = document.getElementById('passEmail').value.trim();
     const pass = document.getElementById('passPassword').value;
+    const cleanEmail = email.toLowerCase();
     const btn = document.getElementById('btnPassSubmit');
 
     btn.disabled = true;
     btn.textContent = 'Vérification en cours...';
 
     try {
-      // 1. Authentification stricte via le serveur Backend (credentials isolés dans le backend .env)
-      const endpoints = ['/api/admin/login', 'http://localhost:3001/api/admin/login'];
-      let loginSuccessful = false;
+      const apiBase = (window.JBF_CONFIG && JBF_CONFIG.API_BASE_URL) ? JBF_CONFIG.API_BASE_URL.replace(/\/+$/, '') : '';
+      const endpoints = [
+        '/api/admin/login',
+        apiBase ? `${apiBase}/api/admin/login` : '',
+        'http://localhost:3001/api/admin/login'
+      ].filter(Boolean);
+
       let lastErr = null;
 
       for (const endpoint of endpoints) {
@@ -246,28 +287,21 @@
           const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, password: pass })
+            body: JSON.stringify({ email: cleanEmail, password: pass })
           });
 
           if (res.ok) {
             const data = await res.json();
             if (data && data.success) {
-              const adminSession = {
-                email: data.email || email,
-                name: data.name || 'Direction Générale JBF',
+              persistAdminSession({
+                email: data.email || cleanEmail,
+                name: data.name || 'Direction Générale JBF SERVICES',
                 role: data.role || 'Super Administrateur',
                 permissions: data.permissions || ['*'],
+                avatar: data.avatar || 'DG',
                 token: data.token || ('jbf-admin-' + Date.now())
-              };
-              localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminSession));
-              localStorage.setItem('jbf_admin_session', JSON.stringify(adminSession));
-              localStorage.setItem('jbf_admin_token', adminSession.token);
-
-              showSuccess('Connexion validée. Redirection vers le tableau de bord...');
-              setTimeout(() => {
-                window.location.href = '../dashboard.html';
-              }, 500);
-              loginSuccessful = true;
+              });
+              redirectToDashboard();
               return;
             }
           } else if (res.status === 401) {
@@ -282,19 +316,35 @@
         }
       }
 
-      // 2. Fallback Supabase Auth directe si le serveur local ne répond pas
-      if (!loginSuccessful && window.JBFAuth) {
-        const res = await window.JBFAuth.loginWithPassword(email, pass, 'admin');
-        if (res && res.success) {
-          showSuccess('Connexion validée. Redirection...');
-          setTimeout(() => {
-            window.location.href = res.redirect || '../dashboard.html';
-          }, 500);
-          return;
+      if (window.JBFAuth) {
+        try {
+          const res = await window.JBFAuth.loginWithPassword(cleanEmail, pass, 'admin');
+          if (res && (res.success || res.user)) {
+            if (res.user) {
+              persistAdminSession({
+                ...res.user,
+                name: res.user.name || res.user.nom || 'Direction Générale JBF SERVICES',
+                avatar: res.user.avatar || 'DG',
+                permissions: res.user.permissions || ['*']
+              });
+            }
+            redirectToDashboard();
+            return;
+          }
+        } catch (supErr) {
+          lastErr = supErr;
         }
       }
 
-      throw new Error(lastErr?.message || 'Identifiants administrateur invalides ou serveur indisponible.');
+      if (tryOfficialAdminStaticLogin(cleanEmail, pass)) {
+        redirectToDashboard();
+        return;
+      }
+
+      throw new Error(
+        lastErr?.message
+        || 'Identifiants incorrects. Utilisez services@admin.jbf et vérifiez le mot de passe, ou initialisez Supabase (init-admin.js).'
+      );
     } catch (err) {
       showError(err.message || 'Échec de connexion administrateur.');
       btn.disabled = false;

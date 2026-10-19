@@ -156,21 +156,32 @@
             }
 
             if (targetSpace === 'admin') {
-                if (user.email !== ADMIN_STRICT_EMAIL && role !== 'admin') {
+                const emailLower = (user.email || '').toLowerCase();
+                if (emailLower !== ADMIN_STRICT_EMAIL && role !== 'admin') {
                     await client.auth.signOut();
                     throw new Error("Accès interdit : Vous n'avez pas les droits Administrateur.");
                 }
-                const adminUser = {
+                const displayName = profileData?.full_name
+                    || (profileData?.nom ? `${profileData.nom} ${profileData.prenom || ''}`.trim() : '')
+                    || 'Direction Générale JBF SERVICES';
+                const adminSession = {
                     id: user.id,
                     email: user.email,
-                    nom: profileData ? (profileData.nom + ' ' + (profileData.prenom || '')) : 'Super Administrateur',
+                    name: displayName,
+                    nom: displayName,
                     role: 'Super Administrateur',
                     permissions: ['*'],
+                    avatar: 'DG',
                     token: session.access_token
                 };
-                localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminUser));
+                localStorage.setItem('JBF_ADMIN_USER', JSON.stringify(adminSession));
+                localStorage.setItem('jbf_admin_session', JSON.stringify(adminSession));
                 localStorage.setItem('jbf_admin_token', session.access_token);
-                return { user: adminUser, redirect: '/JBF Admin/dashboard.html' };
+                return {
+                    success: true,
+                    user: adminSession,
+                    redirect: '../dashboard.html'
+                };
             }
 
             if (targetSpace === 'membre') {
