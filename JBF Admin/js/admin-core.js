@@ -242,6 +242,16 @@ function initSidebar() {
 
   window.jbfAdminNav = { openSidebar, closeSidebar, toggleSidebar };
 
+  document.querySelectorAll('.btn-menu-toggle, #btnMenuToggle').forEach((btn) => {
+    if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', btn.getAttribute('aria-label') || 'Ouvrir le menu de navigation');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
   document.addEventListener('click', (e) => {
     const toggle = e.target.closest('#btnMenuToggle, .btn-menu-toggle');
     if (toggle) {

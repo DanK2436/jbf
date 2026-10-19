@@ -216,7 +216,7 @@
 <script src="js/admin-core.js"></script>
 <script>
 const SUPABASE_URL = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+const SUPABASE_ANON_KEY = window.JBF_CONFIG?.SUPABASE_ANON_KEY || '';
 const supabaseClient = typeof supabase !== 'undefined' ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 let allPointages = [];
@@ -236,11 +236,6 @@ async function loadAdminPointages() {
       if (!error && data) allPointages = data;
     }
   } catch (_) {}
-
-  if (allPointages.length === 0) {
-    const local = JSON.parse(localStorage.getItem('JBF_LOCAL_POINTAGES') || '[]');
-    if (local.length > 0) allPointages = local;
-  }
 
   // KPI
   document.getElementById('kpiTotalMoves').textContent = allPointages.length;
@@ -294,9 +289,8 @@ function renderPointagesTable() {
 }
 
 function logoutAdmin() {
-  localStorage.removeItem('JBF_ADMIN_USER');
-  localStorage.removeItem('jbf_admin_session');
-  window.location.href = 'auth/login.html';
+  if (window.adminCore?.logoutAdmin) window.adminCore.logoutAdmin();
+  else window.location.href = 'auth/login.html';
 }
 
 document.addEventListener('DOMContentLoaded', loadAdminPointages);
