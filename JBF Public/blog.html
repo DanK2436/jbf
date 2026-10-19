@@ -616,30 +616,6 @@ async function loadBlogFromDB() {
     }
   }
 
-  // 3. Fallback localStorage publié par Admin (JBF_ADMIN_ARTICLES)
-  if (BLOG_ARTICLES.length === 0) {
-    try {
-      const stored = localStorage.getItem('JBF_ADMIN_ARTICLES');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          BLOG_ARTICLES = parsed.map(row => ({
-            id: row.id,
-            catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
-            catName: row.categorie || 'Actualité',
-            title: row.titre || row.title,
-            date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-            readTime: '4 min de lecture',
-            img: row.image || row.img_url || 'assets/gallery_mining.jpg',
-            excerpt: row.excerpt || row.description_courte || '',
-            content: row.contenu || row.description_detaillee || '',
-            ...row
-          }));
-        }
-      }
-    } catch (e) {}
-  }
-
   renderBlog();
 }
 

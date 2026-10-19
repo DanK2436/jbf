@@ -363,27 +363,11 @@
     const tbody = document.getElementById('ressourcesTableBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
 
-    let loaded = [];
-    try {
-      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
-        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
-        const { data, error } = await client.from('ressources_hse').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) {
-          loaded = data;
-        }
-      }
-    } catch (e) {
-      console.warn('Supabase ressources_hse:', e);
-    }
-
-    if (loaded.length === 0) {
-      const stored = localStorage.getItem('JBF_RESSOURCES_LOCAL');
-      if (stored) {
-        try { loaded = JSON.parse(stored); } catch (e) {}
-      }
-    }
-
-    allRessources = loaded || [];
+    allRessources = await window.adminCore.loadAdminRows({
+      apiPath: '/api/ressources?limit=200',
+      extract: (data) => data.ressources || data.data || [],
+      tables: ['ressources_hse']
+    });
     updateKPIs();
     renderRessourcesTable(allRessources);
   }

@@ -560,31 +560,6 @@ async function loadGalleryFromDB() {
     }
   }
 
-  // 3. Fallback localStorage publié par Admin (JBF_ADMIN_GALLERY)
-  if (GALLERY_DATA.length === 0) {
-    try {
-      const stored = localStorage.getItem('JBF_ADMIN_GALLERY');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          GALLERY_DATA = parsed.map(row => ({
-            id: row.id,
-            catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
-            catName: row.categorie || 'Réalisation',
-            title: row.titre || row.title,
-            loc: row.localite || row.loc || 'RDC',
-            img: row.url || row.img_url || row.image_url || '',
-            img_url: row.url || row.img_url || row.image_url || '',
-            desc: row.description || row.desc || '',
-            period: row.periode || row.period || (row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : ''),
-            highlights: row.impact || row.highlights || '',
-            ...row
-          }));
-        }
-      }
-    } catch (e) {}
-  }
-
   renderGallery();
 }
 

@@ -449,13 +449,6 @@
       }
     }
 
-    if (list.length === 0) {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) list = JSON.parse(stored);
-      } catch(_) {}
-    }
-
     allAgents = list;
     updateKpis(allAgents);
     renderAgentsTable(allAgents);

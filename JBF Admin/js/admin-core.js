@@ -4,6 +4,24 @@
 // Zéro Emoji — Charte 90% Rose Vif / 10% Blanc — Logo Officiel
 // =============================================================
 
+/** Titres courts affichés sur mobile (< 768px) */
+const ADMIN_MOBILE_TITLES = {
+  'dashboard.html': 'Tableau de bord',
+  'devis.html': 'Devis',
+  'devis-equipes.html': 'Devis équipes',
+  'missions.html': 'Missions',
+  'galerie.html': 'Galerie',
+  'actualites.html': 'Actualités',
+  'conges.html': 'Congés',
+  'membres.html': 'Collaborateurs',
+  'ressources.html': 'Ressources HSE',
+  'service-client.html': 'Service client',
+  'avis.html': 'Avis clients',
+  'sous-admins.html': 'Accès admin',
+  'utilisateurs.html': 'Utilisateurs',
+  'pointages.html': 'Pointages'
+};
+
 const PAGE_PERMISSION_MAP = {
   'dashboard.html': 'dashboard',
   'devis.html': 'devis',
@@ -20,6 +38,7 @@ const PAGE_PERMISSION_MAP = {
 document.addEventListener('DOMContentLoaded', () => {
   initAdminAuthCheck();
   enforcePagePermission();
+  initResponsivePageTitles();
   initClock();
   initSidebar();
   createToastContainer();
@@ -32,17 +51,10 @@ function initAdminAuthCheck() {
   let session = getAdminSession();
 
   if (!session && !isLoginPage) {
-    // Session par défaut pour le test : Super Administrateur avec tous les droits
-    session = {
-      name: 'Direction Générale JBF',
-      email: 'direction@jbf-services.cd',
-      role: 'Super Administrateur',
-      site: 'Direction Lubumbashi & Kinshasa',
-      avatar: 'DG',
-      permissions: ['*'], // Accès total
-      token: 'jbf-super-admin-session'
-    };
-    setAdminSession(session);
+    const inAdminFolder = window.location.pathname.includes('/JBF Admin/') || window.location.pathname.includes('/JBF%20Admin/');
+    const loginUrl = inAdminFolder ? 'auth/login.html' : 'JBF Admin/auth/login.html';
+    window.location.replace(loginUrl);
+    return;
   }
 
   // Mettre à jour l'affichage du profil utilisateur dans la sidebar si présent
@@ -128,7 +140,43 @@ function enforcePagePermission() {
   }
 }
 
-// 3. Horloge temps réel
+// 3. Titres de page adaptés mobile (textes courts, pas de débordement)
+function initResponsivePageTitles() {
+  const currentFile = window.location.pathname.split('/').pop() || 'dashboard.html';
+  const shortTitle = ADMIN_MOBILE_TITLES[currentFile];
+
+  let titleWrap = document.querySelector('.topbar-left .page-title');
+  let h1 = titleWrap?.querySelector('h1');
+
+  if (!h1) {
+    const legacyH1 = document.querySelector('h1.page-title');
+    if (legacyH1) {
+      titleWrap = document.createElement('div');
+      titleWrap.className = 'page-title';
+      legacyH1.classList.remove('page-title');
+      titleWrap.appendChild(legacyH1);
+      const topbarLeft = document.querySelector('.topbar-left');
+      if (topbarLeft) topbarLeft.appendChild(titleWrap);
+      h1 = legacyH1;
+    }
+  }
+
+  if (!h1) return;
+
+  const longTitle = (h1.dataset.fullTitle || h1.textContent).trim();
+  h1.dataset.fullTitle = longTitle;
+  const short = h1.getAttribute('data-short-title') || shortTitle || longTitle.split(/[—–&]/)[0].trim();
+
+  const mq = window.matchMedia('(max-width: 768px)');
+  const apply = () => {
+    h1.textContent = mq.matches ? short : longTitle;
+    document.title = `${mq.matches ? short : longTitle} — JBF SERVICES`;
+  };
+  apply();
+  mq.addEventListener('change', apply);
+}
+
+// 4. Horloge temps réel
 function initClock() {
   const clockEl = document.getElementById('liveClock');
   if (!clockEl) return;

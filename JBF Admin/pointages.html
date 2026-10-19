@@ -138,12 +138,15 @@
 
   <!-- MAIN CONTENT -->
   <div class="admin-main">
-    <header class="admin-header">
-      <div class="header-left">
-        <h1 class="page-title">Supervision des Pointages &amp; Présences Terrain</h1>
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-toggle" id="btnMenuToggle" type="button" aria-label="Menu"><i class="bi bi-list"></i></button>
+        <div class="page-title">
+          <h1>Supervision des Pointages &amp; Présences Terrain</h1>
+        </div>
       </div>
-      <div class="header-right">
-        <button class="btn btn-outline btn-sm" onclick="loadAdminPointages()">
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" type="button" onclick="loadAdminPointages()">
           <i class="bi bi-arrow-clockwise"></i> Actualiser
         </button>
       </div>
@@ -209,8 +212,10 @@
   </div>
 </div>
 
+<script src="js/config.js"></script>
+<script src="js/admin-core.js"></script>
 <script>
-const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+const SUPABASE_URL = window.JBF_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
 const supabaseClient = typeof supabase !== 'undefined' ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 

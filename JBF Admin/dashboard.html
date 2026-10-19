@@ -432,6 +432,78 @@
   let regionsChart = null;
   let pipelineChart = null;
   let currentPeriod = '30d';
+  let cachedDevisForCharts = [];
+
+  function buildDevisActivitySeries(devisList, period) {
+    const list = Array.isArray(devisList) ? devisList : [];
+    const isValide = (d) => ['valide', 'approuve'].includes(String(d.statut || '').toLowerCase());
+
+    if (period === '7d') {
+      const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+      const received = new Array(7).fill(0);
+      const validated = new Array(7).fill(0);
+      const now = new Date();
+      list.forEach((d) => {
+        if (!d.created_at) return;
+        const dt = new Date(d.created_at);
+        const diff = Math.floor((now - dt) / 86400000);
+        if (diff < 0 || diff > 6) return;
+        const idx = 6 - diff;
+        received[idx]++;
+        if (isValide(d)) validated[idx]++;
+      });
+      return { labels, received, validated, sum: received.reduce((a, b) => a + b, 0) };
+    }
+
+    if (period === 'year') {
+      const labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      const received = new Array(12).fill(0);
+      const validated = new Array(12).fill(0);
+      const year = new Date().getFullYear();
+      list.forEach((d) => {
+        if (!d.created_at) return;
+        const dt = new Date(d.created_at);
+        if (dt.getFullYear() !== year) return;
+        received[dt.getMonth()]++;
+        if (isValide(d)) validated[dt.getMonth()]++;
+      });
+      return { labels, received, validated, sum: received.reduce((a, b) => a + b, 0) };
+    }
+
+    const labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'];
+    const received = new Array(8).fill(0);
+    const validated = new Array(8).fill(0);
+    const now = new Date();
+    list.forEach((d) => {
+      if (!d.created_at) return;
+      const dt = new Date(d.created_at);
+      const diffWeeks = Math.floor((now - dt) / (86400000 * 7));
+      if (diffWeeks < 0 || diffWeeks > 7) return;
+      const idx = 7 - diffWeeks;
+      received[idx]++;
+      if (isValide(d)) validated[idx]++;
+    });
+    return { labels, received, validated, sum: received.reduce((a, b) => a + b, 0) };
+  }
+
+  function updateActivityChartFromDevis(devisList, period) {
+    if (!activityChart) return;
+    const series = buildDevisActivitySeries(devisList, period);
+    activityChart.data.labels = series.labels;
+    activityChart.data.datasets[0].data = series.received;
+    activityChart.data.datasets[1].data = series.validated;
+    activityChart.update();
+
+    const labelMap = {
+      '7d': 'Vue 7 derniers jours (données Supabase)',
+      '30d': 'Vue 8 semaines (données Supabase)',
+      year: 'Vue année en cours (données Supabase)'
+    };
+    const labelEl = document.getElementById('chartActivityLabel');
+    if (labelEl) labelEl.textContent = labelMap[period] || labelMap['30d'];
+    const sumEl = document.getElementById('statSumDevis');
+    if (sumEl) sumEl.textContent = String(series.sum);
+  }
 
   document.addEventListener('DOMContentLoaded', async () => {
     initCharts();
@@ -729,29 +801,7 @@
     currentPeriod = p;
     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-
-    if (!activityChart) return;
-
-    if (p === '7d') {
-      activityChart.data.labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-      activityChart.data.datasets[0].data = [4, 6, 8, 7, 9, 3, 2];
-      activityChart.data.datasets[1].data = [3, 5, 7, 6, 8, 2, 2];
-      document.getElementById('chartActivityLabel').textContent = 'Vue 7 Derniers Jours';
-      document.getElementById('statSumDevis').textContent = '39';
-    } else if (p === '30d') {
-      activityChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'];
-      activityChart.data.datasets[0].data = [14, 22, 19, 28, 24, 32, 29, 38];
-      activityChart.data.datasets[1].data = [11, 18, 16, 24, 21, 27, 25, 33];
-      document.getElementById('chartActivityLabel').textContent = 'Vue 30 Derniers Jours';
-      document.getElementById('statSumDevis').textContent = '142';
-    } else if (p === 'year') {
-      activityChart.data.labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août'];
-      activityChart.data.datasets[0].data = [45, 58, 62, 74, 85, 92, 88, 105];
-      activityChart.data.datasets[1].data = [38, 49, 53, 63, 73, 79, 76, 91];
-      document.getElementById('chartActivityLabel').textContent = 'Vue Année 2026';
-      document.getElementById('statSumDevis').textContent = '609';
-    }
-    activityChart.update();
+    updateActivityChartFromDevis(cachedDevisForCharts, p);
   }
 
   function getSupabaseClient() {
@@ -785,6 +835,9 @@
         }
       } catch (_) {}
     }
+
+    cachedDevisForCharts = devisList;
+    updateActivityChartFromDevis(devisList, currentPeriod);
 
     const totalCount = devisList.length;
     const nouveaux = devisList.filter(d => (d.statut || '').toLowerCase() === 'nouveau').length;

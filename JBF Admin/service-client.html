@@ -289,33 +289,11 @@
     const tbody = document.getElementById('ticketsTableBody');
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px;">Chargement des tickets en cours...</td></tr>';
 
-    let loaded = [];
-    try {
-      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
-        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
-        const { data, error } = await client
-          .from('tickets_support')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          loaded = data;
-        }
-      }
-    } catch (e) {
-      console.warn('Erreur chargement Supabase tickets:', e);
-    }
-
-    if (loaded.length === 0) {
-      const local = localStorage.getItem('JBF_TICKETS_LOCAL');
-      if (local) {
-        try {
-          loaded = JSON.parse(local);
-        } catch (e) {}
-      }
-    }
-
-    allTickets = loaded || [];
+    allTickets = await window.adminCore.loadAdminRows({
+      apiPath: '/api/tickets?limit=200',
+      extract: (data) => data.tickets || data.data || [],
+      tables: ['tickets_support']
+    });
     updateKPIs();
     renderTicketsTable(allTickets);
   }

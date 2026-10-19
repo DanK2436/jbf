@@ -247,18 +247,6 @@
     } catch(e) { return {}; }
   })();
 
-  const INITIAL_ADMINS = [
-    {
-      id: 'adm-001',
-      full_name: currentAdminSession.full_name || currentAdminSession.nom || 'Direction Générale JBF',
-      email: currentAdminSession.email || 'services@admin.jbf',
-      phone: currentAdminSession.phone || '+243 971 306 666',
-      role: 'super_admin',
-      permissions: ['*'],
-      is_active: true
-    }
-  ];
-
   document.addEventListener('DOMContentLoaded', () => {
     loadAdminAccounts();
   });
@@ -267,32 +255,11 @@
     const tbody = document.getElementById('adminsTableBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
 
-    let loaded = [];
-    try {
-      if (window.supabase && JBF_CONFIG.SUPABASE_URL) {
-        const client = window.supabase.createClient(JBF_CONFIG.SUPABASE_URL, JBF_CONFIG.SUPABASE_ANON_KEY);
-        const { data, error } = await client.from('admin_accounts').select('*');
-        if (!error && data && data.length > 0) {
-          loaded = data;
-        }
-      }
-    } catch (e) {
-      console.warn('Supabase admin_accounts:', e);
-    }
-
-    if (loaded.length === 0) {
-      const stored = localStorage.getItem('JBF_ADMIN_ACCOUNTS_LOCAL');
-      if (stored) {
-        try { loaded = JSON.parse(stored); } catch (e) {}
-      }
-    }
-
-    if (!loaded || loaded.length === 0) {
-      loaded = INITIAL_ADMINS;
-      localStorage.setItem('JBF_ADMIN_ACCOUNTS_LOCAL', JSON.stringify(INITIAL_ADMINS));
-    }
-
-    adminAccounts = loaded;
+    adminAccounts = await window.adminCore.loadAdminRows({
+      apiPath: '/api/admin/accounts',
+      extract: (data) => data.accounts || data.admins || data.data || [],
+      tables: ['admin_accounts']
+    });
     renderAdminsTable(adminAccounts);
   }
 

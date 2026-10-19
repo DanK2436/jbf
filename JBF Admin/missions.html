@@ -277,69 +277,6 @@
     loadMissionsList();
   });
 
-  const DEMO_MISSIONS_DATA = [
-    {
-      id: 'mis-101',
-      titre: 'Maintenance Électromécanique Broyeurs & Concasseurs',
-      client: 'Tenke Fungurume Mining (TFM)',
-      site_intervention: 'Fungurume — Usine Kwatebala',
-      service: 'Maintenance Industrielle',
-      agents_assignes: ['Alain T. (Chef)', 'Patrick K.', 'Eric M.'],
-      statut: 'en_cours',
-      description: 'Révision générale des paliers et garnitures d\'étanchéité sur les broyeurs SAG. Consignes de cadenassage LOTO obligatoires.'
-    },
-    {
-      id: 'mis-102',
-      titre: 'Supervision & Contrôle Qualité Base-Vie',
-      client: 'Entreprise Partenaire Katanga',
-      site_intervention: 'Kolwezi — Base-Vie Chantier',
-      service: 'Catering & Restauration',
-      agents_assignes: ['Grace M. (Sup)', 'Sarah M.', 'Équipe Catering (6)'],
-      statut: 'en_cours',
-      description: 'Audit hygiène HACCP et supervision des services de restauration collective pour 350 personnes.'
-    },
-    {
-      id: 'mis-103',
-      titre: 'Coulage Radier & Fondations Transformateurs 110kV',
-      client: 'Kamoto Copper Company (KCC)',
-      site_intervention: 'Kolwezi — Sous-station Luilu',
-      service: 'BTP & Construction',
-      agents_assignes: ['Jonathan I. (Ingénieur)', 'Équipe Génie Civil (12)'],
-      statut: 'planifiee',
-      description: 'Coffrage et coulage de 180 m³ de béton armé B30 avec adjuvants hydrofuges selon plans d\'ingénierie.'
-    },
-    {
-      id: 'mis-104',
-      titre: 'Dispositif de Gardiennage & Contrôle Concession',
-      client: 'Société Minière de Bakwanga (MIBA)',
-      site_intervention: 'Mbuji-Mayi — Polygone Diamantifère',
-      service: 'Gardiennage & Sécurité',
-      agents_assignes: ['Eric M.', 'Poste Nord (8 agents)'],
-      statut: 'en_cours',
-      description: 'Surveillance périmétrique 24h/24, contrôle des accès et patrouilles véhiculées sur les axes sensibles.'
-    },
-    {
-      id: 'mis-105',
-      titre: 'Convoi Logistique & Transport Équipements Lourds',
-      client: 'Ruashi Mining SPRL',
-      site_intervention: 'Axe Lubumbashi — Likasi',
-      service: 'Logistique & Transport',
-      agents_assignes: ['Équipe Convois Exceptionnels (4)'],
-      statut: 'termine',
-      description: 'Acheminement sécurisé de transformateurs 40 tonnes avec véhicules d\'escorte et autorisation de voirie.'
-    },
-    {
-      id: 'mis-106',
-      titre: 'Pompage Eaux d\'Exhaure & Assainissement Fosse',
-      client: 'Mutanda Mining (MUMI)',
-      site_intervention: 'Kolwezi — Fosse Ouest',
-      service: 'Services Miniers',
-      agents_assignes: ['Patrick K.', 'Techniciens Pompage (3)'],
-      statut: 'termine',
-      description: 'Installation de motopompes submersibles haute pression pour l\'évacuation continue des venues d\'eau.'
-    }
-  ];
-
   let selectedMissionMediaBase64 = null;
   let selectedMissionMediaType = 'image';
 
@@ -403,13 +340,6 @@
       } catch (e) {
         console.warn('Erreur Supabase missions:', e);
       }
-    }
-
-    if (list.length === 0) {
-      try {
-        const stored = localStorage.getItem('JBF_ADMIN_MISSIONS_LOCAL');
-        if (stored) list = JSON.parse(stored);
-      } catch (_) {}
     }
 
     allMissions = list;
