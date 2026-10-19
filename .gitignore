@@ -20,6 +20,14 @@ backend/node_modules/
 *.log
 logs/
 
+# Flutter (SDK local VM + builds)
+.flutter-sdk/
+flutter/**/build/
+flutter/**/.dart_tool/
+flutter/**/ios/Pods/
+flutter/**/macos/Pods/
+flutter/**/.flutter-plugins-dependencies
+
 # Cache & Système
 .DS_Store
 Thumbs.db
