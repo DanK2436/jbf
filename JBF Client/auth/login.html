@@ -436,56 +436,6 @@
       </div>
     </form>
 
-    <!-- 3. RESET PASSWORD (2 ÉTAPES) -->
-    <div id="resetSection" style="display: none;">
-      <div id="resetStepEmail">
-        <div class="form-group">
-          <label class="form-label">Email de votre compte client</label>
-          <input type="email" id="resetEmail" class="form-control" placeholder="contact@entreprise.cd" required>
-        </div>
-        <button type="button" class="btn-submit" id="btnSendResetCode" onclick="handleSendResetOtp()">
-          Recevoir le code de réinitialisation
-        </button>
-      </div>
-
-      <div id="resetStepNewPass" style="display: none;">
-        <div style="background: #FFF0F7; border: 1px solid rgba(230,0,126,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #0F172A;">
-          Code envoyé à : <strong id="resetTargetDisplay" style="color: var(--brand-pink);"></strong>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Code de sécurité reçu (6 chiffres)</label>
-          <input type="text" id="resetOtpCode" class="form-control" maxlength="6" placeholder="000000" style="text-align: center; letter-spacing: 5px; font-weight: 800; font-size: 1.15rem;" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Nouveau mot de passe</label>
-          <input type="password" id="resetNewPass" class="form-control" placeholder="Minimum 6 caractères" minlength="6" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Confirmer le nouveau mot de passe</label>
-          <input type="password" id="resetConfirmPass" class="form-control" placeholder="Répétez le mot de passe" minlength="6" required>
-        </div>
-
-        <button type="button" class="btn-submit" id="btnConfirmReset" onclick="handleConfirmNewPassword()">
-          Mettre à jour mon mot de passe
-        </button>
-
-        <div style="text-align: center; margin-top: 10px;">
-          <a onclick="resetToEmailStep()" style="font-size: 0.78rem; color: var(--text-muted); cursor: pointer; text-decoration: underline;">
-            Modifier l'adresse email
-          </a>
-        </div>
-      </div>
-
-      <div class="extra-links">
-        <a onclick="switchLoginMode('otp')">Retour à la connexion</a>
-      </div>
-    </div>
-
-
-
     <!-- LIEN CRÉATION COMPTE -->
     <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle); text-align: center;">
       <p style="font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 500;">
@@ -505,9 +455,6 @@
   let activeEmailOtp = null;
   let activeEmailTarget = '';
   let activeWaPhoneTarget = '';
-  let activeResetOtp = null;
-  let activeResetEmail = '';
-
   function showError(msg) {
     const el = document.getElementById('alertError');
     el.textContent = msg;
@@ -534,11 +481,9 @@
     const tabPass = document.getElementById('tabBtnPassword');
     const secOtp = document.getElementById('emailOtpSection');
     const formPass = document.getElementById('passwordForm');
-    const secReset = document.getElementById('resetSection');
     const tabGroup = document.getElementById('authTabGroup');
 
     if (tabGroup) tabGroup.style.display = 'flex';
-    if (secReset) secReset.style.display = 'none';
 
     if (mode === 'otp') {
       if (tabOtp) tabOtp.classList.add('active');
@@ -784,93 +729,6 @@
     clearAlerts();
   }
 
-  // 4. RESET PASSWORD
-  function showForgotPassword() {
-    clearAlerts();
-    document.getElementById('authTabGroup').style.display = 'none';
-    document.getElementById('passwordForm').style.display = 'none';
-    document.getElementById('emailOtpSection').style.display = 'none';
-    document.getElementById('waOtpSection').style.display = 'none';
-    document.getElementById('resetSection').style.display = 'block';
-    resetToEmailStep();
-  }
-
-  function resetToEmailStep() {
-    document.getElementById('resetStepEmail').style.display = 'block';
-    document.getElementById('resetStepNewPass').style.display = 'none';
-    document.getElementById('resetOtpCode').value = '';
-    document.getElementById('resetNewPass').value = '';
-    document.getElementById('resetConfirmPass').value = '';
-  }
-
-  async function handleSendResetOtp() {
-    clearAlerts();
-    const email = document.getElementById('resetEmail').value.trim().toLowerCase();
-    if (!email || !email.includes('@')) {
-      showError('Veuillez renseigner votre adresse email professionnelle.');
-      return;
-    }
-
-    const btn = document.getElementById('btnSendResetCode');
-    btn.disabled = true;
-    btn.innerHTML = 'Envoi du code...';
-
-    try {
-      activeResetOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      activeResetEmail = email;
-
-      sessionStorage.setItem('JBF_RESET_OTP_' + email, JSON.stringify({
-        code: activeResetOtp,
-        expiresAt: Date.now() + 10 * 60 * 1000
-      }));
-
-      if (window.JBFMailService) {
-        await window.JBFMailService.sendClientPasswordReset(email, activeResetOtp);
-      }
-
-      showSuccess(`Un code de vérification a été envoyé à ${email}. Consultez votre boîte de messagerie.`);
-      document.getElementById('resetTargetDisplay').textContent = email;
-      document.getElementById('resetStepEmail').style.display = 'none';
-      document.getElementById('resetStepNewPass').style.display = 'block';
-
-      setTimeout(() => { document.getElementById('resetOtpCode').focus(); }, 200);
-
-    } catch (e) {
-      showError(e.message || "Erreur lors de l'envoi du code.");
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = 'Recevoir le code de réinitialisation';
-    }
-  }
-
-  async function handleConfirmNewPassword() {
-    clearAlerts();
-    const enteredCode = document.getElementById('resetOtpCode').value.trim();
-    const newPass = document.getElementById('resetNewPass').value;
-    const confirmPass = document.getElementById('resetConfirmPass').value;
-
-    if (enteredCode.length !== 6) {
-      showError('Veuillez saisir les 6 chiffres du code reçu.');
-      return;
-    }
-
-    if (newPass.length < 6) {
-      showError('Le mot de passe doit contenir au moins 6 caractères.');
-      return;
-    }
-
-    if (newPass !== confirmPass) {
-      showError('Les deux mots de passe ne correspondent pas.');
-      return;
-    }
-
-    showSuccess('Mot de passe mis à jour avec succès ! Vous pouvez maintenant vous connecter.');
-    setTimeout(() => {
-      switchLoginMode('password');
-      document.getElementById('passEmail').value = activeResetEmail;
-    }, 1200);
-  }
-
   // UTILITAIRES OTP (Gestion des 6 cases & Copier-Coller)
   function setupOtpInputHandlers(selector, submitCallback) {
     const inputs = document.querySelectorAll(selector);
@@ -917,6 +775,14 @@
     localStorage.setItem('JBF_CLIENT_SESSION', JSON.stringify(data));
     localStorage.setItem('jbf_client_session', JSON.stringify(data));
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reset') === 'success') {
+      switchLoginMode('password');
+      showSuccess('Votre mot de passe a été mis à jour. Connectez-vous avec vos nouveaux identifiants.');
+    }
+  });
 </script>
 </body>
 </html>

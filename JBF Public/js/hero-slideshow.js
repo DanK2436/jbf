@@ -2,14 +2,6 @@
  * Hero accueil — rotation des 15 pôles de services (15 secondes)
  */
 (function () {
-  const IMAGES = [
-    'assets/gallery_catering.jpg',
-    'assets/gallery_mining.jpg',
-    'assets/gallery_construction.jpg',
-    'assets/gallery_security.jpg',
-    'assets/hero_bg.jpg'
-  ];
-
   const SERVICES = [
     { code: '01', title: 'Alimentaire & Catering' },
     { code: '02', title: 'Sous-Traitance Minière' },
@@ -26,9 +18,9 @@
     { code: '13', title: 'Ressources Humaines' },
     { code: '14', title: 'Espaces Verts & Paysager' },
     { code: '15', title: 'Électricité & Énergies Renouvelables' }
-  ].map((s, i) => ({
+  ].map((s) => ({
     ...s,
-    image: IMAGES[i % IMAGES.length]
+    image: `assets/services/service-${s.code}.jpg`
   }));
 
   const INTERVAL_MS = 15000;
