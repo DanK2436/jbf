@@ -282,6 +282,16 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="mb_fonction">Fonction / poste <span style="color: var(--danger);">*</span></label>
+          <select id="mb_fonction" class="form-control" required>
+            <option value="Employé / Technicien" selected>Employé / Technicien</option>
+            <option value="Superviseur de Pôle">Superviseur de Pôle</option>
+            <option value="Directeur de Section">Directeur de Section</option>
+            <option value="Chef d'équipe terrain">Chef d'équipe terrain</option>
+          </select>
+        </div>
+
         <div class="membres-form-grid">
           <div class="form-group">
             <label class="form-label" for="mb_statut_equipe">Statut dans le domaine <span style="color: var(--danger);">*</span></label>
@@ -693,12 +703,29 @@
     }
   }
 
+  function resetCreateMemberButton() {
+    const btn = document.getElementById('btnSubmitCreateMember');
+    if (!btn) return;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
+  }
+
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((resolve) => {
+        setTimeout(() => resolve({ ok: false, error: 'timeout', hint: label || 'Délai dépassé' }), ms);
+      })
+    ]);
+  }
+
   async function submitCreateMember(e) {
     e.preventDefault();
     const btn = document.getElementById('btnSubmitCreateMember');
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enregistrement...';
 
+    try {
     const secSelect = document.getElementById('mb_section');
     const selectedOption = secSelect.options[secSelect.selectedIndex];
     const sectionId = parseInt(secSelect.value);
@@ -708,15 +735,14 @@
     const email = document.getElementById('mb_email').value.trim().toLowerCase();
     const password = document.getElementById('mb_password').value;
     const phone = document.getElementById('mb_phone').value.trim();
-    const fonction = document.getElementById('mb_fonction').value;
+    const fonctionEl = document.getElementById('mb_fonction');
+    const fonction = fonctionEl ? fonctionEl.value : 'Collaborateur';
     const site = document.getElementById('mb_site').value;
     const matricule = document.getElementById('mb_matricule').value.trim();
     const statutEquipe = document.getElementById('mb_statut_equipe').value || 'membre';
     const rolePortal = statutEquipe === 'chef_equipe' ? 'chef_equipe' : 'membre';
 
     if (findAgentByEmail(email)) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
       window.adminCore.showToast('Cet email est déjà utilisé. Ouvrez la fiche existante pour modifier ou resynchroniser le mot de passe portail.', 'error');
       return;
     }
@@ -734,42 +760,58 @@
     }
 
     if (window.JBFStaffProvision?.invokeStaffProvision) {
-      const prov = await window.JBFStaffProvision.invokeStaffProvision({
-        type: 'membre',
-        full_name: fullName,
-        email,
-        password,
-        phone,
-        poste: fonction,
-        extraProfile: {
-          section_id: sectionId,
-          section_nom: sectionNom,
-          matricule,
-          site_affectation: site
-        }
-      });
-      if (prov.ok && prov.data?.userId) agentId = prov.data.userId;
-    } else if (sb) {
-      try {
-        const { data: signData, error: signErr } = await sb.auth.signUp({
+      const prov = await withTimeout(
+        window.JBFStaffProvision.invokeStaffProvision({
+          type: 'membre',
+          full_name: fullName,
           email,
           password,
-          options: { data: { role: rolePortal, name: fullName, phone, matricule, statut_equipe: statutEquipe } }
-        });
-        if (!signErr && signData?.user?.id) agentId = signData.user.id;
-        await sb.from('profiles').upsert([{
-          id: agentId,
-          email,
-          full_name: fullName,
-          nom_complet: fullName,
           phone,
-          role: rolePortal,
           poste: fonction,
-          matricule,
-          section_id: sectionId,
-          section_nom: sectionNom,
-          is_verified: true
-        }]);
+          extraProfile: {
+            section_id: sectionId,
+            section_nom: sectionNom,
+            matricule,
+            site_affectation: site
+          }
+        }),
+        8000,
+        'Provisionnement serveur (ignoré, enregistrement local + portail)'
+      );
+      if (prov.ok && prov.data?.userId) agentId = prov.data.userId;
+    }
+
+    if (sb && String(agentId).startsWith('ag-')) {
+      try {
+        const signResult = await withTimeout(
+          sb.auth.signUp({
+            email,
+            password,
+            options: { data: { role: rolePortal, name: fullName, phone, matricule, statut_equipe: statutEquipe } }
+          }),
+          12000,
+          'Inscription Auth Supabase'
+        );
+        if (signResult && !signResult.error && signResult.data?.user?.id) {
+          agentId = signResult.data.user.id;
+        }
+        await withTimeout(
+          sb.from('profiles').upsert([{
+            id: agentId,
+            email,
+            full_name: fullName,
+            nom_complet: fullName,
+            phone,
+            role: rolePortal,
+            poste: fonction,
+            matricule,
+            section_id: sectionId,
+            section_nom: sectionNom,
+            is_verified: true
+          }]),
+          10000,
+          'Profil Supabase'
+        );
       } catch (err) {
         console.warn('Erreur création membre Supabase:', err);
       }
@@ -804,25 +846,32 @@
     let syncOk = true;
     let syncMsg = '';
     if (window.JBFMemberPortalSync?.syncMemberAccount) {
-      const sync = await window.JBFMemberPortalSync.syncMemberAccount(newAgent, { verify: true });
+      const sync = await withTimeout(
+        window.JBFMemberPortalSync.syncMemberAccount(newAgent, { verify: true }),
+        15000,
+        'Sync portail membre'
+      );
       syncOk = !!sync.ok;
       if (!sync.ok) {
         console.warn('[Member sync]', sync);
-        syncMsg = sync.error || sync.hint || 'sync_failed';
+        syncMsg = sync.error || sync.hint || (sync.error === 'timeout' ? 'Sync trop lente — réessayez resync depuis la fiche' : 'sync_failed');
       }
     }
-
-    btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Créer le Collaborateur';
 
     if (syncOk) {
       window.adminCore.showToast(`Collaborateur ${fullName} enregistré. Connexion Espace Membre testée et activée.`, 'success');
     } else {
-      window.adminCore.showToast(`Collaborateur enregistré localement mais connexion portail NON active : ${syncMsg}. Ouvrez la fiche → Resynchroniser avec le mot de passe.`, 'error');
+      window.adminCore.showToast(`Collaborateur enregistré. Connexion portail : ${syncMsg || 'resynchronisez depuis la fiche si besoin'}.`, syncOk === false && syncMsg ? 'info' : 'success');
     }
     closeCreateMemberModal();
     renderAgentsTable(allAgents);
     updateKpis(allAgents);
+    } catch (err) {
+      console.error('[submitCreateMember]', err);
+      window.adminCore.showToast(err.message || 'Erreur lors de la création. Réessayez.', 'error');
+    } finally {
+      resetCreateMemberButton();
+    }
   }
 
   function viewAgentDetailById(idOrEmail) {
