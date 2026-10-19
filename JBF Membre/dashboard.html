@@ -9,7 +9,7 @@
   <style>
     /* STYLES DES COMPOSANTS GRAPHIQUES ET VISUELS */
     .hero-banner {
-      background: linear-gradient(135deg, #111827 0%, #1F2937 60%, #374151 100%);
+      background: var(--grad-header);
       border-radius: var(--r-card);
       padding: 1.5rem 1.75rem;
       margin-bottom: 1.5rem;
@@ -230,26 +230,23 @@
     <main>
       
       <!-- MINIMALIST PAGE TOOLBAR -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:1px solid var(--gray-border);">
-        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-          <h1 style="font-family:'Poppins',sans-serif; font-size:1.3rem; font-weight:900; color:var(--text-h); margin:0;">
-            Tableau de Bord
-          </h1>
-          <span style="font-size:0.72rem; font-weight:800; color:var(--pink); background:var(--pink-pale); border:1px solid var(--pink-blush); padding:0.25rem 0.75rem; border-radius:6px; letter-spacing:0.3px;" id="heroSectionSubtitle">
-            Département des Opérations Minières &amp; Ingénierie de Chantier
-          </span>
-          <span style="font-size:0.68rem; font-weight:700; color:#0369A1; background:#E0F2FE; border:1px solid #BAE6FD; padding:0.2rem 0.55rem; border-radius:4px;">
-            Pôle Exploitation &amp; Prestations Industrielles
-          </span>
+      <div class="member-page-toolbar">
+        <div class="member-page-toolbar__titles">
+          <h1 class="member-page-title">Tableau de bord</h1>
+          <span class="member-page-chip" id="heroSectionSubtitle">Votre pôle JBF</span>
         </div>
+        <div class="member-page-toolbar__actions">
+          <a href="missions.html" class="btn btn-primary btn-sm">Missions</a>
+          <a href="chat.html" class="btn btn-outline btn-sm">Chat</a>
+          <a href="devis-chiffrage.html" class="btn btn-outline btn-sm" id="dashDevisChefBtn" style="display:none;border-color:var(--pink);color:var(--pink);">Devis pro</a>
+        </div>
+      </div>
 
-        <div style="display:flex; gap:0.6rem; align-items:center;">
-          <a href="missions.html" class="btn btn-primary btn-sm" style="font-size:0.78rem; padding:0.4rem 0.85rem;">
-            Mes Missions
-          </a>
-          <a href="chat.html" class="btn btn-outline btn-sm" style="font-size:0.78rem; padding:0.4rem 0.85rem;">
-            Chat Équipe
-          </a>
+      <div class="hero-banner" style="margin-bottom:1.25rem;padding:1.25rem 1.5rem;">
+        <div>
+          <div style="font-size:0.72rem;font-weight:800;opacity:0.9;letter-spacing:0.06em;text-transform:uppercase;">Bienvenue</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:900;margin-top:0.25rem;" id="dashWelcomeName">Collaborateur JBF</div>
+          <div style="font-size:0.82rem;opacity:0.92;margin-top:0.35rem;max-width:420px;">Accédez à vos missions, congés, ressources HSE et à la messagerie liée à l’administration.</div>
         </div>
       </div>
 
@@ -499,6 +496,12 @@
       if (profile) {
         const subEl = document.getElementById('heroSectionSubtitle');
         if (subEl) subEl.textContent = profile.section_nom || 'Votre pôle JBF SERVICES';
+        const welcome = document.getElementById('dashWelcomeName');
+        if (welcome) welcome.textContent = profile.full_name || 'Collaborateur JBF';
+        const devisBtn = document.getElementById('dashDevisChefBtn');
+        if (devisBtn && typeof isChefEquipe === 'function' && isChefEquipe(profile)) {
+          devisBtn.style.display = 'inline-flex';
+        }
         
         const leavesEl = document.getElementById('radialLeavesVal');
         if (leavesEl) leavesEl.textContent = profile.solde_conges;

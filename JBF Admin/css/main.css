@@ -1147,6 +1147,24 @@ body {
     display: flex;
   }
 
+  .btn-label-desktop {
+    display: none;
+  }
+
+  .btn-label-mobile {
+    display: inline;
+  }
+
+  .topbar-right .btn {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .topbar-right .btn .bi {
+    margin-right: 0;
+  }
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1647,4 +1665,23 @@ body {
   .membres-detail-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Topbar — libellés boutons responsive */
+.btn-label-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .btn-label-desktop {
+    display: none;
+  }
+
+  .btn-label-mobile {
+    display: inline;
+  }
+}
+
+.page-title h1[data-short-title] {
+  max-width: min(100%, 42vw);
 }

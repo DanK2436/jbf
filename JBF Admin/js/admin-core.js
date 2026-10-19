@@ -18,7 +18,8 @@ const ADMIN_MOBILE_TITLES = {
   'service-client.html': 'Service client',
   'avis.html': 'Avis clients',
   'sous-admins.html': 'Accès admin',
-  'utilisateurs.html': 'Utilisateurs',
+  'utilisateurs.html': 'Clients',
+  'messagerie.html': 'Messagerie',
   'pointages.html': 'Pointages'
 };
 
@@ -32,15 +33,19 @@ const PAGE_PERMISSION_MAP = {
   'ressources.html': 'ressources',
   'service-client.html': 'service_client',
   'avis.html': 'avis',
-  'sous-admins.html': 'sous_admins'
+  'sous-admins.html': 'sous_admins',
+  'messagerie.html': 'membres',
+  'utilisateurs.html': 'membres'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   initAdminAuthCheck();
   enforcePagePermission();
   initResponsivePageTitles();
+  initResponsiveTopbarButtons();
   initClock();
   initSidebar();
+  initAdminMessagerieNav();
   createToastContainer();
   initTableScrollControls();
 });
@@ -180,6 +185,50 @@ function initResponsivePageTitles() {
   };
   apply();
   mq.addEventListener('change', apply);
+}
+
+/** Boutons topbar : libellé court sur mobile (.btn-label-desktop / .btn-label-mobile) */
+function initResponsiveTopbarButtons() {
+  document.querySelectorAll('.topbar-right .btn-primary, .topbar-right .btn-secondary').forEach((btn) => {
+    if (btn.querySelector('.btn-label-desktop')) return;
+    const text = btn.textContent.replace(/\s+/g, ' ').trim();
+    if (!text || text.length < 18) return;
+    const icon = btn.querySelector('i.bi');
+    const short = btn.getAttribute('data-short-label') || text.split(/\s+/).slice(0, 2).join(' ');
+    btn.innerHTML = '';
+    if (icon) {
+      const ic = icon.cloneNode(true);
+      btn.appendChild(ic);
+      btn.appendChild(document.createTextNode(' '));
+    }
+    const d = document.createElement('span');
+    d.className = 'btn-label-desktop';
+    d.textContent = text.replace(/^\s*/, '').replace(/^[^\s]+\s*/, icon ? '' : '').trim() || text;
+    const m = document.createElement('span');
+    m.className = 'btn-label-mobile';
+    m.textContent = short;
+    if (icon) {
+      d.textContent = text.replace(icon.textContent || '', '').trim();
+    }
+    btn.appendChild(d);
+    btn.appendChild(m);
+  });
+}
+
+function initAdminMessagerieNav() {
+  const nav = document.querySelector('.admin-sidebar .sidebar-nav');
+  if (!nav || nav.querySelector('a[href="messagerie.html"]')) return;
+  const current = (window.location.pathname.split('/').pop() || '').split('?')[0];
+  const link = document.createElement('a');
+  link.href = 'messagerie.html';
+  link.className = 'nav-item' + (current === 'messagerie.html' ? ' active' : '');
+  link.innerHTML = '<i class="bi bi-chat-dots-fill"></i><span>Messagerie équipes</span>';
+  const anchor = nav.querySelector('a[href="ressources.html"]') || nav.querySelector('a[href="membres.html"]');
+  if (anchor && anchor.parentNode) {
+    anchor.insertAdjacentElement('afterend', link);
+  } else {
+    nav.appendChild(link);
+  }
 }
 
 // 4. Horloge temps réel

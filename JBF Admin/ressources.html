@@ -109,7 +109,7 @@
       <div class="topbar-left">
         <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
         <div class="page-title">
-          <h1>Médiathèque, Procédures & Formations HSE</h1>
+          <h1 data-short-title="Ressources HSE">Médiathèque &amp; formations HSE</h1>
         </div>
       </div>
       <div class="topbar-right">
@@ -363,11 +363,25 @@
     const tbody = document.getElementById('ressourcesTableBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px;">Chargement en cours...</td></tr>';
 
-    allRessources = await window.adminCore.loadAdminRows({
+    const remote = await window.adminCore.loadAdminRows({
       apiPath: '/api/ressources?limit=200',
       extract: (data) => data.ressources || data.data || [],
       tables: ['ressources_hse']
     });
+    let local = [];
+    try {
+      const raw = localStorage.getItem('JBF_RESSOURCES_LOCAL');
+      if (raw) local = JSON.parse(raw);
+    } catch (_) {}
+    const byId = new Map();
+    [...local, ...(remote || [])].forEach((r) => {
+      if (!r) return;
+      const key = String(r.id || r.titre || Math.random());
+      byId.set(key, { ...byId.get(key), ...r, id: r.id || key });
+    });
+    allRessources = Array.from(byId.values()).sort(
+      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+    );
     updateKPIs();
     renderRessourcesTable(allRessources);
   }

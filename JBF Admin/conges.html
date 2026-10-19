@@ -177,15 +177,49 @@
 
   document.addEventListener('DOMContentLoaded', () => { loadCongesList(); });
 
+  const CONGES_LOCAL_KEY = 'jbf_local_conges';
+
+  function readLocalConges() {
+    try {
+      const raw = localStorage.getItem(CONGES_LOCAL_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function mergeConges(remote, local) {
+    const map = new Map();
+    [...(local || []), ...(remote || [])].forEach((c) => {
+      if (!c || !c.id) return;
+      const prev = map.get(String(c.id));
+      if (!prev || new Date(c.updated_at || c.created_at || 0) > new Date(prev.updated_at || prev.created_at || 0)) {
+        map.set(String(c.id), c);
+      }
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  }
+
+  function persistCongesLocal() {
+    try {
+      localStorage.setItem(CONGES_LOCAL_KEY, JSON.stringify(allConges));
+    } catch (_) {}
+  }
+
   async function loadCongesList() {
     document.getElementById('congesTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;">Chargement...</td></tr>';
+    let remote = [];
     try {
       if (window.supabase && window.JBF_CONFIG?.SUPABASE_URL) {
         const sb = window.supabase.createClient(window.JBF_CONFIG.SUPABASE_URL, window.JBF_CONFIG.SUPABASE_ANON_KEY);
         const { data, error } = await sb.from('demandes_conges').select('*').order('created_at', { ascending: false }).limit(200);
-        if (!error && Array.isArray(data)) allConges = data;
+        if (!error && Array.isArray(data)) remote = data;
       }
     } catch(e) { console.warn('[Conges Load]', e); }
+    allConges = mergeConges(remote, readLocalConges());
+    persistCongesLocal();
     const badge = document.getElementById('badgeCongesCount');
     if (badge) badge.textContent = allConges.filter(c => c.statut === 'en_attente').length;
     renderCongesTable(allConges);
@@ -225,8 +259,12 @@
         await window.jbfSupabase.updateCongeStatut(id, statut, '');
       }
     } catch(err) {}
-    const target = allConges.find(c => c.id === id);
-    if (target) target.statut = statut;
+    const target = allConges.find(c => String(c.id) === String(id));
+    if (target) {
+      target.statut = statut;
+      target.updated_at = new Date().toISOString();
+    }
+    persistCongesLocal();
     const actionText = statut === 'approuve' ? 'approuvée avec succès' : 'refusée';
     window.adminCore.showToast(`Demande de congé ${actionText}`, statut==='approuve'?'success':'info');
     const countEl = document.getElementById('badgeCongesCount');

@@ -1339,7 +1339,7 @@
         <button class="call-btn-circle" id="toggleMicBtn" onclick="toggleMicrophone()" title="Micro"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></button>
         <button class="call-btn-circle" onclick="addCallParticipant()" title="Inviter un participant"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></button>
       </div>
-      <button class="call-btn-hangup" onclick="endGroupCall()" title="Quitter et générer le compte-rendu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></button>
+      <button class="call-btn-hangup" onclick="endGroupCall()" title="Raccrocher"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></button>
     </div>
   </div>
 
@@ -1418,6 +1418,41 @@
     let speechRecognition = null;
     let callTranscriptHistory = [];
     let currentMeetingData = null;
+    const CHAT_LOCAL_KEY = 'JBF_MESSAGES_CHAT_LOCAL';
+
+    function readChatLocal() {
+      try {
+        const raw = localStorage.getItem(CHAT_LOCAL_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (_) { return []; }
+    }
+
+    function pushChatLocal(msg) {
+      try {
+        const list = readChatLocal();
+        list.push(msg);
+        localStorage.setItem(CHAT_LOCAL_KEY, JSON.stringify(list.slice(-500)));
+      } catch (_) {}
+    }
+
+    function loadTeamMembersFromRegistry() {
+      try {
+        const raw = localStorage.getItem('JBF_ADMIN_MEMBRES_LOCAL');
+        if (!raw) return [];
+        return JSON.parse(raw).map((a) => {
+          const name = a.full_name || a.nom_complet || a.name || a.email || 'Collaborateur';
+          const initials = name.split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+          return {
+            id: String(a.id || a.email),
+            name,
+            role: a.poste || a.fonction || 'Collaborateur',
+            pole: a.section_nom || '',
+            avatar: initials || 'JB',
+            grad: 'linear-gradient(135deg,#E6007E,#C8006E)'
+          };
+        });
+      } catch (_) { return []; }
+    }
 
     // Defined enterprise channels & direct discussions
     const CONVERSATIONS = [
@@ -1689,47 +1724,36 @@
         const { data: messages, error } = await query;
         if (error) throw error;
 
-        let displayMsgs = messages;
-        if (!displayMsgs || displayMsgs.length === 0) {
-          displayMsgs = [
-            {
-              id: '1',
-              user_id: 'other1',
-              expediteur_nom: 'Ing. Marc Mwamba',
-              expediteur_avatar: 'MM',
-              expediteur_poste: 'Directeur Technique',
-              canal_type: 'general',
-              message: 'Bonjour à toutes les équipes. Briefing de sécurité opérationnel validé.',
-              created_at: new Date(Date.now() - 7200000).toISOString()
-            },
-            {
-              id: '2',
-              user_id: 'other2',
-              expediteur_nom: 'Superviseur HSE',
-              expediteur_avatar: 'HSE',
-              expediteur_poste: 'Coordination Sécurité',
-              canal_type: 'general',
-              message: 'Rappel à l\'ensemble des agents : inspection hebdomadaire des EPI aujourd\'hui.',
-              created_at: new Date(Date.now() - 3600000).toISOString()
-            }
-          ];
+        const localAll = readChatLocal();
+        const localFiltered = localAll.filter((m) => {
+          const t = m.canal_type || 'general';
+          if (currentChatId === 'section') {
+            return t === 'section' && (!currentProfile || m.section_id == null || m.section_id === currentProfile.section_id);
+          }
+          return t === 'general' || currentChatId === 'general';
+        });
+        const remote = messages || [];
+        const map = new Map();
+        [...localFiltered, ...remote].forEach((m) => {
+          if (!m) return;
+          const id = m.id || `${m.created_at}-${m.user_id}`;
+          map.set(String(id), m);
+        });
+        const displayMsgs = Array.from(map.values()).sort(
+          (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+        );
+
+        if (!displayMsgs.length) {
+          area.innerHTML = '<div style="text-align:center;padding:2rem;color:#667781;font-size:0.85rem;">Aucun message pour l\'instant. Écrivez le premier message ou attendez une réponse de la Direction (admin).</div>';
+          return;
         }
 
         renderMessages(displayMsgs);
 
       } catch (_) {
-        renderMessages([
-          {
-            id: 'demo1',
-            user_id: 'other1',
-            expediteur_nom: 'Direction Opérations',
-            expediteur_avatar: 'DO',
-            expediteur_poste: 'Direction Générale',
-            canal_type: 'general',
-            message: 'Canal actif — Communication interne sécurisée JBF SERVICES.',
-            created_at: new Date().toISOString()
-          }
-        ]);
+        const localFiltered = readChatLocal();
+        if (localFiltered.length) renderMessages(localFiltered);
+        else area.innerHTML = '<div style="text-align:center;padding:2rem;color:#667781;font-size:0.85rem;">Connexion limitée — messages locaux indisponibles.</div>';
       }
     }
 
@@ -1855,6 +1879,7 @@
 
       appendMessageToUI(newMsg);
 
+      pushChatLocal(newMsg);
       try {
         if (supabaseClient) {
           await supabaseClient.from('messages_chat').insert([newMsg]);
@@ -1940,17 +1965,9 @@
     let activeCallParticipants = [];
     let currentCallMode = 'video';
 
-    const ALL_TEAM_MEMBERS = [
-      { id: 'marc', name: 'Ing. Marc Mwamba', role: 'Directeur Technique', pole: 'Direction Technique', avatar: 'MM', grad: 'linear-gradient(135deg,#2563EB,#1D4ED8)' },
-      { id: 'hse', name: 'Superviseur Sécurité HSE', role: 'Coordination Sécurité & Prévention', pole: 'Comité HSE', avatar: 'SH', grad: 'linear-gradient(135deg,#059669,#047857)' },
-      { id: 'rh', name: 'Secrétariat RH & Paie', role: 'Administration du Personnel', pole: 'Ressources Humaines', avatar: 'RH', grad: 'linear-gradient(135deg,#7C3AED,#6D28D9)' },
-      { id: 'fungurume', name: 'Chef d\'Équipe Fungurume', role: 'Supervision Chantier Minier', pole: 'Section 4 Mines', avatar: 'CF', grad: 'linear-gradient(135deg,#D97706,#B45309)' },
-      { id: 'maintenance', name: 'Technicien Maintenance Site', role: 'Maintenance Engins Lourds', pole: 'Section 5 Maintenance', avatar: 'TM', grad: 'linear-gradient(135deg,#0891B2,#0E7490)' },
-      { id: 'medecin', name: 'Médecin du Travail', role: 'Secours & Santé au Travail', pole: 'Service Médical', avatar: 'MT', grad: 'linear-gradient(135deg,#DC2626,#991B1B)' },
-      { id: 'electromec', name: 'Superviseur Électromécanique', role: 'Installations Industrielles', pole: 'Section 6 Soudure & Élec', avatar: 'SE', grad: 'linear-gradient(135deg,#4F46E5,#4338CA)' },
-      { id: 'logistique', name: 'Coordinateur Logistique', role: 'Gestion Flotte & Dépôt', pole: 'Section 12 Logistique', avatar: 'CL', grad: 'linear-gradient(135deg,#0D9488,#0F766E)' },
-      { id: 'qualite', name: 'Inspecteur Contrôle Qualité', role: 'Normes & Audits Opérationnels', pole: 'Direction Qualité', avatar: 'CQ', grad: 'linear-gradient(135deg,#9333EA,#7E22CE)' }
-    ];
+    function getAllTeamMembers() {
+      return loadTeamMembersFromRegistry();
+    }
 
     function addCallParticipant() {
       openInviteParticipantModal();
@@ -1981,7 +1998,7 @@
       const searchQ = (document.getElementById('inviteColleagueSearch')?.value || '').toLowerCase().trim();
       listEl.innerHTML = '';
 
-      const filtered = ALL_TEAM_MEMBERS.filter(m => {
+      const filtered = getAllTeamMembers().filter(m => {
         if (!searchQ) return true;
         return m.name.toLowerCase().includes(searchQ) || m.role.toLowerCase().includes(searchQ) || m.pole.toLowerCase().includes(searchQ);
       });
@@ -2022,7 +2039,7 @@
     }
 
     function inviteColleagueManually(memberId) {
-      const colleague = ALL_TEAM_MEMBERS.find(m => m.id === memberId);
+      const colleague = getAllTeamMembers().find(m => m.id === memberId);
       if (!colleague) return;
       if (activeCallParticipants.some(p => p.id === memberId)) return;
 
@@ -2052,21 +2069,6 @@
       activeCallParticipants = [
         { id: 'me', name: myName, role: activeRoleTitle, avatar: myInit, isMe: true, grad: 'linear-gradient(135deg,#E6007E,#C8006E)' }
       ];
-
-      if (currentChatId === 'marc_mwamba') {
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[0]); // 2 participants (1-on-1)
-      } else if (currentChatId === 'superviseur_hse') {
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[1]); // 2 participants (1-on-1)
-      } else if (currentChatId === 'rh_admin') {
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[2]); // 2 participants (1-on-1)
-      } else if (currentChatId === 'section') {
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[3], ALL_TEAM_MEMBERS[4], ALL_TEAM_MEMBERS[1]); // 4 participants
-      } else if (currentChatId === 'hse_comm') {
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[1], ALL_TEAM_MEMBERS[5], ALL_TEAM_MEMBERS[4]); // 4 participants
-      } else {
-        // general / direction
-        activeCallParticipants.push(ALL_TEAM_MEMBERS[0], ALL_TEAM_MEMBERS[1], ALL_TEAM_MEMBERS[2]); // 4 participants
-      }
 
       await renderCallParticipants(mode);
 
@@ -2133,16 +2135,6 @@
       });
     }
 
-    function addCallParticipant() {
-      const available = ALL_TEAM_MEMBERS.find(m => !activeCallParticipants.some(p => p.id === m.id));
-      if (!available) {
-        alert('Tous les collaborateurs disponibles participent déjà à cet appel.');
-        return;
-      }
-      activeCallParticipants.push(available);
-      renderCallParticipants(currentCallMode);
-    }
-
     function updateCallTimer() {
       const m = Math.floor(callSeconds / 60).toString().padStart(2, '0');
       const s = (callSeconds % 60).toString().padStart(2, '0');
@@ -2196,34 +2188,16 @@
 
     function endGroupCall() {
       document.getElementById('groupCallOverlay').classList.remove('active');
-      clearInterval(callTimerInterval); callTimerInterval = null;
+      clearInterval(callTimerInterval);
+      callTimerInterval = null;
       if (speechRecognition) { try { speechRecognition.stop(); } catch (_) {} }
       if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-      const ve = document.getElementById('localCameraVideo'); if (ve) ve.srcObject = null;
-
-      const dur = document.getElementById('callDurationTimer').textContent;
-      const ref = 'PV-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(1000 + Math.random() * 9000);
-      const conv = CONVERSATIONS.find(c => c.id === currentChatId) || CONVERSATIONS[0];
-      const notes = callTranscriptHistory.length > 0 ? callTranscriptHistory.join('\n') : 'Aucune retranscription vocale détectée. Saisissez les notes ci-dessous.';
-
-      const participantsStr = activeCallParticipants.map(p => `${p.name} (${p.role})`).join(', ');
-
-      currentMeetingData = {
-        refDoc: ref,
-        channel: conv.name,
-        duration: dur,
-        date: new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-        participants: participantsStr,
-        transcription: notes
-      };
-
-      document.getElementById('summaryRefDoc').textContent = ref;
-      document.getElementById('summaryModalChannel').textContent = conv.name;
-      document.getElementById('summaryModalDuration').textContent = dur;
-      document.getElementById('summaryModalParticipants').textContent = currentMeetingData.participants;
-      document.getElementById('summaryModalNotes').value = notes;
-      document.getElementById('summaryModalActions').value = '';
-      document.getElementById('summaryModalOverlay').classList.add('active');
+      const ve = document.getElementById('localCameraVideo');
+      if (ve) ve.srcObject = null;
+      activeCallParticipants = [];
+      callTranscriptHistory = [];
+      currentMeetingData = null;
+      callSeconds = 0;
     }
 
     function closeSummaryModal() {

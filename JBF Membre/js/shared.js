@@ -137,8 +137,8 @@ async function initMemberSession() {
         if (profile) {
           const secId = parseInt(profile.section_id) || 4;
           const sec = getServiceById(secId);
-          const fullName = profile.full_name || 'David Kasongo';
-          const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'DK';
+          const fullName = profile.full_name || profile.nom_complet || user.email || 'Collaborateur';
+          const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'JB';
 
           currentMemberProfile = {
             id: profile.id,
@@ -148,9 +148,9 @@ async function initMemberSession() {
             section_id: secId,
             section_nom: profile.section_nom || sec.name,
             section_cat: sec.cat,
-            matricule: profile.matricule || 'JBF-EMP-007',
-            poste: profile.poste || 'Superviseur Opérations Minières',
-            solde_conges: profile.solde_conges !== undefined ? profile.solde_conges : 18,
+            matricule: profile.matricule || '',
+            poste: profile.poste || profile.fonction || 'Collaborateur',
+            solde_conges: profile.solde_conges !== undefined ? profile.solde_conges : 22,
             role: profile.role || 'membre',
             statut_equipe: profile.statut_equipe || (profile.role === 'chef_equipe' ? 'chef_equipe' : 'membre')
           };
@@ -248,21 +248,21 @@ function renderNavigation(activePage, profileOverride) {
           </button>
           <a href="${rootPath}dashboard.html" style="display:flex; align-items:center; gap:0.75rem; text-decoration:none;">
             <img src="${rootPath}assets/logo.png" alt="JBF SERVICES" class="member-logo-img" style="height:38px; width:auto; object-fit:contain;">
-            <div class="member-system-tag">Intranet Collaborateurs</div>
+            <div class="member-system-tag">Espace Membre</div>
           </a>
         </div>
         <div class="member-header-actions">
           <div class="user-profile-badge">
             <div class="user-avatar-wrapper">
-              <div class="user-avatar">DK</div>
+              <div class="user-avatar">JB</div>
               <div class="status-online-dot" title="Session Active"></div>
             </div>
             <div class="user-info">
-              <div class="user-meta-name">David Kasongo</div>
-              <div class="user-meta-role">Superviseur Opérations Minières • Pôle Mines</div>
+              <div class="user-meta-name">Collaborateur</div>
+              <div class="user-meta-role">JBF SERVICES</div>
             </div>
           </div>
-          <button onclick="handleLogout()" class="btn btn-outline btn-sm" style="padding:0.4rem 0.85rem; font-size:0.78rem;">Déconnexion</button>
+          <button onclick="handleLogout()" class="btn btn-outline btn-sm btn-logout-compact" title="Déconnexion">Sortir</button>
         </div>
       </header>
     `;
@@ -296,7 +296,7 @@ function renderNavigation(activePage, profileOverride) {
           <li>
             <a href="${rootPath}devis-chiffrage.html" class="${activePage === 'devis-chiffrage' ? 'active' : ''}" onclick="if(window.innerWidth<1024) closeSidebar()" style="border-left:3px solid var(--pink);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M9 7h6M9 11h6"></path></svg>
-              Chiffrage Devis Pro (CDF → USD)
+              Devis pro (CDF→USD)
             </a>
           </li>
           ` : ''}
