@@ -117,11 +117,16 @@ jobs:
             $defines += "--dart-define=JBF_SUPABASE_ANON_KEY=$env:JBF_SUPABASE_ANON_KEY"
           }
           flutter build windows --release @defines
-      - name: Zip Windows bundle
+      - name: Zip Windows Admin
         if: matrix.app == 'jbf_admin'
         shell: pwsh
         run: |
           Compress-Archive -Path "flutter/jbf_admin/build/windows/x64/runner/Release/*" -DestinationPath "JBF-Admin-Windows-x64.zip" -Force
+      - name: Zip Windows Membre
+        if: matrix.app == 'jbf_membre'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "flutter/jbf_membre/build/windows/x64/runner/Release/*" -DestinationPath "JBF-Membre-Windows-x64.zip" -Force
       - uses: actions/upload-artifact@v4
         if: matrix.app == 'jbf_admin'
         with:
@@ -132,7 +137,7 @@ jobs:
         if: matrix.app == 'jbf_membre'
         with:
           name: windows-jbf_membre
-          path: flutter/jbf_membre/build/windows/x64/runner/Release/
+          path: JBF-Membre-Windows-x64.zip
           if-no-files-found: error
 
   build-macos-admin-membre:
@@ -164,11 +169,16 @@ jobs:
             DEFINES="$DEFINES --dart-define=JBF_SUPABASE_ANON_KEY=${JBF_SUPABASE_ANON_KEY}"
           fi
           flutter build macos --release $DEFINES
-      - name: Zip macOS Admin app
+      - name: Zip macOS Admin
         if: matrix.app == 'jbf_admin'
         run: |
           cd flutter/jbf_admin/build/macos/Build/Products/Release
           zip -r "$GITHUB_WORKSPACE/JBF-Admin-macOS.zip" "JBF Admin.app"
+      - name: Zip macOS Membre
+        if: matrix.app == 'jbf_membre'
+        run: |
+          cd flutter/jbf_membre/build/macos/Build/Products/Release
+          zip -r "$GITHUB_WORKSPACE/JBF-Membre-macOS.zip" "JBF Membre.app"
       - uses: actions/upload-artifact@v4
         if: matrix.app == 'jbf_admin'
         with:
@@ -179,8 +189,30 @@ jobs:
         if: matrix.app == 'jbf_membre'
         with:
           name: macos-jbf_membre
-          path: flutter/jbf_membre/build/macos/Build/Products/Release/
+          path: JBF-Membre-macOS.zip
           if-no-files-found: error
+
+  publish-jbf-apps:
+    name: Publication GitHub Release
+    needs: [build-windows-admin-membre, build-macos-admin-membre]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: jbf-apps-${{ github.run_number }}
+          name: JBF Applications — build ${{ github.run_number }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: dist/**/*.zip
 
   build-ios:
     if: false

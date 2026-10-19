@@ -3,9 +3,9 @@ import 'package:jbf_portal_shell/jbf_portal_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  const base = String.fromEnvironment('JBF_PORTAL_BASE');
+  final runtime = PortalRuntime.fromEnvironment(adminApp: false);
   final config = PortalConfig.client(
-    baseUrl: base.isEmpty ? null : base,
+    baseUrl: runtime.portalBase.isEmpty ? null : runtime.portalBase,
   );
-  runApp(PortalApp(config: config));
+  runApp(PortalApp(config: config, runtime: runtime));
 }
