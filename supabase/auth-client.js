@@ -265,15 +265,16 @@
             return { user: clientUser, redirect: '/JBF Client/dashboard.html' };
         },
 
-        async sendPasswordReset(email, options = {}) {
-            const client = getSupabase();
-            if (!client) throw new Error('Supabase SDK indisponible');
-            const cleanEmail = email.trim().toLowerCase();
-            const redirectTo = options.redirectTo || (window.location.origin + '/JBF%20Client/auth/forgot-password.html');
-
-            const { data, error } = await client.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
-            if (error) throw error;
-            return data;
+        async sendPasswordReset(email) {
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            if (!window.JBFMailService?.sendClientPasswordReset) {
+                throw new Error('Réinitialisation indisponible : le code est envoyé par le serveur Brevo/Resend, pas par Supabase.');
+            }
+            const res = await window.JBFMailService.sendClientPasswordReset(cleanEmail);
+            if (!res || res.simulated || res.success === false) {
+                throw new Error('Le serveur n\'a pas confirmé l\'envoi du code.');
+            }
+            return res;
         },
 
         async updatePassword(newPassword) {

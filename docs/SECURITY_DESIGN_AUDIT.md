@@ -1,5 +1,13 @@
 # Contrôle sécurité & design
 
+## OTP : Brevo et Resend, pas l'OTP Auth Supabase
+
+Le code confirme que Brevo (`POST https://api.brevo.com/v3/smtp/email`) et Resend (`POST https://api.resend.com/emails`) ne servent qu'à transporter le message. Le serveur Node génère le code à 6 chiffres, le garde en mémoire, et le compare lui-même. Ce n'est pas une vérification d'identité faite par ces fournisseurs.
+
+Le parcours `supabase.auth.verifyOtp`, `supabase.auth.resend({ type: 'signup' })` et `resetPasswordForEmail` (lien magique Supabase) est retiré des pages et de `auth-client.js`. Supabase reste utilisé pour le mot de passe (`signInWithPassword`), la session, les profils et le stockage. Aucun utilisateur, aucune table et aucun projet n'ont été modifiés.
+
+Sans `BREVO_API_KEY` ni `RESEND_API_KEY` sur le serveur, l'envoi répond 503 et aucun code n'est actif. Un échec fournisseur n'enregistre pas de code. Le sujet du message ne contient plus le code. La fonction Edge de réinitialisation, si elle est déployée plus tard par le propriétaire, suit le même schéma Brevo puis Resend et refuse aussi l'envoi sans clé. Elle n'est pas déployée par ce changement.
+
 ## Lot bee1ef9 — messagerie, relais et en-têtes
 
 Les clés de messagerie ne sont plus dans l'arbre de travail, mais elles restent dans l'historique Git antérieur à leur retrait. Ce dépôt ne les révoque pas et n'en affiche pas les valeurs. Le propriétaire doit les faire tourner ou révoquer chez les fournisseurs (Brevo, Resend) depuis leurs consoles.

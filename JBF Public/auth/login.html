@@ -321,18 +321,9 @@
         return;
       }
 
-      try {
-        if (!supabaseClient) throw new Error("Client Supabase indisponible.");
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.href
-        });
-        if (error) throw error;
-        succBox.innerHTML = `Un lien de réinitialisation a été envoyé à <strong>${email}</strong>. Vérifiez vos emails et spams.`;
-        succBox.classList.add('visible');
-      } catch(err) {
-        errBox.textContent = err.message || "Impossible d'envoyer l'email de réinitialisation.";
-        errBox.classList.add('visible');
-      }
+      const target = new URL('../../JBF Client/auth/forgot-password.html', window.location.href);
+      target.searchParams.set('email', email);
+      window.location.href = target.href;
     }
   </script>
 </body>

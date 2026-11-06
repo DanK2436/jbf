@@ -919,201 +919,120 @@
     }
   }
 
-  /* ======================================================
-      ÉTAPE 3 -> Inscription Supabase avec OTP automatique
-      ====================================================== */
-  async function sendOtpViaSupabase() {
+  async function postAuthApi(path, body) {
+    const bases = [];
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      bases.push('http://127.0.0.1:3001/api', 'http://localhost:3001/api');
+    }
+    if (window.location.origin) bases.push(window.location.origin + '/api');
+    const errors = [];
+    for (const base of bases) {
+      try {
+        const res = await fetch(base + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(body || {})
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data && data.success !== false) return data;
+        errors.push(data.error || ('HTTP ' + res.status));
+      } catch (err) {
+        errors.push(err.message || 'réseau');
+      }
+    }
+    throw new Error(errors[0] || 'Serveur de messagerie injoignable. Aucun code local n\'est émis.');
+  }
+
+  async function sendOtpViaBackend() {
     const email = document.getElementById('s1_email').value.trim();
     const pwd = document.getElementById('s3_pwd').value;
     const btn = document.getElementById('btnCreateAccount');
-
-    if (!email) {
-      showError('s1_email', 'e_email');
-      return false;
-    }
-
-    if (!pwd || pwd.length < 6) {
-      showError('s3_pwd', 'e_pwd');
-      return false;
-    }
-
+    if (!email) { showError('s1_email', 'e_email'); return false; }
+    if (!pwd || pwd.length < 8) { showError('s3_pwd', 'e_pwd'); return false; }
     btn.disabled = true;
-    btn.textContent = "Inscription en cours...";
-
+    btn.textContent = 'Envoi du code...';
     try {
-      // Inscription Supabase - envoie automatiquement l'email OTP
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: pwd,
-        options: {
-          data: {
-            name: document.getElementById('s1_nom').value.trim()
-          }
-        }
-      });
-
-      if (error) throw new Error(error.message || 'Erreur inscription');
-
-      console.log('[Frontend] Utilisateur créé, OTP envoyé par Supabase');
-
-      // L'OTP est envoyé automatiquement par Supabase à l'email
-      // Passer à l'étape 4 pour la saisie du code
+      const data = await postAuthApi('/auth/otp/send', { email: email });
       goToStep(4);
       document.getElementById('verifyEmailDisplay').textContent = email;
-
-      // Afficher les instructions
       const waitingStatus = document.getElementById('waitingStatus');
-      if (waitingStatus) {
-        waitingStatus.style.display = 'block';
+      if (waitingStatus) waitingStatus.style.display = 'block';
+      const succBox = document.getElementById('s4_success_banner');
+      if (succBox) {
+        succBox.textContent = 'Code envoyé par le serveur (' + (data.provider || 'messagerie') + '). Consultez votre boîte mail.';
+        succBox.classList.add('visible');
       }
-
-      // Vérifier toutes les 3 secondes si l'utilisateur s'est connecté
-      checkSessionInterval = setInterval(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          clearInterval(checkSessionInterval);
-          window.location.href = "login.html?verified=true";
-        }
-      }, 3000);
-
       return true;
-
     } catch (err) {
-      console.error("Erreur inscription Supabase:", err);
-      alert("Impossible d'enregistrer le compte. Veuillez réessayer.");
-      btn.disabled = false;
-      btn.textContent = "Créer mon compte →";
+      alert(err.message || 'Impossible d\'envoyer le code.');
       return false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Créer mon compte →';
     }
   }
 
-  function stopSessionCheck() {
-    if (checkSessionInterval) {
-      clearInterval(checkSessionInterval);
-      checkSessionInterval = null;
-    }
-  }
-
-  /* ======================================================
-      VALIDATION DU CODE OTP (ÉTAPE 4) VIA SUPABASE
-      ====================================================== */
-  async function verifyOtpFromSupabase() {
+  async function verifyOtpFromBackend() {
     const email = document.getElementById('s1_email').value.trim();
     const token = document.getElementById('otpCodeInput').value.trim();
+    const pwd = document.getElementById('s3_pwd').value;
+    const name = document.getElementById('s1_nom').value.trim();
     const submitBtn = document.getElementById('btnVerifyOtp');
     const errBox = document.getElementById('s4_error_banner');
     const succBox = document.getElementById('s4_success_banner');
     const errOtp = document.getElementById('e_otp');
-
     errBox.classList.remove('visible');
     succBox.classList.remove('visible');
     errOtp.classList.remove('visible');
-
     if (!token || token.length < 6) {
-      errOtp.textContent = "Veuillez saisir le code à 6 chiffres reçu par email.";
+      errOtp.textContent = 'Veuillez saisir le code à 6 chiffres reçu par email.';
       errOtp.classList.add('visible');
       return;
     }
-
     submitBtn.disabled = true;
-    submitBtn.textContent = "Validation en cours...";
-
+    submitBtn.textContent = 'Validation en cours...';
     try {
-      // Vérifier le code OTP avec Supabase
-      const { error } = await supabase.auth.verifyOtp({
-        email: email,
-        token: token,
-        type: 'email'
-      });
-
-      if (error) throw new Error(error.message || 'Code invalide');
-
-      console.log('[Frontend] Code OTP vérifié avec succès via Supabase');
-
-      // Stocker la session utilisateur
-      localStorage.setItem('jbf_client_session', JSON.stringify(supabase.auth.getSession().data.session));
-      localStorage.setItem('jbf_client_user', JSON.stringify(supabase.auth.getSession().data.user));
-
-      // Passer au succès
-      succBox.textContent = "Code validé avec succès ! Connexion en cours...";
-      succBox.classList.add('visible');
-
-      // Redirection après un court délai
-      setTimeout(() => {
-        window.location.href = "login.html?verified=true";
-      }, 1500);
-
-    } catch (err) {
-      console.error("Erreur validation OTP:", err);
-      let msg = err.message || "Code invalide ou expiré.";
-      if (msg.includes("expired") || msg.includes("Token has expired")) {
-        msg = "Ce code a expiré. Cliquez sur 'Renvoyer le code' pour en obtenir un nouveau.";
-      } else if (msg.includes("invalid") || msg.includes("Token is invalid")) {
-        msg = "Le code saisi est incorrect. Veuillez vérifier vos emails.";
+      await postAuthApi('/auth/register', { email: email, token: token, password: pwd, name: name });
+      if (window.supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email, password: pwd });
+        if (!error && data && data.session) {
+          localStorage.setItem('jbf_client_session', JSON.stringify(data.session));
+          localStorage.setItem('jbf_client_user', JSON.stringify(data.user));
+        }
       }
-      errBox.innerHTML = `<strong>Erreur de validation :</strong> ${msg}`;
+      succBox.textContent = 'Code validé. Compte créé. Redirection...';
+      succBox.classList.add('visible');
+      setTimeout(() => { window.location.href = 'login.html?verified=true'; }, 1200);
+    } catch (err) {
+      errBox.textContent = err.message || 'Code invalide ou expiré.';
       errBox.classList.add('visible');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Valider le Code";
+      submitBtn.textContent = 'Valider le Code';
     }
   }
 
-  /* ======================================================
-      RENVOYER L'EMAIL DE CONFIRMATION (via Supabase)
-      ====================================================== */
-  async function resendOtpFromSupabase() {
+  async function resendOtpFromBackend() {
     const email = document.getElementById('s1_email').value.trim();
     const resendBtn = document.getElementById('resendBtn');
     const errBox = document.getElementById('s4_error_banner');
     const succBox = document.getElementById('s4_success_banner');
     errBox.classList.remove('visible');
     succBox.classList.remove('visible');
-
-    if (!email) {
-      alert("Veuillez entrer votre adresse email.");
-      return;
-    }
-
+    if (!email) { alert('Veuillez entrer votre adresse email.'); return; }
     resendBtn.disabled = true;
-    resendBtn.textContent = "Envoi en cours...";
-
+    resendBtn.textContent = 'Envoi en cours...';
     try {
-      // Supabase envoie un nouveau OTP
-      await supabase.auth.resend({ type: 'signup', email: email });
-
-      succBox.textContent = `Un nouveau code de vérification a été envoyé à ${email}.`;
+      await postAuthApi('/auth/otp/send', { email: email });
+      succBox.textContent = 'Un nouveau code a été envoyé par le serveur.';
       succBox.classList.add('visible');
-
-      // Recommencer le minuteur de cooldown
-      if (resendCooldown > 0) return;
-      resendCooldown = 60;
-      const cdInterval = setInterval(() => {
-        resendCooldown--;
-        const btn = document.getElementById('resendBtn');
-        if (btn) {
-          btn.textContent = `Renvoyer (${resendCooldown}s)`;
-          btn.disabled = true;
-        }
-        if (resendCooldown <= 0) {
-          clearInterval(cdInterval);
-          if (btn) {
-            btn.textContent = "Renvoyer l'email de confirmation";
-            btn.disabled = false;
-          }
-        }
-      }, 1000);
-
     } catch (err) {
-      console.error("Erreur renvoi OTP Supabase:", err);
-      let msg = err.message || "Impossible de renvoyer l'email.";
-      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
-        msg = "Limite d'envoi atteinte. Veuillez patienter quelques minutes.";
-      }
-      errBox.innerHTML = `<strong>Attention :</strong> ${msg}`;
+      errBox.textContent = err.message || 'Renvoi impossible.';
       errBox.classList.add('visible');
+    } finally {
       resendBtn.disabled = false;
-      resendBtn.textContent = "Renvoyer l'email de confirmation";
+      resendBtn.textContent = 'Renvoyer le code';
     }
   }
 
