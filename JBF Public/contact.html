@@ -11,9 +11,9 @@
   <style>
     /* Hero */
     .contact-hero {
-      background: var(--pink);
+      background: var(--pink-pale);
       padding: 8.5rem 0 4rem;
-      color: #fff;
+      color: var(--black);
     }
     .contact-hero-title {
       font-family: 'Poppins', 'Inter', sans-serif;
@@ -25,7 +25,7 @@
     }
     .contact-hero-sub {
       font-size: 1rem;
-      color: rgba(255,255,255,0.9);
+      color: var(--text-body);
       max-width: 640px;
       line-height: 1.65;
     }
@@ -44,11 +44,13 @@
 
     /* Info Panel — Rose Vif & Blanc */
     .contact-info-panel {
-      background: var(--pink);
+      background: #7A1248;
       border-radius: var(--r-card);
       padding: 2.25rem 2rem;
       color: #fff;
-      box-shadow: 0 10px 40px rgba(230,0,126,0.25);
+      box-shadow: 0 8px 24px rgba(20,20,22,0.12);
+      min-width: 0;
+      max-width: 100%;
     }
     .contact-info-title {
       font-family: 'Poppins', sans-serif;
@@ -60,15 +62,15 @@
     }
     .contact-info-desc {
       font-size: 0.88rem;
-      color: rgba(255,255,255,0.88);
+      color: #fff;
       line-height: 1.6;
       margin-bottom: 1.5rem;
     }
 
     /* Contact Cards */
     .contact-card-box {
-      background: rgba(255,255,255,0.15);
-      border: 1.5px solid rgba(255,255,255,0.3);
+      background: #5C0E38;
+      border: 1.5px solid #F6D5E6;
       border-radius: var(--r-card);
       padding: 1.1rem 1.25rem;
       margin-bottom: 0.85rem;
@@ -122,7 +124,7 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.85);
+      color: #fff;
       transition: color 0.2s;
     }
     .contact-val-text {
@@ -272,7 +274,7 @@
       user-select: none;
     }
     .custom-select-trigger.is-placeholder {
-      color: #94a3b8;
+      color: #3F3F46;
       font-weight: 400;
     }
     .custom-select-trigger:hover {
@@ -537,6 +539,46 @@
       }
     }
 
+    .contact-split-grid,
+    .contact-form-panel,
+    .contact-main-section,
+    .custom-select-wrapper {
+      min-width: 0;
+      max-width: 100%;
+    }
+    .field-error {
+      color: #7F1D1D;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin: 0.35rem 0 0.75rem;
+    }
+    .contact-form-panel .fc-input:focus-visible,
+    .custom-select-trigger:focus-visible,
+    .contact-submit-btn:focus-visible,
+    .contact-val-text a:focus-visible {
+      outline: 3px solid #141416;
+      outline-offset: 2px;
+    }
+    @media (max-width: 768px) {
+      .custom-select-text {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+      }
+      .contact-hero-title,
+      .contact-hero-sub,
+      .contact-info-title,
+      .contact-val-text {
+        overflow-wrap: anywhere;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .custom-select-dropdown,
+      .contact-card-box {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
     @media (max-width: 400px) {
       .contact-info-panel,
       .contact-form-panel {
@@ -662,7 +704,7 @@
         <h2 class="contact-form-title">Demande de Cotation &amp; Devis</h2>
         <p class="contact-form-sub">Transmettez vos besoins techniques. Nos ingénieurs vous répondent avec une proposition chiffrée sous 24h.</p>
 
-        <form id="contactForm" onsubmit="submitContact(event)">
+        <form id="contactForm" onsubmit="submitContact(event)" novalidate>
           <div class="row-2">
             <div class="fg">
               <label class="fl" for="contactNom">Nom &amp; Prénom *</label>
@@ -883,16 +925,35 @@ async function submitContact(e) {
   const msg = document.getElementById('contactMessage').value.trim();
   const submitBtn = document.querySelector('.contact-submit-btn');
 
-  if (!nom || !entreprise || !email || !tel || !msg) {
-    showContactToast("Veuillez renseigner tous les champs obligatoires (*).", true);
-    return;
-  }
-  if (!service) {
-    showContactToast("Veuillez sélectionner la prestation souhaitée dans la liste.", true);
-    return;
-  }
-  if (!province) {
-    showContactToast("Veuillez sélectionner votre province de déploiement en RDC.", true);
+  document.querySelectorAll('#contactForm .field-error').forEach((node) => node.remove());
+  document.querySelectorAll('#contactForm [aria-invalid="true"]').forEach((node) => node.removeAttribute('aria-invalid'));
+  const flagField = (id, message) => {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    el.setAttribute('aria-invalid', 'true');
+    const note = document.createElement('p');
+    note.className = 'field-error';
+    note.id = id + '-error';
+    note.setAttribute('role', 'alert');
+    note.textContent = message;
+    el.insertAdjacentElement('afterend', note);
+    if (!flagField.focused) {
+      el.focus();
+      flagField.focused = true;
+    }
+    return true;
+  };
+  flagField.focused = false;
+  let invalid = false;
+  if (!nom) invalid = flagField('contactNom', 'Indiquez votre nom et prénom.') || invalid;
+  if (!entreprise) invalid = flagField('contactEntreprise', 'Indiquez l\'entreprise ou l\'organisation.') || invalid;
+  if (!email) invalid = flagField('contactEmail', 'Indiquez un email professionnel.') || invalid;
+  if (!tel) invalid = flagField('contactTel', 'Indiquez un numéro de téléphone.') || invalid;
+  if (!service) invalid = flagField('contactService', 'Sélectionnez la prestation souhaitée.') || invalid;
+  if (!province) invalid = flagField('contactProvince', 'Sélectionnez la province de déploiement en RDC.') || invalid;
+  if (!msg) invalid = flagField('contactMessage', 'Décrivez le besoin dans le cahier des charges.') || invalid;
+  if (invalid) {
+    showContactToast('Certains champs obligatoires sont incomplets. Le premier message d\'erreur indique quoi corriger.', true);
     return;
   }
 
