@@ -43,38 +43,10 @@
     console.log(`[JBF Mail] Email transmis via ${provider.toUpperCase()}. Quota du jour: ${stats.total}/${DAILY_MAX_EMAILS}`);
   }
 
-  // Clés configurées pour l'environnement statique (GitHub Pages) sans exposition directe
-  const DEFAULT_BREVO_KEY = ['xkeysib', 'a54bb472f2ce9651267208a399c76e0022f925bad23da943610ecb707a04f172', 'pMdfEj1FvgSXsMbJ'].join('-');
-  const DEFAULT_RESEND_KEY = ['re', 'LJuEYqUc', 'NSznD7AttdbN6uucwRSVckSw'].join('_');
-
-  async function loadKeysFromSupabase() {
-    if (typeof window !== 'undefined' && window.supabase) {
-      try {
-        const url = window.ENV_SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
-        const anonKey = window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
-        const client = window.supabase.createClient(url, anonKey);
-        const { data } = await client.from('config_cles_api').select('cle_nom, cle_valeur').eq('is_active', true);
-        if (data && Array.isArray(data)) {
-          data.forEach(row => {
-            if (row.cle_nom === 'BREVO_API_KEY' && row.cle_valeur) {
-              window.ENV_BREVO_API_KEY = row.cle_valeur;
-            }
-            if (row.cle_nom === 'RESEND_API_KEY' && row.cle_valeur) {
-              window.ENV_RESEND_API_KEY = row.cle_valeur;
-            }
-            if (row.cle_nom === 'API_PUBLIC_BASE_URL' && row.cle_valeur && window.JBF_CLIENT_CONFIG) {
-              window.JBF_CLIENT_CONFIG.API_BASE_URL = row.cle_valeur.replace(/\/+$/, '');
-            }
-          });
-        }
-      } catch (_) {}
-    }
-  }
-  loadKeysFromSupabase();
-
+  // Aucune clé fournisseur n'est embarquée. L'envoi direct n'est possible
+  // que si la page définit explicitement window.ENV_* hors dépôt.
   function getMailConfig() {
     const clientCfg = window.JBF_CLIENT_CONFIG || {};
-    const adminCfg = window.JBF_CONFIG || {};
 
     const pickKey = (...candidates) => {
       for (const c of candidates) {
@@ -84,8 +56,8 @@
     };
 
     return {
-      brevoApiKey: pickKey(window.ENV_BREVO_API_KEY, clientCfg.BREVO_API_KEY, adminCfg.BREVO_API_KEY, localStorage.getItem('JBF_BREVO_API_KEY'), DEFAULT_BREVO_KEY),
-      resendApiKey: pickKey(window.ENV_RESEND_API_KEY, clientCfg.RESEND_API_KEY, adminCfg.RESEND_API_KEY, localStorage.getItem('JBF_RESEND_API_KEY'), DEFAULT_RESEND_KEY),
+      brevoApiKey: pickKey(window.ENV_BREVO_API_KEY),
+      resendApiKey: pickKey(window.ENV_RESEND_API_KEY),
       senderName: clientCfg.MAIL_SENDER_NAME || 'JBF SERVICES',
       senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'dankande3@gmail.com',
       backendEndpoints: ['/api/mail/send', 'http://localhost:3001/api/mail/send']

@@ -72,7 +72,7 @@
                    ┌─────────────────────┴─────────────────────┐
                    ▼ (80%)                                     ▼ (20%)
            [ API BREVO ]                               [ API RESEND ]
-      (Clé: xkeysib-a54b...)                      (Clé: re_LJuEYq...)
+      (Clé: [clé retirée du dépôt])                      (Clé: [clé retirée du dépôt])
                    │                                           │
                    └─────────────────────┬─────────────────────┘
                                          │  (Basculement automatique en cas d'échec)

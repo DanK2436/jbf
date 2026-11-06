@@ -1,40 +1,40 @@
 /* =============================================================
-   JBF SERVICES — ESPACE CLIENT — Design System v9.0
-   Palette: Rose Vif #E6007E, Magenta Foncé #B6005E, Blanc #FFFFFF
-   100% RESPONSIVE Mobile / Tablet / Desktop
+   JBF SERVICES — ESPACE CLIENT
+   Gris neutre ~40 % · cartes blanches ~20 % · rose pâle et accents ~30 %
+   Noir pour le texte et la structure ~10 %
    ============================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  /* Nuances Brand */
-  --brand-pink: #E6007E;
-  --brand-pink-dark: #B6005E;
-  --brand-pink-hover: #D00072;
-  --brand-pink-subtle: #FFF0F7;
-  --brand-pink-tint: #FFD6EC;
+  /* Nuances Brand — texte #8E1A56 ≥ 7:1 sur blanc et sur gris */
+  --brand-pink: #8E1A56;
+  --brand-pink-dark: #6E1243;
+  --brand-pink-hover: #7A1248;
+  --brand-pink-subtle: #F8E7F0;
+  --brand-pink-tint: #F3D5E4;
 
-  /* Neutres */
+  /* Neutres type Cursor */
   --white: #FFFFFF;
-  --bg-main: #F8F9FA;
-  --bg-sidebar: #FFFFFF;
+  --bg-main: #E4E4E7;
+  --bg-sidebar: #F4F4F5;
   --bg-card: #FFFFFF;
 
   /* Typographie & Bordures */
-  --text-primary: #111111;
-  --text-secondary: #4A4A4A;
-  --text-muted: #767676;
-  --border-subtle: #E8E8EC;
-  --border-pink: #F9C2DE;
+  --text-primary: #141416;
+  --text-secondary: #2A2A2E;
+  --text-muted: #3F3F46;
+  --border-subtle: #D4D4D8;
+  --border-pink: #E7B8D0;
 
   /* Statuts */
-  --success: #059669;
-  --success-subtle: #DEF7EC;
-  --warning: #D97706;
+  --success: #047857;
+  --success-subtle: #D1FAE5;
+  --warning: #92400E;
   --warning-subtle: #FEF3C7;
-  --danger: #DC2626;
+  --danger: #B91C1C;
   --danger-subtle: #FEE2E2;
-  --info: #0EA5E9;
+  --info: #075985;
   --info-subtle: #E0F2FE;
   --whatsapp: #25D366;
   --whatsapp-subtle: #DCFCE7;
@@ -47,10 +47,10 @@
   --r-sm: 6px;
   --r-md: 10px;
   --r-lg: 16px;
-  --t-instant: all 0.15s ease;
-  --t-smooth: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --sh-card: 0 2px 12px rgba(0, 0, 0, 0.05);
-  --sh-hover: 0 6px 22px rgba(230, 0, 126, 0.14);
+  --t-instant: all 160ms ease;
+  --t-smooth: all 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  --sh-card: 0 1px 2px rgba(20, 20, 22, 0.06), 0 8px 24px rgba(20, 20, 22, 0.05);
+  --sh-hover: 0 8px 22px rgba(20, 20, 22, 0.10);
 }
 
 *, *::before, *::after {
@@ -59,13 +59,17 @@
   padding: 0;
 }
 
+html { scroll-behavior: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
   line-height: 1.5;
   font-size: 0.9rem;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ============================================================
@@ -1040,10 +1044,88 @@ body {
   .fab-devis { display: flex; }
 }
 
-/* Ensure KPI grid is always 4 columns */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 380px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+.client-content {
+  background: linear-gradient(180deg, var(--brand-pink-subtle) 0 240px, var(--bg-main) 240px);
+  min-width: 0;
+  max-width: 100%;
+}
+.chart-container,
+.chart-container-sm {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: 240px;
+  overflow: hidden;
+}
+.chart-container-sm { height: 210px; }
+.chart-direct {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.legend-custom { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.legend-item { display: flex; justify-content: space-between; gap: 8px; align-items: center; min-width: 0; }
+.legend-swatch {
+  width: 18px;
+  height: 12px;
+  margin-right: 8px;
+  border: 1px solid #141416;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.legend-swatch.solid { background: #7A1248; }
+.legend-swatch.stripe {
+  background: repeating-linear-gradient(-45deg, #141416 0 2px, #fff 2px 5px);
+}
+.legend-swatch.dots {
+  background-color: #fff;
+  background-image: radial-gradient(circle, #52525B 1.6px, transparent 1.7px);
+  background-size: 6px 6px;
+}
+.legend-swatch.hatch {
+  background-color: #fff;
+  background-image:
+    repeating-linear-gradient(45deg, #8E1A56 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, #141416 0 1px, transparent 1px 5px);
+}
+.table-responsive { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.client-table { min-width: 36rem; }
+.card, .client-main, .client-layout { min-width: 0; max-width: 100%; }
+:focus-visible {
+  outline: 2px solid var(--brand-pink-hover);
+  outline-offset: 3px;
+}
+@media (max-width: 420px) {
+  .client-content { padding: 12px 8px; }
+  .card-body { padding: 12px; }
+  .fab-devis { right: 12px; bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .kpi-card:hover,
+  .nav-item:hover,
+  .card:hover {
+    transform: none !important;
+  }
 }

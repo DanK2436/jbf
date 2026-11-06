@@ -222,7 +222,10 @@
         const errBox = document.getElementById('loginErrorBanner');
         const hashParams = new URLSearchParams(hash.substring(1));
         const errorDesc = hashParams.get('error_description') || 'Lien de confirmation invalide ou expiré.';
-        errBox.innerHTML = `<strong>Attention :</strong> ${errorDesc.replace(/\+/g, ' ')}`;
+        const safeDesc = errorDesc.replace(/\+/g, ' ').replace(/[&<>"']/g, (ch) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+        errBox.innerHTML = `<strong>Attention :</strong> ${safeDesc}`;
         errBox.classList.add('visible');
       }
 
@@ -233,7 +236,10 @@
             localStorage.setItem('jbf_client_session', JSON.stringify(session));
             localStorage.setItem('jbf_client_user', JSON.stringify(session.user));
             const succBox = document.getElementById('loginSuccessBanner');
-            succBox.innerHTML = `<strong>Compte validé &amp; connecté !</strong> Bienvenue <strong>${session.user.email}</strong>. Redirection en cours...`;
+            const safeEmail = String(session.user.email || '').replace(/[&<>"']/g, (ch) => ({
+              '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+            succBox.innerHTML = `<strong>Compte validé &amp; connecté !</strong> Bienvenue <strong>${safeEmail}</strong>. Redirection en cours...`;
             succBox.classList.add('visible');
             setTimeout(() => {
               window.location.href = "../index.html";

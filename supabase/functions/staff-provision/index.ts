@@ -24,9 +24,30 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const authHeader = req.headers.get('Authorization') || '';
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: authData, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !authData?.user) {
+      return new Response(JSON.stringify({ success: false, error: 'Authentification administrateur requise.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+    const { data: callerProfile } = await admin.from('profiles').select('role').eq('id', authData.user.id).maybeSingle();
+    const callerRole = String(callerProfile?.role || authData.user.app_metadata?.role || '').toLowerCase();
+    if (!['admin', 'super_admin', 'sous_admin', 'direction'].includes(callerRole)) {
+      return new Response(JSON.stringify({ success: false, error: 'Droits insuffisants pour créer un compte staff.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const role = staffType === 'sub_admin' || staffType === 'sous_admin' ? 'sous_admin' : 'membre';
     const poste = role === 'sous_admin' ? 'Sous-Administrateur Délégué' : String(body.poste || body.fonction || 'Collaborateur JBF');
@@ -76,7 +97,6 @@ Deno.serve(async (req) => {
       permissions: role === 'sous_admin' ? permissions : undefined,
       is_verified: true,
       updated_at: new Date().toISOString(),
-      ...(body.extraProfile || {}),
     });
 
     if (role === 'sous_admin') {

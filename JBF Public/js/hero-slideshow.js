@@ -1,5 +1,7 @@
 /**
- * Hero accueil — rotation des 15 pôles de services (15 secondes)
+ * Hero accueil — rotation des 15 pôles de services.
+ * Le défilement automatique respecte prefers-reduced-motion
+ * et ne reprend pas tout seul quand la préférence change.
  */
 (function () {
   const SERVICES = [
@@ -24,8 +26,19 @@
   }));
 
   const INTERVAL_MS = 15000;
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
   let index = 0;
   let timer = null;
+  let pausedByUser = motionQuery.matches;
+
+  function prefersReducedMotion() {
+    return motionQuery.matches;
+  }
+
+  function shouldRunTimer(reduced, userPaused) {
+    return !reduced && !userPaused;
+  }
 
   function applySlide(i, animate) {
     const slide = SERVICES[i];
@@ -35,9 +48,10 @@
     if (!bg || !slide) return;
 
     const gradient =
-      'linear-gradient(118deg, rgba(230, 0, 126, 0.42) 0%, rgba(139, 0, 74, 0.35) 38%, rgba(0, 0, 0, 0.55) 100%)';
+      'linear-gradient(118deg, rgba(20, 20, 22, 0.55) 0%, rgba(122, 18, 72, 0.22) 42%, rgba(0, 0, 0, 0.5) 100%)';
+    const motionOk = animate && !prefersReducedMotion();
 
-    if (animate) bg.classList.add('hero-bg-fading');
+    if (motionOk) bg.classList.add('hero-bg-fading');
     bg.style.backgroundImage = `${gradient}, url('${slide.image}')`;
 
     if (chip) {
@@ -46,42 +60,132 @@
 
     if (dots) {
       dots.querySelectorAll('.hero-dot').forEach((dot, idx) => {
-        dot.classList.toggle('active', idx === i);
-        dot.setAttribute('aria-current', idx === i ? 'true' : 'false');
+        const active = idx === i;
+        dot.classList.toggle('active', active);
+        dot.setAttribute('aria-current', active ? 'true' : 'false');
       });
     }
 
-    if (animate) {
-      window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 900);
+    if (motionOk) {
+      window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 220);
+    } else {
+      bg.classList.remove('hero-bg-fading');
     }
+  }
+
+  function stopTimer() {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  function startTimerIfAllowed() {
+    stopTimer();
+    if (!shouldRunTimer(prefersReducedMotion(), pausedByUser)) return;
+    timer = setInterval(() => {
+      if (!shouldRunTimer(prefersReducedMotion(), pausedByUser)) {
+        stopTimer();
+        return;
+      }
+      index = (index + 1) % SERVICES.length;
+      applySlide(index, true);
+    }, INTERVAL_MS);
+  }
+
+  function announce(message) {
+    const note = document.getElementById('heroMotionNote');
+    if (note) note.textContent = message;
+  }
+
+  function syncPauseButton() {
+    const btn = document.getElementById('heroPause');
+    if (!btn) return;
+    const reduced = prefersReducedMotion();
+    const paused = pausedByUser || reduced;
+    btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+    btn.textContent = paused ? 'Reprendre le diaporama' : 'Mettre le diaporama en pause';
+    if (reduced) {
+      btn.setAttribute('aria-describedby', 'heroMotionNote');
+    } else {
+      btn.removeAttribute('aria-describedby');
+    }
+  }
+
+  function onMotionChange() {
+    stopTimer();
+    if (prefersReducedMotion()) {
+      pausedByUser = true;
+      announce('Animations réduites : le diaporama reste en pause. Les pastilles permettent de changer de visuel.');
+    } else {
+      announce('Les animations sont de nouveau autorisées. Le diaporama ne reprend que si vous activez la lecture.');
+    }
+    syncPauseButton();
+  }
+
+  function togglePause() {
+    if (prefersReducedMotion()) {
+      stopTimer();
+      pausedByUser = true;
+      announce('Le diaporama reste en pause : votre système demande de réduire les animations. Utilisez les pastilles pour changer de visuel.');
+      syncPauseButton();
+      return;
+    }
+    pausedByUser = !pausedByUser;
+    if (pausedByUser) {
+      stopTimer();
+      announce('Diaporama en pause.');
+    } else {
+      startTimerIfAllowed();
+      announce('Diaporama en lecture.');
+    }
+    syncPauseButton();
+  }
+
+  function goTo(nextIndex) {
+    index = nextIndex;
+    applySlide(index, true);
+    if (shouldRunTimer(prefersReducedMotion(), pausedByUser)) startTimerIfAllowed();
+    else stopTimer();
   }
 
   function buildDots() {
     const wrap = document.getElementById('heroServiceDots');
     if (!wrap) return;
     wrap.innerHTML = SERVICES.map((_, i) =>
-      `<button type="button" class="hero-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Service ${i + 1}"></button>`
+      `<button type="button" class="hero-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Service ${i + 1} sur 15"></button>`
     ).join('');
-    wrap.querySelectorAll('.hero-dot').forEach(btn => {
+    wrap.querySelectorAll('.hero-dot').forEach((btn) => {
       btn.addEventListener('click', () => {
-        index = Number(btn.getAttribute('data-index')) || 0;
-        applySlide(index, true);
-        restartTimer();
+        goTo(Number(btn.getAttribute('data-index')) || 0);
       });
     });
-  }
-
-  function restartTimer() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(() => {
-      index = (index + 1) % SERVICES.length;
-      applySlide(index, true);
-    }, INTERVAL_MS);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     buildDots();
     applySlide(0, false);
-    restartTimer();
+    const pauseBtn = document.getElementById('heroPause');
+    if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+    if (typeof motionQuery.addEventListener === 'function') {
+      motionQuery.addEventListener('change', onMotionChange);
+    } else if (typeof motionQuery.addListener === 'function') {
+      motionQuery.addListener(onMotionChange);
+    }
+    if (prefersReducedMotion()) {
+      pausedByUser = true;
+      stopTimer();
+      announce('Animations réduites : le diaporama ne démarre pas automatiquement.');
+    } else {
+      startTimerIfAllowed();
+    }
+    syncPauseButton();
+    window.JBF_HERO = {
+      shouldRunTimer,
+      isTimerRunning: () => Boolean(timer),
+      isPaused: () => pausedByUser || prefersReducedMotion(),
+      goTo,
+      togglePause
+    };
   });
 })();

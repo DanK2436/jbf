@@ -40,7 +40,7 @@ _env = load_env_file()
 BREVO_API_KEY = os.environ.get('BREVO_API_KEY') or _env.get('BREVO_API_KEY', '')
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY') or _env.get('RESEND_API_KEY', '')
 ADMIN_OFFICIAL_EMAIL = (os.environ.get('ADMIN_OFFICIAL_EMAIL') or _env.get('ADMIN_OFFICIAL_EMAIL', 'services@admin.jbf')).strip().lower()
-ADMIN_OFFICIAL_PASSWORD = os.environ.get('ADMIN_OFFICIAL_PASSWORD') or _env.get('ADMIN_OFFICIAL_PASSWORD', 'Services+243JBF')
+ADMIN_OFFICIAL_PASSWORD = os.environ.get('ADMIN_OFFICIAL_PASSWORD') or _env.get('ADMIN_OFFICIAL_PASSWORD', '')
 SUPABASE_URL = os.environ.get('SUPABASE_URL') or _env.get('SUPABASE_URL', 'https://dvzwqxcaiagczyonrhsg.supabase.co')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY') or _env.get('SUPABASE_ANON_KEY', '')
 DAILY_LIMIT = 380
@@ -262,7 +262,7 @@ class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 is_email_match = (email == ADMIN_OFFICIAL_EMAIL)
-                is_pass_match = (password == ADMIN_OFFICIAL_PASSWORD or password.strip() == ADMIN_OFFICIAL_PASSWORD.strip())
+                is_pass_match = bool(ADMIN_OFFICIAL_PASSWORD) and (password == ADMIN_OFFICIAL_PASSWORD or password.strip() == ADMIN_OFFICIAL_PASSWORD.strip())
 
                 if is_email_match and is_pass_match:
                     self.send_response(200)

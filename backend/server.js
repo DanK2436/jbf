@@ -378,9 +378,13 @@ app.post('/api/auth/register', async (req, res) => {
 // 4.1 AUTHENTIFICATION ADMIN SÉCURISÉE (Stocké strictement en Backend / .env)
 // =============================================================
 const OFFICIAL_ADMIN_EMAIL = (process.env.ADMIN_OFFICIAL_EMAIL || 'services@admin.jbf').trim().toLowerCase();
-const OFFICIAL_ADMIN_PASS = process.env.ADMIN_OFFICIAL_PASSWORD || 'Services+243JBF';
+const OFFICIAL_ADMIN_PASS = process.env.ADMIN_OFFICIAL_PASSWORD || '';
 
 async function ensureAdminInSupabase() {
+  if (!OFFICIAL_ADMIN_PASS) {
+    console.warn('ADMIN_OFFICIAL_PASSWORD absent : provisionnement du compte admin ignoré.');
+    return;
+  }
   try {
     const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();
     let user = usersList?.users?.find(u => u.email?.toLowerCase() === OFFICIAL_ADMIN_EMAIL.toLowerCase());
@@ -446,7 +450,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     const cleanEmail = email.trim().toLowerCase();
     const isOfficialAdminEmail = cleanEmail === OFFICIAL_ADMIN_EMAIL;
-    const isOfficialAdminPass = (password === OFFICIAL_ADMIN_PASS || password.trim() === OFFICIAL_ADMIN_PASS.trim());
+    const isOfficialAdminPass = Boolean(OFFICIAL_ADMIN_PASS) && (password === OFFICIAL_ADMIN_PASS || password.trim() === OFFICIAL_ADMIN_PASS.trim());
 
     if (isOfficialAdminEmail && isOfficialAdminPass) {
       // Garantir présence dans Supabase

@@ -20,7 +20,11 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 
 async function initOfficialAdmin() {
   const adminEmail = (process.env.ADMIN_OFFICIAL_EMAIL || 'services@admin.jbf').trim().toLowerCase();
-  const adminPassword = process.env.ADMIN_OFFICIAL_PASSWORD || 'Services+243JBF';
+  const adminPassword = process.env.ADMIN_OFFICIAL_PASSWORD || '';
+  if (!adminPassword) {
+    console.error('ADMIN_OFFICIAL_PASSWORD manquant : abandon du provisionnement.');
+    process.exit(1);
+  }
 
   console.log(`🔐 Initialisation du compte Administrateur officiel : ${adminEmail}...`);
 
@@ -100,7 +104,7 @@ async function initOfficialAdmin() {
 
     console.log('\n🎉 INITIALISATION RÉUSSIE :');
     console.log(`   Email        : ${adminEmail}`);
-    console.log(`   Mot de passe : [${adminPassword}]`);
+    console.log('   Mot de passe : défini via ADMIN_OFFICIAL_PASSWORD (non affiché)');
     console.log('   Rôle         : Super Administrateur');
 
   } catch (err) {
