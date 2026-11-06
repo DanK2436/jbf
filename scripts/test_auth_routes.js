@@ -225,6 +225,94 @@ function assert(name, ok) {
   });
   assert('routes staff fermées', staff.status === 403 && sub.status === 403 && calls.createUser === 1);
 
+  const burstCodes = [];
+  global.fetch = async (url, opts) => {
+    const target = String(url);
+    if (target.startsWith('http://127.0.0.1:') || target.startsWith('http://localhost:')) {
+      return nativeFetch(url, opts);
+    }
+    const html = JSON.parse(opts.body || '{}').htmlContent || '';
+    const found = html.match(/>(\d{6})</);
+    const index = burstCodes.length;
+    if (found) burstCodes.push(found[1]);
+    await new Promise((resolve) => setTimeout(resolve, index === 0 ? 50 : 8));
+    calls.fetch += 1;
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const burstServer = await new Promise((resolve) => {
+    const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+  });
+  const burstPort = burstServer.address().port;
+  try {
+    const burst = await Promise.all(Array.from({ length: 8 }, () => nativeFetch(
+      `http://127.0.0.1:${burstPort}/api/auth/otp/send`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'burst@example.test', purpose: 'login' })
+      }
+    ).then(async (res) => res.status)));
+    const accepted = burst.filter((status) => status === 200).length;
+    const stale = burst.filter((status) => status === 409).length;
+    const blocked = burst.filter((status) => status === 429).length;
+    assert('plafond concurrent : 5 appels fournisseur, 3 refus 429', blocked === 3 && burstCodes.length === 5 && accepted === 1 && stale === 4);
+    const newest = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[4] })
+    });
+    const oldest = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[0] })
+    });
+    assert('seul le dernier code réservé est actif', newest.status === 200 && oldest.status === 400);
+  } finally {
+    await new Promise((resolve) => burstServer.close(resolve));
+  }
+
+  const ordered = [];
+  global.fetch = async (url, opts) => {
+    const target = String(url);
+    if (target.startsWith('http://127.0.0.1:') || target.startsWith('http://localhost:')) {
+      return nativeFetch(url, opts);
+    }
+    const html = JSON.parse(opts.body || '{}').htmlContent || '';
+    const found = html.match(/>(\d{6})</);
+    const index = ordered.length;
+    if (found) ordered.push(found[1]);
+    await new Promise((resolve) => setTimeout(resolve, index === 0 ? 60 : 5));
+    calls.fetch += 1;
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const revServer = await new Promise((resolve) => {
+    const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+  });
+  const revPort = revServer.address().port;
+  try {
+    await Promise.all([0, 1].map(() => nativeFetch(
+      `http://127.0.0.1:${revPort}/api/auth/reset-otp/send`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'reverse@example.test' })
+      }
+    )));
+    const newer = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'reverse@example.test', token: ordered[1], newPassword: 'fixture-pass-9' })
+    });
+    const older = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'reverse@example.test', token: ordered[0], newPassword: 'fixture-pass-9' })
+    });
+    assert('code récent accepté, code ancien refusé', newer.status === 200 && older.status === 400 && calls.createUser === 1);
+  } finally {
+    await new Promise((resolve) => revServer.close(resolve));
+  }
+
   console.log('OK routes Express OTP (Supabase et fournisseurs simulés)');
 })().catch((err) => {
   console.error(err);

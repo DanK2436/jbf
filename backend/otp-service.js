@@ -11,6 +11,9 @@ const PURPOSES = new Set(['login', 'register', 'reset']);
 function createOtpBroker(options = {}) {
   const store = new Map();
   const sends = new Map();
+  const latestReservation = new Map();
+  const abandoned = new Set();
+  let reservationSeq = 0;
   const now = options.now || (() => Date.now());
   const ttlMs = options.ttlMs || 10 * 60 * 1000;
   const maxAttempts = options.maxAttempts || 5;
@@ -44,34 +47,53 @@ function createOtpBroker(options = {}) {
       return { ok: false, status: 503, error: 'Aucun fournisseur de messagerie configuré sur le serveur.' };
     }
     const quotaKey = storageKey(clean, use);
-    const quota = sends.get(quotaKey);
-    if (quota && now() - quota.start < sendWindowMs && quota.count >= maxSends) {
+    let quota = sends.get(quotaKey);
+    if (!quota || now() - quota.start >= sendWindowMs) {
+      quota = { start: now(), count: 0 };
+      sends.set(quotaKey, quota);
+    }
+    if (quota.count >= maxSends) {
       return { ok: false, status: 429, error: 'Trop d\'envois pour cette adresse. Réessayez plus tard.' };
     }
-    return { ok: true, email: clean, purpose: use, code: makeCode(), expiresAt: now() + ttlMs };
+    quota.count += 1;
+    reservationSeq += 1;
+    const reservationId = reservationSeq;
+    latestReservation.set(quotaKey, reservationId);
+    return {
+      ok: true,
+      email: clean,
+      purpose: use,
+      code: makeCode(),
+      expiresAt: now() + ttlMs,
+      reservationId
+    };
   }
 
-  function commit(email, purpose, code, provider) {
+  function commit(email, purpose, code, provider, reservationId) {
     const use = normalizePurpose(purpose);
     const key = storageKey(email, use);
-    const quota = sends.get(key);
-    if (!quota || now() - quota.start >= sendWindowMs) {
-      sends.set(key, { start: now(), count: 1 });
-    } else {
-      quota.count += 1;
+    const current = latestReservation.get(key);
+    if (abandoned.has(reservationId) || current !== reservationId) {
+      return {
+        ok: false,
+        status: 409,
+        stale: true,
+        error: 'Un code plus récent a déjà été demandé. Le code précédent n\'est pas actif.'
+      };
     }
     store.set(key, {
       code: String(code),
       expiresAt: now() + ttlMs,
       delivered: true,
       attempts: 0,
-      purpose: use
+      purpose: use,
+      reservationId
     });
     return { ok: true, status: 200, provider: provider || 'serveur', purpose: use };
   }
 
-  function abort(email, purpose) {
-    store.delete(storageKey(email, normalizePurpose(purpose)));
+  function abort(email, purpose, reservationId) {
+    if (reservationId != null) abandoned.add(reservationId);
   }
 
   function verify(email, token, purpose, consume = true) {

@@ -4,7 +4,7 @@
 
 L'ancienne `POST /api/auth/register` créait un compte `email_confirm: true` sans code et était déclarée avant la route protégée, donc elle capturait toutes les requêtes. Elle est supprimée. La route restante n'appelle `createUser` qu'après un OTP délivré pour l'usage `register` du même email. Un code de connexion ou de réinitialisation ne crée pas de compte. Les routes ouvertes `POST /api/admin/membres` et `POST /api/admin/sous-admins` ne créent plus de compte confirmé : elles n'authentifiaient pas l'appelant.
 
-Les codes viennent de `crypto.randomInt`. Chaque usage a sa clé, une expiration, un plafond d'envois et de tentatives, et une consommation unique.
+Les codes viennent de `crypto.randomInt`. Chaque usage a sa clé, une expiration, un plafond d'envois et de tentatives, et une consommation unique. Le quota est réservé dans `prepare`, avant l'attente du fournisseur : des requêtes simultanées ne peuvent pas toutes passer. Un échec d'envoi consomme quand même le créneau, qui se libère à la fin de la fenêtre (pas de blocage permanent). Si deux réponses arrivent dans le désordre, seul le dernier code demandé reste actif ; l'ancien est refusé.
 
 ## OTP : Brevo et Resend, pas l'OTP Auth Supabase
 

@@ -551,10 +551,11 @@ app.post('/api/auth/otp/send', async (req, res) => {
     try {
       sendRes = await sendTransactionalEmail(prepared.email, 'Code de vérification JBF', html);
     } catch (sendErr) {
-      otps.abort(prepared.email, prepared.purpose);
+      otps.abort(prepared.email, prepared.purpose, prepared.reservationId);
       return res.status(503).json({ success: false, error: 'Le fournisseur de messagerie a refusé l\'envoi. Aucun code n\'est actif.' });
     }
-    const committed = otps.commit(prepared.email, prepared.purpose, prepared.code, sendRes.provider);
+    const committed = otps.commit(prepared.email, prepared.purpose, prepared.code, sendRes.provider, prepared.reservationId);
+    if (!committed.ok) return res.status(committed.status).json(otps.toClient(committed));
     console.log(`${formatOtpLog('Backend OTP', prepared.email)} via ${sendRes.provider}`);
     res.json({
       success: true,
@@ -688,10 +689,11 @@ app.post('/api/auth/reset-otp/send', async (req, res) => {
     try {
       sendRes = await sendTransactionalEmail(prepared.email, 'Code de réinitialisation JBF', html);
     } catch (sendErr) {
-      otps.abort(prepared.email, 'reset');
+      otps.abort(prepared.email, 'reset', prepared.reservationId);
       return res.status(503).json({ success: false, error: 'Le fournisseur de messagerie a refusé l\'envoi. Aucun code n\'est actif.' });
     }
-    const committed = otps.commit(prepared.email, 'reset', prepared.code, sendRes.provider);
+    const committed = otps.commit(prepared.email, 'reset', prepared.code, sendRes.provider, prepared.reservationId);
+    if (!committed.ok) return res.status(committed.status).json(otps.toClient(committed));
     console.log(`${formatOtpLog('Backend Reset OTP', prepared.email)} via ${sendRes.provider}`);
     res.json({
       success: true,
