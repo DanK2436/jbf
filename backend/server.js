@@ -6,6 +6,14 @@
 
 require('dotenv').config();
 
+const {
+  SECURITY_HEADERS,
+  isOfficialAdminPassword,
+  formatOtpLog,
+  publicAssetAllowed,
+  mailRelayCallerAllowed
+} = require('./security-guards');
+
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -378,7 +386,7 @@ app.post('/api/auth/register', async (req, res) => {
 // 4.1 AUTHENTIFICATION ADMIN SÉCURISÉE (Stocké strictement en Backend / .env)
 // =============================================================
 const OFFICIAL_ADMIN_EMAIL = (process.env.ADMIN_OFFICIAL_EMAIL || 'services@admin.jbf').trim().toLowerCase();
-const OFFICIAL_ADMIN_PASS = process.env.ADMIN_OFFICIAL_PASSWORD || '';
+const OFFICIAL_ADMIN_PASS = String(process.env.ADMIN_OFFICIAL_PASSWORD || '').trim();
 
 async function ensureAdminInSupabase() {
   if (!OFFICIAL_ADMIN_PASS) {
@@ -450,7 +458,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     const cleanEmail = email.trim().toLowerCase();
     const isOfficialAdminEmail = cleanEmail === OFFICIAL_ADMIN_EMAIL;
-    const isOfficialAdminPass = Boolean(OFFICIAL_ADMIN_PASS) && (password === OFFICIAL_ADMIN_PASS || password.trim() === OFFICIAL_ADMIN_PASS.trim());
+    const isOfficialAdminPass = isOfficialAdminPassword(OFFICIAL_ADMIN_PASS, password);
 
     if (isOfficialAdminEmail && isOfficialAdminPass) {
       // Garantir présence dans Supabase
@@ -620,7 +628,7 @@ app.post('/api/auth/otp/send', async (req, res) => {
     );
 
     const sendRes = await sendTransactionalEmail(cleanEmail, `Code de vérification : ${otpCode}`, html);
-    console.log(`[Backend OTP] Code ${otpCode} envoyé à ${cleanEmail} via ${sendRes.provider}`);
+    console.log(`${formatOtpLog('Backend OTP', cleanEmail)} via ${sendRes.provider}`);
 
     res.json({
       success: true,
@@ -1578,6 +1586,9 @@ app.get('/api/stats', async (req, res) => {
 // =============================================================
 app.post('/api/mail/send', async (req, res) => {
   try {
+    if (!mailRelayCallerAllowed(req.socket.remoteAddress, req.get('Origin'), req.get('Sec-Fetch-Site'))) {
+      return res.status(401).json({ success: false, error: 'Relais mail réservé au navigateur local du site JBF.' });
+    }
     const { to, subject, html, provider } = req.body;
     if (!to || !subject || !html) {
       return res.status(400).json({ success: false, error: 'Champs obligatoires manquants (to, subject, html).' });
@@ -1660,14 +1671,10 @@ app.post('/api/mail/send', async (req, res) => {
 // =============================================================
 // Protection stricte contre l'exposition de fichiers sensibles et de secrets
 app.use((req, res, next) => {
-  const cleanUrl = req.url.toLowerCase().split('?')[0];
-  if (
-    cleanUrl.includes('.env') ||
-    cleanUrl.includes('/.git') ||
-    cleanUrl.includes('.sql') ||
-    cleanUrl.startsWith('/backend') ||
-    cleanUrl.includes('init-keys.js')
-  ) {
+  Object.entries(SECURITY_HEADERS).forEach(([name, value]) => res.setHeader(name, value));
+  const pathOnly = req.url.split('?')[0];
+  if (pathOnly === '/' || pathOnly.startsWith('/api/')) return next();
+  if (!publicAssetAllowed(pathOnly)) {
     return res.status(403).json({ success: false, error: 'Accès interdit.' });
   }
   next();
@@ -1697,10 +1704,11 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => {
   console.log(`=============================================================`);
   console.log(`[JBF SERVICES] ENTERPRISE API SERVER DEMARRE`);
-  console.log(`URL API : http://localhost:${PORT}`);
+  console.log(`URL API : http://${HOST}:${PORT}`);
   console.log(`=============================================================`);
 });
 

@@ -79,7 +79,7 @@
             // Envoi exclusif via Brevo et Resend (JBFMailService)
             if (window.JBFMailService) {
                 const res = await window.JBFMailService.sendClientLoginOtp(cleanEmail, otpCode);
-                console.log(`[JBFAuth] OTP (${otpCode}) transmis via Brevo / Resend :`, res);
+                console.log('[JBFAuth] OTP transmis via Brevo / Resend (valeur non journalisée)', res && res.provider);
                 return res;
             }
 

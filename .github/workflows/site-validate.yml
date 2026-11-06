@@ -18,6 +18,10 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Contrôles statiques du site
         run: python3 scripts/validate_site.py
+      - name: Sécurité serveur local et gardes admin
+        run: |
+          python3 scripts/test_serve_security.py
+          node scripts/test_security_guards.js
       - name: Syntaxe JavaScript
         run: |
           node --check "JBF Public/js/hero-slideshow.js"

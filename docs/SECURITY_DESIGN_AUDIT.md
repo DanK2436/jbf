@@ -1,5 +1,19 @@
 # Contrôle sécurité & design
 
+## Contre-revue statique (baseline dc44014, vérifiée sur la branche redesign)
+
+Les points ci-dessous étaient un rapport de lecture du baseline, pas des tests dynamiques déjà acquis. Ils ont été rejoués ensuite avec des secrets factices.
+
+| Constat baseline | État sur la branche | Suite |
+|---|---|---|
+| `serve.py` servait la racine du dépôt, y compris `backend/.env`, et écoutait `0.0.0.0` | Confirmé avant correctif | Allowlist (`JBF Public`, `JBF Client`, `assets`, `js`, `index.html`, `supabase/*.js`). Refus des dotfiles, de `..` et des chemins réencodés. Écoute `127.0.0.1` par défaut (`JBF_BIND_HOST` pour déroger). |
+| Mot de passe admin de repli | Déjà retiré du code exécutable. Le fichier `backend/.env.example` le proposait encore | Exemple vidé. Comparaison fail-closed si absent, vide ou incorrect. |
+| OTP en clair dans les logs `serve.py` et `backend/server.js` | Confirmé | Les journaux indiquent qu'un code a été traité, sans sa valeur. |
+| `POST /api/mail/send` anonyme | Confirmé sur `serve.py` et sur Express | Refus si l'appelant n'est pas en loopback avec `Sec-Fetch-Site: same-origin` ou une origine `localhost` / `127.0.0.1`. Le navigateur du site local passe encore. Pas d'envoi réel dans les tests (mock). |
+| CSP et anti-iframe absents du code lu | Confirmé dans le dépôt | En-têtes ajoutés sur `serve.py` et Express (`frame-ancestors 'none'`, `X-Frame-Options: DENY`). Les pages ont encore des scripts inline, donc `script-src` inclut `'unsafe-inline'` et le CDN jsDelivr. Ce n'est pas une preuve que l'hébergement de production (proxy, GitHub Pages) envoie ces en-têtes. |
+
+Le mode démonstration WhatsApp renvoie toujours le code dans la réponse affichée à l'utilisateur quand l'API n'est pas configurée. Ce n'est plus écrit dans `console.log`.
+
 ## Revue de novembre 2026 (redesign web)
 
 Correctifs appliqués dans le dépôt, sans test d'intrusion sur la production et sans mutation de données :

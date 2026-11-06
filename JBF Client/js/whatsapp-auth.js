@@ -90,7 +90,7 @@ class WhatsAppAuthService {
       }
     } else {
       // Mode simulation élégant pour démo et tests immédiats
-      console.log(`%c[JBF WhatsApp Auth] Code OTP généré pour ${formattedPhone} : ${otpCode}`, 'color: #E6007E; font-weight: bold; font-size: 14px;');
+      console.log('[JBF WhatsApp Auth] Code OTP de démonstration généré (valeur non journalisée)');
       return {
         success: true,
         phone: formattedPhone,
