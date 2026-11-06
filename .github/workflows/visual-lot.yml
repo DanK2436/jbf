@@ -1,8 +1,8 @@
-name: Lot visuel — contact et diaporama
+name: Lot visuel — palette et chargement
 
 on:
   push:
-    branches: ['cursor/jbf-contact-diaporama-6f12']
+    branches: ['cursor/jbf-palette-portail-6f12']
   pull_request:
   workflow_dispatch:
 
@@ -11,17 +11,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Contrôle du lot visuel
+      - name: Contrôle palette, loader et diaporama
         run: |
           node --check "JBF Public/js/hero-slideshow.js"
           python3 - <<'PY'
           from pathlib import Path
+          css = Path("JBF Public/css/main.css").read_text(encoding="utf-8")
+          client = Path("JBF Client/css/client.css").read_text(encoding="utf-8")
+          home = Path("JBF Public/index.html").read_text(encoding="utf-8")
+          contact = Path("JBF Public/contact.html").read_text(encoding="utf-8")
           js = Path("JBF Public/js/hero-slideshow.js").read_text(encoding="utf-8")
-          html = Path("JBF Public/contact.html").read_text(encoding="utf-8")
-          if "setInterval" in js or "heroPause" in js:
-              raise SystemExit("le diaporama contient encore un timer ou un bouton pause")
-          for marker in ("7A1248", "5C0E38", "field-error", "prefers-reduced-motion"):
-              if marker not in html:
-                  raise SystemExit(f"marqueur contact absent : {marker}")
-          print("OK lot visuel contact et diaporama")
+          required = {
+              "gris toile": "#E4E4E7" in css,
+              "rose pale": "#F8E7F0" in css,
+              "rose soutenu": "#7A1248" in css,
+              "noir": "#141416" in css,
+              "loader bas": "bootDown" in css and "bootOverlay" in home and "boot-logo" in home,
+              "loader gauche": "bootLeft" in css,
+              "duree 6s": "6s" in css and "6200" in home,
+              "mouvement css": "prefers-reduced-motion: reduce" in css and "prefers-reduced-motion: reduce" in client,
+              "erreur contact": "field-error" in css or "field-error" in contact,
+              "diaporama manuel": "setInterval" not in js and "strictement manuel" in js,
+          }
+          missing = [name for name, ok in required.items() if not ok]
+          if missing:
+              raise SystemExit("marqueurs absents : " + ", ".join(missing))
+          print("OK palette, loader et diaporama")
           PY
