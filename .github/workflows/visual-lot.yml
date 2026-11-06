@@ -26,7 +26,7 @@ jobs:
               "rose pale": "#F8E7F0" in css,
               "rose soutenu": "#7A1248" in css,
               "noir": "#141416" in css,
-              "loader bas": "bootDown" in css and "bootDown" in home,
+              "loader bas": "bootDown" in css and "bootOverlay" in home and "boot-logo" in home,
               "loader gauche": "bootLeft" in css,
               "duree 6s": "6s" in css and "6200" in home,
               "mouvement css": "prefers-reduced-motion: reduce" in css and "prefers-reduced-motion: reduce" in client,
