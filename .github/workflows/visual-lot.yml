@@ -1,0 +1,27 @@
+name: Lot visuel — contact et diaporama
+
+on:
+  push:
+    branches: ['cursor/jbf-contact-diaporama-6f12']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contrôle du lot visuel
+        run: |
+          node --check "JBF Public/js/hero-slideshow.js"
+          python3 - <<'PY'
+          from pathlib import Path
+          js = Path("JBF Public/js/hero-slideshow.js").read_text(encoding="utf-8")
+          html = Path("JBF Public/contact.html").read_text(encoding="utf-8")
+          if "setInterval" in js or "heroPause" in js:
+              raise SystemExit("le diaporama contient encore un timer ou un bouton pause")
+          for marker in ("7A1248", "5C0E38", "field-error", "prefers-reduced-motion"):
+              if marker not in html:
+                  raise SystemExit(f"marqueur contact absent : {marker}")
+          print("OK lot visuel contact et diaporama")
+          PY

@@ -1,5 +1,6 @@
 /**
- * Hero accueil — rotation des 15 pôles de services (15 secondes)
+ * Diaporama d'accueil strictement manuel.
+ * Aucun timer, aucun autoplay. Les pastilles restent utilisables au clavier.
  */
 (function () {
   const SERVICES = [
@@ -23,65 +24,70 @@
     image: `assets/services/service-${s.code}.jpg`
   }));
 
-  const INTERVAL_MS = 15000;
   let index = 0;
-  let timer = null;
 
-  function applySlide(i, animate) {
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function applySlide(i) {
     const slide = SERVICES[i];
     const bg = document.querySelector('.hero-bg-photo');
     const chip = document.getElementById('heroServiceChip');
     const dots = document.getElementById('heroServiceDots');
     if (!bg || !slide) return;
-
-    const gradient =
-      'linear-gradient(118deg, rgba(230, 0, 126, 0.42) 0%, rgba(139, 0, 74, 0.35) 38%, rgba(0, 0, 0, 0.55) 100%)';
-
-    if (animate) bg.classList.add('hero-bg-fading');
+    const gradient = 'linear-gradient(118deg, rgba(20, 20, 22, 0.55) 0%, rgba(122, 18, 72, 0.22) 42%, rgba(0, 0, 0, 0.5) 100%)';
+    if (!prefersReducedMotion()) bg.classList.add('hero-bg-fading');
     bg.style.backgroundImage = `${gradient}, url('${slide.image}')`;
-
     if (chip) {
-      chip.innerHTML = `<span class="hero-chip-code">${slide.code}</span><span class="hero-chip-title">${slide.title}</span>`;
+      chip.replaceChildren();
+      const code = document.createElement('span');
+      code.className = 'hero-chip-code';
+      code.textContent = slide.code;
+      const title = document.createElement('span');
+      title.className = 'hero-chip-title';
+      title.textContent = slide.title;
+      chip.append(code, title);
     }
-
     if (dots) {
       dots.querySelectorAll('.hero-dot').forEach((dot, idx) => {
-        dot.classList.toggle('active', idx === i);
-        dot.setAttribute('aria-current', idx === i ? 'true' : 'false');
+        const active = idx === i;
+        dot.classList.toggle('active', active);
+        dot.setAttribute('aria-current', active ? 'true' : 'false');
       });
     }
-
-    if (animate) {
-      window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 900);
+    const note = document.getElementById('heroMotionNote');
+    if (note) note.textContent = `Visuel ${slide.code} : ${slide.title}`;
+    if (!prefersReducedMotion()) {
+      window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 220);
+    } else {
+      bg.classList.remove('hero-bg-fading');
     }
   }
 
-  function buildDots() {
-    const wrap = document.getElementById('heroServiceDots');
-    if (!wrap) return;
-    wrap.innerHTML = SERVICES.map((_, i) =>
-      `<button type="button" class="hero-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Service ${i + 1}"></button>`
-    ).join('');
-    wrap.querySelectorAll('.hero-dot').forEach(btn => {
-      btn.addEventListener('click', () => {
-        index = Number(btn.getAttribute('data-index')) || 0;
-        applySlide(index, true);
-        restartTimer();
-      });
-    });
-  }
-
-  function restartTimer() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(() => {
-      index = (index + 1) % SERVICES.length;
-      applySlide(index, true);
-    }, INTERVAL_MS);
+  function goTo(nextIndex) {
+    index = nextIndex;
+    applySlide(index);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    buildDots();
-    applySlide(0, false);
-    restartTimer();
+    const wrap = document.getElementById('heroServiceDots');
+    if (wrap) {
+      wrap.replaceChildren();
+      SERVICES.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hero-dot' + (i === 0 ? ' active' : '');
+        btn.dataset.index = String(i);
+        btn.setAttribute('aria-label', `Service ${i + 1} sur 15, ${SERVICES[i].title}`);
+        btn.addEventListener('click', () => goTo(i));
+        wrap.append(btn);
+      });
+    }
+    applySlide(0);
+    window.JBF_HERO = {
+      isTimerRunning: () => false,
+      goTo
+    };
   });
 })();
