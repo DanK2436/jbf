@@ -256,17 +256,27 @@ function assert(name, ok) {
     const stale = burst.filter((status) => status === 409).length;
     const blocked = burst.filter((status) => status === 429).length;
     assert('plafond concurrent : 5 appels fournisseur, 3 refus 429', blocked === 3 && burstCodes.length === 5 && accepted === 1 && stale === 4);
-    const newest = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[4] })
-    });
     const oldest = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[0] })
     });
-    assert('seul le dernier code réservé est actif', newest.status === 200 && oldest.status === 400);
+    const crossed = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'autre@example.test', token: burstCodes[4] })
+    });
+    const newest = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[4] })
+    });
+    const replay = await nativeFetch(`http://127.0.0.1:${burstPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'burst@example.test', token: burstCodes[4] })
+    });
+    assert('login : ancien d\'abord, nouveau une fois, rejeu refusé', oldest.status === 400 && crossed.status === 400 && newest.status === 200 && replay.status === 400);
   } finally {
     await new Promise((resolve) => burstServer.close(resolve));
   }
@@ -298,17 +308,110 @@ function assert(name, ok) {
         body: JSON.stringify({ email: 'reverse@example.test' })
       }
     )));
-    const newer = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'reverse@example.test', token: ordered[1], newPassword: 'fixture-pass-9' })
-    });
     const older = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'reverse@example.test', token: ordered[0], newPassword: 'fixture-pass-9' })
     });
-    assert('code récent accepté, code ancien refusé', newer.status === 200 && older.status === 400 && calls.createUser === 1);
+    const crossedReset = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'reverse@example.test',
+        token: ordered[1],
+        password: 'fixture-pass-9',
+        full_name: 'Fixture'
+      })
+    });
+    const newer = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'reverse@example.test', token: ordered[1], newPassword: 'fixture-pass-9' })
+    });
+    const replayReset = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'reverse@example.test', token: ordered[1], newPassword: 'fixture-pass-9' })
+    });
+    assert('reset : ancien d\'abord, nouveau une fois, rejeu refusé', older.status === 400 && crossedReset.status === 400 && newer.status === 200 && replayReset.status === 400 && calls.createUser === 1);
+
+    const registered = [];
+    global.fetch = async (url, opts) => {
+      const target = String(url);
+      if (target.startsWith('http://127.0.0.1:') || target.startsWith('http://localhost:')) {
+        return nativeFetch(url, opts);
+      }
+      const html = JSON.parse(opts.body || '{}').htmlContent || '';
+      const found = html.match(/>(\d{6})</);
+      const index = registered.length;
+      if (found) registered.push(found[1]);
+      await new Promise((resolve) => setTimeout(resolve, index === 0 ? 60 : 5));
+      calls.fetch += 1;
+      return { ok: true, status: 200, json: async () => ({}) };
+    };
+    const beforeCreate = calls.createUser;
+    await Promise.all([0, 1].map(() => nativeFetch(
+      `http://127.0.0.1:${revPort}/api/auth/otp/send`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'register-order@example.test', purpose: 'register' })
+      }
+    )));
+    const oldRegister = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'register-order@example.test',
+        token: registered[0],
+        password: 'fixture-pass-9',
+        full_name: 'Fixture'
+      })
+    });
+    const loginWithRegister = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'register-order@example.test', token: registered[1] })
+    });
+    const otherEmail = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'autre@example.test',
+        token: registered[1],
+        password: 'fixture-pass-9',
+        full_name: 'Fixture'
+      })
+    });
+    const newRegister = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'register-order@example.test',
+        token: registered[1],
+        password: 'fixture-pass-9',
+        full_name: 'Fixture'
+      })
+    });
+    const replayRegister = await nativeFetch(`http://127.0.0.1:${revPort}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'register-order@example.test',
+        token: registered[1],
+        password: 'fixture-pass-9',
+        full_name: 'Fixture'
+      })
+    });
+    assert(
+      'register : ancien d\'abord, nouveau une fois, rejeu refusé',
+      oldRegister.status === 400
+      && loginWithRegister.status === 400
+      && otherEmail.status === 400
+      && newRegister.status === 200
+      && replayRegister.status === 400
+      && calls.createUser === beforeCreate + 1
+    );
   } finally {
     await new Promise((resolve) => revServer.close(resolve));
   }

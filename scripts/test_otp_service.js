@@ -61,15 +61,27 @@ check('échec ne rend pas le quota', quota.prepare('quota@example.test', 'login'
 clock += 1001;
 check('fenêtre rouverte', quota.prepare('quota@example.test', 'login', true).ok === true);
 
-const order = createOtpBroker({ now: () => clock, makeCode: () => String(900000 + order._n++) });
+const order = createOtpBroker({ now: () => clock, maxAttempts: 5, makeCode: () => String(900000 + order._n++).slice(-6) });
 order._n = 1;
-const first = order.prepare('order@example.test', 'reset', true);
-const second = order.prepare('order@example.test', 'reset', true);
-const lateFirst = order.commit(first.email, 'reset', first.code, 'brevo', first.reservationId);
-check('réponse ancienne ignorée', lateFirst.stale === true && order.verify('order@example.test', first.code, 'reset', false).ok === false);
-order.commit(second.email, 'reset', second.code, 'resend', second.reservationId);
-check('code récent actif', order.verify('order@example.test', second.code, 'reset', true).ok === true);
-check('code ancien refusé', order.verify('order@example.test', first.code, 'reset').ok === false);
+const nextUse = { login: 'register', register: 'reset', reset: 'login' };
+['login', 'register', 'reset'].forEach((purpose) => {
+  const email = `order-${purpose}@example.test`;
+  const older = order.prepare(email, purpose, true);
+  const newer = order.prepare(email, purpose, true);
+  const fast = order.commit(newer.email, purpose, newer.code, 'resend', newer.reservationId);
+  const slow = order.commit(older.email, purpose, older.code, 'brevo', older.reservationId);
+  const oldTry = order.verify(email, older.code, purpose, true);
+  const crossedUse = order.verify(email, newer.code, nextUse[purpose], true);
+  const crossedEmail = order.verify('autre@example.test', newer.code, purpose, true);
+  const accepted = order.verify(email, newer.code, purpose, true);
+  const replay = order.verify(email, newer.code, purpose, true);
+  check(`${purpose} réponse tardive ignorée`, fast.ok === true && slow.stale === true);
+  check(`${purpose} ancien d'abord sans invalider`, oldTry.ok === false && oldTry.status === 400);
+  check(`${purpose} usage croisé sans invalider`, crossedUse.ok === false);
+  check(`${purpose} email croisé sans invalider`, crossedEmail.ok === false);
+  check(`${purpose} nouveau ensuite une fois`, accepted.ok === true);
+  check(`${purpose} rejeu refusé`, replay.ok === false && replay.status === 400);
+});
 
 if (failures.length) {
   console.error('ÉCHEC', failures.join(', '));
