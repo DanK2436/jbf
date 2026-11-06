@@ -8,9 +8,9 @@
   <link rel="stylesheet" href="css/main.css">
   <style>
     .blog-hero {
-      background: var(--pink);
+      background: var(--pink-pale);
       padding: 9rem 0 4.5rem;
-      color: #fff;
+      color: var(--black);
     }
     .blog-hero-title {
       font-family: 'Poppins', 'Inter', sans-serif;
@@ -22,7 +22,7 @@
     }
     .blog-hero-sub {
       font-size: 1.05rem;
-      color: rgba(255,255,255,0.85);
+      color: var(--text-body);
       max-width: 640px;
       line-height: 1.7;
     }
@@ -453,6 +453,23 @@ document.querySelectorAll('#navMenu .nav-link').forEach(link => {
   });
 });
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function sanitizeArticleHtml(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = String(html || '');
+  tpl.content.querySelectorAll('script, iframe, object, embed, link, meta').forEach((node) => node.remove());
+  tpl.content.querySelectorAll('*').forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = attr.value || '';
+      if (name.startsWith('on') || name === 'srcdoc') el.removeAttribute(attr.name);
+      if ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(value)) el.removeAttribute(attr.name);
+    });
+  });
+  return tpl.innerHTML;
+}
 function renderBlog() {
   const grid = document.getElementById('blogGrid');
   const featContainer = document.getElementById('blogFeaturedContainer');
@@ -480,16 +497,16 @@ function renderBlog() {
       featContainer.innerHTML = `
         <div class="blog-featured reveal visible" onclick="openArticleModal(${feat.id})">
           <div class="bf-img-wrap">
-            <img src="${feat.img || 'assets/gallery_mining.jpg'}" alt="${feat.title}" class="bf-img"
+            <img src="${escapeHtml(feat.img || 'assets/gallery_mining.jpg')}" alt="${escapeHtml(feat.title)}" class="bf-img"
                  onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
           </div>
           <div class="bf-body">
             <div class="bf-meta">
               <span style="background: var(--pink); color: #fff; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;">À la une</span>
-              <span>${feat.date}</span> &bull; <span>${feat.readTime}</span>
+              <span>${escapeHtml(feat.date)}</span> &bull; <span>${escapeHtml(feat.readTime)}</span>
             </div>
-            <h2 class="bf-title">${feat.title}</h2>
-            <p class="bf-excerpt">${feat.excerpt}</p>
+            <h2 class="bf-title">${escapeHtml(feat.title)}</h2>
+            <p class="bf-excerpt">${escapeHtml(feat.excerpt)}</p>
             <div>
               <span class="btn btn-pink btn-sm">Lire l'article complet →</span>
             </div>
@@ -507,19 +524,19 @@ function renderBlog() {
   grid.innerHTML = listToRender.map(a => `
     <div class="b-card reveal visible" onclick="openArticleModal(${a.id})">
       <div class="b-img-wrap">
-        <img src="${a.img || 'assets/gallery_mining.jpg'}" alt="${a.title}" class="b-img" loading="lazy"
+        <img src="${escapeHtml(a.img || 'assets/gallery_mining.jpg')}" alt="${escapeHtml(a.title)}" class="b-img" loading="lazy"
              onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
       </div>
       <div class="b-body">
         <div>
           <div class="b-meta">
-            <span style="color:var(--pink); font-weight:800; text-transform:uppercase;">${a.catName}</span> &bull; <span>${a.date}</span>
+            <span style="color:var(--pink); font-weight:800; text-transform:uppercase;">${escapeHtml(a.catName)}</span> &bull; <span>${escapeHtml(a.date)}</span>
           </div>
-          <h3 class="b-title">${a.title}</h3>
-          <p class="b-excerpt">${a.excerpt}</p>
+          <h3 class="b-title">${escapeHtml(a.title)}</h3>
+          <p class="b-excerpt">${escapeHtml(a.excerpt)}</p>
         </div>
         <div class="b-footer">
-          <span>${a.readTime}</span>
+          <span>${escapeHtml(a.readTime)}</span>
           <span style="display:inline-flex; align-items:center; gap:4px;">Lire l'analyse →</span>
         </div>
       </div>
@@ -542,7 +559,7 @@ function openArticleModal(id) {
   document.getElementById('artModalTag').textContent = article.catName;
   document.getElementById('artModalTitle').textContent = article.title;
   document.getElementById('artModalMeta').textContent = `Publié le ${article.date} &bull; ${article.readTime} &bull; JBF SERVICES Documentation`;
-  document.getElementById('artModalBody').innerHTML = article.content;
+  document.getElementById('artModalBody').innerHTML = sanitizeArticleHtml(article.content);
 
   document.getElementById('articleModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';

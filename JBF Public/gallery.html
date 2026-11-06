@@ -8,9 +8,9 @@
   <link rel="stylesheet" href="css/main.css">
   <style>
     .gallery-hero {
-      background: var(--pink);
+      background: var(--pink-pale);
       padding: 9rem 0 4.5rem;
-      color: #fff;
+      color: var(--black);
     }
     .gallery-hero-title {
       font-family: 'Poppins', 'Inter', sans-serif;
@@ -22,7 +22,7 @@
     }
     .gallery-hero-sub {
       font-size: 1.05rem;
-      color: rgba(255,255,255,0.85);
+      color: var(--text-body);
       max-width: 640px;
       line-height: 1.7;
     }
@@ -422,6 +422,9 @@ document.querySelectorAll('#navMenu .nav-link').forEach(link => {
   });
 });
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
 function renderGallery() {
   const grid = document.getElementById('galleryGrid');
   const filtered = GALLERY_DATA.filter(item => {
@@ -442,21 +445,21 @@ function renderGallery() {
   grid.innerHTML = filtered.map(item => `
     <div class="g-card reveal visible" onclick="openGalleryModal(${item.id})">
       <div class="g-img-wrap">
-        <img src="${item.img_url || item.img || ''}" alt="${item.title}" class="g-img" loading="lazy"
+        <img src="${escapeHtml(item.img_url || item.img || '')}" alt="${escapeHtml(item.title || item.titre || '')}" class="g-img" loading="lazy"
              onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
-        <span class="g-tag">${item.catName || item.categorie || 'Réalisation'}</span>
+        <span class="g-tag">${escapeHtml(item.catName || item.categorie || 'Réalisation')}</span>
         <span class="g-badge-loc">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${item.loc || item.localite || ''}
+          ${escapeHtml(item.loc || item.localite || '')}
         </span>
       </div>
       <div class="g-body">
         <div>
-          <h3 class="g-title">${item.title || item.titre}</h3>
-          <p class="g-desc">${item.desc || item.description || ''}</p>
+          <h3 class="g-title">${escapeHtml(item.title || item.titre || '')}</h3>
+          <p class="g-desc">${escapeHtml(item.desc || item.description || '')}</p>
         </div>
         <div class="g-footer">
-          <span>${item.period || item.periode || ''}</span>
+          <span>${escapeHtml(item.period || item.periode || '')}</span>
           <span style="display:inline-flex; align-items:center; gap:4px;">Voir le dossier →</span>
         </div>
       </div>

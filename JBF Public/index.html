@@ -56,6 +56,26 @@
   </style>
 </head>
 <body>
+<div class="boot-overlay" id="bootOverlay">
+  <img class="boot-logo" src="assets/logo.png" alt="" width="240" height="72">
+</div>
+<script>
+(function () {
+  var el = document.getElementById('bootOverlay');
+  if (!el) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function done() {
+    if (!el.isConnected) return;
+    el.remove();
+  }
+  var img = el.querySelector('img');
+  if (img) img.addEventListener('error', done);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') done();
+  });
+  setTimeout(done, reduce ? 400 : 6200);
+})();
+</script>
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-transparent" id="navbar">
@@ -100,12 +120,13 @@
         Votre partenaire polyvalent certifié pour le secteur minier, l'agroalimentaire, le génie civil, la maintenance et la logistique. 15 domaines d'expertise intégrés sur toute la République Démocratique du Congo.
       </p>
       <div class="hero-service-dots" id="heroServiceDots" aria-label="Navigation des 15 services"></div>
+      <p class="visually-hidden" id="heroMotionNote" aria-live="polite"></p>
       <div class="hero-btns">
         <a href="services.html" class="btn btn-outline-white btn-lg">
           Consulter nos 15 Services →
         </a>
-        <a href="../JBF Client/auth/login.html" class="btn btn-lg" style="background: linear-gradient(135deg, #E6007E 0%, #8B004A 100%); color: #fff; border: none; box-shadow: 0 4px 20px rgba(230,0,126,0.4);">
-          Espace Client & Devis Gratuit →
+        <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-lg">
+          Espace Client &amp; Devis Gratuit →
         </a>
       </div>
     </div>
@@ -169,23 +190,31 @@
 <!-- TICKER -->
 <div class="ticker">
   <div class="ticker-wrap">
-    <div class="ticker-item">Sous-traitance Minière &bull; Katanga &amp; Lualaba<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Catering &amp; Restauration Collective<span class="ticker-sep"></span></div>
-    <div class="ticker-item">BTP &amp; Génie Civil Industriel<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Maintenance &amp; Soudure Haute Précision<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Gardiennage &amp; Sécurisation de Sites<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Logistique &amp; Flotte de Transport<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Conformité ARSP &amp; Standards HSE<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Sous-traitance Minière &bull; Katanga &amp; Lualaba<span class="ticker-sep"></span></div>
-    <div class="ticker-item">Catering &amp; Restauration Collective<span class="ticker-sep"></span></div>
-    <div class="ticker-item">BTP &amp; Génie Civil Industriel<span class="ticker-sep"></span></div>
+    <div class="ticker-seq">
+      <div class="ticker-item">Sous-traitance Minière &bull; Katanga &amp; Lualaba<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Catering &amp; Restauration Collective<span class="ticker-sep"></span></div>
+      <div class="ticker-item">BTP &amp; Génie Civil Industriel<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Maintenance &amp; Soudure Haute Précision<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Gardiennage &amp; Sécurisation de Sites<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Logistique &amp; Flotte de Transport<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Conformité ARSP &amp; Standards HSE<span class="ticker-sep"></span></div>
+    </div>
+    <div class="ticker-seq ticker-clone" aria-hidden="true">
+      <div class="ticker-item">Sous-traitance Minière &bull; Katanga &amp; Lualaba<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Catering &amp; Restauration Collective<span class="ticker-sep"></span></div>
+      <div class="ticker-item">BTP &amp; Génie Civil Industriel<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Maintenance &amp; Soudure Haute Précision<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Gardiennage &amp; Sécurisation de Sites<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Logistique &amp; Flotte de Transport<span class="ticker-sep"></span></div>
+      <div class="ticker-item">Conformité ARSP &amp; Standards HSE<span class="ticker-sep"></span></div>
+    </div>
   </div>
 </div>
 
 <!-- ================================================================
      15 SERVICES — Section Unique & Structurée
      ================================================================ -->
-<section class="sectors-section" style="padding: 5.5rem 0 6rem; background: #fff;">
+<section class="sectors-section" style="padding: 5.5rem 0 6rem;">
   <div class="container">
     <div class="sh-left reveal">
       <div class="s-tag">15 DOMAINES DE COMPÉTENCE</div>
@@ -247,7 +276,7 @@
 <!-- ================================================================
      ENGAGEMENTS & CONFORMITÉ LÉGALE (Garanties Institutionnelles)
      ================================================================ -->
-<section style="background: var(--gray-light); padding: 5.5rem 0 6rem;">
+<section style="background: var(--pink-pale); padding: 5.5rem 0 6rem;">
   <div class="container">
     <div class="sh-center reveal">
       <div class="s-tag">CADRE LÉGAL &amp; GARANTIES</div>
@@ -294,7 +323,7 @@
 <!-- ================================================================
      PROCESSUS OPÉRATIONNEL
      ================================================================ -->
-<section class="how-section" style="background: #fff; padding: 5.5rem 0 6rem;">
+<section class="how-section" style="padding: 5.5rem 0 6rem;">
   <div class="container">
     <div class="sh-center reveal">
       <div class="s-tag">MÉTHODOLOGIE OPÉRATIONNELLE</div>

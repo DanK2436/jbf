@@ -8,6 +8,7 @@ import urllib.request
 import urllib.error
 import random
 from datetime import date
+from urllib.parse import unquote, urlsplit
 
 def get_local_ip():
     try:
@@ -21,7 +22,18 @@ def get_local_ip():
 
 PORT = 8080
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BIND_HOST = os.environ.get('JBF_BIND_HOST', '127.0.0.1')
 LOCAL_IP = get_local_ip()
+SECURITY_CSP = (
+    "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+    "form-action 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+    "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'; "
+    "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; "
+    "img-src 'self' data: blob: https:; "
+    "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net "
+    "http://127.0.0.1:* http://localhost:*"
+)
+PUBLIC_TREES = {'JBF Public', 'JBF Client', 'assets', 'js'}
 
 # Lecture des clés depuis backend/.env (sécurisé, non committé)
 def load_env_file():
@@ -40,7 +52,10 @@ _env = load_env_file()
 BREVO_API_KEY = os.environ.get('BREVO_API_KEY') or _env.get('BREVO_API_KEY', '')
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY') or _env.get('RESEND_API_KEY', '')
 ADMIN_OFFICIAL_EMAIL = (os.environ.get('ADMIN_OFFICIAL_EMAIL') or _env.get('ADMIN_OFFICIAL_EMAIL', 'services@admin.jbf')).strip().lower()
-ADMIN_OFFICIAL_PASSWORD = os.environ.get('ADMIN_OFFICIAL_PASSWORD') or _env.get('ADMIN_OFFICIAL_PASSWORD', 'Services+243JBF')
+if 'ADMIN_OFFICIAL_PASSWORD' in os.environ:
+    ADMIN_OFFICIAL_PASSWORD = (os.environ.get('ADMIN_OFFICIAL_PASSWORD') or '').strip()
+else:
+    ADMIN_OFFICIAL_PASSWORD = (_env.get('ADMIN_OFFICIAL_PASSWORD') or '').strip()
 SUPABASE_URL = os.environ.get('SUPABASE_URL') or _env.get('SUPABASE_URL', 'https://dvzwqxcaiagczyonrhsg.supabase.co')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY') or _env.get('SUPABASE_ANON_KEY', '')
 DAILY_LIMIT = 380
@@ -175,75 +190,161 @@ def send_email_server(to_email, subject, html, preferred=None):
         'details': {primary: res, secondary: res2}
     }
 
+def normalize_public_path(raw_path):
+    """Décode l'URL et refuse traversée, dotfiles et octets nuls."""
+    path = urlsplit(raw_path or '').path
+    if '\x00' in path or '%00' in path.lower():
+        return None
+    decoded = path
+    for _ in range(5):
+        nxt = unquote(decoded)
+        if nxt == decoded:
+            break
+        decoded = nxt
+    if '\x00' in decoded or '\\' in decoded:
+        return None
+    parts = []
+    for part in decoded.split('/'):
+        if part in ('', '.'):
+            continue
+        if part == '..' or part.startswith('.'):
+            return None
+        parts.append(part)
+    return parts
+
+
+def public_file_allowed(parts):
+    if not parts:
+        return False
+    if len(parts) == 1 and parts[0] == 'index.html':
+        return True
+    if parts[0] in PUBLIC_TREES:
+        return True
+    if parts[0] == 'supabase' and len(parts) == 2 and parts[1].endswith('.js'):
+        return True
+    return False
+
+
+def resolve_public_file(base_dir, parts):
+    if not public_file_allowed(parts):
+        return None
+    root = os.path.realpath(base_dir)
+    candidate = os.path.realpath(os.path.join(root, *parts))
+    try:
+        if os.path.commonpath([root, candidate]) != root:
+            return None
+    except ValueError:
+        return None
+    if os.path.isdir(candidate):
+        candidate = os.path.realpath(os.path.join(candidate, 'index.html'))
+        try:
+            if os.path.commonpath([root, candidate]) != root:
+                return None
+        except ValueError:
+            return None
+    if not os.path.isfile(candidate):
+        return None
+    name = os.path.basename(candidate).lower()
+    if name.startswith('.') or name.endswith(('.env', '.pem', '.key', '.sql', '.sqlite', '.db')):
+        return None
+    return candidate
+
+
+def admin_password_ok(configured, supplied):
+    secret = (configured or '').strip()
+    given = supplied or ''
+    if not secret or not str(given).strip():
+        return False
+    return given == secret or str(given).strip() == secret
+
+
 class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        path = urlsplit(self.path or '').path
+        if not path.startswith('/api/mail/'):
+            self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Content-Security-Policy', SECURITY_CSP)
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
         super().end_headers()
+
+    def _client_is_loopback(self):
+        host = self.client_address[0]
+        return host in ('127.0.0.1', '::1') or host.startswith('::ffff:127.0.0.1')
+
+    def _mail_caller_allowed(self):
+        if not self._client_is_loopback():
+            return False
+        sec = (self.headers.get('Sec-Fetch-Site') or '').lower()
+        if sec == 'same-origin':
+            return True
+        origin = self.headers.get('Origin') or ''
+        port = self.server.server_address[1]
+        return origin in (f'http://127.0.0.1:{port}', f'http://localhost:{port}')
+
+    def _send_json(self, status, payload):
+        body = json.dumps(payload).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_public_file(self):
+        parts = normalize_public_path(self.path)
+        target = resolve_public_file(BASE_DIR, parts) if parts is not None else None
+        if parts is None or not public_file_allowed(parts):
+            self.send_error(403, 'Accès interdit')
+            return
+        if not target:
+            self.send_error(404, 'Introuvable')
+            return
+        try:
+            with open(target, 'rb') as handle:
+                data = handle.read()
+        except OSError:
+            self.send_error(404, 'Introuvable')
+            return
+        self.send_response(200)
+        self.send_header('Content-Type', self.guess_type(target))
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        if self.command != 'HEAD':
+            self.wfile.write(data)
 
     def do_OPTIONS(self):
         self.send_response(200)
         self.end_headers()
 
+    def do_HEAD(self):
+        self.do_GET()
+
     def do_GET(self):
-        if self.path in ('/', ''):
+        path = urlsplit(self.path or '').path
+        if path in ('/', ''):
             self.send_response(302)
             self.send_header('Location', '/JBF%20Public/index.html')
             self.end_headers()
             return
-        elif self.path == '/api/config':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            data = {
+        if path == '/api/config':
+            self._send_json(200, {
                 'supabaseUrl': SUPABASE_URL,
                 'supabaseAnonKey': SUPABASE_ANON_KEY
-            }
-            self.wfile.write(json.dumps(data).encode('utf-8'))
+            })
             return
-        super().do_GET()
+        self._serve_public_file()
 
     def do_POST(self):
-        if self.path == '/api/mail/send':
-            try:
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length)
-                payload = json.loads(body.decode('utf-8'))
-                
-                to_email = payload.get('to')
-                subject = payload.get('subject')
-                html = payload.get('html')
-                preferred = payload.get('provider')
-                
-                if not to_email or not subject or not html:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'success': False, 'error': 'Champs obligatoires manquants (to, subject, html)'}).encode('utf-8'))
-                    return
-                
-                import re
-                otp_match = re.search(r'\b(\d{6})\b', (subject or '') + ' ' + (html or ''))
-                if otp_match:
-                    print(f"\n============================================================")
-                    print(f"🔑 [JBF OTP CONSOLE] CODE DE CONNEXION : {otp_match.group(1)} (POUR: {to_email})")
-                    print(f"============================================================\n", flush=True)
-
-                result = send_email_server(to_email, subject, html, preferred)
-                status_code = 200 if result.get('success') else 500
-                self.send_response(status_code)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode('utf-8'))
-                return
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
-                return
+        if urlsplit(self.path or '').path == '/api/mail/send':
+            self._send_json(403, {
+                'success': False,
+                'error': "Relais de courriel arbitraire désactivé : aucun contrôle serveur authentifié. Origin, Sec-Fetch-Site et l'adresse loopback ne suffisent pas."
+            })
+            return
 
         elif self.path == '/api/admin/login':
             try:
@@ -262,7 +363,7 @@ class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 is_email_match = (email == ADMIN_OFFICIAL_EMAIL)
-                is_pass_match = (password == ADMIN_OFFICIAL_PASSWORD or password.strip() == ADMIN_OFFICIAL_PASSWORD.strip())
+                is_pass_match = admin_password_ok(ADMIN_OFFICIAL_PASSWORD, password)
 
                 if is_email_match and is_pass_match:
                     self.send_response(200)
@@ -295,13 +396,12 @@ class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(404)
         self.end_headers()
 
-os.chdir(BASE_DIR)
-
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
 if __name__ == '__main__':
-    with ReusableTCPServer(("0.0.0.0", PORT), JBFRequestHandler) as httpd:
+    os.chdir(BASE_DIR)
+    with ReusableTCPServer((BIND_HOST, PORT), JBFRequestHandler) as httpd:
         print("=" * 60)
         print("   JBF SERVICES SARL — SERVEUR LOCAL DEMARRE AVEC SUCCES")
         print("=" * 60)

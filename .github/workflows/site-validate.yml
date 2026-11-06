@@ -1,0 +1,41 @@
+name: Site — validation web
+
+on:
+  push:
+    branches: [main, 'cursor/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Contrôles statiques du site
+        run: python3 scripts/validate_site.py
+      - name: Sécurité serveur local et gardes admin
+        run: |
+          python3 scripts/test_serve_security.py
+          node scripts/test_security_guards.js
+      - name: Syntaxe JavaScript
+        run: |
+          node --check "JBF Public/js/hero-slideshow.js"
+          node --check supabase/mail-service.js
+          node --check "JBF Client/js/config.js"
+      - name: Tests backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm test
+          node ../scripts/test_security_headers.js
+          node ../scripts/test_security_guards.js
+          node ../scripts/test_otp_service.js
+          node ../scripts/test_auth_routes.js
+      - name: Audit des dépendances de production
+        working-directory: backend
+        run: npm audit --omit=dev --audit-level=high

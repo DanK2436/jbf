@@ -69,57 +69,33 @@
         // Envoi OTP via API Brevo / Resend (et non via Supabase)
         async sendOtp(email) {
             const cleanEmail = email.trim().toLowerCase();
-            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-            sessionStorage.setItem('JBF_AUTH_OTP_' + cleanEmail, JSON.stringify({
-                code: otpCode,
-                expiresAt: Date.now() + 10 * 60 * 1000
-            }));
-
-            // Envoi exclusif via Brevo et Resend (JBFMailService)
-            if (window.JBFMailService) {
-                const res = await window.JBFMailService.sendClientLoginOtp(cleanEmail, otpCode);
-                console.log(`[JBFAuth] OTP (${otpCode}) transmis via Brevo / Resend :`, res);
-                return res;
+            sessionStorage.removeItem('JBF_AUTH_OTP_' + cleanEmail);
+            if (!window.JBFMailService) {
+                return { success: false, simulated: false, error: 'Service de messagerie indisponible.' };
             }
-
-            return { success: true, simulated: true, provider: 'local' };
+            const res = await window.JBFMailService.sendClientLoginOtp(cleanEmail);
+            if (!res || res.simulated || res.success === false) {
+                return { success: false, simulated: false, error: 'Envoi serveur refusé.' };
+            }
+            return res;
         },
 
-        // Vérification OTP locale sécurisée (sans dépendre de Supabase Auth)
         async verifyOtp(email, token, targetSpace) {
             const cleanEmail = email.trim().toLowerCase();
             const inputToken = token.trim();
-
-            const stored = sessionStorage.getItem('JBF_AUTH_OTP_' + cleanEmail) ||
-                           sessionStorage.getItem('JBF_EMAIL_OTP_' + cleanEmail) ||
-                           sessionStorage.getItem('JBF_REG_OTP_' + cleanEmail);
-
-            let isValid = false;
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.code === inputToken && Date.now() <= parsed.expiresAt) {
-                        isValid = true;
-                    }
-                } catch(e) {}
+            if (!window.JBFMailService?.verifyServerOtp) {
+                throw new Error('Vérification serveur indisponible. Un code local n\'authentifie pas.');
             }
-
-            if (!isValid) {
+            const verified = await window.JBFMailService.verifyServerOtp(cleanEmail, inputToken);
+            if (!verified || verified.success === false || verified.simulated || verified.demonstration) {
                 throw new Error('Code OTP incorrect ou expiré. Veuillez vérifier votre boîte mail.');
             }
-
-            // Génération de la session pour l'espace ciblé
-            const user = {
+            const user = verified.user || {
                 id: 'usr_' + Date.now().toString().slice(-6),
                 email: cleanEmail,
                 role: targetSpace || 'client'
             };
-            const session = {
-                access_token: 'jbf_session_' + Date.now(),
-                user: user
-            };
-
+            const session = verified.session || { user: user };
             return await this.handlePostLogin(user, session, targetSpace);
         },
 
@@ -289,15 +265,16 @@
             return { user: clientUser, redirect: '/JBF Client/dashboard.html' };
         },
 
-        async sendPasswordReset(email, options = {}) {
-            const client = getSupabase();
-            if (!client) throw new Error('Supabase SDK indisponible');
-            const cleanEmail = email.trim().toLowerCase();
-            const redirectTo = options.redirectTo || (window.location.origin + '/JBF%20Client/auth/forgot-password.html');
-
-            const { data, error } = await client.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
-            if (error) throw error;
-            return data;
+        async sendPasswordReset(email) {
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            if (!window.JBFMailService?.sendClientPasswordReset) {
+                throw new Error('Réinitialisation indisponible : le code est envoyé par le serveur Brevo/Resend, pas par Supabase.');
+            }
+            const res = await window.JBFMailService.sendClientPasswordReset(cleanEmail);
+            if (!res || res.simulated || res.success === false) {
+                throw new Error('Le serveur n\'a pas confirmé l\'envoi du code.');
+            }
+            return res;
         },
 
         async updatePassword(newPassword) {

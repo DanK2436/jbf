@@ -174,8 +174,9 @@
           </div>
           <div class="card-body">
             <div class="chart-container">
-              <canvas id="chartClientExpenses"></canvas>
+              <canvas id="chartClientExpenses" role="img" aria-describedby="expensesDirect"></canvas>
             </div>
+            <p class="chart-direct" id="expensesDirect"></p>
             <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
               <div>
                 <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Total Facturé 2026</span>
@@ -201,8 +202,9 @@
           </div>
           <div class="card-body">
             <div class="chart-container-sm">
-              <canvas id="chartClientSectors"></canvas>
+              <canvas id="chartClientSectors" role="img" aria-describedby="sectorsDirect"></canvas>
             </div>
+            <p class="chart-direct" id="sectorsDirect"></p>
             <div class="legend-custom" id="clientSectorsLegend">
               <!-- Injecté dynamiquement -->
             </div>
@@ -222,8 +224,9 @@
           </div>
           <div class="card-body">
             <div class="chart-container">
-              <canvas id="chartClientSLA"></canvas>
+              <canvas id="chartClientSLA" role="img" aria-describedby="slaDirect"></canvas>
             </div>
+            <p class="chart-direct" id="slaDirect"></p>
           </div>
         </div>
 
@@ -235,8 +238,9 @@
           </div>
           <div class="card-body">
             <div class="chart-container-sm">
-              <canvas id="chartClientPipeline"></canvas>
+              <canvas id="chartClientPipeline" role="img" aria-describedby="pipelineDirect"></canvas>
             </div>
+            <p class="chart-direct" id="pipelineDirect"></p>
             <div class="legend-custom" id="clientPipelineLegend">
               <!-- Injecté dynamiquement -->
             </div>
@@ -545,249 +549,244 @@
     window.clientCore.showToast(`Demande de devis pour "${service}" enregistrée avec succès.`, 'success');
   }
 
-  function initClientCharts() {
-    Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
-    Chart.defaults.color = '#64748B';
+  function pattern(ctx, kind) {
+    const tile = document.createElement('canvas');
+    tile.width = 10;
+    tile.height = 10;
+    const g = tile.getContext('2d');
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, 10, 10);
+    if (kind === 'solid') {
+      g.fillStyle = '#7A1248';
+      g.fillRect(0, 0, 10, 10);
+    } else if (kind === 'stripe') {
+      g.strokeStyle = '#141416';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(0, 10);
+      g.lineTo(10, 0);
+      g.stroke();
+    } else if (kind === 'dots') {
+      g.fillStyle = '#52525B';
+      g.beginPath();
+      g.arc(5, 5, 1.8, 0, Math.PI * 2);
+      g.fill();
+    } else {
+      g.strokeStyle = '#8E1A56';
+      g.lineWidth = 1.2;
+      g.beginPath();
+      g.moveTo(0, 10); g.lineTo(10, 0);
+      g.moveTo(0, 0); g.lineTo(10, 10);
+      g.stroke();
+    }
+    return ctx.createPattern(tile, 'repeat');
+  }
 
-    // 1. Chart Dépenses & Prestations (Area Line)
+  function chartAnimation() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return reduce ? false : { duration: 200 };
+  }
+
+  function writeSeriesCaption(id, sentence) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = sentence;
+  }
+
+  function writeExpenseCaption() {
+    if (!clientExpensesChart) return;
+    const labels = clientExpensesChart.data.labels;
+    const engaged = clientExpensesChart.data.datasets[0].data;
+    const paid = clientExpensesChart.data.datasets[1].data;
+    const line = (name, values) => name + ' : ' + labels.map((label, i) => label + ' ' + values[i] + ' USD').join(', ');
+    writeSeriesCaption('expensesDirect', line('Prestations engagées, trait plein', engaged) + '. ' + line('Factures réglées, trait pointillé', paid) + '.');
+  }
+
+  function legendRow(patternName, label, value) {
+    return `<div class="legend-item"><div style="display:flex;align-items:center;min-width:0;"><span class="legend-swatch ${patternName}" aria-hidden="true"></span><span style="font-weight:600;color:var(--text-primary);">${label}</span></div><span style="font-weight:700;color:var(--text-secondary);">${value}</span></div>`;
+  }
+
+  function initClientCharts() {
+    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#2A2A2E';
+    Chart.defaults.animation = chartAnimation();
+
     const ctxExp = document.getElementById('chartClientExpenses');
     if (ctxExp) {
-      const gradPink = ctxExp.getContext('2d').createLinearGradient(0, 0, 0, 280);
-      gradPink.addColorStop(0, 'rgba(230, 0, 126, 0.28)');
-      gradPink.addColorStop(0.7, 'rgba(230, 0, 126, 0.04)');
-      gradPink.addColorStop(1, 'rgba(230, 0, 126, 0.0)');
-
-      const gradGreen = ctxExp.getContext('2d').createLinearGradient(0, 0, 0, 280);
-      gradGreen.addColorStop(0, 'rgba(5, 150, 105, 0.22)');
-      gradGreen.addColorStop(1, 'rgba(5, 150, 105, 0.0)');
-
+      const g = ctxExp.getContext('2d');
       clientExpensesChart = new Chart(ctxExp, {
         type: 'line',
         data: {
           labels: ['Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept 2026'],
           datasets: [
             {
-              label: 'Prestations Engagées ($ USD)',
+              label: 'Prestations engagées (USD)',
               data: [0, 0, 0, 0, 0, 0, 0, 0],
-              borderColor: '#E6007E',
-              backgroundColor: gradPink,
+              borderColor: '#7A1248',
+              backgroundColor: 'transparent',
               borderWidth: 2.5,
-              tension: 0.35,
-              fill: true,
-              pointBackgroundColor: '#FFFFFF',
-              pointBorderColor: '#E6007E',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6
+              borderDash: [],
+              tension: 0,
+              fill: false,
+              pointStyle: 'circle',
+              pointBackgroundColor: '#7A1248',
+              pointBorderColor: '#141416',
+              pointRadius: 4
             },
             {
-              label: 'Factures Validées & Réglées ($ USD)',
+              label: 'Factures réglées (USD)',
               data: [0, 0, 0, 0, 0, 0, 0, 0],
-              borderColor: '#059669',
-              backgroundColor: gradGreen,
+              borderColor: '#141416',
+              backgroundColor: 'transparent',
               borderWidth: 2,
-              tension: 0.35,
-              fill: true,
+              borderDash: [6, 4],
+              tension: 0,
+              fill: false,
+              pointStyle: 'rect',
               pointBackgroundColor: '#FFFFFF',
-              pointBorderColor: '#059669',
-              pointBorderWidth: 2,
-              pointRadius: 3.5,
-              pointHoverRadius: 5
+              pointBorderColor: '#141416',
+              pointRadius: 4
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: {
-              position: 'top',
-              align: 'end',
-              labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11, weight: '600' } }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(c) {
-                  return ` ${c.dataset.label}: $${c.raw.toLocaleString()} USD`;
-                }
-              }
-            }
+            legend: { position: 'bottom', labels: { boxWidth: 18, usePointStyle: true, font: { size: 12, weight: '600' } } },
+            tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw} USD` } }
           },
           scales: {
-            y: {
-              grid: { color: '#F1F5F9' },
-              ticks: {
-                callback: function(v) { return '$' + (v / 1000) + 'k'; },
-                font: { size: 10 }
-              }
-            },
-            x: {
-              grid: { display: false },
-              ticks: { font: { size: 11 } }
-            }
+            y: { beginAtZero: true, grid: { color: '#D4D4D8' }, ticks: { callback: (v) => v + ' USD', font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
           }
         }
       });
+      writeExpenseCaption();
+      void g;
     }
 
-    // 2. Chart Pôles Contractés (Doughnut)
     const ctxSectors = document.getElementById('chartClientSectors');
     if (ctxSectors) {
       const sectorsData = [
-        { label: 'Catering & Vivres', value: 0, pct: 0, color: '#E6007E' },
-        { label: 'BTP & Maintenance', value: 0, pct: 0, color: '#059669' },
-        { label: 'Sécurité & Gardiennage', value: 0, pct: 0, color: '#2563EB' },
-        { label: 'Transport & Engins', value: 0, pct: 0, color: '#D97706' },
-        { label: 'Télécoms & IT', value: 0, pct: 0, color: '#8B5CF6' }
+        { label: 'Catering & Vivres', value: 0, pct: 0, pattern: 'solid' },
+        { label: 'BTP & Maintenance', value: 0, pct: 0, pattern: 'stripe' },
+        { label: 'Sécurité & Gardiennage', value: 0, pct: 0, pattern: 'dots' },
+        { label: 'Transport & Engins', value: 0, pct: 0, pattern: 'hatch' },
+        { label: 'Télécoms & IT', value: 0, pct: 0, pattern: 'stripe' }
       ];
-
+      const g = ctxSectors.getContext('2d');
       clientSectorsChart = new Chart(ctxSectors, {
         type: 'doughnut',
         data: {
           labels: sectorsData.map(d => d.label),
           datasets: [{
             data: sectorsData.map(d => d.pct),
-            backgroundColor: sectorsData.map(d => d.color),
-            borderWidth: 2,
-            borderColor: '#FFFFFF',
-            hoverOffset: 4
+            backgroundColor: sectorsData.map(d => pattern(g, d.pattern)),
+            borderColor: '#141416',
+            borderWidth: 1,
+            borderDash: [0, 0]
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '72%',
+          animation: chartAnimation(),
+          cutout: '62%',
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(c) {
-                  const item = sectorsData[c.dataIndex];
-                  return ` ${item.label}: ${item.pct}% ($${item.value.toLocaleString()} USD)`;
-                }
-              }
-            }
+            tooltip: { callbacks: { label: (c) => {
+              const item = sectorsData[c.dataIndex];
+              return ` ${item.label}: ${item.pct}% (${item.value} USD)`;
+            } } }
           }
         }
       });
-
       const legendBox = document.getElementById('clientSectorsLegend');
       if (legendBox) {
-        legendBox.innerHTML = sectorsData.map(d => `
-          <div class="legend-item">
-            <div style="display: flex; align-items: center;">
-              <span class="legend-color" style="background: ${d.color};"></span>
-              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
-            </div>
-            <span style="font-weight: 700; color: var(--text-secondary);">${d.pct}% ($${(d.value / 1000).toFixed(1)}k)</span>
-          </div>
-        `).join('');
+        legendBox.innerHTML = sectorsData.map(d => legendRow(d.pattern, d.label, `${d.pct}% (${d.value} USD)`)).join('');
       }
+      writeSeriesCaption('sectorsDirect', sectorsData.map(d => `${d.label} : ${d.pct}% soit ${d.value} USD`).join('. ') + '.');
     }
 
-    // 3. Chart Respect SLA par Chantier (Bar Chart)
     const ctxSLA = document.getElementById('chartClientSLA');
     if (ctxSLA) {
+      const g = ctxSLA.getContext('2d');
+      const labels = ['Site Minier Katanga', 'Kolwezi Base', 'Lubumbashi Dépôt', 'Likasi Usine', 'Fungurume Hub'];
+      const realised = [0, 0, 0, 0, 0];
+      const target = [0, 0, 0, 0, 0];
       clientSLAChart = new Chart(ctxSLA, {
         type: 'bar',
         data: {
-          labels: ['Site Minier Katanga', 'Kolwezi Base', 'Lubumbashi Dépôt', 'Likasi Usine', 'Fungurume Hub'],
+          labels,
           datasets: [
-            {
-              label: 'Délai Réalisé JBF (Jours)',
-              data: [0, 0, 0, 0, 0],
-              backgroundColor: '#E6007E',
-              borderRadius: 6
-            },
-            {
-              label: 'Objectif SLA Contractuel',
-              data: [0, 0, 0, 0, 0],
-              backgroundColor: '#CBD5E1',
-              borderRadius: 6
-            }
+            { label: 'Délai réalisé (jours, aplat)', data: realised, backgroundColor: pattern(g, 'solid'), borderColor: '#141416', borderWidth: 1 },
+            { label: 'Objectif SLA (jours, hachures)', data: target, backgroundColor: pattern(g, 'stripe'), borderColor: '#141416', borderWidth: 1 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           plugins: {
-            legend: {
-              position: 'top',
-              align: 'end',
-              labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11, weight: '600' } }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(c) { return ` ${c.dataset.label}: ${c.raw} jour(s)`; }
-              }
-            }
+            legend: { position: 'bottom', labels: { boxWidth: 16, font: { size: 12, weight: '600' } } },
+            tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw} jour(s)` } }
           },
           scales: {
-            y: {
-              grid: { color: '#F1F5F9' },
-              ticks: { callback: function(v) { return v + ' j'; }, font: { size: 10 } },
-              max: 2.5
-            },
-            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            y: { beginAtZero: true, grid: { color: '#D4D4D8' }, ticks: { callback: (v) => v + ' j', font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 40, minRotation: 0 } }
           }
         }
       });
+      writeSeriesCaption('slaDirect', labels.map((label, i) => `${label} : réalisé ${realised[i]} j, objectif ${target[i]} j`).join('. ') + '.');
     }
 
-    // 4. Chart Cycle de Vie des Demandes (Doughnut Pipeline)
     const ctxPipe = document.getElementById('chartClientPipeline');
     if (ctxPipe) {
       const pipeData = [
-        { label: 'Devis en Étude', count: 0, color: '#F59E0B' },
-        { label: 'Devis Validés', count: 0, color: '#059669' },
-        { label: 'Chantiers Actifs', count: 0, color: '#E6007E' },
-        { label: 'Missions Clôturées', count: 0, color: '#2563EB' }
+        { label: 'Devis en Étude', count: 0, pattern: 'stripe' },
+        { label: 'Devis Validés', count: 0, pattern: 'solid' },
+        { label: 'Chantiers Actifs', count: 0, pattern: 'dots' },
+        { label: 'Missions Clôturées', count: 0, pattern: 'hatch' }
       ];
-
+      const g = ctxPipe.getContext('2d');
       clientPipelineChart = new Chart(ctxPipe, {
         type: 'doughnut',
         data: {
           labels: pipeData.map(d => d.label),
           datasets: [{
             data: pipeData.map(d => d.count),
-            backgroundColor: pipeData.map(d => d.color),
-            borderWidth: 2,
-            borderColor: '#FFFFFF',
-            hoverOffset: 4
+            backgroundColor: pipeData.map(d => pattern(g, d.pattern)),
+            borderColor: '#141416',
+            borderWidth: 1
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '68%',
+          animation: chartAnimation(),
+          cutout: '58%',
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(c) {
-                  const item = pipeData[c.dataIndex];
-                  return ` ${item.label}: ${item.count} opération(s)`;
-                }
-              }
-            }
+            tooltip: { callbacks: { label: (c) => ` ${pipeData[c.dataIndex].label}: ${pipeData[c.dataIndex].count}` } }
           }
         }
       });
-
       const pipeLegend = document.getElementById('clientPipelineLegend');
-      if (pipeLegend) {
-        pipeLegend.innerHTML = pipeData.map(d => `
-          <div class="legend-item">
-            <div style="display: flex; align-items: center;">
-              <span class="legend-color" style="background: ${d.color};"></span>
-              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
-            </div>
-            <span style="font-weight: 700; color: var(--text-secondary);">${d.count}</span>
-          </div>
-        `).join('');
-      }
+      if (pipeLegend) pipeLegend.innerHTML = pipeData.map(d => legendRow(d.pattern, d.label, String(d.count))).join('');
+      writeSeriesCaption('pipelineDirect', pipeData.map(d => `${d.label} : ${d.count}`).join('. ') + '.');
+      window.__jbfPipeMeta = pipeData;
     }
+
+    motionMq.addEventListener?.('change', () => {
+      [clientExpensesChart, clientSectorsChart, clientSLAChart, clientPipelineChart].forEach((chart) => {
+        if (!chart) return;
+        chart.options.animation = chartAnimation();
+        chart.update();
+      });
+    });
   }
 
   async function loadChartData() {
@@ -836,20 +835,17 @@
       const pipeLegend = document.getElementById('clientPipelineLegend');
       if (pipeLegend) {
         const pipeData = [
-          { label: 'Devis en Étude', count: devisEnEtude, color: '#F59E0B' },
-          { label: 'Devis Validés', count: devisValides, color: '#059669' },
-          { label: 'Chantiers Actifs', count: missionsActives, color: '#E6007E' },
-          { label: 'Missions Clôturées', count: missionsCloturees, color: '#2563EB' }
+          { label: 'Devis en Étude', count: devisEnEtude, pattern: 'stripe' },
+          { label: 'Devis Validés', count: devisValides, pattern: 'solid' },
+          { label: 'Chantiers Actifs', count: missionsActives, pattern: 'dots' },
+          { label: 'Missions Clôturées', count: missionsCloturees, pattern: 'hatch' }
         ];
-        pipeLegend.innerHTML = pipeData.map(d => `
-          <div class="legend-item">
-            <div style="display: flex; align-items: center;">
-              <span class="legend-color" style="background: ${d.color};"></span>
-              <span style="font-weight: 600; color: var(--text-primary);">${d.label}</span>
-            </div>
-            <span style="font-weight: 700; color: var(--text-secondary);">${d.count}</span>
-          </div>
-        `).join('');
+        pipeLegend.innerHTML = pipeData.map(d => legendRow(d.pattern, d.label, String(d.count))).join('');
+        writeSeriesCaption('pipelineDirect', pipeData.map(d => `${d.label} : ${d.count}`).join('. ') + '.');
+        if (clientPipelineChart) {
+          const g = clientPipelineChart.canvas.getContext('2d');
+          clientPipelineChart.data.datasets[0].backgroundColor = pipeData.map(d => pattern(g, d.pattern));
+        }
       }
     }
   }
@@ -868,6 +864,7 @@
         clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.update();
+        writeExpenseCaption();
       }
     } else if (period === '30d') {
       if (label) label.textContent = 'Période Mensuelle';
@@ -876,6 +873,7 @@
         clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0];
         clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0];
         clientExpensesChart.update();
+        writeExpenseCaption();
       }
     } else {
       if (label) label.textContent = 'Cumul Année 2026';
@@ -884,6 +882,7 @@
         clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         clientExpensesChart.update();
+        writeExpenseCaption();
       }
     }
   }

@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="../css/client.css">
   <style>
     :root {
-      --brand-pink: #E6007E;
+      --brand-pink: #8E1A56;
       --brand-pink-dark: #C4006B;
-      --brand-pink-soft: #FFF0F7;
+      --brand-pink-soft: #F8E7F0;
       --brand-pink-border: rgba(230, 0, 126, 0.2);
       --slate-dark: #0F172A;
       --slate-gray: #475569;
@@ -778,6 +778,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/config.js"></script>
+<script src="../js/client-api.js"></script>
 <script src="../../supabase/mail-service.js"></script>
 <script>
   /* ======================================================
@@ -1018,17 +1019,14 @@
 
   // ── Envoi OTP Email via Brevo & Resend (et non via Supabase) ──
   async function sendRegistrationOtpEmail() {
-    activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    otpExpiresAt = Date.now() + 10 * 60 * 1000;
-
-    sessionStorage.setItem('JBF_REG_OTP_' + formData.email, JSON.stringify({
-      code: activeOtpCode,
-      expiresAt: otpExpiresAt
-    }));
-
-    if (window.JBFMailService) {
-      const res = await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
-      console.log('[Registration OTP Brevo/Resend Dispatch]:', res);
+    activeOtpCode = '';
+    sessionStorage.removeItem('JBF_REG_OTP_' + formData.email);
+    if (!window.JBFMailService) {
+      throw new Error('Service de messagerie indisponible.');
+    }
+    const res = await window.JBFMailService.sendClientLoginOtp(formData.email);
+    if (!res || res.simulated || res.success === false) {
+      throw new Error('Le serveur n\'a pas confirmé l\'envoi du code.');
     }
   }
 
@@ -1065,17 +1063,7 @@
     resendBtn.textContent = 'Envoi...';
 
     try {
-      activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      otpExpiresAt = Date.now() + 10 * 60 * 1000;
-
-      sessionStorage.setItem('JBF_REG_OTP_' + formData.email, JSON.stringify({
-        code: activeOtpCode,
-        expiresAt: otpExpiresAt
-      }));
-
-      if (window.JBFMailService) {
-        await window.JBFMailService.sendClientLoginOtp(formData.email, activeOtpCode);
-      }
+      await sendRegistrationOtpEmail();
 
       showAlert('Un nouveau code de vérification a été envoyé à votre adresse email.', 'success');
       startResendCountdown();
@@ -1149,20 +1137,11 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Création de votre espace en cours...';
 
     try {
-      // 1. Vérification locale du code OTP émis par Brevo / Resend
-      const stored = sessionStorage.getItem('JBF_REG_OTP_' + formData.email);
-      let isValid = (activeOtpCode && enteredCode === activeOtpCode);
-
-      if (!isValid && stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.code === enteredCode && Date.now() <= parsed.expiresAt) {
-            isValid = true;
-          }
-        } catch(e) {}
+      if (!window.JBFMailService?.verifyServerOtp) {
+        throw new Error('Vérification serveur indisponible. Un code local n\'authentifie pas.');
       }
-
-      if (!isValid) {
+      const verified = await window.JBFMailService.verifyServerOtp(formData.email, enteredCode);
+      if (!verified || verified.success === false || verified.simulated || verified.demonstration) {
         throw new Error('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou demander un nouveau code.');
       }
 

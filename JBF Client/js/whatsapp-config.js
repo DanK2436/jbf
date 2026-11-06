@@ -5,7 +5,12 @@
 
 const WHATSAPP_API_CONFIG = {
   // Activez ou désactivez l'API réelle
-  ENABLED: false, // Passer à true dès que vous insérez vos clés réelles ci-dessous
+  ENABLED: false, // true seulement avec une URL https et une clé réelle, hors dépôt
+
+  // La démonstration n'authentifie jamais. Les deux drapeaux doivent être true
+  // et la page servie en local pour afficher un message, sans créer de session.
+  DEMO_MODE: false,
+  ISOLATED_DEMO: false,
 
   // Fournisseur / Mode : 'meta' (Cloud API officiel), 'twilio', 'wati', ou 'custom'
   PROVIDER: 'custom',
@@ -27,10 +32,7 @@ const WHATSAPP_API_CONFIG = {
   OTP_LENGTH: 6,
   OTP_EXPIRY_SECONDS: 300, // 5 minutes
 
-  // Mode Démonstration / Test immédiat :
-  // Si ENABLED = false ou si l'API externe n'est pas encore joignable,
-  // ce code permettra de tester instantanément l'authentification WhatsApp !
-  DEMO_OTP_CODE: '123456',
+  // Aucun code de démonstration n'est accepté comme authentification.
 
   // Numéro de support WhatsApp direct JBF SERVICES (RDC)
   OFFICIAL_WHATSAPP_SUPPORT: '+243810000000'

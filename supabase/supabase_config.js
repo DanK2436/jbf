@@ -50,26 +50,11 @@ async function jbfLogin(email, password) {
     }
 }
 
-async function jbfRegister(email, password, fullName, phone, userType, companyName) {
-    try {
-        const { data, error } = await supabaseClient.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: fullName,
-                    phone: phone,
-                    user_type: userType || 'particulier',
-                    company_name: companyName || '',
-                    role: 'client'
-                }
-            }
-        });
-        if (error) throw error;
-        return { success: true, data };
-    } catch (err) {
-        return { success: false, message: err.message };
-    }
+async function jbfRegister() {
+    return {
+        success: false,
+        message: 'Inscription par OTP Supabase retirée. Le code est envoyé par le serveur (Brevo/Resend), puis le compte est créé via /api/auth/register.'
+    };
 }
 
 async function jbfLogout() {

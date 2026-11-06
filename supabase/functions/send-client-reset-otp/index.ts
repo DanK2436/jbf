@@ -25,10 +25,21 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const brevoKey = Deno.env.get('BREVO_API_KEY') || '';
+    const resendKey = Deno.env.get('RESEND_API_KEY') || '';
 
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    if (!brevoKey && !resendKey) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Aucun fournisseur de messagerie configuré sur la fonction. Aucun code n\'est émis.'
+      }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const codeHash = await sha256(`${cleanEmail}:${otp}`);
@@ -41,8 +52,9 @@ Deno.serve(async (req) => {
     });
     if (upsertErr) throw upsertErr;
 
+    const html = `<p>Votre code JBF SERVICES : <strong style="font-size:28px;letter-spacing:4px;color:#E6007E">${otp}</strong></p><p>Expire dans 10 minutes.</p>`;
+    let provider = '';
     if (brevoKey) {
-      const html = `<p>Votre code JBF SERVICES : <strong style="font-size:28px;letter-spacing:4px;color:#E6007E">${otp}</strong></p><p>Expire dans 10 minutes.</p>`;
       const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -53,19 +65,34 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           sender: { name: 'JBF SERVICES', email: 'dankande3@gmail.com' },
           to: [{ email: cleanEmail }],
-          subject: `Code de réinitialisation : ${otp}`,
+          subject: 'Code de réinitialisation JBF',
           htmlContent: html,
         }),
       });
-      if (!brevoRes.ok) {
-        const err = await brevoRes.json().catch(() => ({}));
-        throw new Error(err.message || `Brevo ${brevoRes.status}`);
-      }
-    } else {
-      console.warn('[send-client-reset-otp] BREVO_API_KEY manquante — OTP généré côté serveur uniquement.');
+      if (brevoRes.ok) provider = 'brevo';
+    }
+    if (!provider && resendKey) {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: 'JBF SERVICES <onboarding@resend.dev>',
+          to: [cleanEmail],
+          subject: 'Code de réinitialisation JBF',
+          html,
+        }),
+      });
+      if (resendRes.ok) provider = 'resend';
+    }
+    if (!provider) {
+      await admin.from('password_reset_challenges').delete().eq('email', cleanEmail);
+      throw new Error('Les fournisseurs de messagerie ont refusé l\'envoi.');
     }
 
-    return new Response(JSON.stringify({ success: true, provider: brevoKey ? 'brevo' : 'edge' }), {
+    return new Response(JSON.stringify({ success: true, provider }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
