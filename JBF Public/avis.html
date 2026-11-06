@@ -11,9 +11,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .avis-hero {
-      background: var(--pink);
+      background: var(--pink-pale);
       padding: 9rem 0 4.5rem;
-      color: #fff;
+      color: var(--black);
     }
     .avis-hero-title {
       font-family: 'Poppins', 'Inter', sans-serif;
@@ -25,7 +25,7 @@
     }
     .avis-hero-sub {
       font-size: 1.05rem;
-      color: rgba(255,255,255,0.85);
+      color: var(--text-body);
       max-width: 640px;
       line-height: 1.7;
     }
@@ -404,28 +404,28 @@
       <div class="rating-bars">
         <div class="bar-row">
           <span>5 ★</span>
-          <div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div>
-          <span>88%</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+          <span>—</span>
         </div>
         <div class="bar-row">
           <span>4 ★</span>
-          <div class="bar-track"><div class="bar-fill" style="width: 10%;"></div></div>
-          <span>10%</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+          <span>—</span>
         </div>
         <div class="bar-row">
           <span>3 ★</span>
-          <div class="bar-track"><div class="bar-fill" style="width: 2%;"></div></div>
-          <span>2%</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+          <span>—</span>
         </div>
         <div class="bar-row">
           <span>2 ★</span>
           <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
-          <span>0%</span>
+          <span>—</span>
         </div>
         <div class="bar-row">
           <span>1 ★</span>
           <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
-          <span>0%</span>
+          <span>—</span>
         </div>
       </div>
 
@@ -743,16 +743,35 @@ async function submitAvis(e) {
   const consent = document.getElementById('avisConsent').checked;
   const submitBtn = document.getElementById('avisSubmitBtn');
 
+  const showAvisError = (message, field) => {
+    let box = document.getElementById('avisFormError');
+    if (!box) {
+      box = document.createElement('p');
+      box.id = 'avisFormError';
+      box.className = 'field-error';
+      box.setAttribute('role', 'alert');
+      const form = document.getElementById('avisForm');
+      form.insertBefore(box, form.firstChild);
+    }
+    box.textContent = message;
+    if (field) {
+      field.setAttribute('aria-invalid', 'true');
+      field.focus();
+    }
+  };
+  document.getElementById('avisFormError')?.remove();
+  document.querySelectorAll('#avisForm [aria-invalid="true"]').forEach((node) => node.removeAttribute('aria-invalid'));
   if (!selectedRating || selectedRating < 1) {
-    alert('Veuillez sélectionner une note entre 1 et 5 étoiles.');
+    const picker = document.querySelector('#starPicker .star-btn');
+    showAvisError('Sélectionnez une note entre 1 et 5 étoiles.', picker);
     return;
   }
   if (comment.length < 40) {
-    alert('Votre témoignage doit contenir au moins 40 caractères.');
+    showAvisError('Le témoignage doit contenir au moins 40 caractères.', document.getElementById('avisComment'));
     return;
   }
   if (!consent) {
-    alert('Veuillez cocher la case d\'autorisation de publication.');
+    showAvisError('Cochez la case d\'autorisation de publication pour envoyer l\'avis.', document.getElementById('avisConsent'));
     return;
   }
 
