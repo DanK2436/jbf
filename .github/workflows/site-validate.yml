@@ -35,6 +35,7 @@ jobs:
           node ../scripts/test_security_headers.js
           node ../scripts/test_security_guards.js
           node ../scripts/test_otp_service.js
+          node ../scripts/test_auth_routes.js
       - name: Audit des dépendances de production
         working-directory: backend
         run: npm audit --omit=dev --audit-level=high

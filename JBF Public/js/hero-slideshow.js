@@ -1,7 +1,6 @@
 /**
- * Hero accueil — rotation des 15 pôles de services.
- * Le défilement automatique respecte prefers-reduced-motion
- * et ne reprend pas tout seul quand la préférence change.
+ * Diaporama d'accueil strictement manuel.
+ * Aucun timer, aucun autoplay. Les pastilles restent utilisables au clavier.
  */
 (function () {
   const SERVICES = [
@@ -25,39 +24,31 @@
     image: `assets/services/service-${s.code}.jpg`
   }));
 
-  const INTERVAL_MS = 15000;
-  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
   let index = 0;
-  let timer = null;
-  let pausedByUser = motionQuery.matches;
 
   function prefersReducedMotion() {
-    return motionQuery.matches;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  function shouldRunTimer(reduced, userPaused) {
-    return !reduced && !userPaused;
-  }
-
-  function applySlide(i, animate) {
+  function applySlide(i) {
     const slide = SERVICES[i];
     const bg = document.querySelector('.hero-bg-photo');
     const chip = document.getElementById('heroServiceChip');
     const dots = document.getElementById('heroServiceDots');
     if (!bg || !slide) return;
-
-    const gradient =
-      'linear-gradient(118deg, rgba(20, 20, 22, 0.55) 0%, rgba(122, 18, 72, 0.22) 42%, rgba(0, 0, 0, 0.5) 100%)';
-    const motionOk = animate && !prefersReducedMotion();
-
-    if (motionOk) bg.classList.add('hero-bg-fading');
+    const gradient = 'linear-gradient(118deg, rgba(20, 20, 22, 0.55) 0%, rgba(122, 18, 72, 0.22) 42%, rgba(0, 0, 0, 0.5) 100%)';
+    if (!prefersReducedMotion()) bg.classList.add('hero-bg-fading');
     bg.style.backgroundImage = `${gradient}, url('${slide.image}')`;
-
     if (chip) {
-      chip.innerHTML = `<span class="hero-chip-code">${slide.code}</span><span class="hero-chip-title">${slide.title}</span>`;
+      chip.replaceChildren();
+      const code = document.createElement('span');
+      code.className = 'hero-chip-code';
+      code.textContent = slide.code;
+      const title = document.createElement('span');
+      title.className = 'hero-chip-title';
+      title.textContent = slide.title;
+      chip.append(code, title);
     }
-
     if (dots) {
       dots.querySelectorAll('.hero-dot').forEach((dot, idx) => {
         const active = idx === i;
@@ -65,127 +56,38 @@
         dot.setAttribute('aria-current', active ? 'true' : 'false');
       });
     }
-
-    if (motionOk) {
+    const note = document.getElementById('heroMotionNote');
+    if (note) note.textContent = `Visuel ${slide.code} : ${slide.title}`;
+    if (!prefersReducedMotion()) {
       window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 220);
     } else {
       bg.classList.remove('hero-bg-fading');
     }
   }
 
-  function stopTimer() {
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }
-
-  function startTimerIfAllowed() {
-    stopTimer();
-    if (!shouldRunTimer(prefersReducedMotion(), pausedByUser)) return;
-    timer = setInterval(() => {
-      if (!shouldRunTimer(prefersReducedMotion(), pausedByUser)) {
-        stopTimer();
-        return;
-      }
-      index = (index + 1) % SERVICES.length;
-      applySlide(index, true);
-    }, INTERVAL_MS);
-  }
-
-  function announce(message) {
-    const note = document.getElementById('heroMotionNote');
-    if (note) note.textContent = message;
-  }
-
-  function syncPauseButton() {
-    const btn = document.getElementById('heroPause');
-    if (!btn) return;
-    const reduced = prefersReducedMotion();
-    const paused = pausedByUser || reduced;
-    btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
-    btn.textContent = paused ? 'Reprendre le diaporama' : 'Mettre le diaporama en pause';
-    if (reduced) {
-      btn.setAttribute('aria-describedby', 'heroMotionNote');
-    } else {
-      btn.removeAttribute('aria-describedby');
-    }
-  }
-
-  function onMotionChange() {
-    stopTimer();
-    if (prefersReducedMotion()) {
-      pausedByUser = true;
-      announce('Animations réduites : le diaporama reste en pause. Les pastilles permettent de changer de visuel.');
-    } else {
-      announce('Les animations sont de nouveau autorisées. Le diaporama ne reprend que si vous activez la lecture.');
-    }
-    syncPauseButton();
-  }
-
-  function togglePause() {
-    if (prefersReducedMotion()) {
-      stopTimer();
-      pausedByUser = true;
-      announce('Le diaporama reste en pause : votre système demande de réduire les animations. Utilisez les pastilles pour changer de visuel.');
-      syncPauseButton();
-      return;
-    }
-    pausedByUser = !pausedByUser;
-    if (pausedByUser) {
-      stopTimer();
-      announce('Diaporama en pause.');
-    } else {
-      startTimerIfAllowed();
-      announce('Diaporama en lecture.');
-    }
-    syncPauseButton();
-  }
-
   function goTo(nextIndex) {
     index = nextIndex;
-    applySlide(index, true);
-    if (shouldRunTimer(prefersReducedMotion(), pausedByUser)) startTimerIfAllowed();
-    else stopTimer();
-  }
-
-  function buildDots() {
-    const wrap = document.getElementById('heroServiceDots');
-    if (!wrap) return;
-    wrap.innerHTML = SERVICES.map((_, i) =>
-      `<button type="button" class="hero-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Service ${i + 1} sur 15"></button>`
-    ).join('');
-    wrap.querySelectorAll('.hero-dot').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        goTo(Number(btn.getAttribute('data-index')) || 0);
-      });
-    });
+    applySlide(index);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    buildDots();
-    applySlide(0, false);
-    const pauseBtn = document.getElementById('heroPause');
-    if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
-    if (typeof motionQuery.addEventListener === 'function') {
-      motionQuery.addEventListener('change', onMotionChange);
-    } else if (typeof motionQuery.addListener === 'function') {
-      motionQuery.addListener(onMotionChange);
+    const wrap = document.getElementById('heroServiceDots');
+    if (wrap) {
+      wrap.replaceChildren();
+      SERVICES.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hero-dot' + (i === 0 ? ' active' : '');
+        btn.dataset.index = String(i);
+        btn.setAttribute('aria-label', `Service ${i + 1} sur 15, ${SERVICES[i].title}`);
+        btn.addEventListener('click', () => goTo(i));
+        wrap.append(btn);
+      });
     }
-    if (prefersReducedMotion()) {
-      pausedByUser = true;
-      stopTimer();
-      announce('Animations réduites : le diaporama ne démarre pas automatiquement.');
-    } else {
-      startTimerIfAllowed();
-    }
-    syncPauseButton();
+    applySlide(0);
     window.JBF_HERO = {
-      shouldRunTimer,
-      isTimerRunning: () => Boolean(timer),
-      isPaused: () => pausedByUser || prefersReducedMotion(),
-      goTo,
-      togglePause
+      isTimerRunning: () => false,
+      goTo
     };
   });
 })();

@@ -953,7 +953,7 @@
     btn.disabled = true;
     btn.textContent = 'Envoi du code...';
     try {
-      const data = await postAuthApi('/auth/otp/send', { email: email });
+      const data = await postAuthApi('/auth/otp/send', { email: email, purpose: 'register' });
       goToStep(4);
       document.getElementById('verifyEmailDisplay').textContent = email;
       const waitingStatus = document.getElementById('waitingStatus');
@@ -1024,7 +1024,7 @@
     resendBtn.disabled = true;
     resendBtn.textContent = 'Envoi en cours...';
     try {
-      await postAuthApi('/auth/otp/send', { email: email });
+      await postAuthApi('/auth/otp/send', { email: email, purpose: 'register' });
       succBox.textContent = 'Un nouveau code a été envoyé par le serveur.';
       succBox.classList.add('visible');
     } catch (err) {

@@ -28,13 +28,10 @@ if "scroll-behavior: auto" not in main_css or "scroll-behavior: auto" not in cli
 if "scroll-behavior: smooth" not in main_css.split("prefers-reduced-motion: no-preference")[-1][:400]:
     errors.append("le scroll fluide n'est pas réservé à no-preference dans main.css")
 
-for needle in ("prefers-reduced-motion", "addEventListener('change'", "shouldRunTimer", "heroPause", "stopTimer"):
-    if needle not in hero_js:
-        errors.append(f"hero-slideshow.js ne contient pas {needle}")
-if "DOMContentLoaded" in hero_js:
-    block = hero_js.split("DOMContentLoaded", 1)[1][:1200]
-    if "startTimerIfAllowed()" not in block or "prefersReducedMotion()" not in block:
-        errors.append("le diaporama démarre sans tester le mouvement réduit")
+if "setInterval" in hero_js or "heroPause" in hero_js:
+    errors.append("le diaporama ne doit plus avoir de timer ni de bouton pause")
+if "aria-label" not in hero_js or "prefersReducedMotion" not in hero_js:
+    errors.append("le diaporama manuel doit garder des libellés et le mouvement réduit")
 
 if re.search(r"xkeysib-[A-Za-z0-9]{8,}", mail_js) or "DEFAULT_BREVO_KEY" in mail_js or "DEFAULT_RESEND_KEY" in mail_js:
     errors.append("une clé fournisseur reste embarquée dans mail-service.js")

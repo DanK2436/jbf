@@ -1,5 +1,11 @@
 # Contrôle sécurité & design
 
+## Inscription : une seule route, après un OTP d'usage « register »
+
+L'ancienne `POST /api/auth/register` créait un compte `email_confirm: true` sans code et était déclarée avant la route protégée, donc elle capturait toutes les requêtes. Elle est supprimée. La route restante n'appelle `createUser` qu'après un OTP délivré pour l'usage `register` du même email. Un code de connexion ou de réinitialisation ne crée pas de compte. Les routes ouvertes `POST /api/admin/membres` et `POST /api/admin/sous-admins` ne créent plus de compte confirmé : elles n'authentifiaient pas l'appelant.
+
+Les codes viennent de `crypto.randomInt`. Chaque usage a sa clé, une expiration, un plafond d'envois et de tentatives, et une consommation unique.
+
 ## OTP : Brevo et Resend, pas l'OTP Auth Supabase
 
 Le code confirme que Brevo (`POST https://api.brevo.com/v3/smtp/email`) et Resend (`POST https://api.resend.com/emails`) ne servent qu'à transporter le message. Le serveur Node génère le code à 6 chiffres, le garde en mémoire, et le compare lui-même. Ce n'est pas une vérification d'identité faite par ces fournisseurs.

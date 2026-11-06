@@ -46,8 +46,8 @@ app.use(applySecurityHeaders);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Trust proxy pour capturer l'IP réelle du client
-app.set('trust proxy', true);
+// Ne pas faire confiance à X-Forwarded-For : un proxy peut faire passer un client distant pour local.
+app.set('trust proxy', false);
 
 // Configuration CORS (autorise Web, Desktop Flutter et Mobile Flutter)
 app.use(cors({
@@ -297,90 +297,9 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// =============================================================
-// 4.1. MODULE AUTHENTIFICATION CLIENT (ADMIN SERVICE ROLE)
-// =============================================================
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, full_name, phone, company, secteur, address, city, province } = req.body;
-
-    if (!email || !password || !full_name) {
-      return res.status(400).json({ success: false, error: 'Email, mot de passe et nom complet obligatoires.' });
-    }
-
-    // Création directe de l'utilisateur avec la clé de service (contourne tout blocage dashboard)
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: password,
-      email_confirm: true,
-      user_metadata: {
-        full_name,
-        phone: phone || '',
-        company: company || '',
-        secteur: secteur || '',
-        address: address || '',
-        city: city || '',
-        province: province || '',
-        role: 'client'
-      }
-    });
-
-    if (createError) {
-      let errMsg = createError.message;
-      if (errMsg.includes('already registered') || errMsg.includes('already exists')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Cette adresse email est déjà enregistrée. Veuillez vous connecter.'
-        });
-      }
-      throw createError;
-    }
-
-    // Synchronisation du profil client
-    try {
-      await supabaseAdmin.from('profiles').upsert([{
-        id: userData.user.id,
-        email: email,
-        full_name: full_name,
-        phone: phone || null,
-        company: company || null,
-        secteur: secteur || null,
-        address: address || null,
-        city: city || null,
-        province: province || null,
-        role: 'client',
-        updated_at: new Date().toISOString()
-      }]);
-    } catch(profileErr) {
-      console.warn('Upsert profile notice:', profileErr.message);
-    }
-
-    // Authentification immédiate pour fournir la session au frontend
-    const { data: authData, error: signInError } = await supabasePublic.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-    if (signInError) {
-      return res.status(201).json({
-        success: true,
-        user: userData.user,
-        message: 'Compte créé avec succès !'
-      });
-    }
-
-    res.status(201).json({
-      success: true,
-      session: authData.session,
-      user: authData.user,
-      message: 'Compte créé et connecté avec succès !'
-    });
-
-  } catch (err) {
-    console.error('Erreur POST /api/auth/register:', err);
-    res.status(500).json({ success: false, error: err.message || 'Erreur lors de la création du compte.' });
-  }
-});
+// L'inscription client est uniquement la route OTP plus bas.
+// L'ancienne création directe (email_confirm sans code) a été retirée
+// parce qu'elle était enregistrée avant la route protégée et la masquait.
 
 // =============================================================
 // 4.1 AUTHENTIFICATION ADMIN SÉCURISÉE (Stocké strictement en Backend / .env)
@@ -447,7 +366,7 @@ async function ensureAdminInSupabase() {
     console.warn('Notice sync admin Supabase:', e.message);
   }
 }
-ensureAdminInSupabase();
+if (process.env.JBF_DISABLE_LISTEN !== '1') ensureAdminInSupabase();
 
 app.post('/api/admin/login', async (req, res) => {
   try {
@@ -523,8 +442,7 @@ app.post('/api/admin/login', async (req, res) => {
 // 4.2 GESTIONNAIRE OTP EMAIL MULTI-PROVIDER (BREVO / RESEND)
 // =============================================================
 const { createOtpBroker } = require('./otp-service');
-const loginOtps = createOtpBroker();
-const resetOtps = createOtpBroker();
+const otps = createOtpBroker();
 function mailProviderConfigured() {
   return Boolean(process.env.BREVO_API_KEY || process.env.RESEND_API_KEY);
 }
@@ -619,23 +537,24 @@ app.post('/api/auth/otp/send', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, error: 'Adresse email requise.' });
 
-    const prepared = loginOtps.prepare(email, mailProviderConfigured());
-    if (!prepared.ok) return res.status(prepared.status).json(loginOtps.toClient(prepared));
+    const purpose = req.body.purpose === 'register' ? 'register' : 'login';
+    const prepared = otps.prepare(email, purpose, mailProviderConfigured());
+    if (!prepared.ok) return res.status(prepared.status).json(otps.toClient(prepared));
 
     const html = buildOtpHtmlEmail(
-      'Code de Connexion Sécurisé',
+      purpose === 'register' ? 'Code de création de compte' : 'Code de Connexion Sécurisé',
       prepared.code,
-      'Voici votre code de sécurité à 6 chiffres pour accéder à votre espace :'
+      'Voici votre code de sécurité à 6 chiffres :'
     );
 
     let sendRes;
     try {
       sendRes = await sendTransactionalEmail(prepared.email, 'Code de vérification JBF', html);
     } catch (sendErr) {
-      loginOtps.abort(prepared.email);
+      otps.abort(prepared.email, prepared.purpose);
       return res.status(503).json({ success: false, error: 'Le fournisseur de messagerie a refusé l\'envoi. Aucun code n\'est actif.' });
     }
-    const committed = loginOtps.commit(prepared.email, prepared.code, sendRes.provider);
+    const committed = otps.commit(prepared.email, prepared.purpose, prepared.code, sendRes.provider);
     console.log(`${formatOtpLog('Backend OTP', prepared.email)} via ${sendRes.provider}`);
     res.json({
       success: true,
@@ -657,9 +576,9 @@ app.post('/api/auth/otp/verify', async (req, res) => {
     }
 
     const cleanEmail = String(email || '').trim().toLowerCase();
-    const checked = loginOtps.verify(email, token, true);
+    const checked = otps.verify(email, token, 'login', true);
     if (!checked.ok) {
-      return res.status(checked.status).json(loginOtps.toClient(checked));
+      return res.status(checked.status).json(otps.toClient(checked));
     }
 
     // Récupérer ou créer profil
@@ -698,19 +617,29 @@ app.post('/api/auth/otp/verify', async (req, res) => {
 // POST /api/auth/register — compte créé seulement après OTP serveur (pas d'email OTP Supabase)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, token, password, name } = req.body || {};
-    if (!password || String(password).length < 8) {
-      return res.status(400).json({ success: false, error: 'Mot de passe d\'au moins 8 caractères requis.' });
+    const { email, token, password, name, full_name, phone, company, secteur, address, city, province } = req.body || {};
+    const displayName = full_name || name;
+    if (!password || String(password).length < 8 || !displayName) {
+      return res.status(400).json({ success: false, error: 'Nom, mot de passe (8+) et code OTP requis.' });
     }
-    const checked = loginOtps.verify(email, token, true);
-    if (!checked.ok) return res.status(checked.status).json(loginOtps.toClient(checked));
+    const checked = otps.verify(email, token, 'register', true);
+    if (!checked.ok) return res.status(checked.status).json(otps.toClient(checked));
 
     const cleanEmail = checked.email;
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: cleanEmail,
       password: String(password),
       email_confirm: true,
-      user_metadata: { full_name: name || cleanEmail.split('@')[0], role: 'client' }
+      user_metadata: {
+        full_name: displayName,
+        phone: phone || '',
+        company: company || '',
+        secteur: secteur || '',
+        address: address || '',
+        city: city || '',
+        province: province || '',
+        role: 'client'
+      }
     });
     if (createErr) {
       return res.status(400).json({ success: false, error: createErr.message || 'Création du compte impossible.' });
@@ -720,7 +649,13 @@ app.post('/api/auth/register', async (req, res) => {
       await supabaseAdmin.from('profiles').upsert({
         id: userId,
         email: cleanEmail,
-        full_name: name || cleanEmail.split('@')[0],
+        full_name: displayName,
+        phone: phone || null,
+        company: company || null,
+        secteur: secteur || null,
+        address: address || null,
+        city: city || null,
+        province: province || null,
         role: 'client',
         is_verified: true
       });
@@ -740,8 +675,8 @@ app.post('/api/auth/reset-otp/send', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Adresse email requise.' });
     }
 
-    const prepared = resetOtps.prepare(email, mailProviderConfigured());
-    if (!prepared.ok) return res.status(prepared.status).json(resetOtps.toClient(prepared));
+    const prepared = otps.prepare(email, 'reset', mailProviderConfigured());
+    if (!prepared.ok) return res.status(prepared.status).json(otps.toClient(prepared));
 
     const html = buildOtpHtmlEmail(
       'Réinitialisation de Mot de Passe',
@@ -753,10 +688,10 @@ app.post('/api/auth/reset-otp/send', async (req, res) => {
     try {
       sendRes = await sendTransactionalEmail(prepared.email, 'Code de réinitialisation JBF', html);
     } catch (sendErr) {
-      resetOtps.abort(prepared.email);
+      otps.abort(prepared.email, 'reset');
       return res.status(503).json({ success: false, error: 'Le fournisseur de messagerie a refusé l\'envoi. Aucun code n\'est actif.' });
     }
-    const committed = resetOtps.commit(prepared.email, prepared.code, sendRes.provider);
+    const committed = otps.commit(prepared.email, 'reset', prepared.code, sendRes.provider);
     console.log(`${formatOtpLog('Backend Reset OTP', prepared.email)} via ${sendRes.provider}`);
     res.json({
       success: true,
@@ -778,9 +713,9 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     const cleanEmail = String(email || '').trim().toLowerCase();
-    const checked = resetOtps.verify(email, token, true);
+    const checked = otps.verify(email, token, 'reset', true);
     if (!checked.ok) {
-      return res.status(checked.status).json(resetOtps.toClient(checked));
+      return res.status(checked.status).json(otps.toClient(checked));
     }
 
     // Mettre à jour le mot de passe via Supabase Admin si l'utilisateur existe dans auth.users
@@ -1210,6 +1145,10 @@ app.post('/api/admin/membres', async (req, res) => {
       site_affectation 
     } = req.body;
 
+    return res.status(403).json({
+      success: false,
+      error: 'Création de collaborateur refusée : cette route n\'authentifie pas l\'appelant et ne crée plus de compte confirmé.'
+    });
     if (!email || !password || !full_name) {
       return res.status(400).json({ success: false, error: 'Nom complet, email et mot de passe initial obligatoires.' });
     }
@@ -1351,6 +1290,10 @@ app.post('/api/admin/sous-admins', async (req, res) => {
   try {
     const { full_name, email, password, phone, permissions } = req.body;
 
+    return res.status(403).json({
+      success: false,
+      error: 'Création de sous-administrateur refusée : cette route n\'authentifie pas l\'appelant et ne crée plus de compte confirmé.'
+    });
     if (!full_name || !email || !password) {
       return res.status(400).json({ success: false, error: 'Nom complet, email et mot de passe obligatoires.' });
     }
@@ -1659,12 +1602,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '127.0.0.1';
-app.listen(PORT, HOST, () => {
-  console.log(`=============================================================`);
-  console.log(`[JBF SERVICES] ENTERPRISE API SERVER DEMARRE`);
-  console.log(`URL API : http://${HOST}:${PORT}`);
-  console.log(`=============================================================`);
-});
+if (process.env.JBF_DISABLE_LISTEN !== '1') {
+  app.listen(PORT, HOST, () => {
+    console.log(`=============================================================`);
+    console.log(`[JBF SERVICES] ENTERPRISE API SERVER DEMARRE`);
+    console.log(`URL API : http://${HOST}:${PORT}`);
+    console.log(`=============================================================`);
+  });
+}
+module.exports = { app };
 
 // =============================================================
 // 12. KEEP-ALIVE AUTOMATIQUE SUPABASE (Anti-mise en veille 7 jours)
@@ -1685,6 +1631,8 @@ async function pingSupabaseKeepAlive() {
     console.warn('[Supabase Keep-Alive] Ping exception:', e.message);
   }
 }
-setInterval(pingSupabaseKeepAlive, KEEP_ALIVE_INTERVAL);
-setTimeout(pingSupabaseKeepAlive, 5000);
+if (process.env.JBF_DISABLE_LISTEN !== '1') {
+  setInterval(pingSupabaseKeepAlive, KEEP_ALIVE_INTERVAL);
+  setTimeout(pingSupabaseKeepAlive, 5000);
+}
 

@@ -56,6 +56,26 @@
   </style>
 </head>
 <body>
+<div class="boot-overlay" id="bootOverlay">
+  <img class="boot-logo" src="assets/logo.png" alt="" width="240" height="72">
+</div>
+<script>
+(function () {
+  var el = document.getElementById('bootOverlay');
+  if (!el) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function done() {
+    if (!el.isConnected) return;
+    el.remove();
+  }
+  var img = el.querySelector('img');
+  if (img) img.addEventListener('error', done);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') done();
+  });
+  setTimeout(done, reduce ? 400 : 6200);
+})();
+</script>
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-transparent" id="navbar">
@@ -100,10 +120,7 @@
         Votre partenaire polyvalent certifié pour le secteur minier, l'agroalimentaire, le génie civil, la maintenance et la logistique. 15 domaines d'expertise intégrés sur toute la République Démocratique du Congo.
       </p>
       <div class="hero-service-dots" id="heroServiceDots" aria-label="Navigation des 15 services"></div>
-      <div class="hero-motion-controls">
-        <button type="button" class="hero-pause" id="heroPause" aria-pressed="false">Mettre le diaporama en pause</button>
-        <p class="visually-hidden" id="heroMotionNote" aria-live="polite"></p>
-      </div>
+      <p class="visually-hidden" id="heroMotionNote" aria-live="polite"></p>
       <div class="hero-btns">
         <a href="services.html" class="btn btn-outline-white btn-lg">
           Consulter nos 15 Services →

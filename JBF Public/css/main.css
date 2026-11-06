@@ -1829,20 +1829,36 @@ select.fc-input option:checked,
   background: linear-gradient(102deg, rgba(20,20,22,0.82) 0%, rgba(20,20,22,0.55) 58%, rgba(122,18,72,0.28) 100%);
 }
 .hero-service-chip { background: var(--pink-fill); }
-.hero-pause {
-  margin-top: 0.85rem;
-  background: transparent;
-  color: #fff;
-  border: 1.5px solid rgba(255,255,255,0.85);
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
-  min-height: 44px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  animation: bootDismiss 0s linear 6s forwards;
 }
-.hero-pause:hover { background: rgba(255,255,255,0.12); }
-.hero-pause[aria-pressed="true"] { background: var(--white); color: var(--black); border-color: var(--white); }
+.boot-logo {
+  width: min(240px, 70vw);
+  height: auto;
+  clip-path: inset(0 0 100% 0);
+  animation: bootDown 3s linear forwards, bootLeft 3s linear 3s forwards;
+}
+@keyframes bootDown {
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes bootLeft {
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes bootDismiss {
+  to { visibility: hidden; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-overlay { animation: bootDismiss 0s linear 0.4s forwards; }
+  .boot-logo { animation: none; clip-path: none; }
+}
 .hero-dot { width: 14px; height: 14px; }
 .hero-service-dots { max-width: 100%; }
 .ticker-wrap { display: flex; width: max-content; animation: tickMove 28s linear infinite; }
