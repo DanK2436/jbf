@@ -30,6 +30,16 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    if (!brevoKey) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Aucun fournisseur de messagerie configuré sur la fonction. Aucun code n\'est émis.'
+      }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const codeHash = await sha256(`${cleanEmail}:${otp}`);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -58,14 +68,13 @@ Deno.serve(async (req) => {
         }),
       });
       if (!brevoRes.ok) {
+        await admin.from('password_reset_challenges').delete().eq('email', cleanEmail);
         const err = await brevoRes.json().catch(() => ({}));
         throw new Error(err.message || `Brevo ${brevoRes.status}`);
       }
-    } else {
-      console.warn('[send-client-reset-otp] BREVO_API_KEY manquante — OTP généré côté serveur uniquement.');
     }
 
-    return new Response(JSON.stringify({ success: true, provider: brevoKey ? 'brevo' : 'edge' }), {
+    return new Response(JSON.stringify({ success: true, provider: 'brevo' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {

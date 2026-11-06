@@ -7,11 +7,10 @@
 require('dotenv').config();
 
 const {
-  SECURITY_HEADERS,
   isOfficialAdminPassword,
   formatOtpLog,
   publicAssetAllowed,
-  mailRelayCallerAllowed
+  applySecurityHeaders
 } = require('./security-guards');
 
 const express = require('express');
@@ -43,6 +42,7 @@ const supabasePublic = createClient(
 
 // ----- 3. INITIALISATION EXPRESS & MIDDLEWARES -----
 const app = express();
+app.use(applySecurityHeaders);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -616,10 +616,11 @@ app.post('/api/auth/otp/send', async (req, res) => {
     if (!email) return res.status(400).json({ success: false, error: 'Adresse email requise.' });
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY) {
+      return res.status(503).json({ success: false, error: 'Aucun fournisseur de messagerie configuré sur le serveur.' });
+    }
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000;
-
-    activeOtpStore.set(cleanEmail, { code: otpCode, expiresAt });
 
     const html = buildOtpHtmlEmail(
       'Code de Connexion Sécurisé',
@@ -627,7 +628,14 @@ app.post('/api/auth/otp/send', async (req, res) => {
       'Voici votre code de sécurité à 6 chiffres pour accéder à votre espace :'
     );
 
-    const sendRes = await sendTransactionalEmail(cleanEmail, `Code de vérification : ${otpCode}`, html);
+    let sendRes;
+    try {
+      sendRes = await sendTransactionalEmail(cleanEmail, `Code de vérification : ${otpCode}`, html);
+    } catch (sendErr) {
+      activeOtpStore.delete(cleanEmail);
+      throw sendErr;
+    }
+    activeOtpStore.set(cleanEmail, { code: otpCode, expiresAt, delivered: true });
     console.log(`${formatOtpLog('Backend OTP', cleanEmail)} via ${sendRes.provider}`);
 
     res.json({
@@ -653,7 +661,7 @@ app.post('/api/auth/otp/verify', async (req, res) => {
     const cleanToken = token.trim();
 
     const stored = activeOtpStore.get(cleanEmail);
-    let isValid = (stored && stored.code === cleanToken && Date.now() <= stored.expiresAt);
+    let isValid = Boolean(stored && stored.delivered && stored.code === cleanToken && Date.now() <= stored.expiresAt);
 
     if (!isValid) {
       return res.status(400).json({ success: false, error: 'Code OTP incorrect ou expiré.' });
@@ -703,10 +711,11 @@ app.post('/api/auth/reset-otp/send', async (req, res) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY) {
+      return res.status(503).json({ success: false, error: 'Aucun fournisseur de messagerie configuré sur le serveur.' });
+    }
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000;
-
-    resetOtpStore.set(cleanEmail, { code: otpCode, expiresAt });
 
     const html = buildOtpHtmlEmail(
       'Réinitialisation de Mot de Passe',
@@ -714,13 +723,20 @@ app.post('/api/auth/reset-otp/send', async (req, res) => {
       'Voici votre code sécurisé à 6 chiffres pour réinitialiser le mot de passe de votre compte client JBF :'
     );
 
-    const sendRes = await sendTransactionalEmail(
-      cleanEmail,
-      `Code de réinitialisation : ${otpCode}`,
-      html
-    );
+    let sendRes;
+    try {
+      sendRes = await sendTransactionalEmail(
+        cleanEmail,
+        `Code de réinitialisation : ${otpCode}`,
+        html
+      );
+    } catch (sendErr) {
+      resetOtpStore.delete(cleanEmail);
+      throw sendErr;
+    }
+    resetOtpStore.set(cleanEmail, { code: otpCode, expiresAt, delivered: true });
 
-    console.log(`[Backend Reset OTP] Code envoyé à ${cleanEmail} via ${sendRes.provider}`);
+    console.log(`${formatOtpLog('Backend Reset OTP', cleanEmail)} via ${sendRes.provider}`);
 
     res.json({
       success: true,
@@ -745,7 +761,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const cleanToken = token.trim();
 
     const stored = resetOtpStore.get(cleanEmail);
-    let isValid = (stored && stored.code === cleanToken && Date.now() <= stored.expiresAt);
+    let isValid = Boolean(stored && stored.delivered && stored.code === cleanToken && Date.now() <= stored.expiresAt);
 
     if (!isValid) {
       return res.status(400).json({ success: false, error: 'Code OTP incorrect ou expiré.' });
@@ -1584,86 +1600,11 @@ app.get('/api/stats', async (req, res) => {
 // 10.4 SERVICE D'EXPÉDITION D'EMAILS SÉCURISÉ (BACKEND-ONLY)
 // Aucune clé API exposée côté navigateur / frontend
 // =============================================================
-app.post('/api/mail/send', async (req, res) => {
-  try {
-    if (!mailRelayCallerAllowed(req.socket.remoteAddress, req.get('Origin'), req.get('Sec-Fetch-Site'))) {
-      return res.status(401).json({ success: false, error: 'Relais mail réservé au navigateur local du site JBF.' });
-    }
-    const { to, subject, html, provider } = req.body;
-    if (!to || !subject || !html) {
-      return res.status(400).json({ success: false, error: 'Champs obligatoires manquants (to, subject, html).' });
-    }
-
-    const brevoKey = process.env.BREVO_API_KEY;
-    const resendKey = process.env.RESEND_API_KEY;
-
-    let result = null;
-    const preferred = provider || (Math.random() < 0.80 ? 'brevo' : 'resend');
-    const fallback = preferred === 'brevo' ? 'resend' : 'brevo';
-
-    const sendWithBrevoInternal = async () => {
-      if (!brevoKey) throw new Error('BREVO_API_KEY non configurée sur le serveur');
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': brevoKey,
-          'content-type': 'application/json',
-          'User-Agent': 'JBF-Backend/1.0'
-        },
-        body: JSON.stringify({
-          sender: { name: 'JBF SERVICES', email: 'dankande3@gmail.com' },
-          to: [{ email: to }],
-          subject: subject,
-          htmlContent: html
-        })
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || `Erreur Brevo HTTP ${response.status}`);
-      }
-      return { success: true, provider: 'brevo' };
-    };
-
-    const sendWithResendInternal = async () => {
-      if (!resendKey) throw new Error('RESEND_API_KEY non configurée sur le serveur');
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'JBF-Backend/1.0'
-        },
-        body: JSON.stringify({
-          from: 'JBF SERVICES <onboarding@resend.dev>',
-          to: [to],
-          subject: subject,
-          html: html
-        })
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || `Erreur Resend HTTP ${response.status}`);
-      }
-      return { success: true, provider: 'resend' };
-    };
-
-    try {
-      result = preferred === 'brevo' ? await sendWithBrevoInternal() : await sendWithResendInternal();
-    } catch (primaryErr) {
-      console.warn(`[Backend Mail] Échec prestataire primaire (${preferred}), tentative fallback (${fallback}):`, primaryErr.message);
-      try {
-        result = fallback === 'brevo' ? await sendWithBrevoInternal() : await sendWithResendInternal();
-      } catch (fallbackErr) {
-        throw new Error(`Échec des deux prestataires : ${primaryErr.message} | ${fallbackErr.message}`);
-      }
-    }
-
-    return res.json(result);
-  } catch (error) {
-    console.error('Erreur POST /api/mail/send:', error.message);
-    return res.status(500).json({ success: false, error: error.message });
-  }
+app.post('/api/mail/send', (req, res) => {
+  return res.status(403).json({
+    success: false,
+    error: "Relais de courriel arbitraire désactivé : aucun contrôle serveur authentifié. Origin, Sec-Fetch-Site et l'adresse loopback ne suffisent pas."
+  });
 });
 
 // =============================================================
@@ -1671,7 +1612,6 @@ app.post('/api/mail/send', async (req, res) => {
 // =============================================================
 // Protection stricte contre l'exposition de fichiers sensibles et de secrets
 app.use((req, res, next) => {
-  Object.entries(SECURITY_HEADERS).forEach(([name, value]) => res.setHeader(name, value));
   const pathOnly = req.url.split('?')[0];
   if (pathOnly === '/' || pathOnly.startsWith('/api/')) return next();
   if (!publicAssetAllowed(pathOnly)) {

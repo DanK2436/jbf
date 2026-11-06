@@ -13,7 +13,7 @@ const SECURITY_CSP = [
   "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'",
   "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://api.brevo.com https://api.resend.com http://127.0.0.1:* http://localhost:*"
+  "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net http://127.0.0.1:* http://localhost:*"
 ].join('; ');
 
 const SECURITY_HEADERS = {
@@ -67,17 +67,21 @@ function publicAssetAllowed(urlPath) {
   return false;
 }
 
-function mailRelayCallerAllowed(remoteAddress, origin, secFetchSite) {
-  const ip = String(remoteAddress || '').replace(/^::ffff:/, '');
-  if (ip !== '127.0.0.1' && ip !== '::1') return false;
-  if (String(secFetchSite || '').toLowerCase() === 'same-origin') return true;
-  try {
-    const url = new URL(String(origin || ''));
-    const hostOk = url.hostname === '127.0.0.1' || url.hostname === 'localhost';
-    return hostOk && (url.protocol === 'http:' || url.protocol === 'https:');
-  } catch (_) {
-    return false;
-  }
+function applySecurityHeaders(req, res, next) {
+  Object.entries(SECURITY_HEADERS).forEach(([name, value]) => {
+    res.setHeader(name, value);
+  });
+  if (typeof next === 'function') next();
+}
+
+/**
+ * Le relais de contenu libre n'a pas de contrôle serveur authentifié.
+ * L'adresse loopback, Origin et Sec-Fetch-Site sont forgeables, et un
+ * reverse proxy peut présenter un client distant comme local.
+ * Tant qu'aucun secret serveur dédié n'existe, le relais reste fermé.
+ */
+function arbitraryMailRelayEnabled() {
+  return false;
 }
 
 module.exports = {
@@ -87,5 +91,6 @@ module.exports = {
   formatOtpLog,
   decodeRequestPath,
   publicAssetAllowed,
-  mailRelayCallerAllowed
+  applySecurityHeaders,
+  arbitraryMailRelayEnabled
 };

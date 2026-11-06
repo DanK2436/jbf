@@ -26,6 +26,23 @@ class WhatsAppAuthService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
+  providerReady() {
+    const cfg = this.config || {};
+    if (cfg.ENABLED !== true) return false;
+    const url = String(cfg.API_URL || '');
+    const key = String(cfg.API_KEY || '');
+    if (!url.startsWith('https://') || /example/i.test(url)) return false;
+    if (!key || /VOTRE_|CHANGE_ME|ICI|placeholder/i.test(key)) return false;
+    return true;
+  }
+
+  isolatedDemoRequested() {
+    const cfg = this.config || {};
+    const host = (window.location && window.location.hostname) || '';
+    const local = host === 'localhost' || host === '127.0.0.1';
+    return cfg.DEMO_MODE === true && cfg.ISOLATED_DEMO === true && local;
+  }
+
   // Envoyer le code OTP par WhatsApp
   async sendOTP(phone) {
     const formattedPhone = this.normalizePhone(phone);
@@ -33,7 +50,24 @@ class WhatsAppAuthService {
       return { success: false, message: 'Numéro de téléphone invalide.' };
     }
 
-    const otpCode = this.config.ENABLED ? this.generateOTP() : this.config.DEMO_OTP_CODE;
+    if (!this.providerReady()) {
+      if (this.isolatedDemoRequested()) {
+        return {
+          success: false,
+          demonstration: true,
+          authenticated: false,
+          phone: formattedPhone,
+          message: 'Démonstration isolée : aucun code n\'est émis et cette voie n\'ouvre pas de session.'
+        };
+      }
+      return {
+        success: false,
+        authenticated: false,
+        message: 'WhatsApp n\'est pas configuré. Aucun code de démonstration n\'est accepté.'
+      };
+    }
+
+    const otpCode = this.generateOTP();
     const expiresAt = Date.now() + this.config.OTP_EXPIRY_SECONDS * 1000;
 
     // Sauvegarder l'état temporaire
@@ -79,25 +113,18 @@ class WhatsAppAuthService {
 
         const data = await response.json();
         if (response.ok) {
-          return { success: true, phone: formattedPhone, message: 'Code OTP envoyé par WhatsApp avec succès.' };
-        } else {
-          console.warn('[WhatsApp API] Erreur renvoyée:', data);
-          return { success: false, message: data.message || "Échec de l'envoi WhatsApp." };
+          return { success: true, phone: formattedPhone, authenticated: false, message: 'Code OTP envoyé par WhatsApp avec succès.' };
         }
+        sessionStorage.removeItem(this.sessionKey);
+        console.warn('[WhatsApp API] Erreur renvoyée:', data && data.message);
+        return { success: false, message: data.message || "Échec de l'envoi WhatsApp." };
       } catch (err) {
-        console.warn('[WhatsApp API] Exception réseau:', err);
+        sessionStorage.removeItem(this.sessionKey);
+        console.warn('[WhatsApp API] Exception réseau:', err.message || err);
         return { success: false, message: 'Erreur de communication avec le serveur WhatsApp.' };
       }
-    } else {
-      // Mode simulation élégant pour démo et tests immédiats
-      console.log('[JBF WhatsApp Auth] Code OTP de démonstration généré (valeur non journalisée)');
-      return {
-        success: true,
-        phone: formattedPhone,
-        demoCode: otpCode,
-        message: `Code envoyé par WhatsApp ! (En mode test immédiat, votre code est : ${otpCode})`
-      };
     }
+    return { success: false, message: 'Fournisseur WhatsApp indisponible.' };
   }
 
   // Vérifier le code OTP saisi
@@ -117,6 +144,10 @@ class WhatsAppAuthService {
     if (data.attempts > 5) {
       sessionStorage.removeItem(this.sessionKey);
       return { success: false, message: 'Trop de tentatives incorrectes. Veuillez recommencer.' };
+    }
+
+    if (!this.providerReady() || data.demonstration) {
+      return { success: false, authenticated: false, message: 'Un code de démonstration n\'authentifie pas.' };
     }
 
     if (enteredCode.trim() === data.otp.trim()) {

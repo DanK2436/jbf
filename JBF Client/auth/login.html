@@ -12,6 +12,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/client-api.js"></script>
   <script src="../js/whatsapp-config.js"></script>
   <script src="../js/whatsapp-auth.js"></script>
   <script src="../../supabase/auth-client.js"></script>
@@ -560,24 +561,17 @@
 
     try {
       activeEmailTarget = email;
-      activeEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      activeEmailOtp = '';
+      sessionStorage.removeItem('JBF_EMAIL_OTP_' + email);
 
-      sessionStorage.setItem('JBF_EMAIL_OTP_' + email, JSON.stringify({
-        code: activeEmailOtp,
-        expiresAt: Date.now() + 10 * 60 * 1000
-      }));
-
-      // Envoi via service mail (Brevo / Resend / Relais / Simulation)
-      let mailResult = null;
-      if (window.JBFMailService) {
-        mailResult = await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);
+      if (!window.JBFMailService) {
+        throw new Error('Service de messagerie indisponible.');
       }
-
-      if (mailResult && mailResult.provider && mailResult.provider !== 'simulation-locale') {
-        showSuccess(`Code de vérification sécurisé envoyé à ${email} (via ${mailResult.provider.toUpperCase()}). Consultez votre boîte mail.`);
-      } else {
-        showSuccess(`Un code de vérification a été envoyé à ${email}. Vérifiez votre boîte mail.`);
+      const mailResult = await window.JBFMailService.sendClientLoginOtp(email);
+      if (!mailResult || mailResult.success === false || mailResult.simulated) {
+        throw new Error('Le serveur n\'a pas confirmé l\'envoi du code.');
       }
+      showSuccess(`Code de vérification envoyé à ${email} (via ${(mailResult.provider || 'serveur').toUpperCase()}). Consultez votre boîte mail.`);
       document.getElementById('displayEmailOtpTarget').textContent = email;
       document.getElementById('emailOtpStep1').style.display = 'none';
       document.getElementById('emailOtpStep2').style.display = 'block';
@@ -605,19 +599,19 @@
       return;
     }
 
-    // Vérification
-    const stored = sessionStorage.getItem('JBF_EMAIL_OTP_' + activeEmailTarget);
-    let valid = (activeEmailOtp && code === activeEmailOtp);
-
-    if (!valid && stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.code === code && Date.now() <= parsed.expiresAt) valid = true;
-      } catch(e) {}
+    if (!window.JBFMailService?.verifyServerOtp) {
+      showError('Vérification serveur indisponible. Un code affiché localement n\'authentifie pas.');
+      return;
     }
-
-    if (!valid) {
-      showError('Code OTP incorrect ou expiré. Veuillez vérifier votre boîte mail ou redemander un nouveau code.');
+    let verified;
+    try {
+      verified = await window.JBFMailService.verifyServerOtp(activeEmailTarget, code);
+    } catch (err) {
+      showError(err.message || 'Code OTP incorrect ou expiré.');
+      return;
+    }
+    if (!verified || verified.success === false || verified.simulated || verified.demonstration) {
+      showError('Code OTP refusé par le serveur.');
       return;
     }
 

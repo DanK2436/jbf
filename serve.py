@@ -30,8 +30,8 @@ SECURITY_CSP = (
     "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'; "
     "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; "
     "img-src 'self' data: blob: https:; "
-    "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://api.brevo.com "
-    "https://api.resend.com http://127.0.0.1:* http://localhost:*"
+    "connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net "
+    "http://127.0.0.1:* http://localhost:*"
 )
 PUBLIC_TREES = {'JBF Public', 'JBF Client', 'assets', 'js'}
 
@@ -340,41 +340,11 @@ class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if urlsplit(self.path or '').path == '/api/mail/send':
-            try:
-                if not self._mail_caller_allowed():
-                    self._send_json(401, {'success': False, 'error': 'Relais mail réservé au navigateur local du site JBF.'})
-                    return
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length)
-                payload = json.loads(body.decode('utf-8'))
-                
-                to_email = payload.get('to')
-                subject = payload.get('subject')
-                html = payload.get('html')
-                preferred = payload.get('provider')
-                
-                if not to_email or not subject or not html:
-                    self._send_json(400, {'success': False, 'error': 'Champs obligatoires manquants (to, subject, html)'})
-                    return
-
-                import re
-                otp_match = re.search(r'\b(\d{6})\b', (subject or '') + ' ' + (html or ''))
-                if otp_match:
-                    print(f"[JBF Mail] Relais demandé pour {to_email} (code non journalisé)", flush=True)
-
-                result = send_email_server(to_email, subject, html, preferred)
-                status_code = 200 if result.get('success') else 500
-                self.send_response(status_code)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode('utf-8'))
-                return
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
-                return
+            self._send_json(403, {
+                'success': False,
+                'error': "Relais de courriel arbitraire désactivé : aucun contrôle serveur authentifié. Origin, Sec-Fetch-Site et l'adresse loopback ne suffisent pas."
+            })
+            return
 
         elif self.path == '/api/admin/login':
             try:

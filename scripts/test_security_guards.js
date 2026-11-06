@@ -9,7 +9,8 @@ const {
   isOfficialAdminPassword,
   formatOtpLog,
   publicAssetAllowed,
-  mailRelayCallerAllowed
+  arbitraryMailRelayEnabled,
+  applySecurityHeaders
 } = require('../backend/security-guards');
 
 const FAKE_OTP = '246813';
@@ -44,9 +45,18 @@ check('backend/.env bloqué', publicAssetAllowed('/backend/.env') === false);
 check('double encodage bloqué', publicAssetAllowed('/%252e%252e/backend/.env') === false);
 check('dotfile bloqué', publicAssetAllowed('/.git/HEAD') === false);
 check('asset public', publicAssetAllowed('/JBF%20Public/index.html') === true);
-check('relais anonyme refusé', mailRelayCallerAllowed('127.0.0.1', '', '') === false);
-check('relais externe refusé', mailRelayCallerAllowed('203.0.113.8', 'http://127.0.0.1:3001', 'cross-site') === false);
-check('relais same-origin local', mailRelayCallerAllowed('127.0.0.1', 'http://127.0.0.1:8080', 'same-origin') === true);
+check('relais arbitraire fermé', arbitraryMailRelayEnabled() === false);
+check('en-têtes avant les routes', (() => {
+  const headerAt = serverSrc.indexOf('app.use(applySecurityHeaders)');
+  const firstPost = serverSrc.indexOf('app.post(');
+  const firstGet = serverSrc.indexOf('app.get(');
+  const firstRoute = [firstPost, firstGet].filter((n) => n >= 0).sort((a, b) => a - b)[0];
+  return headerAt >= 0 && headerAt < firstRoute;
+})());
+check('navigateur sans clé messagerie', (() => {
+  const mail = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'mail-service.js'), 'utf8');
+  return !mail.includes('ENV_BREVO_API_KEY') && !mail.includes('api.brevo.com') && !mail.includes('api.resend.com') && !mail.includes('simulated: true');
+})());
 
 if (failures.length) {
   console.error('ÉCHEC', failures.join(', '));

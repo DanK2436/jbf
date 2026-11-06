@@ -1,303 +1,89 @@
 /**
- * JBF SERVICES — Dispatcher d'Emails OTP & Réinitialisation Client
- * Multi-provider: Brevo (80%) / Resend (20%)
- * Quota strict : 380 emails / jour
- * Réservé exclusivement à l'Espace Client
+ * JBF SERVICES — Client d'envoi OTP
+ * Aucune clé de messagerie n'est lue ni envoyée par le navigateur.
+ * Le serveur génère le code et parle aux fournisseurs.
  */
-
 (function (window) {
   'use strict';
 
-  const DAILY_MAX_EMAILS = 380;
-  const STORAGE_KEY = 'JBF_EMAIL_QUOTA_STATS';
-
-  // Obtenir ou initialiser les statistiques quotidiennes
-  function getDailyStats() {
-    const today = new Date().toISOString().split('T')[0];
-    let stats = { date: today, total: 0, brevo: 0, resend: 0 };
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.date === today) {
-          stats = parsed;
-        } else {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
-        }
-      }
-    } catch (e) {
-      console.warn('[JBF Mail] Impossible de lire les stats:', e);
+  function apiBases() {
+    if (window.JBFClientApi && typeof window.JBFClientApi.getClientApiBases === 'function') {
+      return window.JBFClientApi.getClientApiBases();
     }
-    return stats;
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return ['http://127.0.0.1:3001/api', 'http://localhost:3001/api'];
+    }
+    return [];
   }
 
-  function recordEmailSent(provider) {
-    const stats = getDailyStats();
-    stats.total += 1;
-    if (provider === 'brevo') stats.brevo += 1;
-    if (provider === 'resend') stats.resend += 1;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
-    } catch (e) {}
-    console.log(`[JBF Mail] Email transmis via ${provider.toUpperCase()}. Quota du jour: ${stats.total}/${DAILY_MAX_EMAILS}`);
-  }
-
-  // Aucune clé fournisseur n'est embarquée. L'envoi direct n'est possible
-  // que si la page définit explicitement window.ENV_* hors dépôt.
-  function getMailConfig() {
-    const clientCfg = window.JBF_CLIENT_CONFIG || {};
-
-    const pickKey = (...candidates) => {
-      for (const c of candidates) {
-        if (typeof c === 'string' && c.trim().length > 0) return c.trim();
-      }
-      return '';
-    };
-
-    return {
-      brevoApiKey: pickKey(window.ENV_BREVO_API_KEY),
-      resendApiKey: pickKey(window.ENV_RESEND_API_KEY),
-      senderName: clientCfg.MAIL_SENDER_NAME || 'JBF SERVICES',
-      senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'dankande3@gmail.com',
-      backendEndpoints: ['/api/mail/send', 'http://localhost:3001/api/mail/send']
-    };
-  }
-
-  // 1. Envoi direct via API REST Brevo (ex-Sendinblue)
-  async function sendViaBrevo(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
-    const sendersToTry = [
-      { name: senderName || 'JBF SERVICES', email: 'dankande3@gmail.com' },
-      { name: senderName || 'JBF SERVICES', email: 'dankande22@gmail.com' }
-    ];
-
-    let lastError = null;
-    for (const sender of sendersToTry) {
+  async function postServer(path, body) {
+    const errors = [];
+    const bases = apiBases();
+    if (!bases.length) {
+      return {
+        ok: false,
+        error: 'Aucun serveur de messagerie joignable depuis cette page. Le navigateur n\'envoie pas de courriel.'
+      };
+    }
+    for (const base of bases) {
       try {
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        const res = await fetch(base + path, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': apiKey,
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: sender,
-            to: [{ email: toEmail }],
-            subject: subject,
-            htmlContent: htmlContent
-          })
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(body || {})
         });
-
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          return { success: true, provider: 'brevo', messageId: data.messageId };
-        } else {
-          const err = await res.json().catch(() => ({}));
-          lastError = new Error(err.message || `Brevo HTTP ${res.status}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data && data.success !== false) {
+          return { ok: true, data };
         }
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    throw lastError || new Error('Échec envoi Brevo');
-  }
-
-  // 2. Envoi direct via API REST Resend
-  async function sendViaResend(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
-    const fromsToTry = [
-      `${senderName || 'JBF SERVICES'} <onboarding@resend.dev>`,
-      `JBF SERVICES <onboarding@resend.dev>`
-    ];
-
-    let lastError = null;
-    for (const fromStr of fromsToTry) {
-      try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            from: fromStr,
-            to: [toEmail],
-            subject: subject,
-            html: htmlContent
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          return { success: true, provider: 'resend', id: data.id };
-        } else {
-          const err = await res.json().catch(() => ({}));
-          lastError = new Error(err.message || `Resend HTTP ${res.status}`);
-        }
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    throw lastError || new Error('Échec envoi Resend');
-  }
-
-  // Dispatcher multi-provider intelligent
-  async function dispatchEmail(toEmail, subject, htmlContent, options = {}) {
-    const requireRealDelivery = options.requireRealDelivery === true;
-    const stats = getDailyStats();
-    if (stats.total >= DAILY_MAX_EMAILS) {
-      console.warn(`[JBF Mail] Quota quotidien de ${DAILY_MAX_EMAILS} emails atteint.`);
-      return { success: false, error: 'Quota quotidien de sécurité atteint.' };
-    }
-
-    const cfg = getMailConfig();
-    let errors = [];
-
-    // Tentative 1 : Brevo direct si clé API renseignée
-    if (cfg.brevoApiKey) {
-      try {
-        const res = await sendViaBrevo(cfg.brevoApiKey, cfg.senderName, cfg.senderEmail, toEmail, subject, htmlContent);
-        if (res && res.success) {
-          recordEmailSent('brevo');
-          console.log('[JBF Mail] OTP réel envoyé avec succès via Brevo à', toEmail);
-          return res;
-        }
+        errors.push(data.error || ('HTTP ' + res.status));
       } catch (err) {
-        console.warn('[JBF Mail] Échec Brevo :', err.message);
-        errors.push(`Brevo: ${err.message}`);
+        errors.push(err.message || 'réseau');
       }
     }
-
-    // Tentative 2 : Resend direct si clé API renseignée
-    if (cfg.resendApiKey) {
-      try {
-        const res = await sendViaResend(cfg.resendApiKey, cfg.senderName, cfg.senderEmail, toEmail, subject, htmlContent);
-        if (res && res.success) {
-          recordEmailSent('resend');
-          console.log('[JBF Mail] OTP réel envoyé avec succès via Resend à', toEmail);
-          return res;
-        }
-      } catch (err) {
-        console.warn('[JBF Mail] Échec Resend :', err.message);
-        errors.push(`Resend: ${err.message}`);
-      }
-    }
-
-    // Tentative 3 : Relais backend (/api/mail/send)
-    for (const endpoint of cfg.backendEndpoints) {
-      try {
-        const serverRes = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: toEmail,
-            subject: subject,
-            html: htmlContent
-          })
-        });
-
-        if (serverRes.ok) {
-          const data = await serverRes.json();
-          if (data && data.success) {
-            recordEmailSent(data.provider || 'serveur');
-            console.log(`[JBF Mail] OTP transmis via serveur backend (${data.provider})`);
-            return data;
-          }
-        }
-      } catch (err) {
-        errors.push(`Backend ${endpoint}: ${err.message}`);
-      }
-    }
-
-    if (requireRealDelivery) {
-      throw new Error(
-        'Impossible d\'envoyer l\'email (Brevo/Resend/backend). ' +
-        (errors.length ? errors.join(' · ') : 'Vérifiez votre connexion ou réessayez.')
-      );
-    }
-
-    // Mode démonstration (connexion locale uniquement)
-    console.info('[JBF Mail] Mode résilient local actif.');
-    recordEmailSent('simulation-locale');
-    return {
-      success: true,
-      simulated: true,
-      provider: 'simulation-locale',
-      message: 'Mode résilient sécurisé : le code OTP est validé pour votre session.'
-    };
-  }
-
-
-  // Modèle d'email HTML épuré — Affichage exclusif du code de sécurité (aucune information d'origine ni IP)
-  function buildHtmlEmail(titre, codeOrContent, messageExplicatif) {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #F8FAFC; margin: 0; padding: 24px 16px; color: #0F172A; }
-    .container { max-width: 480px; margin: 0 auto; background: #FFFFFF; border-radius: 16px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-    .header { padding: 28px 24px 20px; text-align: center; border-bottom: 1px solid #F1F5F9; }
-    .header h1 { margin: 0; color: #E6007E; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p { margin: 4px 0 0; font-size: 11px; text-transform: uppercase; color: #64748B; letter-spacing: 1px; font-weight: 700; }
-    .body { padding: 32px 28px; text-align: center; }
-    .body h2 { font-size: 17px; color: #0F172A; margin: 0 0 10px; font-weight: 700; }
-    .body p { font-size: 13.5px; line-height: 1.5; color: #475569; margin: 0 0 20px; }
-    .code-box { background: #FFF0F7; border: 2px dashed #E6007E; border-radius: 12px; padding: 20px 14px; text-align: center; margin: 20px 0; }
-    .code { font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #E6007E; font-family: 'Courier New', Courier, monospace; }
-    .expire-hint { font-size: 12px; color: #94A3B8; margin-top: 14px; line-height: 1.4; }
-    .footer { background: #F8FAFC; padding: 16px 20px; text-align: center; font-size: 11px; color: #94A3B8; border-top: 1px solid #E2E8F0; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>JBF SERVICES</h1>
-      <p>Portail Partenaires &amp; Espace Client</p>
-    </div>
-    <div class="body">
-      <h2>${titre}</h2>
-      <p>${messageExplicatif}</p>
-      <div class="code-box">
-        <div class="code">${codeOrContent}</div>
-      </div>
-      <div class="expire-hint">
-        Ce code est strictement personnel et expire dans 10 minutes.<br>
-        Ne le transmettez à personne.
-      </div>
-    </div>
-    <div class="footer">
-      JBF SERVICES SARL &middot; Lubumbashi, République Démocratique du Congo
-    </div>
-  </div>
-</body>
-</html>`;
+    return { ok: false, error: errors.join(' · ') || 'Envoi refusé par le serveur.' };
   }
 
   const JBFMailService = {
-    getQuotaStats: getDailyStats,
-
-    // Envoi OTP pour la connexion client
-    async sendClientLoginOtp(email, otpCode) {
-      const subject = `Code de vérification : ${otpCode}`;
-      const html = buildHtmlEmail(
-        'Code de Connexion',
-        otpCode,
-        'Voici votre code de vérification à 6 chiffres pour accéder à votre Espace Client :'
-      );
-      return await dispatchEmail(email, subject, html);
+    getQuotaStats: function () {
+      return { date: new Date().toISOString().slice(0, 10), total: 0, brevo: 0, resend: 0 };
     },
 
-    // Envoi de code pour mot de passe oublié client
-    async sendClientPasswordReset(email, resetCode) {
-      const subject = `Code de réinitialisation : ${resetCode}`;
-      const html = buildHtmlEmail(
-        'Réinitialisation de Mot de Passe',
-        resetCode,
-        'Voici votre code sécurisé pour réinitialiser le mot de passe de votre compte client :'
-      );
-      return await dispatchEmail(email, subject, html, { requireRealDelivery: true });
+    async sendClientLoginOtp(email) {
+      const result = await postServer('/auth/otp/send', { email: email });
+      if (!result.ok) {
+        const error = new Error(result.error || 'Envoi du code impossible.');
+        error.simulated = false;
+        throw error;
+      }
+      return {
+        success: true,
+        simulated: false,
+        provider: (result.data && result.data.provider) || 'serveur'
+      };
+    },
+
+    async sendClientPasswordReset(email) {
+      const result = await postServer('/auth/reset-otp/send', { email: email });
+      if (!result.ok) {
+        const error = new Error(result.error || 'Envoi du code impossible.');
+        error.simulated = false;
+        throw error;
+      }
+      return {
+        success: true,
+        simulated: false,
+        provider: (result.data && result.data.provider) || 'serveur'
+      };
+    },
+
+    async verifyServerOtp(email, token) {
+      const result = await postServer('/auth/otp/verify', { email: email, token: token });
+      if (!result.ok) {
+        throw new Error(result.error || 'Code OTP incorrect ou expiré.');
+      }
+      return result.data || { success: true };
     }
   };
 

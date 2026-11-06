@@ -69,57 +69,33 @@
         // Envoi OTP via API Brevo / Resend (et non via Supabase)
         async sendOtp(email) {
             const cleanEmail = email.trim().toLowerCase();
-            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-            sessionStorage.setItem('JBF_AUTH_OTP_' + cleanEmail, JSON.stringify({
-                code: otpCode,
-                expiresAt: Date.now() + 10 * 60 * 1000
-            }));
-
-            // Envoi exclusif via Brevo et Resend (JBFMailService)
-            if (window.JBFMailService) {
-                const res = await window.JBFMailService.sendClientLoginOtp(cleanEmail, otpCode);
-                console.log('[JBFAuth] OTP transmis via Brevo / Resend (valeur non journalisée)', res && res.provider);
-                return res;
+            sessionStorage.removeItem('JBF_AUTH_OTP_' + cleanEmail);
+            if (!window.JBFMailService) {
+                return { success: false, simulated: false, error: 'Service de messagerie indisponible.' };
             }
-
-            return { success: true, simulated: true, provider: 'local' };
+            const res = await window.JBFMailService.sendClientLoginOtp(cleanEmail);
+            if (!res || res.simulated || res.success === false) {
+                return { success: false, simulated: false, error: 'Envoi serveur refusé.' };
+            }
+            return res;
         },
 
-        // Vérification OTP locale sécurisée (sans dépendre de Supabase Auth)
         async verifyOtp(email, token, targetSpace) {
             const cleanEmail = email.trim().toLowerCase();
             const inputToken = token.trim();
-
-            const stored = sessionStorage.getItem('JBF_AUTH_OTP_' + cleanEmail) ||
-                           sessionStorage.getItem('JBF_EMAIL_OTP_' + cleanEmail) ||
-                           sessionStorage.getItem('JBF_REG_OTP_' + cleanEmail);
-
-            let isValid = false;
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.code === inputToken && Date.now() <= parsed.expiresAt) {
-                        isValid = true;
-                    }
-                } catch(e) {}
+            if (!window.JBFMailService?.verifyServerOtp) {
+                throw new Error('Vérification serveur indisponible. Un code local n\'authentifie pas.');
             }
-
-            if (!isValid) {
+            const verified = await window.JBFMailService.verifyServerOtp(cleanEmail, inputToken);
+            if (!verified || verified.success === false || verified.simulated || verified.demonstration) {
                 throw new Error('Code OTP incorrect ou expiré. Veuillez vérifier votre boîte mail.');
             }
-
-            // Génération de la session pour l'espace ciblé
-            const user = {
+            const user = verified.user || {
                 id: 'usr_' + Date.now().toString().slice(-6),
                 email: cleanEmail,
                 role: targetSpace || 'client'
             };
-            const session = {
-                access_token: 'jbf_session_' + Date.now(),
-                user: user
-            };
-
+            const session = verified.session || { user: user };
             return await this.handlePostLogin(user, session, targetSpace);
         },
 

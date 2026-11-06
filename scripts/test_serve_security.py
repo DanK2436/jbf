@@ -134,13 +134,14 @@ def main():
                 'subject': f'Code {FAKE_OTP}',
                 'html': f'<p>{FAKE_OTP}</p>'
             })
-        if status != 401:
+        if status != 403:
             fail(f'relais anonyme -> {status}')
         if calls:
             fail('le relais anonyme a appelé l\'envoi')
         if FAKE_OTP in buf.getvalue():
             fail('OTP factice journalisé sur refus anonyme')
 
+        before = len(calls)
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             status, payload, _, _ = request(port, 'POST', '/api/mail/send', {
@@ -149,21 +150,19 @@ def main():
                 'html': f'<p>{FAKE_OTP}</p>'
             }, headers={'Origin': f'http://127.0.0.1:{port}', 'Sec-Fetch-Site': 'same-origin'})
         logged = buf.getvalue()
-        if status != 200:
-            fail(f'relais same-origin -> {status}')
-        if not calls:
-            fail('le parcours same-origin n\'a pas atteint le relais mocké')
-        if FAKE_OTP in logged:
-            fail('OTP factice présent dans les logs du relais')
-        if b'mock' not in payload:
-            fail('réponse mock absente')
+        if status != 403:
+            fail(f'relais same-origin forgé -> {status}')
+        if len(calls) != before:
+            fail('le relais same-origin a quand même appelé l\'envoi')
+        if FAKE_OTP in logged or FAKE_OTP.encode() in payload:
+            fail('OTP factice présent dans la réponse ou les logs')
 
         status, _, _, _ = request(port, 'POST', '/api/mail/send', {
             'to': 'fixture@example.test',
             'subject': 'Code',
             'html': '<p>x</p>'
         }, headers={'Origin': 'https://evil.example', 'Sec-Fetch-Site': 'cross-site'})
-        if status != 401:
+        if status != 403:
             fail(f'origine externe -> {status}')
 
         serve.ADMIN_OFFICIAL_EMAIL = 'admin-fixture@example.test'

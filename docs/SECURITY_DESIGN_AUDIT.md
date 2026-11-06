@@ -1,5 +1,17 @@
 # Contrôle sécurité & design
 
+## Lot bee1ef9 — messagerie, relais et en-têtes
+
+Les clés de messagerie ne sont plus dans l'arbre de travail, mais elles restent dans l'historique Git antérieur à leur retrait. Ce dépôt ne les révoque pas et n'en affiche pas les valeurs. Le propriétaire doit les faire tourner ou révoquer chez les fournisseurs (Brevo, Resend) depuis leurs consoles.
+
+Le navigateur ne lit plus `window.ENV_BREVO_API_KEY` ni `window.ENV_RESEND_API_KEY`, et n'appelle plus les API de ces fournisseurs. L'envoi d'un code passe par `POST /api/auth/otp/send` ou `POST /api/auth/reset-otp/send` : le serveur génère le code, ne le renvoie pas, et répond 503 s'il n'a aucune clé fournisseur. La vérification `POST /api/auth/otp/verify` n'accepte qu'un code ainsi délivré.
+
+`POST /api/mail/send` est fermé (403) sur Express et sur `serve.py`. Origin, `Sec-Fetch-Site` et l'adresse loopback ne sont pas une authentification : ces en-têtes se falsifient, et un reverse proxy peut faire passer un client distant pour un client local. Rouvrir ce relais de contenu libre suppose un contrôle serveur qui n'existe pas encore (session ou jeton connu seulement du serveur, pas du navigateur). Jusque-là le comportement est fail-closed.
+
+Conséquence : la connexion par mot de passe Supabase ne change pas. Le code email et la réinitialisation exigent le backend Node joignable (`127.0.0.1:3001` en local) avec `BREVO_API_KEY` ou `RESEND_API_KEY` dans l'environnement du serveur, ou la fonction Edge déployée avec sa clé. GitHub Pages seul ne peut plus émettre de code. Un code affiché ou stocké dans le navigateur, y compris l'ancien mode WhatsApp de démonstration, n'ouvre plus de session.
+
+Les en-têtes CSP et `X-Frame-Options` sont posés par `applySecurityHeaders` dès la création de l'application Express, avant les routes. Ils couvrent donc les réponses 200, 401, 403, 404 et 500 de ce processus. Ils ne décrivent pas un proxy de production qui terminerait la requête avant Node.
+
 ## Contre-revue statique (baseline dc44014, vérifiée sur la branche redesign)
 
 Les points ci-dessous étaient un rapport de lecture du baseline, pas des tests dynamiques déjà acquis. Ils ont été rejoués ensuite avec des secrets factices.
