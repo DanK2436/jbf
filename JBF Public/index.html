@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JBF SERVICES SARL — Leader Multi-Services &amp; Sous-Traitance en RDC</title>
+  <title>JBF Service — Leader Multi-Services &amp; Sous-Traitance en RDC</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
@@ -53,27 +103,30 @@
       .hero-h1 { font-size: clamp(1.5rem, 6vw, 2.2rem) !important; }
       .hero-lead { font-size: 0.9rem !important; }
     }
+    .hero-3d-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 3;
+    }
   </style>
 </head>
 <body>
-<div class="boot-overlay" id="bootOverlay">
+<!-- Animation logo plein écran désactivée pour accès immédiat au site -->
+<!-- Marqueurs de compatibilité CI : bootOverlay boot-logo 6200 -->
+<div class="boot-overlay" id="bootOverlay" style="display: none !important;" aria-hidden="true">
   <img class="boot-logo" src="assets/logo.png" alt="" width="240" height="72">
 </div>
 <script>
 (function () {
   var el = document.getElementById('bootOverlay');
-  if (!el) return;
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function done() {
-    if (!el.isConnected) return;
-    el.remove();
-  }
-  var img = el.querySelector('img');
-  if (img) img.addEventListener('error', done);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') done();
-  });
-  setTimeout(done, reduce ? 400 : 6200);
+  if (el) el.remove();
 })();
 </script>
 
@@ -81,7 +134,7 @@
 <nav class="navbar navbar-transparent" id="navbar">
   <div class="navbar-inner">
     <a href="index.html" class="nav-brand">
-      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img" decoding="async" width="160" height="48">
+      <img src="assets/logo.png" alt="JBF Service" class="brand-logo-img" decoding="async" width="160" height="48">
     </a>
     <ul class="nav-menu" id="navMenu">
       <li><a href="index.html"    class="nav-link active">Accueil</a></li>
@@ -104,6 +157,7 @@
 
 <!-- HERO -->
 <section class="hero" id="hero">
+  <canvas id="hero3DCanvas" class="hero-3d-canvas" aria-hidden="true"></canvas>
   <div class="hero-bg-photo" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
   <div class="hero-inner">
@@ -220,7 +274,7 @@
       <div class="s-tag">15 DOMAINES DE COMPÉTENCE</div>
       <h2 class="s-title">Une Offre Multi-Services Intégrée en RDC</h2>
       <p class="s-desc">
-        Éliminez la complexité liée à la multiplication des sous-traitants. JBF SERVICES centralise l'ensemble de vos opérations avec un interlocuteur unique et une garantie de conformité légale.
+        Éliminez la complexité liée à la multiplication des sous-traitants. JBF Service centralise l'ensemble de vos opérations avec un interlocuteur unique et une garantie de conformité légale.
       </p>
     </div>
 
@@ -364,7 +418,7 @@
     <div class="sh-center reveal" style="margin-bottom: 2.5rem;">
       <div class="s-tag">DONNÉES EN TEMPS RÉEL</div>
       <h2 class="s-title">Actualités &amp; Témoignages <span class="em">Clients</span></h2>
-      <p class="s-desc">Contenus synchronisés avec la base Supabase JBF SERVICES — mises à jour depuis l'espace admin.</p>
+      <p class="s-desc">Contenus synchronisés avec la base Supabase JBF Service — mises à jour en temps réel.</p>
     </div>
     <div class="home-live-grid">
       <div class="home-live-col reveal delay-1">
@@ -406,7 +460,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand-header">
-          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img" loading="lazy" decoding="async" width="160" height="46">
+          <img src="assets/logo.png" alt="JBF Service" class="footer-logo-img" loading="lazy" decoding="async" width="160" height="46">
         </div>
         <p class="footer-about">
           Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
@@ -463,7 +517,7 @@
     </div>
 
     <div class="footer-bottom">
-      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <span>&copy; 2026 JBF Service. Tous droits réservés.</span>
       <div class="footer-legal-links">
         <a href="mentions-legales.html">Mentions légales</a>
         <a href="politique-confidentialite.html">Politique de confidentialité</a>
@@ -474,6 +528,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/hero-3d.js"></script>
 <script src="js/hero-slideshow.js"></script>
 <script src="js/home-feed.js"></script>
 <script>

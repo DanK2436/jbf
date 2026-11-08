@@ -1,10 +1,60 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>À Propos de JBF SERVICES | RDC</title>
-  <meta name="description" content="Découvrez l'histoire, la gouvernance, les valeurs, les certifications ARSP et l'ancrage national de JBF SERVICES sur les 26 provinces de la RDC.">
+  <title>À Propos de JBF Service | RDC</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
+  <meta name="description" content="Découvrez l'histoire, la gouvernance, les valeurs, les certifications ARSP et l'ancrage national de JBF Service sur les 26 provinces de la RDC.">
   <link rel="stylesheet" href="css/main.css">
   <style>
     .about-hero {
@@ -49,13 +99,14 @@
       margin-bottom: 1.25rem;
     }
 
-    /* Key Numbers Card — Rose Vif & Blanc (Zéro Magenta) */
+    /* Key Numbers Card — Gris Structuré (60% Corporate Gray) */
     .about-kpi-card {
-      background: var(--pink);
+      background: linear-gradient(135deg, #4a4a52 0%, #383840 100%);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: var(--r-card);
       padding: 2.5rem 2rem;
       color: #fff;
-      box-shadow: 0 10px 40px rgba(230,0,126,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     }
     .about-kpi-title {
       font-family: 'Poppins', sans-serif;
@@ -63,7 +114,7 @@
       font-weight: 800;
       margin-bottom: 1.75rem;
       padding-bottom: 0.75rem;
-      border-bottom: 1.5px solid rgba(255,255,255,0.3);
+      border-bottom: 1.5px solid rgba(255,255,255,0.2);
       color: #fff;
     }
     .about-kpi-grid {
@@ -72,8 +123,8 @@
       gap: 1.5rem;
     }
     .about-kpi-item {
-      background: rgba(255,255,255,0.15);
-      border: 1.5px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.18);
       border-radius: var(--r-card);
       padding: 1.2rem 1rem;
       text-align: center;
@@ -90,14 +141,14 @@
       font-family: 'Poppins', sans-serif;
       font-size: 2.2rem;
       font-weight: 900;
-      color: #fff;
+      color: var(--pink);
       line-height: 1;
       margin-bottom: 0.35rem;
       transition: color 0.2s;
     }
     .about-kpi-lbl {
       font-size: 0.76rem;
-      color: #fff;
+      color: #f0f0f4;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -247,59 +298,20 @@
       line-height: 1.5;
     }
 
-    /* RSE Box — Rose Vif & Blanc (Zéro Magenta) */
+    /* RSE Box — Gris Structuré (60% Corporate Gray) */
     .rse-box {
-      background: var(--pink);
+      background: linear-gradient(135deg, #4a4a52 0%, #383840 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-left: 5px solid var(--pink);
       border-radius: var(--r-card);
       padding: 3rem 2.5rem;
       color: #fff;
       margin-top: 4.5rem;
-      box-shadow: 0 10px 40px rgba(230,0,126,0.25);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 3rem;
       align-items: center;
-    }
-
-    /* Harmonisation Footer Rose & Blanc pour la page À Propos */
-    .footer {
-      background: var(--pink) !important;
-      color: #fff;
-    }
-    .footer-col-title {
-      color: #fff !important;
-      border-bottom: 2px solid rgba(255,255,255,0.3) !important;
-    }
-    .footer-links a {
-      color: rgba(255,255,255,0.88) !important;
-    }
-    .footer-links a:hover {
-      color: #fff !important;
-      text-decoration: underline;
-    }
-    .footer-about {
-      color: rgba(255,255,255,0.9) !important;
-    }
-    .footer-contact-icon {
-      background: rgba(255,255,255,0.2) !important;
-      color: #fff !important;
-    }
-    .footer-contact-icon svg {
-      stroke: #fff !important;
-    }
-    .footer-contact-text {
-      color: #fff !important;
-    }
-    .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.25) !important;
-      color: rgba(255,255,255,0.85) !important;
-    }
-    .footer-legal-links a {
-      color: rgba(255,255,255,0.85) !important;
-    }
-    .footer-legal-links a:hover {
-      color: #fff !important;
-      text-decoration: underline;
     }
 
     @media (max-width: 960px) {
@@ -322,7 +334,7 @@
 <nav class="navbar" id="navbar">
   <div class="navbar-inner">
     <a href="index.html" class="nav-brand">
-      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+      <img src="assets/logo.png" alt="JBF Service" class="brand-logo-img">
     </a>
     <ul class="nav-menu" id="navMenu">
       <li><a href="index.html"    class="nav-link">Accueil</a></li>
@@ -346,7 +358,7 @@
 <!-- ABOUT HERO -->
 <section class="about-hero">
   <div class="container">
-    <h1 class="about-hero-title">À Propos de JBF SERVICES</h1>
+    <h1 class="about-hero-title">À Propos de JBF Service</h1>
     <p class="about-hero-sub">
       Leader congolais de la sous-traitance industrielle, minière, du catering, du BTP, de la maintenance et de la logistique sur l'ensemble des 26 provinces de la RDC.
     </p>
@@ -364,7 +376,7 @@
         <h2 class="s-title" style="margin-bottom: 1.25rem;">L'Excellence Opérationnelle au Cœur du Développement Congolais</h2>
         
         <p class="about-lead-text">
-          Fondée avec la volonté d'offrir aux multinationales et entreprises locales un niveau d'exécution aux standards internationaux, <strong>JBF SERVICES</strong> s'est imposée comme un partenaire stratégique de premier plan en République Démocratique du Congo.
+          Fondée avec la volonté d'offrir aux multinationales et entreprises locales un niveau d'exécution aux standards internationaux, <strong>JBF Service</strong> s'est imposée comme un partenaire stratégique de premier plan en République Démocratique du Congo.
         </p>
         
         <p class="about-body-text">
@@ -382,7 +394,7 @@
 
       <!-- Right KPI Card -->
       <div class="about-kpi-card">
-        <h3 class="about-kpi-title">JBF SERVICES en Chiffres Clés</h3>
+        <h3 class="about-kpi-title">JBF Service en Chiffres Clés</h3>
         <div class="about-kpi-grid">
           <div class="about-kpi-item">
             <div class="about-kpi-num">15</div>
@@ -411,7 +423,7 @@
     <div style="margin-top: 5rem;">
       <div class="s-tag">VALEURS &amp; CULTURE D'ENTREPRISE</div>
       <h2 class="s-title">Les 4 Piliers Fondamentaux de notre Engagement</h2>
-      <p class="s-desc">Ces principes directeurs guident chaque décision opérationnelle et managériale de JBF SERVICES.</p>
+      <p class="s-desc">Ces principes directeurs guident chaque décision opérationnelle et managériale de JBF Service.</p>
 
       <div class="values-grid">
         <div class="val-card">
@@ -454,7 +466,7 @@
         <div class="s-tag">MAILLAGE GÉOGRAPHIQUE NATIONAL</div>
         <h3 class="presence-title">Déploiement Opérationnel dans les 26 Provinces</h3>
         <p class="presence-desc">
-          Avec un siège stratégique à <strong>Lubumbashi</strong> au cœur de la Copperbelt, des bases avancées à <strong>Kolwezi</strong> et des bureaux de liaison à <strong>Kinshasa</strong>, JBF SERVICES assure le pilotage fluide de vos projets partout en RDC :
+          Avec un siège stratégique à <strong>Lubumbashi</strong> au cœur de la Copperbelt, des bases avancées à <strong>Kolwezi</strong> et des bureaux de liaison à <strong>Kinshasa</strong>, JBF Service assure le pilotage fluide de vos projets partout en RDC :
         </p>
         <ul style="list-style: disc; padding-left: 1.25rem; font-size: 0.88rem; color: var(--text-body); line-height: 1.7;">
           <li><strong>Haut-Katanga &amp; Lualaba :</strong> Chantiers miniers, usines hydrométallurgiques, génie civil lourd et camps de vie.</li>
@@ -542,7 +554,7 @@
         <div class="s-tag" style="background: rgba(255,255,255,0.25); color: #fff;">RESPONSABILITÉ SOCIÉTALE (RSE)</div>
         <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff;">Bâtir un Avenir Industriel Durable et Inclusif</h3>
         <p style="color: rgba(255,255,255,0.92); font-size: 0.92rem; line-height: 1.75;">
-          Chez JBF SERVICES, la performance économique est indissociable de notre devoir envers les communautés hôtes et l'environnement en RDC.
+          Chez JBF Service, la performance économique est indissociable de notre devoir envers les communautés hôtes et l'environnement en RDC.
         </p>
       </div>
 
@@ -564,7 +576,7 @@
 
     <!-- Final CTA -->
     <div style="text-align: center; margin-top: 4.5rem;">
-      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.45rem; font-weight: 800; color: var(--text-h); margin-bottom: 0.5rem;">Vous souhaitez collaborer avec JBF SERVICES ?</h3>
+      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.45rem; font-weight: 800; color: var(--text-h); margin-bottom: 0.5rem;">Vous souhaitez collaborer avec JBF Service ?</h3>
       <p style="color: var(--text-light); font-size: 0.92rem; margin-bottom: 1.5rem;">Nos chargés de projets sont disponibles pour étudier votre besoin et vous transmettre une cotation sous 24h.</p>
       <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-lg">Demander un Devis Commercial →</a>
     </div>
@@ -578,7 +590,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand-header">
-          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+          <img src="assets/logo.png" alt="JBF Service" class="footer-logo-img">
         </div>
         <p class="footer-about">
           Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
@@ -635,7 +647,7 @@
     </div>
 
     <div class="footer-bottom">
-      <span>&copy; 2026 JBF SERVICES. Tous droits réservés.</span>
+      <span>&copy; 2026 JBF Service. Tous droits réservés.</span>
       <div class="footer-legal-links">
         <a href="mentions-legales.html">Mentions légales</a>
         <a href="politique-confidentialite.html">Politique de confidentialité</a>

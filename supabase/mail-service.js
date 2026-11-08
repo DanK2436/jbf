@@ -1,14 +1,16 @@
 /**
- * JBF SERVICES — Dispatcher d'Emails OTP & Réinitialisation Client
- * Multi-provider: Brevo (80%) / Resend (20%)
- * Quota strict : 380 emails / jour
- * Réservé exclusivement à l'Espace Client
+ * JBF SERVICES — Dispatcher d'Emails OTP & Authentification Client
+ * Priorité 1 : Brevo (295 messages / jour)
+ * Secours / Failover : Resend (98 messages / jour lorsque Brevo est épuisé ou indisponible)
+ * Quota total : 393 emails / jour
  */
 
 (function (window) {
   'use strict';
 
-  const DAILY_MAX_EMAILS = 380;
+  const DAILY_MAX_BREVO = 295;
+  const DAILY_MAX_RESEND = 98;
+  const DAILY_MAX_EMAILS = DAILY_MAX_BREVO + DAILY_MAX_RESEND; // 393
   const STORAGE_KEY = 'JBF_EMAIL_QUOTA_STATS';
 
   // Obtenir ou initialiser les statistiques quotidiennes
@@ -40,7 +42,6 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
     } catch (e) {}
-    console.log(`[JBF Mail] Email transmis via ${provider.toUpperCase()}. Quota du jour: ${stats.total}/${DAILY_MAX_EMAILS}`);
   }
 
   // Clés configurées pour l'environnement statique (GitHub Pages) sans exposition directe
@@ -87,7 +88,7 @@
       brevoApiKey: pickKey(window.ENV_BREVO_API_KEY, clientCfg.BREVO_API_KEY, adminCfg.BREVO_API_KEY, localStorage.getItem('JBF_BREVO_API_KEY'), DEFAULT_BREVO_KEY),
       resendApiKey: pickKey(window.ENV_RESEND_API_KEY, clientCfg.RESEND_API_KEY, adminCfg.RESEND_API_KEY, localStorage.getItem('JBF_RESEND_API_KEY'), DEFAULT_RESEND_KEY),
       senderName: clientCfg.MAIL_SENDER_NAME || 'JBF SERVICES',
-      senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'dankande3@gmail.com',
+      senderEmail: clientCfg.MAIL_SENDER_EMAIL || 'bintijudith104@gmail.com',
       backendEndpoints: ['/api/mail/send', 'http://localhost:3001/api/mail/send']
     };
   }
@@ -96,6 +97,7 @@
   async function sendViaBrevo(apiKey, senderName, senderEmail, toEmail, subject, htmlContent) {
     const sendersToTry = [
       { name: senderName || 'JBF SERVICES', email: 'dankande3@gmail.com' },
+      { name: senderName || 'JBF SERVICES', email: 'bintijudith104@gmail.com' },
       { name: senderName || 'JBF SERVICES', email: 'dankande22@gmail.com' }
     ];
 
@@ -170,39 +172,40 @@
   }
 
   // Dispatcher multi-provider intelligent
+  // Priorité absolue : Brevo (295/jour). Failover : Resend (98/jour)
   async function dispatchEmail(toEmail, subject, htmlContent, options = {}) {
     const requireRealDelivery = options.requireRealDelivery === true;
     const stats = getDailyStats();
     if (stats.total >= DAILY_MAX_EMAILS) {
-      console.warn(`[JBF Mail] Quota quotidien de ${DAILY_MAX_EMAILS} emails atteint.`);
-      return { success: false, error: 'Quota quotidien de sécurité atteint.' };
+      console.warn(`[JBF Mail] Quota quotidien global de sécurité (${DAILY_MAX_EMAILS}) atteint.`);
+      return { success: false, error: 'Quota quotidien d\'envoi atteint.' };
     }
 
     const cfg = getMailConfig();
     let errors = [];
 
-    // Tentative 1 : Brevo direct si clé API renseignée
-    if (cfg.brevoApiKey) {
+    // Priorité 1 : Brevo direct tant que quota < 295 / jour
+    if (cfg.brevoApiKey && stats.brevo < DAILY_MAX_BREVO) {
       try {
         const res = await sendViaBrevo(cfg.brevoApiKey, cfg.senderName, cfg.senderEmail, toEmail, subject, htmlContent);
         if (res && res.success) {
           recordEmailSent('brevo');
-          console.log('[JBF Mail] OTP réel envoyé avec succès via Brevo à', toEmail);
           return res;
         }
       } catch (err) {
-        console.warn('[JBF Mail] Échec Brevo :', err.message);
+        console.warn('[JBF Mail] Échec Brevo, basculement automatique vers Resend :', err.message);
         errors.push(`Brevo: ${err.message}`);
       }
+    } else if (stats.brevo >= DAILY_MAX_BREVO) {
+      console.info(`[JBF Mail] Quota Brevo journalier (${DAILY_MAX_BREVO}) atteint, relais automatique vers Resend.`);
     }
 
-    // Tentative 2 : Resend direct si clé API renseignée
-    if (cfg.resendApiKey) {
+    // Priorité 2 / Secours : Resend direct (98 / jour)
+    if (cfg.resendApiKey && stats.resend < DAILY_MAX_RESEND) {
       try {
         const res = await sendViaResend(cfg.resendApiKey, cfg.senderName, cfg.senderEmail, toEmail, subject, htmlContent);
         if (res && res.success) {
           recordEmailSent('resend');
-          console.log('[JBF Mail] OTP réel envoyé avec succès via Resend à', toEmail);
           return res;
         }
       } catch (err) {

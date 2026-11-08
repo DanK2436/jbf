@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Suivi des Interventions & Chantiers — JBF Client</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/client.css">
 </head>
@@ -12,7 +62,7 @@
 <div class="client-layout">
   <aside class="client-sidebar">
     <div class="sidebar-header">
-      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
       <div class="brand-text">
         <h2>JBF CLIENT</h2>
         <span>Espace Partenaire RDC</span>
@@ -78,9 +128,45 @@
     </header>
 
     <main class="client-content">
+      <!-- OPERATIONS METRICS -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 22px;">
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 0;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--brand-pink-subtle); color: var(--brand-pink); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-geo-alt-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Chantiers Déployés</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: var(--text-primary);" id="kpiMissionsDeployees">0</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Provinces & concessions RDC</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 0;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #DCFCE7; color: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Conformité QHSE</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #166534;">100%</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Standards ARSP & RDC</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 0;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #E0F2FE; color: #0284C7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Superviseurs JBF</div>
+            <div style="font-size: 1.35rem; font-weight: 900; color: #0369A1;">24/7</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Permanence opérationnelle</div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
-          <h2><i class="bi bi-compass"></i> Ordres de Mission Exécutés par JBF SERVICES</h2>
+          <h2><i class="bi bi-compass"></i> Ordres de Mission Exécutés par JBF Service</h2>
           <button class="btn btn-secondary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
         </div>
         <div class="card-body">
@@ -137,64 +223,66 @@
 
   async function loadClientMissions() {
     const tbody = document.getElementById('missionsTableBody');
-
-    // Récupérer la session client
     let session = window.clientCore?.getClientSession() || {};
+    const clientEmail = (session.email || '').toLowerCase();
+    const clientCompany = session.companyName || session.name || '';
 
     let list = [];
-    let fromSupabase = false;
 
-    // --- Tentative Supabase ---
-    if (supabase && session.id) {
+    // --- Requête Supabase en direct (Données réelles) ---
+    if (supabase) {
       try {
         const { data, error } = await supabase
           .from('missions')
           .select('*')
-          .eq('client_id', session.id)
           .order('created_at', { ascending: false });
 
-        if (!error && data && data.length > 0) {
-          list = data;
-          fromSupabase = true;
-          try { localStorage.setItem('JBF_MISSIONS_LOCAL', JSON.stringify(list)); } catch(e) {}
+        if (!error && Array.isArray(data)) {
+          list = data.filter(m => 
+            (session.id && m.client_id === session.id) ||
+            (clientCompany && m.client && m.client.toLowerCase().includes(clientCompany.toLowerCase())) ||
+            (clientEmail && m.client_email && m.client_email.toLowerCase() === clientEmail)
+          );
         }
       } catch(e) {
-        console.warn('Supabase missions error:', e);
+        console.warn('[Supabase missions error]', e);
       }
     }
 
-    // --- Fallback localStorage ---
-    if (!fromSupabase) {
+    // Fallback stockage local synchronisé du client
+    if (list.length === 0) {
       try {
         const stored = localStorage.getItem('JBF_MISSIONS_LOCAL');
-        if (stored) list = JSON.parse(stored);
+        if (stored) {
+          const localList = JSON.parse(stored);
+          list = localList.filter(m => !m.client_email || m.client_email.toLowerCase() === clientEmail);
+        }
       } catch(e) {}
     }
 
-    // --- Exemple pour test immédiat ---
+    // Calcul des KPIs réels de chantiers
+    const actives = list.filter(m => m.statut !== 'termine').length;
+    const terminees = list.filter(m => m.statut === 'termine').length;
+    const effectifs = list.reduce((acc, m) => acc + (Number(m.effectif) || 0), 0);
+
+    const elActives = document.getElementById('kpiMissionsActives');
+    const elTerminees = document.getElementById('kpiMissionsTerminees');
+    const elEffectifs = document.getElementById('kpiTotalEffectifs');
+
+    if (elActives) elActives.textContent = `${actives} Chantier(s)`;
+    if (elTerminees) elTerminees.textContent = `${terminees} Livré(s)`;
+    if (elEffectifs) elEffectifs.textContent = effectifs > 0 ? `${effectifs} Agents` : `${actives * 4} Mobilisables`;
+
     if (!list || list.length === 0) {
-      list = [
-        {
-          id: '5012',
-          titre: 'Maintenance préventive groupe électrogène & câblage',
-          lieu: 'Kinshasa — Site Industriel Limete',
-          chef_equipe: 'Alain Kalombo (JBF Team)',
-          effectif: 4,
-          avancement: 75,
-          statut: 'en_cours'
-        },
-        {
-          id: '5008',
-          titre: 'Mise en conformité assainissement & traitement des sols',
-          lieu: 'Haut-Katanga — Chantier Lubumbashi',
-          chef_equipe: 'Christian Mutombo (JBF Team)',
-          effectif: 6,
-          avancement: 100,
-          statut: 'termine'
-        }
-      ];
-      try { localStorage.setItem('JBF_MISSIONS_LOCAL', JSON.stringify(list)); } catch(e) {}
-    }
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+            <i class="bi bi-geo-alt" style="font-size: 2.2rem; color: #CBD5E1; display: block; margin-bottom: 10px;"></i>
+            <strong style="color: var(--text-primary); font-size: 0.95rem;">Aucun chantier ou mission active pour votre compte.</strong><br>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Dès qu'une intervention est planifiée par nos chefs d'équipes, son avancement en direct s'affichera ici.</span>
+          </td>
+        </tr>
+      `;
       return;
     }
 
@@ -209,9 +297,27 @@
         <tr>
           <td><strong>#MSN-${(m.id || '').toString().slice(-4).toUpperCase()}</strong></td>
           <td>${escapeHtml(m.titre || m.service || 'Intervention')}</td>
-          <td>${escapeHtml(m.site || 'RDC')}</td>
-          <td>${escapeHtml(m.chef || 'Superviseur JBF')}</td>
-          <td>${escapeHtml(m.effectif ? String(m.effectif) : 'Équipe JBF')}</td>
+          <td>${escapeHtml(m.site || m.site_intervention || 'RDC')}</td>
+          <td>${escapeHtml(m.chef || m.chef_equipe || 'Superviseur JBF')}</td>
+          <td>${escapeHtml(m.effectif ? String(m.effectif) + ' agents' : 'Équipe JBF')}</td>
+          <td>
+            <div style="font-size:0.75rem;margin-bottom:3px;font-weight:700;">${pct}% Réalisé</div>
+            <div style="background:#F1F5F9;height:7px;border-radius:4px;overflow:hidden;width:140px;">
+              <div style="background:${barColor};width:${pct}%;height:100%;"></div>
+            </div>
+          </td>
+          <td><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+          <td style="text-align:right;">
+            <div class="table-actions">
+              <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Point d\\'avancement mission ${m.id}')">
+                <i class="bi bi-whatsapp"></i> Chef d'Équipe
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
           <td>
             <div style="font-size:0.75rem;margin-bottom:3px;font-weight:700;">${pct}% Réalisé</div>
             <div style="background:#F1F5F9;height:7px;border-radius:4px;overflow:hidden;width:140px;">

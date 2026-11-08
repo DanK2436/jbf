@@ -1,5 +1,5 @@
 /* ============================================================
-   JBF SERVICES — Navbar & Footer partagés (injectés)
+   JBF SERVICE — Navbar & Footer partagés (injectés)
    ============================================================ */
 
 (function() {
@@ -19,7 +19,7 @@
   <div class="navbar-inner">
     <a href="${root}index.html" class="nav-brand">
       <div class="nav-brand-text">
-        <span class="nav-brand-jbf">JBF</span><span class="nav-brand-services">&nbsp;SERVICES</span>
+        <span class="nav-brand-jbf">JBF</span><span class="nav-brand-services">&nbsp;Service</span>
       </div>
       <span class="nav-brand-tagline">L'Excellence à votre service</span>
     </a>
@@ -34,11 +34,11 @@
       <li><a href="${root}contact.html"  class="nav-link ${isActive('contact.html') ? 'active' : ''}">Contact</a></li>
     </ul>
     <div class="nav-actions">
-  <a href="${root ? root : ''}../JBF Client/auth/login.html" class="nav-connexion" style="font-weight: 700;">Espace Client</a>
-  <button class="hamburger" id="jbf-hamburger" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-</div>
+      <a href="${root ? root : ''}../JBF Client/auth/login.html" class="nav-connexion btn-pink" style="padding: 0.55rem 1.15rem; border-radius: 8px; font-weight: 700; color: #fff; text-decoration: none;">Espace Client</a>
+      <button class="hamburger" id="jbf-hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </nav>`;
 
@@ -49,12 +49,12 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand-name">
-          <span class="fbj">JBF</span>&nbsp;<span class="fbs">SERVICES</span>
+          <span class="fbj">JBF</span>&nbsp;<span class="fbs">Service</span>
         </div>
         <div class="footer-brand-tag">L'Excellence à votre service</div>
         <p class="footer-about">
           Votre partenaire polyvalent pour l'alimentaire, le BTP, la logistique, le minier
-          et bien plus encore. 15 domaines d'expertise à votre service.
+          et bien plus encore. 15 domaines d'expertise certifiés à votre service.
         </p>
       </div>
       <div>
@@ -62,8 +62,8 @@
         <ul class="footer-links">
           <li><a href="${root}index.html">Accueil</a></li>
           <li><a href="${root}services.html">Services (15 Pôles)</a></li>
-          <li><a href="${root ? root : ''}../JBF Client/auth/login.html" style="color: var(--pink); font-weight: 700;">Espace Client & Devis</a></li>
-          <li><a href="${root ? root : ''}../JBF Client/service-client.html">Service Client & WhatsApp</a></li>
+          <li><a href="${root ? root : ''}../JBF Client/auth/login.html" style="color: var(--pink-light); font-weight: 700;">Espace Client &amp; Devis</a></li>
+          <li><a href="${root ? root : ''}../JBF Client/service-client.html">Service Client &amp; WhatsApp</a></li>
           <li><a href="${root}gallery.html">Galerie Chantiers</a></li>
           <li><a href="${root}avis.html">Avis Clients</a></li>
           <li><a href="${root}blog.html">Actualités</a></li>
@@ -96,7 +96,7 @@
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
             </svg>
           </div>
-          <span class="footer-contact-text">République Démocratique du Congo</span>
+          <span class="footer-contact-text">Lubumbashi &bull; République Démocratique du Congo</span>
         </div>
       </div>
       <div>
@@ -115,7 +115,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 JBF SERVICES. Tous droits réservés.</span>
+      <span>&copy; 2026 JBF Service. Tous droits réservés.</span>
       <div class="footer-legal-links">
         <a href="${root}mentions-legales.html">Mentions légales</a>
         <a href="${root}politique-confidentialite.html">Politique de confidentialité</a>

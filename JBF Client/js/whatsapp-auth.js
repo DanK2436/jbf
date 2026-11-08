@@ -1,5 +1,5 @@
 // =============================================================
-// JBF SERVICES — MODULE D'AUTHENTIFICATION WHATSAPP
+// JBF Service — MODULE D'AUTHENTIFICATION WHATSAPP
 // Envoi, validation OTP et connexion instantanée
 // =============================================================
 

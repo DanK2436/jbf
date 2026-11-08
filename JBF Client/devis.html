@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mes Devis & Commandes — JBF Client</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/client.css">
 </head>
@@ -12,7 +62,7 @@
 <div class="client-layout">
   <aside class="client-sidebar">
     <div class="sidebar-header">
-      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
       <div class="brand-text">
         <h2>JBF CLIENT</h2>
         <span>Espace Partenaire RDC</span>
@@ -176,7 +226,7 @@
 
 <!-- MODALE DEMANDE DEVIS AVEC UPLOAD DE FICHIERS (MAX 3, 5MB) -->
 <div class="modal-overlay" id="newQuoteModal">
-  <div class="modal-box">
+  <div class="modal-box spatial-3d-card">
     <div class="modal-header">
       <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);"><i class="bi bi-plus-circle" style="color: var(--brand-pink);"></i> Demander une Nouvelle Prestation</h3>
       <button class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newQuoteModal')">&times;</button>
@@ -184,36 +234,56 @@
     <form onsubmit="handleNewQuote(event)">
       <div class="modal-body">
         <div class="form-group">
-          <label>Prestation Souhaitée *</label>
-          <select id="modalServiceSelect" class="form-control" required>
-            <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
-            <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
-            <option value="BTP, Génie Civil & Construction">3. BTP, Génie Civil & Construction</option>
-            <option value="Maintenance Industrielle & Soudure">4. Maintenance Industrielle & Soudure</option>
-            <option value="Gardiennage & Sécurité Physique">5. Gardiennage, Sécurité Physique & Surveillance</option>
-            <option value="Nettoyage Industriel & Housekeeping">6. Nettoyage Industriel & Housekeeping</option>
-            <option value="Transport Personnel & Location Engins">7. Transport du Personnel & Location d'Engins</option>
-            <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
-            <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
-            <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
-            <option value="Gestion des Déchets & Assainissement">11. Gestion des Déchets & Assainissement</option>
-            <option value="Audit HSE & Contrôle Qualité">12. Audit HSE & Contrôle Qualité</option>
-            <option value="Plomberie & Traitement des Eaux">13. Plomberie & Traitement des Eaux</option>
-            <option value="Fournitures Générales de Bureau">14. Fournitures Générales de Bureau</option>
-            <option value="Import-Export & Transit">15. Import-Export & Transit Douanier</option>
-          </select>
+          <label>
+            <span>Prestation Souhaitée</span>
+            <span class="label-req">*</span>
+          </label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-tools input-icon"></i>
+            <select id="modalServiceSelect" class="form-control" required>
+              <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
+              <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
+              <option value="BTP, Génie Civil & Construction">3. BTP, Génie Civil & Construction</option>
+              <option value="Maintenance Industrielle & Soudure">4. Maintenance Industrielle & Soudure</option>
+              <option value="Gardiennage & Sécurité Physique">5. Gardiennage, Sécurité Physique & Surveillance</option>
+              <option value="Nettoyage Industriel & Housekeeping">6. Nettoyage Industriel & Housekeeping</option>
+              <option value="Transport Personnel & Location Engins">7. Transport du Personnel & Location d'Engins</option>
+              <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
+              <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
+              <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
+              <option value="Gestion des Déchets & Assainissement">11. Gestion des Déchets & Assainissement</option>
+              <option value="Audit HSE & Contrôle Qualité">12. Audit HSE & Contrôle Qualité</option>
+              <option value="Plomberie & Traitement des Eaux">13. Plomberie & Traitement des Eaux</option>
+              <option value="Fournitures Générales de Bureau">14. Fournitures Générales de Bureau</option>
+              <option value="Import-Export & Transit">15. Import-Export & Transit Douanier</option>
+            </select>
+          </div>
         </div>
+
         <div class="form-group">
-          <label>Lieu / Concession en RDC *</label>
-          <input type="text" id="modalSiteInput" class="form-control" placeholder="Ex: Kolwezi, Lubumbashi, Likasi..." required>
+          <label>
+            <span>Lieu / Concession en RDC</span>
+            <span class="label-req">*</span>
+          </label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-pin-map input-icon"></i>
+            <input type="text" id="modalSiteInput" class="form-control" placeholder="Ex: Kolwezi, Lubumbashi, Likasi..." required>
+          </div>
         </div>
+
         <div class="form-group">
-          <label>Cahier des charges ou description</label>
+          <label>
+            <span>Cahier des charges ou description</span>
+            <span class="label-tag">Détails</span>
+          </label>
           <textarea id="modalDescInput" class="form-control" rows="3" placeholder="Volume estimé, effectifs, délais souhaités..."></textarea>
         </div>
 
         <div class="form-group">
-          <label>Joindre des documents techniques (max 3 fichiers, 5 Mo max chacun)</label>
+          <label>
+            <span>Documents Techniques & Plans</span>
+            <span class="label-tag">Max 3 x 5 Mo</span>
+          </label>
           <div class="file-upload-zone" id="quoteDropZone">
             <input type="file" id="quoteFileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.dxf,.dwg,.stl,.png,.svg,.jpg,.jpeg" onchange="handleQuoteFileSelection(event)">
             <i class="bi bi-cloud-arrow-up" style="font-size: 1.8rem; color: var(--brand-pink); display: block; margin-bottom: 4px;"></i>
@@ -227,7 +297,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('newQuoteModal')">Fermer</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitQuote"><i class="bi bi-send-fill"></i> Soumettre la Demande</button>
+        <button type="submit" class="btn btn-primary btn-sm btn-3d" id="btnSubmitQuote"><i class="bi bi-send-fill"></i> Soumettre la Demande</button>
       </div>
     </form>
   </div>
@@ -239,6 +309,7 @@
 <script src="js/whatsapp-config.js"></script>
 <script src="js/whatsapp-auth.js"></script>
 <script src="js/client-core.js"></script>
+<script src="js/client-3d-forms.js"></script>
 
 <script>
   let allClientQuotes = [];

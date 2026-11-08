@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Connexion Espace Client — JBF SERVICES</title>
+  <title>Connexion Espace Client — JBF Service</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,20 +62,23 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/config.js"></script>
-  <script src="../js/whatsapp-config.js"></script>
-  <script src="../js/whatsapp-auth.js"></script>
   <script src="../../supabase/auth-client.js"></script>
   <script src="../../supabase/mail-service.js"></script>
+  <!-- Three.js 3D WebGL Engine & Auth Scene -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="../js/client-auth-3d.js"></script>
+  <script src="../js/client-3d-forms.js"></script>
 
   <style>
     :root {
       --brand-pink: #E6007E;
-      --brand-pink-dark: #B6005E;
-      --brand-pink-subtle: #FFF0F7;
-      --text-primary: #0F172A;
-      --text-secondary: #475569;
-      --text-muted: #64748B;
-      --border-subtle: #E2E8F0;
+      --brand-pink-dark: #C4006B;
+      --brand-pink-subtle: #FCE7F3;
+      --gray-base: #aaaaaa;
+      --text-primary: #0C0C0E;
+      --text-secondary: #242428;
+      --text-muted: #55555c;
+      --border-subtle: #8c8c92;
       --whatsapp-green: #25D366;
       --whatsapp-hover: #1EBE5D;
       --whatsapp-subtle: #DCFCE7;
@@ -40,20 +93,24 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at 10% 10%, rgba(230, 0, 126, 0.05) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 90%, rgba(37, 211, 102, 0.04) 0%, transparent 40%),
-                  #F8FAFC;
+      background: #aaaaaa;
       padding: 20px 14px;
       color: var(--text-primary);
+      position: relative;
+      overflow-x: hidden;
     }
 
     .login-container {
+      position: relative;
+      z-index: 10;
       width: 100%;
       max-width: 460px;
-      background: #FFFFFF;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-radius: var(--r-lg);
-      border: 1px solid var(--border-subtle);
-      box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(230, 0, 126, 0.25);
+      box-shadow: 0 20px 50px rgba(12, 12, 14, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
       overflow: hidden;
     }
 
@@ -143,20 +200,62 @@
 
     .form-control {
       width: 100%;
-      padding: 11px 14px;
+      padding: 12px 16px;
       font-size: 0.9rem;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--r-sm);
+      font-weight: 600;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
       outline: none;
-      transition: all 0.15s ease;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       box-sizing: border-box;
       background: #FFFFFF;
       color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(12, 12, 14, 0.04), inset 0 2px 4px rgba(12, 12, 14, 0.02);
+    }
+
+    .form-control:hover:not(:focus) {
+      border-color: #CBD5E1;
+      box-shadow: 0 3px 8px rgba(12, 12, 14, 0.06);
     }
 
     .form-control:focus {
-      border-color: var(--brand-pink);
-      box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.12);
+      border-color: var(--brand-pink) !important;
+      box-shadow: 0 0 0 4px rgba(230, 0, 126, 0.14), 0 8px 22px rgba(230, 0, 126, 0.12), inset 0 1px 2px rgba(12, 12, 14, 0.02) !important;
+      transform: translateY(-2px);
+    }
+
+    .input-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .input-icon-wrap i.input-icon {
+      position: absolute;
+      left: 18px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      font-size: 1.05rem !important;
+      width: 20px !important;
+      height: 20px !important;
+      line-height: 20px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: #94A3B8;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 5 !important;
+    }
+
+    .input-icon-wrap:focus-within i.input-icon {
+      color: var(--brand-pink);
+      transform: translateY(-50%) scale(1.1) !important;
+    }
+
+    .input-icon-wrap .form-control {
+      padding-left: 56px !important;
     }
 
     .phone-input-group {
@@ -355,8 +454,8 @@
 
 <div class="login-container">
   <div class="login-header">
-    <img src="../../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" onerror="this.src='../assets/logo.png'">
-    <h1>Espace Client</h1>
+    <img src="../../assets/logo.png" alt="JBF Service" class="client-brand-logo" onerror="this.src='../assets/logo.png'">
+    <h1>Espace Client JBF Service</h1>
     <p>Suivi en direct de vos devis et prestations en RDC</p>
   </div>
 
@@ -374,18 +473,23 @@
       </button>
     </div>
 
-    <!-- 1. MODE EMAIL OTP (Brevo & Resend) -->
+    <!-- 1. MODE EMAIL OTP -->
     <div id="emailOtpSection">
       <div id="emailOtpStep1">
         <div class="form-group">
-          <label class="form-label">Email de votre compte ou devis</label>
-          <input type="email" id="emailOtpInput" class="form-control" placeholder="contact@entreprise.com" required autocomplete="email">
+          <label class="form-label">
+            <span><i class="bi bi-envelope"></i> Email de votre compte ou devis</span>
+          </label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-envelope-at input-icon"></i>
+            <input type="email" id="emailOtpInput" class="form-control" placeholder="contact@entreprise.com" required autocomplete="email">
+          </div>
         </div>
-        <button type="button" class="btn-submit" id="btnSendEmailOtp" onclick="handleSendEmailOtp()">
+        <button type="button" class="btn-submit btn-3d" id="btnSendEmailOtp" onclick="handleSendEmailOtp()">
           <i class="bi bi-send-fill"></i> Recevoir mon Code OTP
         </button>
         <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 10px; text-align: center;">
-          <i class="bi bi-shield-lock-fill" style="color: var(--brand-pink);"></i> Envoi direct par Brevo & Resend (aucun mot de passe requis)
+          <i class="bi bi-shield-lock-fill" style="color: var(--brand-pink);"></i> Connexion sécurisée par code de validation email
         </p>
       </div>
 
@@ -403,7 +507,7 @@
           <input type="text" maxlength="1" class="otp-digit email-otp-digit" inputmode="numeric" pattern="[0-9]*">
         </div>
 
-        <button type="button" class="btn-submit" id="btnVerifyEmailOtp" onclick="handleVerifyEmailOtp()">
+        <button type="button" class="btn-submit btn-3d" id="btnVerifyEmailOtp" onclick="handleVerifyEmailOtp()">
           <i class="bi bi-check-circle-fill"></i> Valider et Accéder à mon Espace
         </button>
 
@@ -421,14 +525,24 @@
     <!-- 2. MODE MOT DE PASSE -->
     <form id="passwordForm" onsubmit="handlePasswordLogin(event)" style="display: none;">
       <div class="form-group">
-        <label class="form-label">Email professionnel</label>
-        <input type="email" id="passEmail" class="form-control" required placeholder="contact@entreprise.cd" autocomplete="username">
+        <label class="form-label">
+          <span><i class="bi bi-envelope"></i> Email professionnel</span>
+        </label>
+        <div class="input-icon-wrap">
+          <i class="bi bi-envelope-at input-icon"></i>
+          <input type="email" id="passEmail" class="form-control" required placeholder="contact@entreprise.cd" autocomplete="username">
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Mot de passe</label>
-        <input type="password" id="passPassword" class="form-control" required placeholder="••••••••••••" autocomplete="current-password">
+        <label class="form-label">
+          <span><i class="bi bi-shield-lock"></i> Mot de passe</span>
+        </label>
+        <div class="input-icon-wrap">
+          <i class="bi bi-key input-icon"></i>
+          <input type="password" id="passPassword" class="form-control" required placeholder="••••••••••••" autocomplete="current-password">
+        </div>
       </div>
-      <button type="submit" class="btn-submit" id="btnPassSubmit">
+      <button type="submit" class="btn-submit btn-3d" id="btnPassSubmit">
         <i class="bi bi-box-arrow-in-right"></i> Connexion Espace Client
       </button>
       <div class="extra-links">
@@ -573,11 +687,7 @@
         mailResult = await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);
       }
 
-      if (mailResult && mailResult.provider && mailResult.provider !== 'simulation-locale') {
-        showSuccess(`Code de vérification sécurisé envoyé à ${email} (via ${mailResult.provider.toUpperCase()}). Consultez votre boîte mail.`);
-      } else {
-        showSuccess(`Un code de vérification a été envoyé à ${email}. Vérifiez votre boîte mail.`);
-      }
+      showSuccess(`Un code de validation à 6 chiffres a été envoyé à <strong>${email}</strong>. Veuillez vérifier votre boîte de réception et vos courriers indésirables.`);
       document.getElementById('displayEmailOtpTarget').textContent = email;
       document.getElementById('emailOtpStep1').style.display = 'none';
       document.getElementById('emailOtpStep2').style.display = 'block';

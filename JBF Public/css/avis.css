@@ -1,7 +1,17 @@
 /* =============================================================
-   JBF SERVICES — AVIS CLIENTS (css/avis.css)
-   Design 50% Rose Magenta (#E6007E / #9E1A59)
+   JBF SERVICE — AVIS CLIENTS (css/avis.css)
+   Palette officielle : 60% Gris #aaaaaa, 20% Rose Logo #E6007E, 15% Blanc, 5% Noir
    ============================================================= */
+
+:root {
+  --primary: var(--pink, #E6007E);
+  --primary-pale: rgba(170, 170, 170, 0.4);
+  --primary-blush: #FBCFE8;
+  --primary-tint: #FCE7F3;
+  --grad-btn: linear-gradient(135deg, #E6007E, #FF2E99);
+  --text-dark: #0C0C0E;
+  --text-soft: #4e4e54;
+}
 
 .reviews-summary {
   background: #fff;

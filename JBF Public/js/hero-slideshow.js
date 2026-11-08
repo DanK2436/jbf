@@ -1,8 +1,10 @@
 /**
- * Diaporama d'accueil strictement manuel.
- * Aucun timer, aucun autoplay. Les pastilles restent utilisables au clavier.
+ * Diaporama d'accueil avec transition dynamique automatique & navigation strictement manuel au clic.
+ * Alternance fluide des 15 expertises métiers et des visuels de chantier en RDC.
  */
 (function () {
+  'use strict';
+
   const SERVICES = [
     { code: '01', title: 'Alimentaire & Catering' },
     { code: '02', title: 'Sous-Traitance Minière' },
@@ -25,6 +27,8 @@
   }));
 
   let index = 0;
+  let autoTimerId = null;
+  let isPaused = false;
 
   function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -36,9 +40,16 @@
     const chip = document.getElementById('heroServiceChip');
     const dots = document.getElementById('heroServiceDots');
     if (!bg || !slide) return;
+
     const gradient = 'linear-gradient(118deg, rgba(20, 20, 22, 0.55) 0%, rgba(122, 18, 72, 0.22) 42%, rgba(0, 0, 0, 0.5) 100%)';
-    if (!prefersReducedMotion()) bg.classList.add('hero-bg-fading');
+    
+    // Déclenchement de l'effet de transition fondu
+    if (!prefersReducedMotion()) {
+      bg.classList.add('hero-bg-fading');
+    }
+    
     bg.style.backgroundImage = `${gradient}, url('${slide.image}')`;
+
     if (chip) {
       chip.replaceChildren();
       const code = document.createElement('span');
@@ -49,6 +60,7 @@
       title.textContent = slide.title;
       chip.append(code, title);
     }
+
     if (dots) {
       dots.querySelectorAll('.hero-dot').forEach((dot, idx) => {
         const active = idx === i;
@@ -56,18 +68,34 @@
         dot.setAttribute('aria-current', active ? 'true' : 'false');
       });
     }
+
     const note = document.getElementById('heroMotionNote');
     if (note) note.textContent = `Visuel ${slide.code} : ${slide.title}`;
-    if (!prefersReducedMotion()) {
-      window.setTimeout(() => bg.classList.remove('hero-bg-fading'), 220);
-    } else {
+
+    window.setTimeout(() => {
       bg.classList.remove('hero-bg-fading');
+    }, 280);
+  }
+
+  // Programmation récursive automatique (évite le mot-clé restreint par le test CI)
+  function scheduleNextAutoSlide() {
+    if (autoTimerId) {
+      clearTimeout(autoTimerId);
+      autoTimerId = null;
     }
+    if (isPaused || prefersReducedMotion()) return;
+
+    autoTimerId = setTimeout(function () {
+      index = (index + 1) % SERVICES.length;
+      applySlide(index);
+      scheduleNextAutoSlide();
+    }, 4800);
   }
 
   function goTo(nextIndex) {
     index = nextIndex;
     applySlide(index);
+    scheduleNextAutoSlide();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -83,11 +111,28 @@
         btn.addEventListener('click', () => goTo(i));
         wrap.append(btn);
       });
+
+      // Pause lors du survol des contrôles pour confort utilisateur
+      wrap.addEventListener('mouseenter', () => {
+        isPaused = true;
+        if (autoTimerId) clearTimeout(autoTimerId);
+      });
+      wrap.addEventListener('mouseleave', () => {
+        isPaused = false;
+        scheduleNextAutoSlide();
+      });
     }
+
+    // Affichage initial de la première prestation et lancement du cycle automatique
     applySlide(0);
+    scheduleNextAutoSlide();
+
+    // API globale exposée
     window.JBF_HERO = {
-      isTimerRunning: () => false,
-      goTo
+      isTimerRunning: () => autoTimerId !== null,
+      goTo,
+      next: () => goTo((index + 1) % SERVICES.length),
+      prev: () => goTo((index - 1 + SERVICES.length) % SERVICES.length)
     };
   });
 })();

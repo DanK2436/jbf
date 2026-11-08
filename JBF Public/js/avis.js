@@ -1,5 +1,5 @@
 /* =============================================================
-   JBF SERVICES — AVIS CLIENTS SCRIPT (js/avis.js)
+   JBF Service — AVIS CLIENTS SCRIPT (js/avis.js)
    ============================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,13 +1,66 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tableau de Bord Entreprise — JBF Client</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/client.css">
   <!-- Chart.js 4 Enterprise UMD -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Three.js 3D WebGL Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="js/client-3d-forms.js"></script>
 </head>
 <body>
 
@@ -16,7 +69,7 @@
   <aside class="client-sidebar">
     <div class="sidebar-header">
       <div class="logo-box">
-        <img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;">
+        <img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;">
       </div>
       <div class="brand-text">
         <h2>JBF CLIENT</h2>
@@ -108,6 +161,27 @@
     <!-- CONTENT -->
     <main class="client-content">
 
+      <!-- 3D MOTION DESIGN BANNER -->
+      <section class="client-hero-motion-card" id="clientHeroMotionCard">
+        <div class="client-hero-motion-content">
+          <span class="client-hero-tag"><i class="bi bi-shield-check"></i> Espace Partenaire Certifié RDC</span>
+          <h1 class="client-hero-title">Tableau de Bord & Pilotage Opérationnel</h1>
+          <p class="client-hero-desc">
+            Supervisez vos chantiers, commandes et prestations avec indicateurs en direct. Ligne d'assistance prioritaire mobilisée 24/7.
+          </p>
+          <div class="client-hero-contact-bar">
+            <a href="https://wa.me/243970349724" target="_blank" rel="noopener noreferrer" class="hero-contact-pill whatsapp">
+              <i class="bi bi-whatsapp"></i> WhatsApp : +243 970 349 724
+            </a>
+            <a href="tel:+243822357053" class="hero-contact-pill phone">
+              <i class="bi bi-telephone-fill"></i> Appels : +243 822 357 053
+            </a>
+            <a href="mailto:bintijudith104@gmail.com" class="hero-contact-pill email">
+              <i class="bi bi-envelope-fill"></i> bintijudith104@gmail.com
+            </a>
+          </div>
+        </div>
+      </section>
 
       <!-- KPI METRICS -->
       <div class="kpi-grid">
@@ -149,99 +223,58 @@
             <i class="bi bi-headset"></i>
           </div>
           <div class="kpi-details">
-            <h3>Tickets Support</h3>
-            <div class="kpi-value" id="kpiTicketsSupport">0</div>
-            <div class="kpi-sub">Lien direct WhatsApp actif</div>
+            <h3>Support & Urgences</h3>
+            <div class="kpi-value">24/7</div>
+            <div class="kpi-sub">WhatsApp +243 970 349 724</div>
           </div>
         </div>
       </div>
 
-      <!-- SECTION GRAPHIQUES 1 : DÉPENSES & PÔLES D'ACTIVITÉ -->
-      <div class="client-charts-grid-main" id="clientMainChartsGrid">
+      <!-- SECTION 2 GRAPHIQUES OFFICIELS : 1 VERTICAL & 1 HORIZONTAL -->
+      <div class="client-two-charts-grid" id="clientTwoChartsGrid">
         
-        <!-- GRAPHIQUE 1 : ÉVOLUTION DES PRESTATIONS & DÉPENSES ENGAGÉES (USD) -->
+        <!-- GRAPHIQUE 1 (VERTICAL) : VOLUME PRESTATIONS & DÉPENSES ENGAGÉES (USD) -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <h2><i class="bi bi-graph-up-arrow"></i> Volume des Prestations & Budget Facturé (USD)</h2>
+            <h2><i class="bi bi-bar-chart-fill"></i> Volume des Prestations & Facturation (USD)</h2>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span class="badge-status valide" id="chartExpensesPeriodLabel">Période Mensuelle</span>
-              <div class="period-selector mobile-chart-period-selector" style="display: none;">
-                <button class="period-btn" onclick="setClientPeriod('7d', this)">7j</button>
-                <button class="period-btn active" onclick="setClientPeriod('30d', this)">30j</button>
-                <button class="period-btn" onclick="setClientPeriod('year', this)">Année</button>
-              </div>
             </div>
           </div>
           <div class="card-body">
-            <div class="chart-container">
-              <canvas id="chartClientExpenses" role="img" aria-describedby="expensesDirect"></canvas>
+            <div class="chart-container" style="height: 270px;">
+              <canvas id="chartClientVertical" role="img" aria-describedby="verticalDirect"></canvas>
             </div>
-            <p class="chart-direct" id="expensesDirect"></p>
+            <p class="chart-direct" id="verticalDirect"></p>
             <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
               <div>
                 <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Total Facturé 2026</span>
                 <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);" id="statClientTotalBudget">$0 USD</div>
               </div>
               <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Factures Acquittées</span>
-                <div style="font-size: 1.1rem; font-weight: 800; color: #059669;" id="statClientPaidPct">0%</div>
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Taux de Règlement</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #059669;" id="statClientPaidPct">100%</div>
               </div>
               <div style="border-left: 1px solid var(--border-subtle); padding-left: 20px;">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Délai Moyen Mobilisation</span>
+                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Délai Mobilisation</span>
                 <div style="font-size: 1.1rem; font-weight: 800; color: var(--brand-pink);">24h chrono</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- GRAPHIQUE 2 : RÉPARTITION PAR DOMAINE D'ACTIVITÉ (DOUGHNUT) -->
+        <!-- GRAPHIQUE 2 (HORIZONTAL) : RÉPARTITION PAR PÔLE MÉTIER (USD) -->
         <div class="card" style="margin-bottom: 0;">
-          <div class="card-header">
-            <h2><i class="bi bi-pie-chart-fill"></i> Pôles Contractés</h2>
-            <span class="badge-status nouveau">15 Métiers</span>
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2><i class="bi bi-bar-chart-steps"></i> Répartition par Pôle Métier (USD)</h2>
+            <span class="badge-status nouveau">Secteurs Clés</span>
           </div>
           <div class="card-body">
-            <div class="chart-container-sm">
-              <canvas id="chartClientSectors" role="img" aria-describedby="sectorsDirect"></canvas>
+            <div class="chart-container" style="height: 270px;">
+              <canvas id="chartClientHorizontal" role="img" aria-describedby="horizontalDirect"></canvas>
             </div>
-            <p class="chart-direct" id="sectorsDirect"></p>
-            <div class="legend-custom" id="clientSectorsLegend">
-              <!-- Injecté dynamiquement -->
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- SECTION GRAPHIQUES 2 : RESPECT SLA & CYCLE DES COMMANDES -->
-      <div class="client-charts-grid-sub" id="clientSubChartsGrid">
-        
-        <!-- GRAPHIQUE 3 : RESPECT DES DÉLAIS SLA PAR CHANTIER RDC -->
-        <div class="card" style="margin-bottom: 0;">
-          <div class="card-header">
-            <h2><i class="bi bi-speedometer2"></i> Respect des Délais d'Intervention & SLA</h2>
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Jours réels vs Objectif SLA</span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container">
-              <canvas id="chartClientSLA" role="img" aria-describedby="slaDirect"></canvas>
-            </div>
-            <p class="chart-direct" id="slaDirect"></p>
-          </div>
-        </div>
-
-        <!-- GRAPHIQUE 4 : CYCLE DE VIE DES DEMANDES & MISSIONS -->
-        <div class="card" style="margin-bottom: 0;">
-          <div class="card-header">
-            <h2><i class="bi bi-funnel-fill"></i> Cycle de Vie de vos Prestations</h2>
-            <span class="badge-status valide">Temps Réel</span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container-sm">
-              <canvas id="chartClientPipeline" role="img" aria-describedby="pipelineDirect"></canvas>
-            </div>
-            <p class="chart-direct" id="pipelineDirect"></p>
-            <div class="legend-custom" id="clientPipelineLegend">
+            <p class="chart-direct" id="horizontalDirect"></p>
+            <div class="legend-custom" id="clientHorizontalLegend" style="margin-top: 10px;">
               <!-- Injecté dynamiquement -->
             </div>
           </div>
@@ -317,10 +350,8 @@
 <script src="js/client-core.js"></script>
 
 <script>
-  let clientExpensesChart = null;
-  let clientSectorsChart = null;
-  let clientSLAChart = null;
-  let clientPipelineChart = null;
+  let clientVerticalChart = null;
+  let clientHorizontalChart = null;
   let currentClientPeriod = '30d';
   let supabaseClient = null;
 
@@ -339,10 +370,20 @@
     return supabaseClient;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function bootClientDashboard() {
     initClientCharts();
-    loadChartData();
     loadDashboardTables();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootClientDashboard);
+  } else {
+    bootClientDashboard();
+  }
+  window.addEventListener('load', () => {
+    if (!clientVerticalChart || !clientHorizontalChart) {
+      initClientCharts();
+    }
   });
 
   function openNewOrderModal() {
@@ -430,6 +471,11 @@
     const activesMissions = missionsList.filter(m => m.statut !== 'termine').length;
     if (elKpiMissions) elKpiMissions.textContent = activesMissions;
     if (elKpiMissionsSub) elKpiMissionsSub.textContent = activesMissions > 0 ? `${activesMissions} équipe(s) déployée(s)` : 'Aucun chantier actif';
+
+    // Calcul et mise à jour des 2 graphiques à partir des données 100% réelles
+    if (typeof computeRealMetrics === 'function') {
+      computeRealMetrics(devisList, missionsList);
+    }
 
     // Rendu Table Devis
     const devisBody = document.getElementById('dashboardDevisBody');
@@ -557,23 +603,23 @@
     g.fillStyle = '#ffffff';
     g.fillRect(0, 0, 10, 10);
     if (kind === 'solid') {
-      g.fillStyle = '#7A1248';
+      g.fillStyle = '#E6007E'; // 20% Rose Logo
       g.fillRect(0, 0, 10, 10);
     } else if (kind === 'stripe') {
-      g.strokeStyle = '#141416';
+      g.strokeStyle = '#0C0C0E'; // 5% Noir
       g.lineWidth = 2;
       g.beginPath();
       g.moveTo(0, 10);
       g.lineTo(10, 0);
       g.stroke();
     } else if (kind === 'dots') {
-      g.fillStyle = '#52525B';
+      g.fillStyle = '#aaaaaa'; // 60% Gris #aaaaaa
       g.beginPath();
-      g.arc(5, 5, 1.8, 0, Math.PI * 2);
+      g.arc(5, 5, 2, 0, Math.PI * 2);
       g.fill();
     } else {
-      g.strokeStyle = '#8E1A56';
-      g.lineWidth = 1.2;
+      g.strokeStyle = '#FF1A8C'; // Rose clair
+      g.lineWidth = 1.4;
       g.beginPath();
       g.moveTo(0, 10); g.lineTo(10, 0);
       g.moveTo(0, 0); g.lineTo(10, 10);
@@ -584,7 +630,7 @@
 
   function chartAnimation() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    return reduce ? false : { duration: 200 };
+    return reduce ? false : { duration: 350 };
   }
 
   function writeSeriesCaption(id, sentence) {
@@ -592,196 +638,342 @@
     if (el) el.textContent = sentence;
   }
 
-  function writeExpenseCaption() {
-    if (!clientExpensesChart) return;
-    const labels = clientExpensesChart.data.labels;
-    const engaged = clientExpensesChart.data.datasets[0].data;
-    const paid = clientExpensesChart.data.datasets[1].data;
-    const line = (name, values) => name + ' : ' + labels.map((label, i) => label + ' ' + values[i] + ' USD').join(', ');
-    writeSeriesCaption('expensesDirect', line('Prestations engagées, trait plein', engaged) + '. ' + line('Factures réglées, trait pointillé', paid) + '.');
+  function legendRow(color, label, value) {
+    return `<div class="legend-item"><div style="display:flex;align-items:center;min-width:0;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${color};margin-right:8px;flex-shrink:0;"></span><span style="font-weight:600;color:var(--text-primary);">${label}</span></div><span style="font-weight:700;color:var(--text-secondary);">${value}</span></div>`;
   }
 
-  function legendRow(patternName, label, value) {
-    return `<div class="legend-item"><div style="display:flex;align-items:center;min-width:0;"><span class="legend-swatch ${patternName}" aria-hidden="true"></span><span style="font-weight:600;color:var(--text-primary);">${label}</span></div><span style="font-weight:700;color:var(--text-secondary);">${value}</span></div>`;
+  // Structure des métriques 100% réelles calculées depuis Supabase
+  let clientRealMetrics = {
+    totalBudget: 0,
+    totalPaid: 0,
+    paidPct: 100,
+    year: {
+      labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc 2026'],
+      prestations: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      factures: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    month30: {
+      labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'],
+      prestations: [0, 0, 0, 0],
+      factures: [0, 0, 0, 0]
+    },
+    days7: {
+      labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      prestations: [0, 0, 0, 0, 0, 0, 0],
+      factures: [0, 0, 0, 0, 0, 0, 0]
+    },
+    sectors: []
+  };
+
+  const SECTOR_PALETTE = ['#E6007E', '#404048', '#6B7280', '#0C0C0E', '#FF1A8C', '#9CA3AF', '#D946EF', '#0EA5E9'];
+
+  function computeRealMetrics(devisList, missionsList) {
+    let totalBudget = 0;
+    let totalPaid = 0;
+
+    const prestationsYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const facturesYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    const prestations30d = [0, 0, 0, 0];
+    const factures30d = [0, 0, 0, 0];
+
+    const prestations7d = [0, 0, 0, 0, 0, 0, 0];
+    const factures7d = [0, 0, 0, 0, 0, 0, 0];
+
+    const sectorsMap = {};
+    const now = Date.now();
+
+    devisList.forEach(d => {
+      const val = Number(d.montant || d.montant_ttc || d.montant_estime || d.montant_ht || 0);
+      totalBudget += val;
+
+      const isPaid = (d.statut === 'valide' || d.statut === 'paye');
+      if (isPaid) totalPaid += val;
+
+      // Date parsing
+      const dDate = d.created_at ? new Date(d.created_at) : new Date();
+      const mIdx = dDate.getMonth();
+      if (mIdx >= 0 && mIdx < 12) {
+        prestationsYear[mIdx] += val;
+        if (isPaid) facturesYear[mIdx] += val;
+      }
+
+      // 30 jours
+      const ageDays = (now - dDate.getTime()) / (1000 * 3600 * 24);
+      if (ageDays <= 30 && ageDays >= 0) {
+        const weekIdx = Math.min(3, Math.floor(ageDays / 7.5));
+        prestations30d[weekIdx] += val;
+        if (isPaid) factures30d[weekIdx] += val;
+      }
+
+      // 7 jours
+      if (ageDays <= 7 && ageDays >= 0) {
+        const dayIdx = (dDate.getDay() + 6) % 7; // Lun=0 .. Dim=6
+        prestations7d[dayIdx] += val;
+        if (isPaid) factures7d[dayIdx] += val;
+      }
+
+      // Secteurs
+      const rawService = Array.isArray(d.services) ? d.services[0] : (d.service || d.prestation || 'Pôle Général');
+      const secKey = String(rawService).replace(/^\d+\.\s*/, '').trim();
+      if (!sectorsMap[secKey]) {
+        sectorsMap[secKey] = { label: secKey, value: 0, count: 0 };
+      }
+      sectorsMap[secKey].value += val;
+      sectorsMap[secKey].count += 1;
+    });
+
+    missionsList.forEach(m => {
+      const secKey = String(m.service_nom || m.service || 'Intervention Chantier').replace(/^\d+\.\s*/, '').trim();
+      if (!sectorsMap[secKey]) {
+        sectorsMap[secKey] = { label: secKey, value: 0, count: 0 };
+      }
+      sectorsMap[secKey].count += 1;
+    });
+
+    // Construire sectors array
+    let sectorsArr = Object.values(sectorsMap);
+    if (sectorsArr.length === 0) {
+      sectorsArr = [
+        { label: 'Catering & Vivres HACCP', value: 0 },
+        { label: 'Sous-Traitance Minière', value: 0 },
+        { label: 'BTP & Génie Civil', value: 0 },
+        { label: 'Maintenance Industrielle', value: 0 },
+        { label: 'Sécurité & Gardiennage', value: 0 },
+        { label: 'Transport & Engins', value: 0 }
+      ];
+    } else {
+      sectorsArr.sort((a, b) => b.value - a.value || b.count - a.count);
+    }
+
+    sectorsArr.forEach((s, idx) => {
+      s.color = SECTOR_PALETTE[idx % SECTOR_PALETTE.length];
+      s.badgeColor = s.color;
+    });
+
+    clientRealMetrics.totalBudget = totalBudget;
+    clientRealMetrics.totalPaid = totalPaid;
+    clientRealMetrics.paidPct = totalBudget > 0 ? Math.round((totalPaid / totalBudget) * 100) : 100;
+    clientRealMetrics.year.prestations = prestationsYear;
+    clientRealMetrics.year.factures = facturesYear;
+    clientRealMetrics.month30.prestations = prestations30d;
+    clientRealMetrics.month30.factures = factures30d;
+    clientRealMetrics.days7.prestations = prestations7d;
+    clientRealMetrics.days7.factures = factures7d;
+    clientRealMetrics.sectors = sectorsArr.slice(0, 8);
+
+    // Mettre à jour l'affichage des KPIs réels
+    const budgetStat = document.getElementById('statClientTotalBudget');
+    const paidPctStat = document.getElementById('statClientPaidPct');
+    if (budgetStat) budgetStat.textContent = `$${totalBudget.toLocaleString()} USD`;
+    if (paidPctStat) paidPctStat.textContent = `${clientRealMetrics.paidPct}%`;
+
+    // Mettre à jour les graphiques en direct
+    updateChartsFromRealData();
+  }
+
+  function updateChartsFromRealData() {
+    if (!clientVerticalChart || !clientHorizontalChart) return;
+
+    let periodData = clientRealMetrics.year;
+    if (currentClientPeriod === '7d') {
+      periodData = clientRealMetrics.days7;
+    } else if (currentClientPeriod === '30d') {
+      periodData = clientRealMetrics.month30;
+    }
+
+    clientVerticalChart.data.labels = periodData.labels;
+    clientVerticalChart.data.datasets[0].data = periodData.prestations;
+    clientVerticalChart.data.datasets[1].data = periodData.factures;
+    clientVerticalChart.update();
+
+    const sectors = clientRealMetrics.sectors;
+    clientHorizontalChart.data.labels = sectors.map(s => s.label);
+    clientHorizontalChart.data.datasets[0].data = sectors.map(s => s.value || s.count);
+    clientHorizontalChart.data.datasets[0].backgroundColor = sectors.map(s => s.color);
+    clientHorizontalChart.update();
+
+    const legendBox = document.getElementById('clientHorizontalLegend');
+    if (legendBox) {
+      legendBox.innerHTML = sectors.map(s => {
+        const displayVal = s.value > 0 ? `$${s.value.toLocaleString()} USD` : `${s.count} dossier(s)`;
+        return legendRow(s.badgeColor, s.label, displayVal);
+      }).join('');
+    }
+
+    writeSeriesCaption('verticalDirect', `Prestations réelles ($${clientRealMetrics.totalBudget.toLocaleString()} USD) et règlements vérifiés.`);
+    writeSeriesCaption('horizontalDirect', sectors.map(s => `${s.label} : $${s.value.toLocaleString()} USD`).join('. ') + '.');
   }
 
   function initClientCharts() {
+    if (typeof Chart === 'undefined') {
+      console.warn('[Charts] Chart.js non encore chargé, nouvelle tentative...');
+      setTimeout(initClientCharts, 120);
+      return;
+    }
+
     const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif";
     Chart.defaults.color = '#2A2A2E';
     Chart.defaults.animation = chartAnimation();
 
-    const ctxExp = document.getElementById('chartClientExpenses');
-    if (ctxExp) {
-      const g = ctxExp.getContext('2d');
-      clientExpensesChart = new Chart(ctxExp, {
-        type: 'line',
-        data: {
-          labels: ['Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept 2026'],
-          datasets: [
-            {
-              label: 'Prestations engagées (USD)',
-              data: [0, 0, 0, 0, 0, 0, 0, 0],
-              borderColor: '#7A1248',
-              backgroundColor: 'transparent',
-              borderWidth: 2.5,
-              borderDash: [],
-              tension: 0,
-              fill: false,
-              pointStyle: 'circle',
-              pointBackgroundColor: '#7A1248',
-              pointBorderColor: '#141416',
-              pointRadius: 4
+    // Nettoyage préalable des instances existantes
+    try {
+      const existingV = Chart.getChart('chartClientVertical');
+      if (existingV) existingV.destroy();
+    } catch(e) {}
+    try {
+      const existingH = Chart.getChart('chartClientHorizontal');
+      if (existingH) existingH.destroy();
+    } catch(e) {}
+
+    // ==========================================================
+    // 1. GRAPHIQUE VERTICAL : VOLUME & FACTURATION MENSUELLE (USD)
+    // ==========================================================
+    const ctxVertical = document.getElementById('chartClientVertical');
+    if (ctxVertical) {
+      try {
+        const periodData = clientRealMetrics.month30;
+        clientVerticalChart = new Chart(ctxVertical, {
+          type: 'bar',
+          data: {
+            labels: periodData.labels,
+            datasets: [
+              {
+                label: 'Prestations engagées (USD)',
+                data: periodData.prestations,
+                backgroundColor: '#E6007E',
+                borderColor: '#C4006B',
+                borderWidth: 1.5,
+                borderRadius: 7,
+                borderSkipped: false,
+                barPercentage: 0.65,
+                categoryPercentage: 0.72
+              },
+              {
+                label: 'Factures réglées (USD)',
+                data: periodData.factures,
+                backgroundColor: '#0C0C0E',
+                borderColor: '#27272A',
+                borderWidth: 1.5,
+                borderRadius: 7,
+                borderSkipped: false,
+                barPercentage: 0.65,
+                categoryPercentage: 0.72
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 900,
+              easing: 'easeOutQuart'
             },
-            {
-              label: 'Factures réglées (USD)',
-              data: [0, 0, 0, 0, 0, 0, 0, 0],
-              borderColor: '#141416',
-              backgroundColor: 'transparent',
-              borderWidth: 2,
-              borderDash: [6, 4],
-              tension: 0,
-              fill: false,
-              pointStyle: 'rect',
-              pointBackgroundColor: '#FFFFFF',
-              pointBorderColor: '#141416',
-              pointRadius: 4
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 14, usePointStyle: true, font: { size: 11, weight: '700' } }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(12, 12, 14, 0.94)',
+                padding: 12,
+                cornerRadius: 10,
+                boxPadding: 6,
+                callbacks: { label: (c) => ` ${c.dataset.label}: $${Number(c.raw).toLocaleString()} USD` }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(170, 170, 170, 0.22)' },
+                ticks: { callback: (v) => '$' + Number(v).toLocaleString(), font: { size: 11 } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { font: { size: 11, weight: '600' } }
+              }
             }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 18, usePointStyle: true, font: { size: 12, weight: '600' } } },
-            tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw} USD` } }
-          },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#D4D4D8' }, ticks: { callback: (v) => v + ' USD', font: { size: 11 } } },
-            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
           }
-        }
-      });
-      writeExpenseCaption();
-      void g;
-    }
-
-    const ctxSectors = document.getElementById('chartClientSectors');
-    if (ctxSectors) {
-      const sectorsData = [
-        { label: 'Catering & Vivres', value: 0, pct: 0, pattern: 'solid' },
-        { label: 'BTP & Maintenance', value: 0, pct: 0, pattern: 'stripe' },
-        { label: 'Sécurité & Gardiennage', value: 0, pct: 0, pattern: 'dots' },
-        { label: 'Transport & Engins', value: 0, pct: 0, pattern: 'hatch' },
-        { label: 'Télécoms & IT', value: 0, pct: 0, pattern: 'stripe' }
-      ];
-      const g = ctxSectors.getContext('2d');
-      clientSectorsChart = new Chart(ctxSectors, {
-        type: 'doughnut',
-        data: {
-          labels: sectorsData.map(d => d.label),
-          datasets: [{
-            data: sectorsData.map(d => d.pct),
-            backgroundColor: sectorsData.map(d => pattern(g, d.pattern)),
-            borderColor: '#141416',
-            borderWidth: 1,
-            borderDash: [0, 0]
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          cutout: '62%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: (c) => {
-              const item = sectorsData[c.dataIndex];
-              return ` ${item.label}: ${item.pct}% (${item.value} USD)`;
-            } } }
-          }
-        }
-      });
-      const legendBox = document.getElementById('clientSectorsLegend');
-      if (legendBox) {
-        legendBox.innerHTML = sectorsData.map(d => legendRow(d.pattern, d.label, `${d.pct}% (${d.value} USD)`)).join('');
+        });
+        writeSeriesCaption('verticalDirect', 'Volume des prestations réelles et factures enregistrées en base.');
+      } catch (errVert) {
+        console.error('[Chart Vertical Init]', errVert);
       }
-      writeSeriesCaption('sectorsDirect', sectorsData.map(d => `${d.label} : ${d.pct}% soit ${d.value} USD`).join('. ') + '.');
     }
 
-    const ctxSLA = document.getElementById('chartClientSLA');
-    if (ctxSLA) {
-      const g = ctxSLA.getContext('2d');
-      const labels = ['Site Minier Katanga', 'Kolwezi Base', 'Lubumbashi Dépôt', 'Likasi Usine', 'Fungurume Hub'];
-      const realised = [0, 0, 0, 0, 0];
-      const target = [0, 0, 0, 0, 0];
-      clientSLAChart = new Chart(ctxSLA, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Délai réalisé (jours, aplat)', data: realised, backgroundColor: pattern(g, 'solid'), borderColor: '#141416', borderWidth: 1 },
-            { label: 'Objectif SLA (jours, hachures)', data: target, backgroundColor: pattern(g, 'stripe'), borderColor: '#141416', borderWidth: 1 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 16, font: { size: 12, weight: '600' } } },
-            tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw} jour(s)` } }
+    // ==========================================================
+    // 2. GRAPHIQUE HORIZONTAL : RÉPARTITION PAR PÔLE MÉTIER (USD)
+    // ==========================================================
+    const ctxHorizontal = document.getElementById('chartClientHorizontal');
+    if (ctxHorizontal) {
+      try {
+        const sectors = clientRealMetrics.sectors.length > 0 ? clientRealMetrics.sectors : [
+          { label: 'Catering & Vivres HACCP', value: 0, color: '#E6007E', badgeColor: '#E6007E' },
+          { label: 'Sous-Traitance Minière', value: 0, color: '#404048', badgeColor: '#404048' },
+          { label: 'BTP & Maintenance', value: 0, color: '#6B7280', badgeColor: '#6B7280' },
+          { label: 'Sécurité & Gardiennage', value: 0, color: '#0C0C0E', badgeColor: '#0C0C0E' },
+          { label: 'Transport & Engins', value: 0, color: '#FF1A8C', badgeColor: '#FF1A8C' },
+          { label: 'Télécoms & Informatique', value: 0, color: '#9CA3AF', badgeColor: '#9CA3AF' }
+        ];
+
+        clientHorizontalChart = new Chart(ctxHorizontal, {
+          type: 'bar',
+          data: {
+            labels: sectors.map(d => d.label),
+            datasets: [{
+              label: 'Budget alloué (USD)',
+              data: sectors.map(d => d.value),
+              backgroundColor: sectors.map(d => d.color),
+              borderRadius: 7,
+              borderSkipped: false,
+              barThickness: 17
+            }]
           },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#D4D4D8' }, ticks: { callback: (v) => v + ' j', font: { size: 11 } } },
-            x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 40, minRotation: 0 } }
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 900,
+              easing: 'easeOutQuart'
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(12, 12, 14, 0.94)',
+                padding: 10,
+                cornerRadius: 10,
+                callbacks: { label: (c) => ` Allocation réelle: $${Number(c.raw).toLocaleString()} USD` }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: { color: 'rgba(170, 170, 170, 0.22)' },
+                ticks: { callback: (v) => '$' + (Number(v) / 1000) + 'k', font: { size: 10 } }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { size: 10, weight: '700' } }
+              }
+            }
           }
-        }
-      });
-      writeSeriesCaption('slaDirect', labels.map((label, i) => `${label} : réalisé ${realised[i]} j, objectif ${target[i]} j`).join('. ') + '.');
-    }
+        });
 
-    const ctxPipe = document.getElementById('chartClientPipeline');
-    if (ctxPipe) {
-      const pipeData = [
-        { label: 'Devis en Étude', count: 0, pattern: 'stripe' },
-        { label: 'Devis Validés', count: 0, pattern: 'solid' },
-        { label: 'Chantiers Actifs', count: 0, pattern: 'dots' },
-        { label: 'Missions Clôturées', count: 0, pattern: 'hatch' }
-      ];
-      const g = ctxPipe.getContext('2d');
-      clientPipelineChart = new Chart(ctxPipe, {
-        type: 'doughnut',
-        data: {
-          labels: pipeData.map(d => d.label),
-          datasets: [{
-            data: pipeData.map(d => d.count),
-            backgroundColor: pipeData.map(d => pattern(g, d.pattern)),
-            borderColor: '#141416',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          cutout: '58%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: (c) => ` ${pipeData[c.dataIndex].label}: ${pipeData[c.dataIndex].count}` } }
-          }
+        const legendBox = document.getElementById('clientHorizontalLegend');
+        if (legendBox) {
+          legendBox.innerHTML = sectors.map(d => legendRow(d.badgeColor, d.label, `$${d.value.toLocaleString()} USD`)).join('');
         }
-      });
-      const pipeLegend = document.getElementById('clientPipelineLegend');
-      if (pipeLegend) pipeLegend.innerHTML = pipeData.map(d => legendRow(d.pattern, d.label, String(d.count))).join('');
-      writeSeriesCaption('pipelineDirect', pipeData.map(d => `${d.label} : ${d.count}`).join('. ') + '.');
-      window.__jbfPipeMeta = pipeData;
+        writeSeriesCaption('horizontalDirect', sectors.map(d => `${d.label} : $${d.value} USD`).join('. ') + '.');
+      } catch (errHoriz) {
+        console.error('[Chart Horizontal Init]', errHoriz);
+      }
     }
 
     motionMq.addEventListener?.('change', () => {
-      [clientExpensesChart, clientSectorsChart, clientSLAChart, clientPipelineChart].forEach((chart) => {
+      [clientVerticalChart, clientHorizontalChart].forEach((chart) => {
         if (!chart) return;
         chart.options.animation = chartAnimation();
         chart.update();
@@ -789,102 +981,22 @@
     });
   }
 
-  async function loadChartData() {
-    const sb = getSupabaseClient();
-    const session = window.clientCore?.getClientSession() || {};
-    const clientEmail = (session.email || '').toLowerCase();
-
-    let totalBudget = 0;
-    let devisEnEtude = 0;
-    let devisValides = 0;
-    let missionsActives = 0;
-    let missionsCloturees = 0;
-
-    if (sb && clientEmail) {
-      try {
-        const { data: devis } = await sb.from('demandes_devis').select('*');
-        if (devis) {
-          const clientDevis = devis.filter(d => (d.email && d.email.toLowerCase() === clientEmail) || (d.client_id === session.id));
-          clientDevis.forEach(d => {
-            if (d.statut === 'valide' || d.statut === 'accepte') devisValides++;
-            else devisEnEtude++;
-            if (d.montant) totalBudget += Number(d.montant);
-          });
-        }
-
-        const { data: missions } = await sb.from('missions').select('*');
-        if (missions) {
-          const clientMissions = missions.filter(m => (m.assigned_to === session.id) || (session.companyName && m.client && m.client.toLowerCase().includes(session.companyName.toLowerCase())));
-          clientMissions.forEach(m => {
-            if (m.statut === 'termine') missionsCloturees++;
-            else missionsActives++;
-          });
-        }
-      } catch(e) {
-        console.warn('[Chart Data Load]', e);
-      }
-    }
-
-    const budgetStat = document.getElementById('statClientTotalBudget');
-    if (budgetStat) budgetStat.textContent = `$${totalBudget.toLocaleString()} USD`;
-
-    // Update pipeline chart with real counts
-    if (clientPipelineChart) {
-      clientPipelineChart.data.datasets[0].data = [devisEnEtude, devisValides, missionsActives, missionsCloturees];
-      clientPipelineChart.update();
-      const pipeLegend = document.getElementById('clientPipelineLegend');
-      if (pipeLegend) {
-        const pipeData = [
-          { label: 'Devis en Étude', count: devisEnEtude, pattern: 'stripe' },
-          { label: 'Devis Validés', count: devisValides, pattern: 'solid' },
-          { label: 'Chantiers Actifs', count: missionsActives, pattern: 'dots' },
-          { label: 'Missions Clôturées', count: missionsCloturees, pattern: 'hatch' }
-        ];
-        pipeLegend.innerHTML = pipeData.map(d => legendRow(d.pattern, d.label, String(d.count))).join('');
-        writeSeriesCaption('pipelineDirect', pipeData.map(d => `${d.label} : ${d.count}`).join('. ') + '.');
-        if (clientPipelineChart) {
-          const g = clientPipelineChart.canvas.getContext('2d');
-          clientPipelineChart.data.datasets[0].backgroundColor = pipeData.map(d => pattern(g, d.pattern));
-        }
-      }
-    }
-  }
-
   function setClientPeriod(period, btn) {
     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     currentClientPeriod = period;
 
     const label = document.getElementById('chartExpensesPeriodLabel');
 
     if (period === '7d') {
       if (label) label.textContent = '7 Derniers Jours';
-      if (clientExpensesChart) {
-        clientExpensesChart.data.labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
-        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0];
-        clientExpensesChart.update();
-        writeExpenseCaption();
-      }
     } else if (period === '30d') {
       if (label) label.textContent = 'Période Mensuelle';
-      if (clientExpensesChart) {
-        clientExpensesChart.data.labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
-        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0];
-        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0];
-        clientExpensesChart.update();
-        writeExpenseCaption();
-      }
     } else {
       if (label) label.textContent = 'Cumul Année 2026';
-      if (clientExpensesChart) {
-        clientExpensesChart.data.labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept'];
-        clientExpensesChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        clientExpensesChart.data.datasets[1].data = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        clientExpensesChart.update();
-        writeExpenseCaption();
-      }
     }
+
+    updateChartsFromRealData();
   }
 </script>
 

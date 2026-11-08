@@ -1,5 +1,5 @@
 // =============================================================
-// JBF SERVICES — CONFIGURATION DE L'API WHATSAPP
+// JBF Service — CONFIGURATION DE L'API WHATSAPP
 // Prêt à recevoir vos identifiants d'API WhatsApp dès que vous les fournissez
 // =============================================================
 
@@ -32,6 +32,6 @@ const WHATSAPP_API_CONFIG = {
   // ce code permettra de tester instantanément l'authentification WhatsApp !
   DEMO_OTP_CODE: '123456',
 
-  // Numéro de support WhatsApp direct JBF SERVICES (RDC)
-  OFFICIAL_WHATSAPP_SUPPORT: '+243810000000'
+  // Numéro de support WhatsApp direct JBF Service (RDC)
+  OFFICIAL_WHATSAPP_SUPPORT: '+243970349724'
 };

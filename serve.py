@@ -129,45 +129,42 @@ def send_email_server(to_email, subject, html, preferred=None):
         mail_stats['resend'] = 0
         mail_stats['total'] = 0
     
-    if mail_stats['total'] >= DAILY_LIMIT:
-        return {'success': False, 'error': f'Quota quotidien de {DAILY_LIMIT} emails atteint.'}
+    max_brevo = 295
+    max_resend = 98
+    daily_limit = max_brevo + max_resend # 393
     
-    max_brevo = int(DAILY_LIMIT * 0.8) # 304
-    max_resend = DAILY_LIMIT - max_brevo # 76
+    if mail_stats['total'] >= daily_limit:
+        return {'success': False, 'error': f'Quota quotidien d\'envoi atteint.'}
     
-    if mail_stats['brevo'] >= max_brevo:
-        primary = 'resend'
-    elif mail_stats['resend'] >= max_resend:
-        primary = 'brevo'
-    elif preferred in ('brevo', 'resend'):
-        primary = preferred
-    else:
-        primary = 'brevo' if random.random() < 0.8 else 'resend'
-        
-    secondary = 'resend' if primary == 'brevo' else 'brevo'
-    
-    # 1. Tentative avec le prestataire primaire
-    res = send_via_brevo(to_email, subject, html) if primary == 'brevo' else send_via_resend(to_email, subject, html)
-    if res.get('success'):
-        mail_stats[primary] += 1
-        mail_stats['total'] += 1
-        print(f"[JBF Mail Server] Succès via {primary.upper()} à {to_email} (Quota: {mail_stats['total']}/{DAILY_LIMIT})")
+    # Priorité absolue Brevo (295 messages/jour)
+    if mail_stats['brevo'] < max_brevo:
+        res = send_via_brevo(to_email, subject, html)
+        if res.get('success'):
+            mail_stats['brevo'] += 1
+            mail_stats['total'] += 1
+            print(f"[JBF Mail Server] Succès via Brevo à {to_email}")
+            sys.stdout.flush()
+            return res
+        print(f"[JBF Mail Server] Échec Brevo, basculement vers Resend...")
         sys.stdout.flush()
-        return res
-        
-    print(f"[JBF Mail Server] Échec {primary.upper()}, basculement sur {secondary.upper()}...")
-    sys.stdout.flush()
     
-    # 2. Tentative avec le prestataire secondaire (failover)
-    res2 = send_via_brevo(to_email, subject, html) if secondary == 'brevo' else send_via_resend(to_email, subject, html)
-    if res2.get('success'):
-        mail_stats[secondary] += 1
-        mail_stats['total'] += 1
-        print(f"[JBF Mail Server] Succès via prestataire de secours {secondary.upper()} à {to_email}")
+    # Secours / failover Resend (98 messages/jour)
+    if mail_stats['resend'] < max_resend:
+        res2 = send_via_resend(to_email, subject, html)
+        if res2.get('success'):
+            mail_stats['resend'] += 1
+            mail_stats['total'] += 1
+            print(f"[JBF Mail Server] Succès via Resend (relais) à {to_email}")
+            sys.stdout.flush()
+            return res2
+        print(f"[JBF Mail Server] Échec Resend: {res2}")
         sys.stdout.flush()
-        return res2
-        
-    print(f"[JBF Mail Server] Échec des deux prestataires! Brevo: {res if primary=='brevo' else res2} | Resend: {res2 if primary=='brevo' else res}")
+    
+    return {
+        'success': False,
+        'error': 'Service d\'envoi momentanément indisponible. Veuillez réessayer plus tard.',
+        'code': 500
+    }
     sys.stdout.flush()
     return {
         'success': False,
@@ -270,7 +267,7 @@ class JBFRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({
                         'success': True,
-                        'name': 'Direction Générale JBF SERVICES',
+                        'name': 'Direction Générale JBF Service',
                         'email': ADMIN_OFFICIAL_EMAIL,
                         'role': 'Super Administrateur',
                         'site': 'Lubumbashi (Siège Central)',
@@ -303,12 +300,11 @@ class ReusableTCPServer(socketserver.TCPServer):
 if __name__ == '__main__':
     with ReusableTCPServer(("0.0.0.0", PORT), JBFRequestHandler) as httpd:
         print("=" * 60)
-        print("   JBF SERVICES SARL — SERVEUR LOCAL DEMARRE AVEC SUCCES")
+        print("   JBF Service — SERVEUR LOCAL DEMARRE AVEC SUCCES")
         print("=" * 60)
         print(f"  Accueil Public   : http://localhost:{PORT}/JBF%20Public/")
         print(f"  Espace Client    : http://localhost:{PORT}/JBF%20Client/")
-        print(f"  Espace Admin     : http://localhost:{PORT}/JBF%20Admin/")
-        print(f"  Espace Membre    : http://localhost:{PORT}/JBF%20Membre/")
+        print(f"  Apps Métier      : Desktop & Mobile (Flutter)")
         print(f"  Acces Reseau IP  : http://{LOCAL_IP}:{PORT}/")
         print(f"  API Mail Relais  : http://localhost:{PORT}/api/mail/send")
         print("=" * 60)

@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Créer un compte Client — JBF SERVICES SARL</title>
+  <title>Créer un compte Client — JBF Service</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,20 +86,24 @@
       align-items: center;
       justify-content: center;
       padding: 24px 16px;
-      background: radial-gradient(circle at 10% 10%, rgba(230, 0, 126, 0.04) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 90%, rgba(230, 0, 126, 0.03) 0%, transparent 40%),
-                  #F8FAFC;
+      background: #aaaaaa;
       color: var(--slate-dark);
+      position: relative;
+      overflow-x: hidden;
     }
 
     .auth-container {
+      position: relative;
+      z-index: 10;
       width: 100%;
       max-width: 480px;
-      background: #FFFFFF;
-      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(230, 0, 126, 0.25);
       border-radius: 20px;
       padding: 36px 32px 30px;
-      box-shadow: var(--card-shadow);
+      box-shadow: 0 20px 50px rgba(12, 12, 14, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
     }
 
     .auth-header {
@@ -251,30 +305,52 @@
 
     .input-icon-wrap i {
       position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
+      left: 18px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
       color: var(--slate-light);
-      font-size: 0.95rem;
+      font-size: 1.05rem !important;
+      width: 20px !important;
+      height: 20px !important;
+      line-height: 20px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       pointer-events: none;
+      z-index: 5 !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .input-icon-wrap:focus-within i {
+      color: var(--brand-pink);
+      transform: translateY(-50%) scale(1.1) !important;
     }
 
     .form-control {
       width: 100%;
-      padding: 11px 14px 11px 40px;
+      padding: 12px 16px 12px 56px !important;
       font-size: 0.88rem;
+      font-weight: 600;
       font-family: inherit;
       color: var(--slate-dark);
       background: #FFFFFF;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      transition: all 0.2s ease;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(12, 12, 14, 0.04), inset 0 2px 4px rgba(12, 12, 14, 0.02);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .form-control:hover:not(:focus) {
+      border-color: #CBD5E1;
+      box-shadow: 0 3px 8px rgba(12, 12, 14, 0.06);
     }
 
     .form-control:focus {
       outline: none;
-      border-color: var(--brand-pink);
-      box-shadow: 0 0 0 3.5px rgba(230, 0, 126, 0.12);
+      background: #FFFFFF;
+      border-color: var(--brand-pink) !important;
+      box-shadow: 0 0 0 4px rgba(230, 0, 126, 0.14), 0 8px 22px rgba(230, 0, 126, 0.12), inset 0 1px 2px rgba(12, 12, 14, 0.02) !important;
+      transform: translateY(-2px);
     }
 
     .phone-flex {
@@ -555,7 +631,7 @@
   <!-- En-tête -->
   <div class="auth-header">
     <a href="../../JBF%20Public/index.html">
-      <img src="../../assets/logo.png" alt="JBF SERVICES SARL" class="auth-logo" onerror="this.src='../assets/logo.png'">
+      <img src="../../assets/logo.png" alt="JBF Service" class="auth-logo" onerror="this.src='../assets/logo.png'">
     </a>
     <h1 class="auth-title">Créer mon Espace Client</h1>
     <p class="auth-subtitle">Plateforme Partenaires &amp; Suivi Opérationnel RDC</p>
@@ -706,7 +782,7 @@
 
       <label class="cgu-agreement">
         <input type="checkbox" id="checkCGU" required>
-        <span>J'accepte les <a href="../../JBF%20Public/cgu.html" target="_blank">Conditions Générales d'Utilisation</a> et la <a href="../../JBF%20Public/politique-confidentialite.html" target="_blank">Politique de Confidentialité</a> de JBF SERVICES SARL.</span>
+        <span>J'accepte les <a href="../../JBF%20Public/cgu.html" target="_blank">Conditions Générales d'Utilisation</a> et la <a href="../../JBF%20Public/politique-confidentialite.html" target="_blank">Politique de Confidentialité</a> de JBF Service.</span>
       </label>
 
       <button type="submit" class="btn-primary-action" id="btnSubmitStep2">
@@ -727,7 +803,7 @@
   <div class="step-panel" id="panelStep3">
     <div class="panel-header">
       <div class="panel-title">3. Vérification de l'Adresse Email</div>
-      <div class="panel-desc">Saisissez le code de sécurité transmis à votre boîte de messagerie.</div>
+      <div class="panel-desc">Saisissez le code de sécurité transmis par email transactionnel sécurisé.</div>
     </div>
 
     <div class="email-otp-box">
@@ -770,7 +846,7 @@
     <a href="login.html">Se connecter</a>
     <div style="margin-top: 10px;">
       <a href="../../JBF%20Public/index.html" style="color: var(--slate-gray); font-size: 0.76rem;">
-        <i class="bi bi-arrow-left"></i> Retour au site public JBF SERVICES
+        <i class="bi bi-arrow-left"></i> Retour au site public JBF Service
       </a>
     </div>
   </div>
@@ -779,6 +855,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/config.js"></script>
 <script src="../../supabase/mail-service.js"></script>
+<!-- Three.js 3D WebGL Engine & Auth Scene -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="../js/client-auth-3d.js"></script>
+<script src="../js/client-3d-forms.js"></script>
 <script>
   /* ======================================================
      CONFIGURATION SUPABASE AUTHENTIQUE

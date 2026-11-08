@@ -1,5 +1,5 @@
 // =============================================================
-// JBF SERVICES — SCRIPT CENTRAL DU PORTAIL CLIENT
+// JBF Service — SCRIPT CENTRAL DU PORTAIL CLIENT
 // Gestion de session, navigation, scrollbars & API client
 // =============================================================
 
@@ -225,10 +225,10 @@ function showToast(message, type = 'info') {
 
 // 6. Raccourci d'ouverture WhatsApp direct avec message pré-rempli (Service Client Officiel Uniquement)
 function openWhatsAppDirect(customMsg = '') {
-  const number = (window.JBF_CLIENT_CONFIG?.WHATSAPP_SUPPORT_NUMBER || '243971306666').replace(/[^0-9]/g, '');
+  const number = (window.JBF_CLIENT_CONFIG?.WHATSAPP_SUPPORT_NUMBER || '243970349724').replace(/[^0-9]/g, '');
   const session = getClientSession();
   const clientName = session ? `${session.companyName || session.nom || 'Client'} (${session.contactName || ''})` : 'Client';
-  const defaultText = encodeURIComponent(`Bonjour Service Client JBF SERVICES, je suis ${clientName}. ${customMsg || "J'ai besoin d'assistance concernant nos prestations."}`);
+  const defaultText = encodeURIComponent(`Bonjour Direction JBF Service, je suis ${clientName}. ${customMsg || "J'ai besoin d'une assistance ou d'un devis concernant vos prestations."}`);
   window.open(`https://wa.me/${number}?text=${defaultText}`, '_blank');
 }
 

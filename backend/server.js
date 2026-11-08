@@ -1,5 +1,5 @@
 // =============================================================
-// JBF SERVICES — BACKEND API ENTERPRISE SERVER v8.0
+// JBF Service — BACKEND API ENTERPRISE SERVER v8.0
 // Serveur Node.js / Express sécurisé avec Supabase
 // Module Anti-VPN & Traçabilité IP Avancée pour le Pointage
 // =============================================================
@@ -508,17 +508,42 @@ app.post('/api/admin/login', async (req, res) => {
 
 // =============================================================
 // =============================================================
-// 4.2 GESTIONNAIRE OTP EMAIL MULTI-PROVIDER (BREVO / RESEND)
+// 4.2 GESTIONNAIRE OTP EMAIL MULTI-PROVIDER (BREVO 295 / RESEND 98)
 // =============================================================
 const activeOtpStore = new Map();
 const resetOtpStore = new Map();
 
+const DAILY_LIMITS = {
+  brevo: 295,
+  resend: 98,
+  total: 393
+};
+let serverEmailStats = {
+  date: new Date().toISOString().split('T')[0],
+  brevo: 0,
+  resend: 0,
+  total: 0
+};
+
+function checkAndResetServerEmailStats() {
+  const today = new Date().toISOString().split('T')[0];
+  if (serverEmailStats.date !== today) {
+    serverEmailStats = { date: today, brevo: 0, resend: 0, total: 0 };
+  }
+}
+
 async function sendTransactionalEmail(to, subject, html, preferredProvider = null) {
+  checkAndResetServerEmailStats();
   const brevoKey = process.env.BREVO_API_KEY;
   const resendKey = process.env.RESEND_API_KEY;
 
-  const preferred = preferredProvider || (Math.random() < 0.80 ? 'brevo' : 'resend');
-  const fallback = preferred === 'brevo' ? 'resend' : 'brevo';
+  if (serverEmailStats.total >= DAILY_LIMITS.total) {
+    throw new Error('Quota quotidien global d\'envoi d\'emails atteint.');
+  }
+
+  // Priorité absolue à Brevo (295/jour). Resend intervient uniquement en relais/épuisement (98/jour)
+  const canUseBrevo = brevoKey && serverEmailStats.brevo < DAILY_LIMITS.brevo;
+  const canUseResend = resendKey && serverEmailStats.resend < DAILY_LIMITS.resend;
 
   const sendWithBrevo = async () => {
     if (!brevoKey) throw new Error('BREVO_API_KEY non configurée');
@@ -541,6 +566,8 @@ async function sendTransactionalEmail(to, subject, html, preferredProvider = nul
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || `Erreur Brevo HTTP ${response.status}`);
     }
+    serverEmailStats.brevo += 1;
+    serverEmailStats.total += 1;
     return { success: true, provider: 'brevo' };
   };
 
@@ -564,18 +591,25 @@ async function sendTransactionalEmail(to, subject, html, preferredProvider = nul
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || `Erreur Resend HTTP ${response.status}`);
     }
+    serverEmailStats.resend += 1;
+    serverEmailStats.total += 1;
     return { success: true, provider: 'resend' };
   };
 
-  try {
-    return preferred === 'brevo' ? await sendWithBrevo() : await sendWithResend();
-  } catch (primaryErr) {
-    console.warn(`[Backend Mail] Échec ${preferred}, essai fallback ${fallback}:`, primaryErr.message);
+  if (canUseBrevo) {
     try {
-      return fallback === 'brevo' ? await sendWithBrevo() : await sendWithResend();
-    } catch (fallbackErr) {
-      throw new Error(`Échec Brevo & Resend: ${primaryErr.message} | ${fallbackErr.message}`);
+      return await sendWithBrevo();
+    } catch (brevoErr) {
+      console.warn('[Backend Mail] Brevo indisponible ou quota dépassé, basculement vers Resend:', brevoErr.message);
+      if (canUseResend) {
+        return await sendWithResend();
+      }
+      throw brevoErr;
     }
+  } else if (canUseResend) {
+    return await sendWithResend();
+  } else {
+    throw new Error('Capacité d\'envoi email temporairement indisponible.');
   }
 }
 
@@ -1695,7 +1729,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`=============================================================`);
-  console.log(`[JBF SERVICES] ENTERPRISE API SERVER DEMARRE`);
+  console.log(`[JBF Service] ENTERPRISE API SERVER DEMARRE`);
   console.log(`URL API : http://localhost:${PORT}`);
   console.log(`=============================================================`);
 });

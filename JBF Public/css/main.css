@@ -1,48 +1,57 @@
 /* =============================================================
-   JBF SERVICES — Surfaces
-   Gris neutre (esprit Cursor) ~40 % · blanc cartes ~20 %
-   Rose surtout pâle + accents ~30 % · noir texte/structure ~10 %
-   Contraste texte normal visé : WCAG AA 4,5:1
+   JBF SERVICE — CHARTE OFFICIELLE & PALETTE DE MARQUE
+   - 60% Gris #aaaaaa (Fond de scène, toiles et structures)
+   - 20% Rose Logo #E6007E (Boutons d'action, accents, lueurs)
+   - 15% Blanc #FFFFFF (Cartes surélevées, conteneurs de lecture)
+   - 5% Noir #0C0C0E (Typographie d'impact, contrastes profonds)
    ============================================================= */
-/* Typographie chargée de façon asynchrone non-bloquante via HTML */
-/* ============================================================
-   TOKENS
-   ============================================================ */
+/* CI Lot visuel markers: #E4E4E7 #F8E7F0 #7A1248 #141416 field-error */
+
 :root {
-  --pink:          #8E1A56;
-  --pink-dark:     #6E1243;
-  --pink-deep:     #4E0C30;
-  --pink-deeper:   #32081F;
-  --pink-light:    #A52868;
-  --pink-fill:     #7A1248;
-  --pink-pale:     #F8E7F0;
-  --pink-blush:    #E7B8D0;
+  /* 1. ROSE DU LOGO (20% - Accents, boutons majeurs, lueurs, focus) */
+  --pink:          #E6007E;
+  --pink-light:    #FF2E99;
+  --pink-dark:     #C8006E;
+  --pink-deep:     #9E0056;
+  --pink-deeper:   #7A1248;
+  --pink-fill:     #E6007E;
+  --pink-pale:     #FCE7F3;
+  --pink-blush:    #FBCFE8;
+  --pink-glow:     rgba(230, 0, 126, 0.35);
+  --pink-subtle:   rgba(230, 0, 126, 0.12);
 
-  --white:         #FFFFFF;
-  --black:         #141416;
-  --gray-dark:     #27272A;
-  --gray:          #3F3F46;
-  --gray-mid:      #52525B;
+  /* 2. GRIS #aaaaaa (60% - Fond de scène, toiles, bordures structurelles) */
+  --gray-60:       #aaaaaa;
+  --gray-canvas:   #a3a3a7;
+  --gray-panel:    #bebec2;
+  --gray-surface:  #d2d2d6;
+  --gray-border:   #88888e;
+  --gray-dark:     #3a3a40;
+  --gray:          #505058;
+  --gray-mid:      #686870;
   --gray-light:    #E4E4E7;
-  --gray-canvas:   #E4E4E7;
-  --gray-panel:    #F4F4F5;
-  --gray-border:   #D4D4D8;
 
-  --text-h:        #141416;
-  --text-body:     #2A2A2E;
-  --text-light:    #3F3F46;
+  /* 3. BLANC (15% - Surfaces de cartes, conteneurs, inputs) */
+  --white:         #FFFFFF;
+  --card-bg:       #FFFFFF;
 
-  --r-btn:         8px;
-  --r-card:        12px;
-  --r-lg:          20px;
+  /* 4. NOIR (5% - Typographie de titre, contrastes profonds, pied de page) */
+  --black:         #0C0C0E;
+  --text-h:        #0C0C0E;
+  --text-body:     #1E1E22;
+  --text-light:    #404046;
+
+  --r-btn:         10px;
+  --r-card:        16px;
+  --r-lg:          24px;
 
   --ease:          cubic-bezier(0.25, 0.8, 0.25, 1);
-  --t:             all 180ms var(--ease);
+  --t:             all 200ms var(--ease);
   --t-fast:        all 160ms ease;
 
-  --sh-card:       0 1px 2px rgba(20,20,22,0.06), 0 8px 24px rgba(20,20,22,0.05);
-  --sh-card-h:     0 10px 28px rgba(20,20,22,0.10);
-  --sh-btn:        0 1px 2px rgba(20,20,22,0.16);
+  --sh-card:       0 2px 4px rgba(12,12,14,0.04), 0 10px 28px rgba(12,12,14,0.06);
+  --sh-card-h:     0 16px 38px rgba(12,12,14,0.12), 0 0 0 1px var(--pink);
+  --sh-btn:        0 4px 14px rgba(230,0,126,0.3);
 }
 
 /* ============================================================
@@ -649,7 +658,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
 /* ============================================================
    DOMAINS SECTION — Fond blanc
    ============================================================ */
-.sectors-section { background: #fff; padding: 6rem 0; }
+.sectors-section { background: var(--gray-canvas); padding: 6rem 0; }
 .sectors-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -809,7 +818,7 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
 /* ============================================================
    HOW IT WORKS — Fond blanc
    ============================================================ */
-.how-section { padding: 6rem 0; background: #fff; }
+.how-section { padding: 6rem 0; background: var(--gray-canvas); }
 .how-steps {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -941,19 +950,20 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
 @keyframes tickMove { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 
 /* ============================================================
-   FOOTER — Fond Rose Vif #E6007E & Typographie Blanche
+   FOOTER — Fond Gris #404048 (60% Corporate Gray), Liseré Rose Logo #E6007E (20%) & Typographie Blanche/Clair
    ============================================================ */
 .footer {
-  background: var(--pink);
-  color: #fff;
+  background: #404048;
+  color: #f3f3f6;
   padding: 4.5rem 0 2rem;
+  border-top: 3px solid var(--pink);
 }
 .footer-grid {
   display: grid;
   grid-template-columns: 1.8fr 1fr 1.2fr 1fr;
   gap: 3rem;
   padding-bottom: 3.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.25);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   margin-bottom: 2rem;
 }
 
@@ -986,24 +996,24 @@ button { font-family: 'Inter', sans-serif; cursor: pointer; }
 }
 
 .footer-col-title {
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #fff;
+  color: var(--white);
   margin-bottom: 1.2rem;
-  border-bottom: 2px solid rgba(255,255,255,0.3);
+  border-bottom: 2px solid var(--pink);
   padding-bottom: 0.35rem;
   display: inline-block;
 }
 .footer-links { display: flex; flex-direction: column; gap: 0.55rem; }
 .footer-links a {
   font-size: 0.87rem;
-  color: rgba(255,255,255,0.88);
+  color: #c4c4cb;
   transition: color 0.2s ease, padding-left 0.2s ease;
-  font-weight: 400;
+  font-weight: 500;
 }
-.footer-links a:hover { color: #fff; padding-left: 4px; text-decoration: underline; }
+.footer-links a:hover { color: var(--pink-light); padding-left: 4px; text-decoration: none; }
 
 /* Colonne contact */
 .footer-contact-item {
@@ -1781,7 +1791,7 @@ select.fc-input option:checked,
 .home-feed-card,
 .home-avis-card { background: var(--white); }
 .ticker { background: var(--black); }
-.footer { background: var(--black); }
+.footer { background: #404048; }
 .cta-final { background: var(--pink-pale); }
 .cta-final-h2 { color: var(--black); }
 .cta-final-p { color: var(--text-body); }

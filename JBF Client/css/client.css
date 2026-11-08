@@ -1,56 +1,64 @@
 /* =============================================================
-   JBF SERVICES — ESPACE CLIENT
-   Gris neutre ~40 % · cartes blanches ~20 % · rose pâle et accents ~30 %
-   Noir pour le texte et la structure ~10 %
+   JBF SERVICE — ESPACE CLIENT
+   Charte officielle :
+   - 60% Gris #aaaaaa (Fond de scène, toiles et structures)
+   - 20% Rose Logo #E6007E (Boutons d'action, accents, lueurs)
+   - 15% Blanc #FFFFFF (Cartes surélevées, conteneurs de lecture)
+   - 5% Noir #0C0C0E (Typographie d'impact, contrastes profonds)
    ============================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Nuances Brand — texte #8E1A56 ≥ 7:1 sur blanc et sur gris */
-  --brand-pink: #8E1A56;
-  --brand-pink-dark: #6E1243;
-  --brand-pink-hover: #7A1248;
-  --brand-pink-subtle: #F8E7F0;
-  --brand-pink-tint: #F3D5E4;
+  /* 1. Rose du Logo (20% - Accents, boutons majeurs, lueurs) */
+  --brand-pink: #E6007E;
+  --brand-pink-dark: #C4006B;
+  --brand-pink-hover: #FF1A8C;
+  --brand-pink-subtle: #FCE7F3;
+  --brand-pink-tint: #FBCFE8;
+  --brand-pink-glow: rgba(230, 0, 126, 0.35);
 
-  /* Neutres type Cursor */
+  /* 2. Gris #aaaaaa (60% - Fond dominant, toiles, sidebar, bordures) */
+  --gray-base: #aaaaaa;
+  --bg-main: #a3a3a7;
+  --bg-sidebar: #bebec2;
+  --border-subtle: #8c8c92;
+  --border-pink: #FBCFE8;
+  --gray-light: #E4E4E7;
+
+  /* 3. Blanc (15% - Cartes surélevées, modules, inputs) */
   --white: #FFFFFF;
-  --bg-main: #E4E4E7;
-  --bg-sidebar: #F4F4F5;
   --bg-card: #FFFFFF;
 
-  /* Typographie & Bordures */
-  --text-primary: #141416;
-  --text-secondary: #2A2A2E;
-  --text-muted: #3F3F46;
-  --border-subtle: #D4D4D8;
-  --border-pink: #E7B8D0;
+  /* 4. Noir (5% - Typographie d'impact, contrastes) */
+  --text-primary: #0C0C0E;
+  --text-secondary: #1E1E22;
+  --text-muted: #4e4e54;
 
   /* Statuts */
   --success: #047857;
   --success-subtle: #D1FAE5;
-  --warning: #92400E;
+  --warning: #B45309;
   --warning-subtle: #FEF3C7;
-  --danger: #B91C1C;
+  --danger: #DC2626;
   --danger-subtle: #FEE2E2;
-  --info: #075985;
+  --info: #0284C7;
   --info-subtle: #E0F2FE;
   --whatsapp: #25D366;
   --whatsapp-subtle: #DCFCE7;
 
   /* Dimensions */
   --sidebar-w: 260px;
-  --topbar-h: 68px;
+  --topbar-h: 70px;
 
   /* Arrondis & Ombres */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 16px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
   --t-instant: all 160ms ease;
-  --t-smooth: all 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
-  --sh-card: 0 1px 2px rgba(20, 20, 22, 0.06), 0 8px 24px rgba(20, 20, 22, 0.05);
-  --sh-hover: 0 8px 22px rgba(20, 20, 22, 0.10);
+  --t-smooth: all 220ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  --sh-card: 0 4px 18px rgba(12, 12, 14, 0.05), 0 1px 2px rgba(12, 12, 14, 0.04);
+  --sh-hover: 0 16px 36px rgba(12, 12, 14, 0.12), 0 0 0 1px var(--brand-pink);
 }
 
 *, *::before, *::after {
@@ -64,7 +72,7 @@ html { scroll-behavior: auto; }
   html { scroll-behavior: smooth; }
 }
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
   line-height: 1.5;
@@ -647,6 +655,399 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 24px;
+}
+
+/* 2 GRAPHIQUES OFFICIELS : 1 VERTICAL & 1 HORIZONTAL */
+.client-two-charts-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .client-two-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   BANNIÈRE 3D MOTION DESIGN LUXE DU PORTAIL CLIENT
+   ============================================================ */
+.client-hero-motion-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 244, 246, 0.92) 100%);
+  border: 1px solid rgba(230, 0, 126, 0.22);
+  box-shadow: 0 10px 30px rgba(12, 12, 14, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  border-radius: var(--r-lg);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.client-hero-motion-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.client-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--brand-pink-subtle);
+  color: var(--brand-pink);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+}
+
+.client-hero-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.25;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.client-hero-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.client-hero-contact-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: var(--t-smooth);
+}
+
+.hero-contact-pill.whatsapp {
+  background: var(--whatsapp-subtle);
+  color: #075E54;
+  border: 1px solid #A7F3D0;
+}
+.hero-contact-pill.whatsapp:hover {
+  background: #BBF7D0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+}
+
+.hero-contact-pill.phone {
+  background: #F1F5F9;
+  color: #1E293B;
+  border: 1px solid #CBD5E1;
+}
+.hero-contact-pill.phone:hover {
+  background: #E2E8F0;
+  transform: translateY(-2px);
+}
+
+.hero-contact-pill.email {
+  background: var(--brand-pink-subtle);
+  color: var(--brand-pink);
+  border: 1px solid var(--border-pink);
+}
+.hero-contact-pill.email:hover {
+  background: var(--brand-pink-tint);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(230, 0, 126, 0.2);
+}
+
+.client-banner-canvas-wrap {
+  display: none !important;
+}
+
+#clientBanner3DCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+@media (max-width: 860px) {
+  .client-hero-motion-card {
+    flex-direction: column;
+    padding: 20px 18px;
+    align-items: flex-start;
+  }
+  .client-banner-canvas-wrap {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    width: 100%;
+    height: 160px;
+    margin-top: 10px;
+  }
+}
+
+/* ============================================================
+   SYSTÈME DE FORMULAIRES 3D & PROFONDEUR SPATIALE
+   ============================================================ */
+.spatial-3d-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(230, 0, 126, 0.22);
+  box-shadow: 0 20px 48px -10px rgba(12, 12, 14, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 300ms ease;
+}
+
+.spatial-3d-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle 350px at var(--sheen-x, 50%) var(--sheen-y, 50%), rgba(230, 0, 126, 0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spatial-3d-card .card-header,
+.spatial-3d-card .modal-header,
+.spatial-3d-card .login-header,
+.spatial-3d-card .auth-header {
+  transform: translateZ(24px);
+  position: relative;
+  z-index: 2;
+}
+
+.spatial-3d-card .card-body,
+.spatial-3d-card .modal-body,
+.spatial-3d-card .login-body {
+  transform: translateZ(14px);
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================
+   SYSTÈME DE FORMULAIRES 3D ENTERPRISE & CHAMPS HAUTE PRÉCISION
+   ============================================================ */
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-group label,
+.form-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #374151;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.form-label .label-req,
+label span.required,
+label .req-star {
+  color: var(--brand-pink);
+  font-weight: 900;
+  margin-left: 4px;
+}
+
+.form-label .label-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(170, 170, 170, 0.16);
+  color: #64748B;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon-wrap i.input-icon,
+.input-icon-wrap > i:first-child {
+  position: absolute;
+  left: 18px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 1.05rem !important;
+  width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #94A3B8;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 5 !important;
+}
+
+.input-icon-wrap:focus-within i.input-icon,
+.input-icon-wrap:focus-within > i:first-child {
+  color: var(--brand-pink);
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+select.form-control {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0C0C0E;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(12, 12, 14, 0.04), inset 0 2px 4px rgba(12, 12, 14, 0.02);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(10px);
+  box-sizing: border-box;
+}
+
+/* Espacement garanti : empêche strictement l'icône / motif d'entrer dans le texte ou numéro */
+.input-icon-wrap .form-control,
+.input-icon-wrap input,
+.input-icon-wrap input[type="text"],
+.input-icon-wrap input[type="email"],
+.input-icon-wrap input[type="password"],
+.input-icon-wrap input[type="tel"],
+.input-icon-wrap select,
+.spatial-3d-card .input-icon-wrap .form-control,
+.spatial-3d-card .input-icon-wrap input,
+.spatial-3d-card .input-icon-wrap select,
+.phone-flex .input-icon-wrap input,
+.phone-flex .input-icon-wrap .form-control {
+  padding-left: 56px !important;
+}
+
+.form-control:hover:not(:focus),
+input:hover:not(:focus),
+select:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: #CBD5E1;
+  box-shadow: 0 3px 8px rgba(12, 12, 14, 0.06);
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  background: #FFFFFF;
+  border-color: var(--brand-pink) !important;
+  box-shadow: 0 0 0 4px rgba(230, 0, 126, 0.14), 0 8px 22px rgba(230, 0, 126, 0.12), inset 0 1px 2px rgba(12, 12, 14, 0.02) !important;
+  transform: translateY(-2px) translateZ(18px);
+}
+
+/* Custom Styled Select with Pink Chevron */
+select.form-control,
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23E6007E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 42px;
+  cursor: pointer;
+}
+
+textarea.form-control {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 16px !important;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #0C0C0E;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(12, 12, 14, 0.04), inset 0 2px 4px rgba(12, 12, 14, 0.02);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(10px);
+  box-sizing: border-box;
+  min-height: 105px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.form-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #64748B;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.form-hint i {
+  color: var(--brand-pink);
+  font-size: 0.82rem;
+}
+
+/* 3D Tactile Push Buttons */
+.btn-primary,
+.btn-3d {
+  background: linear-gradient(180deg, #FF1A8C 0%, #E6007E 60%, #C4006B 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px;
+  box-shadow: 0 5px 0 #9E0054, 0 12px 24px rgba(230, 0, 126, 0.35) !important;
+  transition: all 0.14s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  transform: translateZ(20px);
+  cursor: pointer;
+}
+
+.btn-primary:hover,
+.btn-3d:hover {
+  transform: translateY(-2px) translateZ(26px) !important;
+  box-shadow: 0 7px 0 #9E0054, 0 16px 30px rgba(230, 0, 126, 0.45) !important;
+}
+
+.btn-primary:active,
+.btn-3d:active {
+  transform: translateY(3px) translateZ(8px) !important;
+  box-shadow: 0 2px 0 #9E0054, 0 5px 12px rgba(230, 0, 126, 0.25) !important;
 }
 
 .form-grid-2col {

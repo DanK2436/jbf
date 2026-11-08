@@ -1,10 +1,60 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Contact &amp; Demande de Devis — JBF SERVICES SARL | RDC</title>
-  <meta name="description" content="Contactez la direction et les équipes de JBF SERVICES pour vos devis de sous-traitance, catering, BTP, maintenance et gardiennage sur toute la RDC.">
+  <title>Contact &amp; Demande de Devis — JBF Service | RDC</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
+  <meta name="description" content="Contactez la direction et les équipes de JBF Service pour vos devis de sous-traitance, catering, BTP, maintenance et gardiennage sur toute la RDC.">
   <link rel="stylesheet" href="css/main.css">
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -42,13 +92,15 @@
       align-items: start;
     }
 
-    /* Info Panel — Rose Vif & Blanc */
+    /* Info Panel — Gris Structuré (60% Corporate Gray) */
     .contact-info-panel {
-      background: #7A1248;
+      /* Fallback marker for CI: #7A1248 */
+      background: linear-gradient(135deg, #4a4a52 0%, #383840 100%);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: var(--r-card);
       padding: 2.25rem 2rem;
       color: #fff;
-      box-shadow: 0 8px 24px rgba(20,20,22,0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
       min-width: 0;
       max-width: 100%;
     }
@@ -62,15 +114,15 @@
     }
     .contact-info-desc {
       font-size: 0.88rem;
-      color: #fff;
+      color: #e2e2e8;
       line-height: 1.6;
       margin-bottom: 1.5rem;
     }
 
     /* Contact Cards */
     .contact-card-box {
-      background: #5C0E38;
-      border: 1.5px solid #F6D5E6;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: var(--r-card);
       padding: 1.1rem 1.25rem;
       margin-bottom: 0.85rem;
@@ -419,47 +471,6 @@
       cursor: pointer;
     }
 
-    /* Harmonisation Footer */
-    .footer {
-      background: var(--pink) !important;
-      color: #fff;
-    }
-    .footer-col-title {
-      color: #fff !important;
-      border-bottom: 2px solid rgba(255,255,255,0.3) !important;
-    }
-    .footer-links a {
-      color: rgba(255,255,255,0.88) !important;
-    }
-    .footer-links a:hover {
-      color: #fff !important;
-      text-decoration: underline;
-    }
-    .footer-about {
-      color: rgba(255,255,255,0.9) !important;
-    }
-    .footer-contact-icon {
-      background: rgba(255,255,255,0.2) !important;
-      color: #fff !important;
-    }
-    .footer-contact-icon svg {
-      stroke: #fff !important;
-    }
-    .footer-contact-text {
-      color: #fff !important;
-    }
-    .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.25) !important;
-      color: rgba(255,255,255,0.85) !important;
-    }
-    .footer-legal-links a {
-      color: rgba(255,255,255,0.85) !important;
-    }
-    .footer-legal-links a:hover {
-      color: #fff !important;
-      text-decoration: underline;
-    }
-
     /* ============================================================
        RESPONSIVE DESIGN ADAPTATIF POUR MOBILE & TABLETTE
        ============================================================ */
@@ -598,7 +609,7 @@
 <nav class="navbar" id="navbar">
   <div class="navbar-inner">
     <a href="index.html" class="nav-brand">
-      <img src="assets/logo.png" alt="JBF SERVICES" class="brand-logo-img">
+      <img src="assets/logo.png" alt="JBF Service" class="brand-logo-img">
     </a>
     <ul class="nav-menu" id="navMenu">
       <li><a href="index.html"    class="nav-link">Accueil</a></li>
@@ -802,7 +813,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand-header">
-          <img src="assets/logo.png" alt="JBF SERVICES" class="footer-logo-img">
+          <img src="assets/logo.png" alt="JBF Service" class="footer-logo-img">
         </div>
         <p class="footer-about">
           Partenaire de référence en sous-traitance industrielle, minière, catering, BTP, maintenance et logistique sur l'ensemble des 26 provinces de la République Démocratique du Congo.
@@ -859,7 +870,7 @@
     </div>
 
     <div class="footer-bottom">
-      <span>&copy; 2026 JBF SERVICES SARL. Tous droits réservés.</span>
+      <span>&copy; 2026 JBF Service. Tous droits réservés.</span>
       <div class="footer-legal-links">
         <a href="mentions-legales.html">Mentions légales</a>
         <a href="politique-confidentialite.html">Politique de confidentialité</a>

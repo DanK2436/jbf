@@ -1,9 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profil Entreprise & Paramètres — JBF Client</title>
+  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
+  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
+  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
+  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <meta property="og:image" content="https://jbf-service.cd/assets/favicon.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "name": "JBF Service SARL",
+    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
+    "url": "https://jbf-service.cd",
+    "logo": "https://jbf-service.cd/assets/logo.png",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243970349724",
+        "contactType": "customer service",
+        "contactOption": "WhatsApp",
+        "areaServed": "CD",
+        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+243822357053",
+        "contactType": "technical support",
+        "areaServed": "CD"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lubumbashi",
+      "addressRegion": "Haut-Katanga",
+      "addressCountry": "CD"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/client.css">
 </head>
@@ -12,7 +62,7 @@
 <div class="client-layout">
   <aside class="client-sidebar">
     <div class="sidebar-header">
-      <div class="logo-box"><img src="../assets/logo.png" alt="JBF SERVICES" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="logo-box"><img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
       <div class="brand-text">
         <h2>JBF CLIENT</h2>
         <span>Espace Partenaire RDC</span>
@@ -78,7 +128,7 @@
     </header>
 
     <main class="client-content">
-      <div class="card" style="max-width: 760px;">
+      <div class="card spatial-3d-card" style="max-width: 760px;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
           <h2><i class="bi bi-building-gear"></i> Paramètres du Compte Partenaire</h2>
           <span class="badge-status valide" id="accountSyncBadge"><i class="bi bi-cloud-check-fill"></i> Synchronisé Base de Données</span>
@@ -102,43 +152,79 @@
           <form onsubmit="handleSaveProfile(event)">
             <div class="form-grid-2col">
               <div class="form-group">
-                <label>Raison Sociale / Entreprise *</label>
-                <input type="text" id="profCompanyName" class="form-control" placeholder="Ex: Société Minière du Katanga" required>
+                <label>
+                  <span>Raison Sociale / Entreprise</span>
+                  <span class="label-req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-buildings input-icon"></i>
+                  <input type="text" id="profCompanyName" class="form-control" placeholder="Ex: Société Minière du Katanga" required>
+                </div>
               </div>
 
               <div class="form-group">
-                <label>Nom & Titre de l'Interlocuteur Principal *</label>
-                <input type="text" id="profContactName" class="form-control" placeholder="Ex: Jean-Luc Mwamba (Directeur Logistique)" required>
+                <label>
+                  <span>Interlocuteur Principal</span>
+                  <span class="label-req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-person input-icon"></i>
+                  <input type="text" id="profContactName" class="form-control" placeholder="Ex: Jean-Luc Mwamba (Directeur Logistique)" required>
+                </div>
               </div>
             </div>
 
             <div class="form-grid-2col">
               <div class="form-group">
-                <label>Adresse Email Professionnelle *</label>
-                <input type="email" id="profEmail" class="form-control" placeholder="contact@entreprise.cd" required>
+                <label>
+                  <span>Email Professionnel</span>
+                  <span class="label-req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-envelope-at input-icon"></i>
+                  <input type="email" id="profEmail" class="form-control" placeholder="contact@entreprise.cd" required>
+                </div>
               </div>
 
               <div class="form-group">
-                <label>Numéro Téléphone / Ligne WhatsApp Directe *</label>
-                <input type="tel" id="profWhatsapp" class="form-control" placeholder="+243 810 000 000" required>
-                <small style="color: var(--text-muted); font-size: 0.72rem;">Numéro utilisé pour vos notifications officielles et alertes chantiers.</small>
+                <label>
+                  <span>Téléphone / Ligne WhatsApp Directe</span>
+                  <span class="label-req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-telephone input-icon"></i>
+                  <input type="tel" id="profWhatsapp" class="form-control" placeholder="+243 970 349 724" required>
+                </div>
+                <div class="form-hint"><i class="bi bi-shield-check"></i> Numéro utilisé pour alertes chantiers et rapports opérationnels.</div>
               </div>
             </div>
 
             <div class="form-grid-2col">
               <div class="form-group">
-                <label>Siège / Ville Principale en RDC *</label>
-                <input type="text" id="profCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi / Kinshasa" required>
+                <label>
+                  <span>Siège / Ville en RDC</span>
+                  <span class="label-req">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-pin-map input-icon"></i>
+                  <input type="text" id="profCity" class="form-control" placeholder="Ex: Lubumbashi / Kolwezi / Likasi" required>
+                </div>
               </div>
 
               <div class="form-group">
-                <label>Secteur d'Activité Principal</label>
-                <input type="text" id="profSector" class="form-control" placeholder="Ex: Sous-Traitance Minière & Extraction">
+                <label>
+                  <span>Secteur d'Activité</span>
+                  <span class="label-tag">Optionnel</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-layers input-icon"></i>
+                  <input type="text" id="profSector" class="form-control" placeholder="Ex: Sous-Traitance Minière & Extraction">
+                </div>
               </div>
             </div>
 
             <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
-              <button type="submit" class="btn btn-primary" id="btnSaveProfile">
+              <button type="submit" class="btn btn-primary btn-3d" id="btnSaveProfile">
                 <i class="bi bi-check2-circle"></i> Enregistrer les Modifications
               </button>
             </div>
@@ -154,6 +240,7 @@
 <script src="js/whatsapp-config.js"></script>
 <script src="js/whatsapp-auth.js"></script>
 <script src="js/client-core.js"></script>
+<script src="js/client-3d-forms.js"></script>
 
 <script>
   let sbClient = null;

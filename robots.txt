@@ -1,0 +1,15 @@
+﻿# JBF Service SARL — Robots.txt Officiel
+# Indexation Maximale Search Engines (Googlebot, Bingbot, Slurp, DuckDuckBot, Baiduspider, Applebot)
+User-agent: *
+Allow: /
+Allow: /JBF%20Public/
+Allow: /JBF%20Client/
+Allow: /assets/
+
+# Fichiers de référencement sémantique et mots-clés
+Allow: /assets/seo-keywords-15000.json
+Allow: /assets/seo-keywords.txt
+Allow: /assets/favicon.svg
+Allow: /assets/favicon.png
+
+Sitemap: https://jbf-service.cd/sitemap.xml

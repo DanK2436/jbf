@@ -1,5 +1,5 @@
 /* =============================================================
-   JBF SERVICES — CLIENT JS CENTRAL (js/supabase.js)
+   JBF Service — CLIENT JS CENTRAL (js/supabase.js)
    Connecteur API Backend & Supabase sécurisé v7.0
    Aucune clé secrète n'est exposée côté client
    ============================================================= */
