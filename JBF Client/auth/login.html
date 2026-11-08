@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -571,14 +571,14 @@
   let activeWaPhoneTarget = '';
   function showError(msg) {
     const el = document.getElementById('alertError');
-    el.textContent = msg;
+    el.innerHTML = msg;
     el.style.display = 'block';
     document.getElementById('alertSuccess').style.display = 'none';
   }
 
   function showSuccess(msg) {
     const el = document.getElementById('alertSuccess');
-    el.textContent = msg;
+    el.innerHTML = msg;
     el.style.display = 'block';
     document.getElementById('alertError').style.display = 'none';
   }

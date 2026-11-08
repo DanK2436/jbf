@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -891,7 +891,7 @@
 
   function showAlert(message, type = 'error') {
     const banner = document.getElementById('alertBanner');
-    banner.textContent = message;
+    banner.innerHTML = message;
     banner.className = `alert-banner ${type}`;
     banner.style.display = 'block';
     window.scrollTo({ top: banner.offsetTop - 20, behavior: 'smooth' });
