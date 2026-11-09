@@ -36,7 +36,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _sendInitialOtp() async {
     setState(() => _isSending = true);
-    final res = await _otpService.sendOtpEmail(_currentEmail);
+    await _otpService.sendOtpEmail(_currentEmail);
     if (!mounted) return;
     setState(() {
       _isSending = false;
@@ -85,7 +85,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 _isSending = true;
                 _errorMessage = null;
               });
-              final res = await _otpService.sendOtpEmail(newMail);
+              await _otpService.sendOtpEmail(newMail);
               if (!mounted) return;
               setState(() {
                 _isSending = false;
