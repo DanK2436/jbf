@@ -1,25 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:jbf_portal_shell/jbf_portal_shell.dart';
+import 'config/app_config.dart';
+import 'services/auth_service.dart';
+import 'theme/app_theme.dart';
+import 'screens/login_screen.dart';
+import 'screens/admin_main_screen.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final runtime = PortalRuntime.fromEnvironment(adminApp: true);
-  final config = PortalConfig.admin(
-    baseUrl: runtime.portalBase.isEmpty ? null : runtime.portalBase,
-  );
+  final authService = AuthService();
+  final hasSession = await authService.tryAutoLogin();
 
-  AdminMessageNotifier? notifier;
-  if (runtime.messageNotifications) {
-    notifier = AdminMessageNotifier(runtime);
-    await notifier.initialize();
+  runApp(JbfAdminApp(
+    authService: authService,
+    initialScreen: hasSession
+        ? AdminMainScreen(authService: authService)
+        : LoginScreen(authService: authService),
+  ));
+}
+
+class JbfAdminApp extends StatelessWidget {
+  final AuthService authService;
+  final Widget initialScreen;
+
+  const JbfAdminApp({
+    super.key,
+    required this.authService,
+    required this.initialScreen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: AppConfig.appName,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: initialScreen,
+    );
   }
-
-  runApp(
-    PortalApp(
-      config: config,
-      runtime: runtime,
-      messageNotifier: notifier,
-    ),
-  );
 }

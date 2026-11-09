@@ -50,7 +50,6 @@ jobs:
           done
 
   build-android:
-    if: false
     needs: analyze
     runs-on: ubuntu-latest
     strategy:
