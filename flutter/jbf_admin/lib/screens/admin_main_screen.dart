@@ -9,6 +9,7 @@ import 'conges_screen.dart';
 import 'avis_screen.dart';
 import 'membres_screen.dart';
 import 'sous_admins_screen.dart';
+import 'otp_settings_screen.dart';
 import 'login_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     'Modération des Avis Clients',
     'Annuaire des Collaborateurs',
     'Gestion des Sous-Administrateurs',
+    'Sécurité OTP Admin Principal',
   ];
 
   Widget _buildBody() {
@@ -52,6 +54,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         return const MembresScreen();
       case 7:
         return const SousAdminsScreen();
+      case 8:
+        return const OtpSettingsScreen();
       default:
         return const DashboardScreen(onNavigate: _dummyNavigate);
     }
@@ -95,12 +99,21 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shield, color: AppConfig.brandPink, size: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.shield, color: AppConfig.brandPink, size: 20),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Column(
@@ -148,7 +161,13 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       ),
                     ],
                   ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.shield_outlined, color: Colors.white),
+                  tooltip: 'Sécurité OTP Admin',
+                  onPressed: () => setState(() => _selectedIndex = 8),
+                ),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.logout, color: Colors.white),
                   tooltip: 'Déconnexion',
@@ -181,6 +200,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildNavItem(5, Icons.star_outline, Icons.star, 'Modération Avis'),
                   _buildNavItem(6, Icons.people_outline, Icons.people, 'Membres RH'),
                   _buildNavItem(7, Icons.admin_panel_settings_outlined, Icons.admin_panel_settings, 'Sous-Administrateurs'),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildNavItem(8, Icons.shield_outlined, Icons.shield, 'Sécurité OTP Direction'),
                 ],
               ),
             ),
@@ -216,6 +237,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildDrawerItem(5, Icons.star, 'Modération Avis'),
                   _buildDrawerItem(6, Icons.people, 'Membres RH'),
                   _buildDrawerItem(7, Icons.admin_panel_settings, 'Sous-Administrateurs'),
+                  _buildDrawerItem(8, Icons.shield, 'Sécurité OTP Direction'),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.logout, color: AppConfig.dangerRed),

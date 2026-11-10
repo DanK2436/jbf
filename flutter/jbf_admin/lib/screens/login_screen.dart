@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
+import '../services/otp_service.dart';
+import 'admin_main_screen.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,10 +17,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController(text: AppConfig.masterAdminEmail);
   final _passwordController = TextEditingController(text: AppConfig.masterAdminPassword);
-  final _otpEmailController = TextEditingController(text: AppConfig.masterAdminEmail);
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _showCustomOtpEmail = false;
   String? _errorMessage;
 
   Future<void> _handleLogin() async {
@@ -35,20 +35,32 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (res['success'] == true) {
-      // Step 2: Transition to OTP verification screen with target email
-      final targetEmail = _showCustomOtpEmail && _otpEmailController.text.trim().isNotEmpty
-          ? _otpEmailController.text.trim()
-          : _emailController.text.trim();
+      // Contrôle OTP réservé à l'administrateur principal avec email configuré dans le logiciel
+      final configuredEmail = await OtpService().getConfiguredOtpEmail();
 
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            authService: widget.authService,
-            initialEmail: targetEmail,
+      if (configuredEmail == null || configuredEmail.isEmpty) {
+        // À la première connexion (ou si aucun email OTP n'a encore été ajouté dans le logiciel) :
+        // Ne demande pas d'OTP et ouvre directement la session administrateur.
+        await widget.authService.completeLogin();
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => AdminMainScreen(authService: widget.authService),
           ),
-        ),
-      );
-      setState(() => _isLoading = false);
+        );
+      } else {
+        // Dès qu'un email a été configuré dans le logiciel : envoi du code OTP obligatoire
+        if (!mounted) return;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OtpScreen(
+              authService: widget.authService,
+              initialEmail: configuredEmail,
+            ),
+          ),
+        );
+        setState(() => _isLoading = false);
+      }
     } else {
       setState(() {
         _isLoading = false;
@@ -83,26 +95,35 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo & Header
+                // Logo Officiel JBF Service
                 Center(
                   child: Container(
-                    width: 64,
-                    height: 64,
+                    width: 76,
+                    height: 76,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppConfig.brandPink,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: AppConfig.brandPink.withOpacity(0.4),
-                          blurRadius: 12,
+                          color: AppConfig.brandPink.withOpacity(0.2),
+                          blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
                       ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1.5),
                     ),
-                    child: const Icon(
-                      Icons.admin_panel_settings,
-                      color: Colors.white,
-                      size: 36,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.shield,
+                          color: AppConfig.brandPink,
+                          size: 38,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -165,11 +186,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     hintText: 'services@admin.jbf',
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  onChanged: (val) {
-                    if (!_showCustomOtpEmail) {
-                      _otpEmailController.text = val;
-                    }
-                  },
                 ),
                 const SizedBox(height: 18),
 
@@ -192,36 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Email Destination OTP manual change toggle
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Email de réception OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    TextButton(
-                      onPressed: () => setState(() => _showCustomOtpEmail = !_showCustomOtpEmail),
-                      child: Text(
-                        _showCustomOtpEmail ? 'Utiliser email compte' : 'Modifier email OTP',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_showCustomOtpEmail) ...[
-                  TextField(
-                    controller: _otpEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.alternate_email),
-                      hintText: 'Adresse où recevoir le code OTP',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
 
                 // Submit Button
                 ElevatedButton(
@@ -236,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Text(
-                          'Vérifier & Envoyer Code OTP',
+                          'Connexion Direction',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -255,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Double facteur (2FA) obligatoire : un code OTP est envoyé par email après validation du mot de passe.',
+                          'Portail officiel Direction JBF SERVICES SARL. La configuration de l\'email OTP s\'effectue à l\'intérieur de votre espace d\'administration.',
                           style: TextStyle(fontSize: 11, color: Colors.grey.shade800),
                         ),
                       ),

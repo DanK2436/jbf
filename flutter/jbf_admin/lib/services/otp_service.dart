@@ -20,6 +20,7 @@ class OtpService {
       70, 118, 103, 83, 88, 115, 77, 98, 74,
     ]);
   }
+  static const String _prefOtpKey = 'jbf_admin_configured_otp_email';
   static const String _senderEmail = 'bintijudith104@gmail.com';
   static const String _senderName = 'JBF SERVICES SARL';
 
@@ -30,22 +31,50 @@ class OtpService {
   String? get targetEmail => _targetEmail;
   String? get currentOtpForDev => _currentOtp;
 
-  /// Update or manually assign the destination email
-  Future<void> setTargetEmail(String email) async {
-    _targetEmail = email.trim().toLowerCase();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jbf_admin_otp_target_email', _targetEmail!);
+  /// Vérifie si l'administrateur a configuré un email OTP à l'intérieur du logiciel.
+  /// Renvoie null si aucun email n'a encore été enregistré (première connexion).
+  Future<String?> getConfiguredOtpEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString(_prefOtpKey)?.trim();
+      if (email != null && email.isNotEmpty && email.contains('@')) {
+        _targetEmail = email.toLowerCase();
+        return _targetEmail;
+      }
+    } catch (_) {}
+    _targetEmail = null;
+    return null;
   }
 
-  Future<String?> getSavedTargetEmail() async {
-    final prefs = await SharedPreferences.getInstance();
-    _targetEmail = prefs.getString('jbf_admin_otp_target_email') ?? 'services@admin.jbf';
-    return _targetEmail;
+  Future<bool> isOtpConfigured() async {
+    final email = await getConfiguredOtpEmail();
+    return email != null && email.isNotEmpty;
   }
+
+  /// Configurer ou mettre à jour l'email de réception OTP à l'intérieur du logiciel
+  Future<void> setConfiguredOtpEmail(String? email) async {
+    final prefs = await SharedPreferences.getInstance();
+    final clean = email?.trim().toLowerCase();
+    if (clean == null || clean.isEmpty) {
+      await prefs.remove(_prefOtpKey);
+      _targetEmail = null;
+    } else {
+      await prefs.setString(_prefOtpKey, clean);
+      _targetEmail = clean;
+    }
+  }
+
+  Future<void> removeConfiguredOtpEmail() async {
+    await setConfiguredOtpEmail(null);
+  }
+
+  /// Rétrocompatibilité
+  Future<void> setTargetEmail(String email) => setConfiguredOtpEmail(email);
+  Future<String?> getSavedTargetEmail() => getConfiguredOtpEmail();
 
   /// Generate 6-digit OTP code and send via Brevo real email service
   Future<Map<String, dynamic>> sendOtpEmail(String email) async {
-    await setTargetEmail(email);
+    _targetEmail = email.trim().toLowerCase();
 
     // 1. Generate 6-digit code
     final random = Random();

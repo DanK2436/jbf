@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../models/admin_models.dart';
 import '../services/supabase_service.dart';
+import '../services/otp_service.dart';
 import '../widgets/kpi_card.dart';
 import '../widgets/stat_badge.dart';
 
@@ -17,6 +18,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _supabase = SupabaseService();
   bool _isLoading = true;
+  String? _otpConfiguredEmail;
   List<DevisItem> _devisList = [];
   List<MissionItem> _missionsList = [];
   List<PointageLog> _pointagesList = [];
@@ -32,12 +34,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final devis = await _supabase.fetchDevis();
     final missions = await _supabase.fetchMissions();
     final pointages = await _supabase.fetchPointages();
+    final otpEmail = await OtpService().getConfiguredOtpEmail();
 
     if (!mounted) return;
     setState(() {
       _devisList = devis;
       _missionsList = missions;
       _pointagesList = pointages;
+      _otpConfiguredEmail = otpEmail;
       _isLoading = false;
     });
   }
@@ -135,6 +139,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 20),
+
+            // OTP Warning Banner if not configured inside the app
+            if (_otpConfiguredEmail == null || _otpConfiguredEmail!.isEmpty) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFCD34D)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.shield_outlined, color: Color(0xFFD97706), size: 26),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Sécurité Direction : Protection OTP non configurée',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF92400E)),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'L\'administrateur principal se connecte actuellement en accès direct. Ajoutez votre email dans le logiciel pour exiger un code OTP à 6 chiffres.',
+                            style: TextStyle(fontSize: 12, color: Color(0xFFB45309)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD97706),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      ),
+                      onPressed: () => widget.onNavigate(8),
+                      child: const Text('Configurer OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             // Live KPI Grid
             LayoutBuilder(

@@ -114,6 +114,8 @@ class _OtpScreenState extends State<OtpScreen> {
     final isValid = _otpService.verifyOtp(input);
 
     if (isValid) {
+      await widget.authService.completeLogin();
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => AdminMainScreen(authService: widget.authService),
@@ -153,19 +155,35 @@ class _OtpScreenState extends State<OtpScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Icon
+                // Logo Officiel JBF Service
                 Center(
                   child: Container(
-                    width: 64,
-                    height: 64,
+                    width: 76,
+                    height: 76,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppConfig.brandPinkTint,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConfig.brandPink.withOpacity(0.2),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1.5),
                     ),
-                    child: const Icon(
-                      Icons.mark_email_read_outlined,
-                      color: AppConfig.brandPink,
-                      size: 34,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.mark_email_read_outlined,
+                          color: AppConfig.brandPink,
+                          size: 34,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -204,7 +222,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Email de réception :',
+                            const Text('Email configuré dans le logiciel :',
                                 style: TextStyle(fontSize: 11, color: Colors.grey)),
                             Text(
                               _currentEmail,
@@ -214,10 +232,16 @@ class _OtpScreenState extends State<OtpScreen> {
                           ],
                         ),
                       ),
-                      TextButton.icon(
-                        icon: const Icon(Icons.edit, size: 14),
-                        label: const Text('Modifier', style: TextStyle(fontSize: 12)),
-                        onPressed: _showEditEmailDialog,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Vérifié',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF16A34A), fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),

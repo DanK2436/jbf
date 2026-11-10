@@ -92,12 +92,21 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.engineering, color: AppConfig.brandPink, size: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.engineering, color: AppConfig.brandPink, size: 20),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Column(

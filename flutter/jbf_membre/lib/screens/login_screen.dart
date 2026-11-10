@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
-import 'otp_screen.dart';
+import 'membre_main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -15,10 +15,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _idController = TextEditingController(text: AppConfig.defaultMatricule);
   final _passwordController = TextEditingController(text: AppConfig.defaultPassword);
-  final _otpEmailController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _showCustomOtpEmail = false;
   String? _errorMessage;
 
   Future<void> _handleLogin() async {
@@ -35,23 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (res['success'] == true) {
-      final defaultEmail = res['email'] ?? 'dankande3@gmail.com';
-      final targetEmail = _showCustomOtpEmail && _otpEmailController.text.trim().isNotEmpty
-          ? _otpEmailController.text.trim()
-          : defaultEmail;
-
-      final agentNom = widget.authService.currentUser?.fullName ?? 'Collaborateur';
-
-      Navigator.of(context).push(
+      // Connexion directe pour les membres sans exigence de code OTP
+      await widget.authService.completeLogin();
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            authService: widget.authService,
-            initialEmail: targetEmail,
-            agentNom: agentNom,
-          ),
+          builder: (_) => MembreMainScreen(authService: widget.authService),
         ),
       );
-      setState(() => _isLoading = false);
     } else {
       setState(() {
         _isLoading = false;
@@ -86,25 +74,35 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Logo Officiel JBF Service
                 Center(
                   child: Container(
-                    width: 64,
-                    height: 64,
+                    width: 76,
+                    height: 76,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppConfig.brandPink,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: AppConfig.brandPink.withOpacity(0.4),
-                          blurRadius: 12,
+                          color: AppConfig.brandPink.withOpacity(0.2),
+                          blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
                       ],
+                      border: Border.all(color: Colors.grey.shade200, width: 1.5),
                     ),
-                    child: const Icon(
-                      Icons.badge_outlined,
-                      color: Colors.white,
-                      size: 36,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.badge_outlined,
+                          color: AppConfig.brandPink,
+                          size: 38,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -188,36 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Manual OTP Email Setting
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Email de réception OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    TextButton(
-                      onPressed: () => setState(() => _showCustomOtpEmail = !_showCustomOtpEmail),
-                      child: Text(
-                        _showCustomOtpEmail ? 'Utiliser email par défaut' : 'Indiquer email manuellement',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_showCustomOtpEmail) ...[
-                  TextField(
-                    controller: _otpEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.alternate_email),
-                      hintText: 'ex: mon.adresse@gmail.com',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
 
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
@@ -231,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Text(
-                          'Connexion & Envoi Code OTP',
+                          'Se connecter à mon Espace',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -249,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Sécurité 2FA : le code de confirmation est expédié directement par email après contrôle du mot de passe.',
+                          'Portail réservé aux collaborateurs et équipes de terrain JBF SERVICES SARL.',
                           style: TextStyle(fontSize: 11, color: Colors.grey.shade800),
                         ),
                       ),

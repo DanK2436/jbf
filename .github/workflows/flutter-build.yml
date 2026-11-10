@@ -84,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [jbf_admin, jbf_membre]
+        app: [jbf_admin, jbf_membre, jbf_client]
     steps:
       - uses: actions/checkout@v4
       - name: Enable MSVC (Visual Studio 2022)
@@ -116,6 +116,23 @@ jobs:
             $defines += "--dart-define=JBF_SUPABASE_ANON_KEY=$env:JBF_SUPABASE_ANON_KEY"
           }
           flutter build windows --release @defines
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows Installer (Inno Setup)
+        working-directory: flutter/${{ matrix.app }}
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" windows/installer.iss
+          Get-ChildItem -Path installer_output
+
+      - name: Upload Windows Setup Installer (.exe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.app }}-setup-exe
+          path: flutter/${{ matrix.app }}/installer_output/*.exe
+          if-no-files-found: error
+
       - name: Zip Windows Admin
         if: matrix.app == 'jbf_admin'
         shell: pwsh
@@ -126,17 +143,28 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path "flutter/jbf_membre/build/windows/x64/runner/Release/*" -DestinationPath "JBF-Membre-Windows-x64.zip" -Force
+      - name: Zip Windows Client
+        if: matrix.app == 'jbf_client'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "flutter/jbf_client/build/windows/x64/runner/Release/*" -DestinationPath "JBF-Client-Windows-x64.zip" -Force
       - uses: actions/upload-artifact@v4
         if: matrix.app == 'jbf_admin'
         with:
-          name: windows-jbf_admin
+          name: windows-jbf_admin-portable-zip
           path: JBF-Admin-Windows-x64.zip
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: matrix.app == 'jbf_membre'
         with:
-          name: windows-jbf_membre
+          name: windows-jbf_membre-portable-zip
           path: JBF-Membre-Windows-x64.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: matrix.app == 'jbf_client'
+        with:
+          name: windows-jbf_client-portable-zip
+          path: JBF-Client-Windows-x64.zip
           if-no-files-found: error
 
   build-macos-admin-membre:
