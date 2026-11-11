@@ -144,7 +144,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.fullName ?? 'Jean-Pierre Mulamba',
+                        user?.fullName ?? 'Profil sans nom',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
@@ -197,7 +197,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 children: [
                   UserAccountsDrawerHeader(
                     decoration: const BoxDecoration(color: AppConfig.brandPink),
-                    accountName: Text(user?.fullName ?? 'Jean-Pierre Mulamba'),
+                    accountName: Text(user?.fullName ?? 'Profil sans nom'),
                     accountEmail: Text('${user?.matricule} • ${user?.poste}'),
                     currentAccountPicture: CircleAvatar(
                       backgroundColor: Colors.white,

@@ -57,7 +57,9 @@ class _LeavesScreenState extends State<LeavesScreen> {
                   children: [
                     Text('Agent : ${widget.user.fullName} (${widget.user.matricule})',
                         style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Solde légal : ${widget.user.soldeConges} jours restants',
+                    Text(widget.user.soldeConges < 0
+                        ? 'Solde non renseigné'
+                        : 'Solde légal : ${widget.user.soldeConges} jours restants',
                         style: const TextStyle(color: AppConfig.brandPinkDark, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 14),
                     const Text('Nature de l\'Absence', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -230,7 +232,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                           const Text('SOLDE DE CONGÉS DISPONIBLE',
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
                           const SizedBox(height: 6),
-                          Text('${widget.user.soldeConges} Jours',
+                          Text(widget.user.soldeConges < 0 ? 'Non renseigné' : '${widget.user.soldeConges} Jours',
                               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppConfig.brandPink)),
                           const Text('Droits légaux enregistrés en BDD', style: TextStyle(fontSize: 12, color: Colors.grey)),
                         ],

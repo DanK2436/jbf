@@ -32,11 +32,10 @@ class AdminUser {
       role: json['role'] ?? 'Super Administrateur',
       site: json['site'] ?? 'Lubumbashi (Siège)',
       avatar: json['avatar'] ?? 'DG',
-      permissions: (json['permissions'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          ['*'],
-      token: json['token'] ?? 'token-admin',
+      permissions: json['permissions'] is List
+          ? (json['permissions'] as List).map((e) => e.toString()).toList()
+          : <String>[],
+      token: json['token']?.toString() ?? '',
     );
   }
 

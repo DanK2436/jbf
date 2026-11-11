@@ -134,13 +134,15 @@ class _MembresScreenState extends State<MembresScreen> {
                 poste: posteCtrl.text.isNotEmpty ? posteCtrl.text : 'Agent de Terrain',
                 sectionNom: secCtrl.text,
                 province: provCtrl.text,
-                soldeConges: 18,
+                soldeConges: -1,
               );
 
-              await _supabase.createMembre(m);
+              final saved = await _supabase.createMembre(m);
               _loadMembres();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Collaborateur enregistré dans la table profiles de Supabase')),
+                SnackBar(content: Text(saved
+                    ? 'Collaborateur enregistré.'
+                    : 'Enregistrement refusé. Le collaborateur n\'a pas été créé.')),
               );
             },
             child: const Text('Enregistrer dans Supabase'),
@@ -305,7 +307,7 @@ class _MembresScreenState extends State<MembresScreen> {
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
-                                      'Solde : ${m.soldeConges}j',
+                                      m.soldeConges < 0 ? 'Solde non renseigné' : 'Solde : ${m.soldeConges}j',
                                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                                     ),
                                   ),

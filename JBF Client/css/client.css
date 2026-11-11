@@ -1,30 +1,26 @@
 /* =============================================================
    JBF SERVICE — ESPACE CLIENT
    Charte officielle :
-   - 60% Gris #aaaaaa (Fond de scène, toiles et structures)
-   - 20% Rose Logo #E6007E (Boutons d'action, accents, lueurs)
-   - 15% Blanc #FFFFFF (Cartes surélevées, conteneurs de lecture)
-   - 5% Noir #0C0C0E (Typographie d'impact, contrastes profonds)
+   Intention visuelle : gris très clair ~40 %, blanc ~20 %, rose du logo ~30 %, noir ~10 %.
    ============================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* 1. Rose du Logo (20% - Accents, boutons majeurs, lueurs) */
-  --brand-pink: #E6007E;
-  --brand-pink-dark: #C4006B;
-  --brand-pink-hover: #FF1A8C;
-  --brand-pink-subtle: #FCE7F3;
-  --brand-pink-tint: #FBCFE8;
-  --brand-pink-glow: rgba(230, 0, 126, 0.35);
+  --brand-pink: #DE026A;
+  --brand-pink-dark: #C8025F;
+  --brand-pink-hover: #DE026A;
+  --brand-pink-subtle: #FADCEA;
+  --brand-pink-tint: #F4AECF;
+  --brand-pink-glow: rgba(222, 2, 106, 0.28);
 
-  /* 2. Gris #aaaaaa (60% - Fond dominant, toiles, sidebar, bordures) */
-  --gray-base: #aaaaaa;
-  --bg-main: #a3a3a7;
-  --bg-sidebar: #bebec2;
-  --border-subtle: #8c8c92;
-  --border-pink: #FBCFE8;
-  --gray-light: #E4E4E7;
+  --gray-base: #F6F6F7;
+  --bg-main: #F6F6F7;
+  --bg-sidebar: #F3F3F5;
+  --border-subtle: #E4E4E7;
+  --border-pink: #F4AECF;
+  --gray-light: #F6F6F7;
 
   /* 3. Blanc (15% - Cartes surélevées, modules, inputs) */
   --white: #FFFFFF;
@@ -1493,7 +1489,7 @@ textarea.form-control {
   flex-shrink: 0;
   display: inline-block;
 }
-.legend-swatch.solid { background: #7A1248; }
+.legend-swatch.solid { background: #DE026A; }
 .legend-swatch.stripe {
   background: repeating-linear-gradient(-45deg, #141416 0 2px, #fff 2px 5px);
 }

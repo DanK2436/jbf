@@ -18,7 +18,7 @@ class MembreUser {
     required this.poste,
     required this.sectionNom,
     this.province = 'Haut-Katanga (Lubumbashi)',
-    this.soldeConges = 18,
+    this.soldeConges = -1,
     required this.avatar,
     required this.token,
   });
@@ -26,13 +26,15 @@ class MembreUser {
   factory MembreUser.fromJson(Map<String, dynamic> json) {
     return MembreUser(
       id: json['id']?.toString() ?? 'mbr-1',
-      fullName: json['name'] ?? json['full_name'] ?? 'Jean-Pierre Mulamba',
-      email: json['email'] ?? 'jp.mulamba@jbf-services.cd',
-      matricule: json['matricule'] ?? 'JBF-M-2026-012',
-      poste: json['poste'] ?? 'Chef d\'Équipe Soudure & Tuyauterie',
-      sectionNom: json['section_nom'] ?? 'Maintenance & Soudure',
-      province: json['province'] ?? 'Lualaba (Kolwezi)',
-      soldeConges: int.tryParse(json['solde_conges']?.toString() ?? '18') ?? 18,
+      fullName: json['name'] ?? json['full_name'] ?? 'Profil sans nom',
+      email: json['email'] ?? '',
+      matricule: json['matricule'] ?? '',
+      poste: json['poste'] ?? '',
+      sectionNom: json['section_nom'] ?? '',
+      province: json['province'] ?? '',
+      soldeConges: json['solde_conges'] == null
+          ? -1
+          : int.tryParse(json['solde_conges'].toString()) ?? -1,
       avatar: json['avatar'] ?? 'JM',
       token: json['token'] ?? 'token-membre',
     );

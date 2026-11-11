@@ -6,102 +6,129 @@ import '../models/membre_models.dart';
 
 class AuthService {
   static const String _sessionKey = 'jbf_membre_session_data';
+  final http.Client _http;
   MembreUser? _currentUser;
   String? _pendingEmail;
+
+  AuthService({http.Client? httpClient}) : _http = httpClient ?? http.Client();
 
   MembreUser? get currentUser => _currentUser;
   String? get pendingEmail => _pendingEmail;
   bool get isLoggedIn => _currentUser != null;
 
+  static bool isMemberRole(String role) {
+    final value = role.trim().toLowerCase();
+    return value == 'membre' || value == 'member' || value == 'collaborateur';
+  }
+
   Future<bool> tryAutoLogin() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = prefs.getString(_sessionKey);
-      if (jsonStr != null) {
-        final map = jsonDecode(jsonStr);
-        _currentUser = MembreUser.fromJson(map);
-        return true;
-      }
+      if (jsonStr == null) return false;
+      final map = jsonDecode(jsonStr);
+      final token = (map['token'] ?? '').toString();
+      if (!token.contains('.')) return false;
+      _currentUser = MembreUser.fromJson(map);
+      return true;
     } catch (_) {}
     return false;
   }
 
-  /// Step 1: Verify identifier (matricule / email) and password
   Future<Map<String, dynamic>> verifyPasswordOnly(String identifier, String password) async {
     final cleanId = identifier.trim();
-    final cleanPass = password.trim();
+    final cleanPass = password;
+    if (!cleanId.contains('@')) {
+      return {
+        'success': false,
+        'error': 'La connexion membre exige l\'email du compte. Un matricule seul ne vérifie pas le mot de passe.',
+      };
+    }
+    if (cleanPass.isEmpty) {
+      return {'success': false, 'error': 'Mot de passe requis.'};
+    }
 
-    // 1. Check Supabase profiles table directly
+    final signed = await _passwordGrant(cleanId.toLowerCase(), cleanPass);
+    if (signed['success'] != true) return signed;
+
+    final profile = await _loadProfile(signed['userId'] as String, signed['token'] as String);
+    if (profile == null) {
+      return {
+        'success': false,
+        'error': 'Compte authentifié, mais le profil membre est introuvable ou refusé.',
+      };
+    }
+    final role = (profile['role'] ?? '').toString();
+    if (!isMemberRole(role)) {
+      return {'success': false, 'error': 'Ce compte n\'a pas le rôle membre. Accès refusé.'};
+    }
+
+    _currentUser = MembreUser.fromJson({
+      ...profile,
+      'email': profile['email'] ?? cleanId.toLowerCase(),
+      'role': role,
+      'token': signed['token'],
+    });
+    _pendingEmail = _currentUser!.email;
+    return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+  }
+
+  Future<Map<String, dynamic>> _passwordGrant(String email, String password) async {
     try {
-      final isEmail = cleanId.contains('@');
-      final queryField = isEmail ? 'email' : 'matricule';
-      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?$queryField=eq.$cleanId&select=*';
-
-      final res = await http.get(
-        Uri.parse(url),
+      final res = await _http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 6));
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 12));
+      final data = _asMap(res.body);
+      if (res.statusCode != 200) {
+        return {'success': false, 'error': _authError(data) ?? 'Identifiants refusés.'};
+      }
+      final token = data['access_token']?.toString() ?? '';
+      final user = data['user'];
+      final userId = user is Map ? user['id']?.toString() ?? '' : '';
+      if (token.isEmpty || userId.isEmpty) {
+        return {'success': false, 'error': 'Réponse d\'authentification incomplète.'};
+      }
+      return {'success': true, 'token': token, 'userId': userId};
+    } catch (_) {
+      return {'success': false, 'error': 'Service d\'authentification injoignable.'};
+    }
+  }
 
-      if (res.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(res.body);
-        if (list.isNotEmpty) {
-          final p = list.first;
-          _currentUser = MembreUser.fromJson(p);
-          _pendingEmail = p['email'] ?? 'dankande3@gmail.com';
-          return {
-            'success': true,
-            'user': _currentUser,
-            'email': _pendingEmail,
-          };
-        }
+  Future<Map<String, dynamic>?> _loadProfile(String userId, String token) async {
+    try {
+      final res = await _http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 12));
+      if (res.statusCode != 200) return null;
+      final list = jsonDecode(res.body);
+      if (list is List && list.isNotEmpty && list.first is Map) {
+        return Map<String, dynamic>.from(list.first as Map);
       }
     } catch (_) {}
+    return null;
+  }
 
-    // 2. Default Collaborator Account (Jean-Pierre Mulamba)
-    if ((cleanId.toUpperCase() == AppConfig.defaultMatricule ||
-            cleanId.toLowerCase() == 'jp.mulamba@jbf-services.cd') &&
-        cleanPass == AppConfig.defaultPassword) {
-      _currentUser = MembreUser(
-        id: 'mbr-012',
-        fullName: 'Jean-Pierre Mulamba',
-        email: 'jp.mulamba@jbf-services.cd',
-        matricule: 'JBF-M-2026-012',
-        poste: 'Chef d\'Équipe Soudure & Tuyauterie',
-        sectionNom: 'Maintenance & Soudure',
-        province: 'Lualaba (Kolwezi)',
-        soldeConges: 14,
-        avatar: 'JM',
-        token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      _pendingEmail = _currentUser!.email;
-      return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
-    }
+  Map<String, dynamic> _asMap(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {};
+  }
 
-    // 3. Fallback generic collaborator login if starts with JBF-
-    if (cleanId.toUpperCase().startsWith('JBF-') && cleanPass.length >= 4) {
-      _currentUser = MembreUser(
-        id: 'mbr-custom',
-        fullName: 'Agent Terrain JBF',
-        email: 'agent@jbf-services.cd',
-        matricule: cleanId.toUpperCase(),
-        poste: 'Technicien Spécialisé',
-        sectionNom: 'Sous-traitance Industrielle',
-        province: 'Haut-Katanga (Lubumbashi)',
-        soldeConges: 18,
-        avatar: 'AT',
-        token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      _pendingEmail = _currentUser!.email;
-      return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
-    }
-
-    return {
-      'success': false,
-      'error': 'Matricule ou mot de passe incorrect. Exemple : ${AppConfig.defaultMatricule} / ${AppConfig.defaultPassword}',
-    };
+  String? _authError(Map<String, dynamic> data) {
+    final msg = data['msg'] ?? data['error_description'] ?? data['message'] ?? data['error'];
+    if (msg == null) return null;
+    return msg.toString();
   }
 
   Future<void> completeLogin() async {

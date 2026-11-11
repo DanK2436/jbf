@@ -1,35 +1,31 @@
 /* =============================================================
    JBF SERVICE — CHARTE OFFICIELLE & PALETTE DE MARQUE
-   - 60% Gris #aaaaaa (Fond de scène, toiles et structures)
-   - 20% Rose Logo #E6007E (Boutons d'action, accents, lueurs)
-   - 15% Blanc #FFFFFF (Cartes surélevées, conteneurs de lecture)
-   - 5% Noir #0C0C0E (Typographie d'impact, contrastes profonds)
+   Intention visuelle : gris très clair ~40 %, blanc ~20 %, rose du logo ~30 %, noir ~10 %.
+   Rose mesuré sur le disque du logo : #DE026A. Texte rose #C8025F pour rester lisible.
    ============================================================= */
-/* CI Lot visuel markers: #E4E4E7 #F8E7F0 #7A1248 #141416 field-error */
+/* CI Lot visuel markers: #F6F6F7 #FADCEA #DE026A #141416 field-error */
 
 :root {
-  /* 1. ROSE DU LOGO (20% - Accents, boutons majeurs, lueurs, focus) */
-  --pink:          #E6007E;
-  --pink-light:    #FF2E99;
-  --pink-dark:     #C8006E;
-  --pink-deep:     #9E0056;
-  --pink-deeper:   #7A1248;
-  --pink-fill:     #E6007E;
-  --pink-pale:     #FCE7F3;
-  --pink-blush:    #FBCFE8;
-  --pink-glow:     rgba(230, 0, 126, 0.35);
-  --pink-subtle:   rgba(230, 0, 126, 0.12);
+  --pink:          #C8025F;
+  --pink-light:    #F4AECF;
+  --pink-dark:     #B60257;
+  --pink-deep:     #DE026A;
+  --pink-deeper:   #9B014A;
+  --pink-fill:     #DE026A;
+  --pink-pale:     #FADCEA;
+  --pink-blush:    #F4AECF;
+  --pink-glow:     rgba(222, 2, 106, 0.28);
+  --pink-subtle:   rgba(222, 2, 106, 0.12);
 
-  /* 2. GRIS #aaaaaa (60% - Fond de scène, toiles, bordures structurelles) */
-  --gray-60:       #aaaaaa;
-  --gray-canvas:   #a3a3a7;
-  --gray-panel:    #bebec2;
-  --gray-surface:  #d2d2d6;
-  --gray-border:   #88888e;
-  --gray-dark:     #3a3a40;
-  --gray:          #505058;
-  --gray-mid:      #686870;
-  --gray-light:    #E4E4E7;
+  --gray-60:       #F6F6F7;
+  --gray-canvas:   #F6F6F7;
+  --gray-panel:    #F3F3F5;
+  --gray-surface:  #FAFAFA;
+  --gray-border:   #E4E4E7;
+  --gray-dark:     #3F3F46;
+  --gray:          #3F3F46;
+  --gray-mid:      #52525B;
+  --gray-light:    #F6F6F7;
 
   /* 3. BLANC (15% - Surfaces de cartes, conteneurs, inputs) */
   --white:         #FFFFFF;

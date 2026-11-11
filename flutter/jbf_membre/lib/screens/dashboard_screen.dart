@@ -327,7 +327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: KpiCard(
                     title: 'Solde Congés Payés',
-                    value: '${widget.user.soldeConges} Jours',
+                    value: widget.user.soldeConges < 0 ? 'Non renseigné' : '${widget.user.soldeConges} Jours',
                     subtitle: 'Droits légaux enregistrés',
                     icon: Icons.beach_access,
                     color: AppConfig.successGreen,

@@ -22,13 +22,10 @@ jobs:
           contact = Path("JBF Public/contact.html").read_text(encoding="utf-8")
           js = Path("JBF Public/js/hero-slideshow.js").read_text(encoding="utf-8")
           required = {
-              "gris toile": "#E4E4E7" in css,
-              "rose pale": "#F8E7F0" in css,
-              "rose soutenu": "#7A1248" in css,
-              "noir": "#141416" in css,
-              "loader bas": "bootDown" in css and "bootOverlay" in home and "boot-logo" in home,
-              "loader gauche": "bootLeft" in css,
-              "duree 6s": "6s" in css and "6200" in home,
+              "gris toile": "#F6F6F7" in css,
+              "rose pale": "#FADCEA" in css,
+              "rose logo": "#DE026A" in css,
+              "noir": "#0C0C0E" in css or "#141416" in css,
               "mouvement css": "prefers-reduced-motion: reduce" in css and "prefers-reduced-motion: reduce" in client,
               "erreur contact": "field-error" in css or "field-error" in contact,
               "diaporama manuel": "setInterval" not in js and "strictement manuel" in js,
