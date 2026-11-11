@@ -19,6 +19,7 @@ class AuthService {
     return value == 'admin' ||
         value == 'super_admin' ||
         value == 'sous_admin' ||
+        value == 'direction' ||
         value.contains('administrateur');
   }
 
@@ -47,15 +48,18 @@ class AuthService {
     final signed = await _passwordGrant(cleanEmail, password);
     if (signed['success'] != true) return signed;
 
-    final profile = await _loadRow(
-      'profiles?id=eq.${signed['userId']}&select=*',
-      signed['token'] as String,
-    );
+    final profile = await _loadProfile(signed['userId'] as String, signed['token'] as String, cleanEmail);
     final account = await _loadRow(
-      'admin_accounts?email=eq.$cleanEmail&select=*',
+      'admin_accounts?email=eq.${Uri.encodeQueryComponent(cleanEmail)}&select=*',
       signed['token'] as String,
     );
     final role = (account?['role'] ?? profile?['role'] ?? '').toString();
+    if (profile == null && account == null) {
+      return {
+        'success': false,
+        'error': 'Le mot de passe est accepté, mais aucun profil administrateur accessible ne correspond à ce compte.',
+      };
+    }
     if (!isAdminRole(role)) {
       return {
         'success': false,
@@ -104,6 +108,15 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>?> _loadProfile(String userId, String token, String email) async {
+    final encodedEmail = Uri.encodeQueryComponent(email);
+    for (final filter in ['id=eq.$userId', 'user_id=eq.$userId', 'email=eq.$encodedEmail']) {
+      final row = await _loadRow('profiles?$filter&select=*', token);
+      if (row != null) return row;
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>?> _loadRow(String query, String token) async {
     try {
       final res = await _http.get(
@@ -113,7 +126,7 @@ class AuthService {
           'Authorization': 'Bearer $token',
         },
       ).timeout(const Duration(seconds: 12));
-      if (res.statusCode != 200) return null;
+    if (res.statusCode == 400 || res.statusCode != 200) return null;
       final list = jsonDecode(res.body);
       if (list is List && list.isNotEmpty && list.first is Map) {
         return Map<String, dynamic>.from(list.first as Map);
@@ -131,6 +144,13 @@ class AuthService {
   }
 
   String? _authError(Map<String, dynamic> data) {
+    final code = data['error_code']?.toString();
+    if (code == 'invalid_credentials') {
+      return 'Email ou mot de passe refusé par le service d\'authentification. L\'ancien mot de passe enregistré dans l\'application n\'est plus accepté.';
+    }
+    if (code == 'email_not_confirmed') {
+      return 'L\'email n\'est pas confirmé. Aucune session n\'est ouverte.';
+    }
     final msg = data['msg'] ?? data['error_description'] ?? data['message'] ?? data['error'];
     if (msg == null) return null;
     return msg.toString();

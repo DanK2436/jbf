@@ -11,10 +11,11 @@ void main() {
   test('le mot de passe maître local ne suffit plus', () async {
     SharedPreferences.setMockInitialValues({});
     final auth = AuthService(httpClient: MockClient((request) async {
-      return http.Response(jsonEncode({'error_description': 'Invalid login credentials'}), 400);
+      return http.Response(jsonEncode({'error_code': 'invalid_credentials', 'msg': 'Invalid login credentials'}), 400);
     }));
     final res = await auth.verifyPasswordOnly('services@admin.jbf', 'Services+243JBF');
     expect(res['success'], false);
+    expect(res['error'].toString(), contains('ancien mot de passe'));
     expect(auth.isLoggedIn, false);
   });
 

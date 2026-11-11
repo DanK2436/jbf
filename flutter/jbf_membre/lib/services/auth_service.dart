@@ -51,11 +51,11 @@ class AuthService {
     final signed = await _passwordGrant(cleanId.toLowerCase(), cleanPass);
     if (signed['success'] != true) return signed;
 
-    final profile = await _loadProfile(signed['userId'] as String, signed['token'] as String);
+    final profile = await _loadProfile(signed['userId'] as String, signed['token'] as String, cleanId.toLowerCase());
     if (profile == null) {
       return {
         'success': false,
-        'error': 'Compte authentifié, mais le profil membre est introuvable ou refusé.',
+        'error': 'Le mot de passe est accepté, mais aucun profil membre accessible ne correspond à ce compte.',
       };
     }
     final role = (profile['role'] ?? '').toString();
@@ -99,21 +99,24 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>?> _loadProfile(String userId, String token) async {
-    try {
-      final res = await _http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*'),
-        headers: {
-          'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
-      if (res.statusCode != 200) return null;
-      final list = jsonDecode(res.body);
-      if (list is List && list.isNotEmpty && list.first is Map) {
-        return Map<String, dynamic>.from(list.first as Map);
-      }
-    } catch (_) {}
+  Future<Map<String, dynamic>?> _loadProfile(String userId, String token, String email) async {
+    final encodedEmail = Uri.encodeQueryComponent(email);
+    for (final filter in ['id=eq.$userId', 'user_id=eq.$userId', 'email=eq.$encodedEmail']) {
+      try {
+        final res = await _http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?$filter&select=*'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer $token',
+          },
+        ).timeout(const Duration(seconds: 12));
+        if (res.statusCode == 400 || res.statusCode != 200) continue;
+        final list = jsonDecode(res.body);
+        if (list is List && list.isNotEmpty && list.first is Map) {
+          return Map<String, dynamic>.from(list.first as Map);
+        }
+      } catch (_) {}
+    }
     return null;
   }
 
@@ -126,6 +129,13 @@ class AuthService {
   }
 
   String? _authError(Map<String, dynamic> data) {
+    final code = data['error_code']?.toString();
+    if (code == 'invalid_credentials') {
+      return 'Email ou mot de passe refusé par le service d\'authentification. L\'ancien mot de passe enregistré dans l\'application n\'est plus accepté.';
+    }
+    if (code == 'email_not_confirmed') {
+      return 'L\'email n\'est pas confirmé. Aucune session n\'est ouverte.';
+    }
     final msg = data['msg'] ?? data['error_description'] ?? data['message'] ?? data['error'];
     if (msg == null) return null;
     return msg.toString();

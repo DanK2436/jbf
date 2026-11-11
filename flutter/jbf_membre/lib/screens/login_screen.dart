@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _idController,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.badge),
-                    hintText: 'ex: JBF-M-2026-012',
+                    hintText: 'email du compte',
                   ),
                 ),
                 const SizedBox(height: 18),
