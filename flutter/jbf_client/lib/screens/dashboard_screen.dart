@@ -174,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     KpiCard(
                       title: 'Devis & Demandes',
                       value: '$totalDevis dossier(s)',
-                      subtitle: 'Budget estimé : \$${(montantEngage / 1000).toStringAsFixed(1)}k USD',
+                      subtitle: _devisList.isEmpty ? 'Aucun devis reçu' : 'Somme des montants reçus',
                       icon: Icons.request_quote_outlined,
                       color: AppConfig.brandPink,
                       onTap: () => widget.onNavigate(1),
@@ -196,10 +196,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => widget.onNavigate(3),
                     ),
                     KpiCard(
-                      title: 'Qualité & Agrément',
-                      value: '100% ARSP',
-                      subtitle: 'Norme HACCP & ISO 45001',
-                      icon: Icons.workspace_premium_outlined,
+                      title: 'Avis',
+                      value: 'Ouvrir',
+                      subtitle: 'Aucun pourcentage de qualité n\'est calculé ici',
+                      icon: Icons.star_outline,
                       color: const Color(0xFFD97706),
                       onTap: () => widget.onNavigate(4),
                     ),

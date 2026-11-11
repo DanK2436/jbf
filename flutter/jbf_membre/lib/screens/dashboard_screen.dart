@@ -20,7 +20,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   List<MembreMission> _missions = [];
   List<PointageRecord> _pointages = [];
-  String _selectedSite = 'Chantier MUMI (Kolwezi)';
 
   @override
   void initState() {
@@ -41,63 +40,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Future<void> _handlePointage(String type) async {
-    final record = await _supabase.recordPointage(
-      agentNom: widget.user.fullName,
-      matricule: widget.user.matricule,
-      siteLieu: _selectedSite,
-      typePointage: type,
-    );
-
-    _loadData();
-
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.check_circle, color: AppConfig.successGreen),
-            const SizedBox(width: 8),
-            Text(type == 'entree' ? 'Prise de Poste Enregistrée (BDD)' : 'Fin de Poste Enregistrée (BDD)'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Collaborateur : ${widget.user.fullName} (${widget.user.matricule})'),
-            Text('Site : $_selectedSite'),
-            Text('Horodatage : ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')} (Lubumbashi GMT+2)'),
-            const SizedBox(height: 8),
-            const Text('IP : 105.101.44.12 (Airtel RDC) • GPS : -10.7183, 25.4729'),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD1FAE5),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.security, size: 16, color: AppConfig.successGreen),
-                  SizedBox(width: 6),
-                  Text('Pointage enregistré dans la table pointages Supabase',
-                      style: TextStyle(color: AppConfig.successGreen, fontSize: 12)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,77 +161,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.touch_app, color: AppConfig.brandPink, size: 22),
-                            SizedBox(width: 10),
-                            Text(
-                              'Terminal de Pointage Géolocalisé (Anti-VPN)',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD1FAE5),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.check_circle, size: 14, color: AppConfig.successGreen),
-                              SizedBox(width: 4),
-                              Text('Enregistrement direct BDD',
-                                  style: TextStyle(color: AppConfig.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'Pointage',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 14),
-                    Row(
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Le tableau de bord ne déclare pas un pointage réussi et n\'invente ni site, ni adresse IP, ni position GPS. La saisie se fait sur la feuille de temps.',
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedSite,
-                            items: const [
-                              DropdownMenuItem(value: 'Chantier MUMI (Kolwezi)', child: Text('Chantier MUMI (Kolwezi)')),
-                              DropdownMenuItem(value: 'Base Kakula Kamoa (Kolwezi)', child: Text('Base Kakula Kamoa (Kolwezi)')),
-                              DropdownMenuItem(value: 'Usine Luilu KCC (Kolwezi)', child: Text('Usine Luilu KCC (Kolwezi)')),
-                              DropdownMenuItem(value: 'Frontier Mine (Sakania)', child: Text('Frontier Mine (Sakania)')),
-                              DropdownMenuItem(value: 'Siège Social (Lubumbashi)', child: Text('Siège Social (Lubumbashi)')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedSite = val);
-                            },
-                            decoration: const InputDecoration(
-                              labelText: 'Site d\'Intervention Actuel',
-                              prefixIcon: Icon(Icons.location_on),
-                            ),
-                          ),
+                        ElevatedButton(
+                          onPressed: () => widget.onNavigate(2),
+                          child: const Text('Ouvrir la feuille de temps'),
                         ),
-                        const SizedBox(width: 16),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.login),
-                          label: const Text('Pointer Entrée'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConfig.brandPink,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          ),
-                          onPressed: () => _handlePointage('entree'),
+                        OutlinedButton(
+                          onPressed: () => widget.onNavigate(3),
+                          child: const Text('Voir les congés'),
                         ),
-                        const SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Pointer Sortie'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange.shade800,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          ),
-                          onPressed: () => _handlePointage('sortie'),
+                        OutlinedButton(
+                          onPressed: () => widget.onNavigate(4),
+                          child: const Text('Messagerie'),
                         ),
                       ],
                     ),

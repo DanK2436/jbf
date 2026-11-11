@@ -11,6 +11,7 @@ import 'membres_screen.dart';
 import 'sous_admins_screen.dart';
 import 'otp_settings_screen.dart';
 import 'login_screen.dart';
+import '../navigation/destinations.dart';
 
 class AdminMainScreen extends StatefulWidget {
   final AuthService authService;
@@ -251,8 +252,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       bottomNavigationBar: isDesktop
           ? null
           : BottomNavigationBar(
-              currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-              onTap: (idx) => setState(() => _selectedIndex = idx),
+              currentIndex: adminMobilePrimary.contains(_selectedIndex)
+                  ? adminMobilePrimary.indexOf(_selectedIndex)
+                  : adminMobilePrimary.length,
+              onTap: (idx) {
+                if (idx == adminMobilePrimary.length) {
+                  _openAllPages();
+                  return;
+                }
+                setState(() => _selectedIndex = adminMobilePrimary[idx]);
+              },
               selectedItemColor: AppConfig.brandPink,
               unselectedItemColor: Colors.grey,
               type: BottomNavigationBarType.fixed,
@@ -261,8 +270,31 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.request_quote), label: 'Devis'),
                 BottomNavigationBarItem(icon: Icon(Icons.engineering), label: 'Missions'),
                 BottomNavigationBarItem(icon: Icon(Icons.fingerprint), label: 'Pointage'),
+                BottomNavigationBarItem(icon: Icon(Icons.apps), label: 'Pages'),
               ],
             ),
+    );
+  }
+
+  void _openAllPages() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          children: [
+            const ListTile(title: Text('Toutes les pages', style: TextStyle(fontWeight: FontWeight.bold))),
+            for (final destination in adminDestinations)
+              ListTile(
+                title: Text(destination.label),
+                selected: _selectedIndex == destination.index,
+                onTap: () {
+                  setState(() => _selectedIndex = destination.index);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 
