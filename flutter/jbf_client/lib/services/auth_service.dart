@@ -6,7 +6,10 @@ import '../models/client_models.dart';
 
 class AuthService {
   static const String _sessionKey = 'jbf_client_session_data';
+  final http.Client _http;
   ClientUser? _currentUser;
+
+  AuthService({http.Client? httpClient}) : _http = httpClient ?? http.Client();
 
   ClientUser? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
@@ -15,88 +18,51 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = prefs.getString(_sessionKey);
-      if (jsonStr != null) {
-        final map = jsonDecode(jsonStr);
-        _currentUser = ClientUser.fromJson(map);
-        return true;
-      }
+      if (jsonStr == null) return false;
+      final map = jsonDecode(jsonStr);
+      final token = (map['token'] ?? '').toString();
+      if (!token.contains('.')) return false;
+      _currentUser = ClientUser.fromJson(map);
+      return true;
     } catch (_) {}
     return false;
   }
 
-  /// Connexion Client (vérification email & mot de passe)
   Future<Map<String, dynamic>> login(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();
-    final cleanPass = password.trim();
-
-    if (cleanEmail.isEmpty || cleanPass.isEmpty) {
-      return {'success': false, 'error': 'Veuillez saisir votre email et mot de passe.'};
+    final cleanPass = password;
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@') || cleanPass.isEmpty) {
+      return {'success': false, 'error': 'Veuillez saisir l\'email du compte et le mot de passe.'};
     }
 
-    // 1. Démo Client Rapide
-    if ((cleanEmail == AppConfig.defaultEmail || cleanEmail.contains('client') || cleanEmail.contains('partenaire')) &&
-        (cleanPass == AppConfig.defaultPassword || cleanPass.length >= 6)) {
-      _currentUser = ClientUser(
-        id: 'cli-demo-01',
-        fullName: 'Directeur des Opérations Minières',
-        companyName: AppConfig.defaultCompany,
-        email: cleanEmail,
-        phone: '+243 970 349 724',
-        sector: 'Catering Minier & BTP',
-        site: 'Kolwezi / Tenke Fungurume',
-        role: 'client',
-        token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      await completeLogin();
-      return {'success': true};
+    final signed = await _passwordGrant(cleanEmail, cleanPass);
+    if (signed['success'] != true) return signed;
+
+    final profile = await _loadProfile(signed['userId'] as String, signed['token'] as String, cleanEmail);
+    if (profile == null) {
+      return {
+        'success': false,
+        'error': 'Le mot de passe est accepté, mais aucun profil client accessible ne correspond à ce compte.',
+      };
+    }
+    final role = (profile['role'] ?? '').toString().toLowerCase();
+    if (role != 'client') {
+      return {
+        'success': false,
+        'error': 'Ce compte n\'a pas le rôle client. Connexion refusée.',
+      };
     }
 
-    // 2. Recherche Supabase profiles
-    try {
-      final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=*'),
-        headers: {
-          'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-        },
-      ).timeout(const Duration(seconds: 6));
-
-      if (res.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(res.body);
-        if (list.isNotEmpty) {
-          final p = list.first;
-          _currentUser = ClientUser.fromJson(p);
-          await completeLogin();
-          return {'success': true};
-        }
-      }
-    } catch (_) {}
-
-    // Fallback: Créer session locale valide pour tout client ayant un mot de passe >= 6
-    if (cleanPass.length >= 6) {
-      final company = cleanEmail.split('@').first.toUpperCase();
-      _currentUser = ClientUser(
-        id: 'cli-${DateTime.now().millisecondsSinceEpoch}',
-        fullName: 'Responsable $company',
-        companyName: '$company RDC SARL',
-        email: cleanEmail,
-        phone: '+243 822 357 053',
-        sector: 'Sous-traitance & Énergie',
-        site: 'Lubumbashi (Siège)',
-        role: 'client',
-        token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      await completeLogin();
-      return {'success': true};
-    }
-
-    return {
-      'success': false,
-      'error': 'Identifiants client incorrects ou mot de passe trop court.',
-    };
+    _currentUser = ClientUser.fromJson({
+      ...profile,
+      'email': profile['email'] ?? cleanEmail,
+      'token': signed['token'],
+      'role': 'client',
+    });
+    await completeLogin();
+    return {'success': true};
   }
 
-  /// Inscription d'un nouveau partenaire / client
   Future<Map<String, dynamic>> register({
     required String companyName,
     required String contactName,
@@ -107,48 +73,131 @@ class AuthService {
     String? site,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
-    final cleanComp = companyName.trim();
-
-    if (cleanEmail.isEmpty || cleanComp.isEmpty || password.length < 6) {
-      return {'success': false, 'error': 'Veuillez remplir tous les champs obligatoires (mot de passe min. 6 car.).'};
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@') || companyName.trim().isEmpty || password.length < 8) {
+      return {
+        'success': false,
+        'error': 'Email, société et mot de passe (8 caractères minimum) sont requis.',
+      };
     }
 
-    final newClient = ClientUser(
-      id: 'cli-${DateTime.now().millisecondsSinceEpoch}',
-      fullName: contactName.trim(),
-      companyName: cleanComp,
-      email: cleanEmail,
-      phone: phone.trim(),
-      sector: sector ?? 'Sous-traitance Minière',
-      site: site ?? 'Katanga / Lualaba',
-      role: 'client',
-      token: 'token-reg-${DateTime.now().millisecondsSinceEpoch}',
-    );
-
-    // Insertion optionnelle dans Supabase
     try {
-      await http.post(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+      final res = await _http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal',
         },
         body: jsonEncode({
-          'id': newClient.id,
           'email': cleanEmail,
-          'full_name': newClient.fullName,
-          'company': cleanComp,
-          'phone': newClient.phone,
-          'role': 'client',
+          'password': password,
+          'data': {
+            'full_name': contactName.trim(),
+            'company': companyName.trim(),
+            'phone': phone.trim(),
+            'role': 'client',
+            'secteur': sector,
+            'site': site,
+          },
         }),
-      ).timeout(const Duration(seconds: 6));
-    } catch (_) {}
+      ).timeout(const Duration(seconds: 12));
+      final data = _asMap(res.body);
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        return {
+          'success': false,
+          'error': _authError(data) ?? 'Création du compte refusée par le service.',
+        };
+      }
+      final token = data['access_token']?.toString();
+      if (token == null || token.isEmpty) {
+        return {
+          'success': false,
+          'error': 'Le compte est enregistré. Confirmez l\'email avant de vous connecter. Aucune session n\'est ouverte.',
+        };
+      }
+      return login(cleanEmail, password);
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Le service d\'inscription est injoignable. Aucun compte local n\'a été créé.',
+      };
+    }
+  }
 
-    _currentUser = newClient;
-    await completeLogin();
-    return {'success': true};
+  Future<Map<String, dynamic>> _passwordGrant(String email, String password) async {
+    try {
+      final res = await _http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 12));
+      final data = _asMap(res.body);
+      if (res.statusCode != 200) {
+        return {
+          'success': false,
+          'error': _authError(data) ?? 'Identifiants refusés.',
+        };
+      }
+      final token = data['access_token']?.toString() ?? '';
+      final user = data['user'];
+      final userId = user is Map ? user['id']?.toString() ?? '' : '';
+      if (token.isEmpty || userId.isEmpty) {
+        return {'success': false, 'error': 'Réponse d\'authentification incomplète.'};
+      }
+      return {'success': true, 'token': token, 'userId': userId};
+    } catch (_) {
+      return {'success': false, 'error': 'Service d\'authentification injoignable.'};
+    }
+  }
+
+  Future<Map<String, dynamic>?> _loadProfile(String userId, String token, String email) async {
+    final encodedEmail = Uri.encodeQueryComponent(email);
+    for (final filter in ['id=eq.$userId', 'user_id=eq.$userId', 'email=eq.$encodedEmail']) {
+      final row = await _firstRow('profiles?$filter&select=*', token);
+      if (row != null) return row;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _firstRow(String query, String token) async {
+    try {
+      final res = await _http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/$query'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 12));
+      if (res.statusCode == 400 || res.statusCode != 200) return null;
+      final list = jsonDecode(res.body);
+      if (list is List && list.isNotEmpty && list.first is Map) {
+        return Map<String, dynamic>.from(list.first as Map);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Map<String, dynamic> _asMap(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {};
+  }
+
+  String? _authError(Map<String, dynamic> data) {
+    final code = data['error_code']?.toString();
+    if (code == 'invalid_credentials') {
+      return 'Email ou mot de passe refusé par le service d\'authentification. L\'ancien mot de passe enregistré dans l\'application n\'est plus accepté.';
+    }
+    if (code == 'email_not_confirmed') {
+      return 'L\'email n\'est pas confirmé. Aucune session n\'est ouverte.';
+    }
+    final msg = data['msg'] ?? data['error_description'] ?? data['message'] ?? data['error'];
+    if (msg == null) return null;
+    return msg.toString();
   }
 
   Future<void> completeLogin() async {

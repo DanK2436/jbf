@@ -8,6 +8,7 @@ import 'leaves_screen.dart';
 import 'chat_screen.dart';
 import 'resources_screen.dart';
 import 'login_screen.dart';
+import '../navigation/destinations.dart';
 
 class MembreMainScreen extends StatefulWidget {
   final AuthService authService;
@@ -144,7 +145,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.fullName ?? 'Jean-Pierre Mulamba',
+                        user?.fullName ?? 'Profil sans nom',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
@@ -197,7 +198,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 children: [
                   UserAccountsDrawerHeader(
                     decoration: const BoxDecoration(color: AppConfig.brandPink),
-                    accountName: Text(user?.fullName ?? 'Jean-Pierre Mulamba'),
+                    accountName: Text(user?.fullName ?? 'Profil sans nom'),
                     accountEmail: Text('${user?.matricule} • ${user?.poste}'),
                     currentAccountPicture: CircleAvatar(
                       backgroundColor: Colors.white,
@@ -225,8 +226,16 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
       bottomNavigationBar: isDesktop
           ? null
           : BottomNavigationBar(
-              currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-              onTap: (idx) => setState(() => _selectedIndex = idx),
+              currentIndex: membreMobilePrimary.contains(_selectedIndex)
+                  ? membreMobilePrimary.indexOf(_selectedIndex)
+                  : membreMobilePrimary.length,
+              onTap: (idx) {
+                if (idx == membreMobilePrimary.length) {
+                  _openAllPages();
+                  return;
+                }
+                setState(() => _selectedIndex = membreMobilePrimary[idx]);
+              },
               selectedItemColor: AppConfig.brandPink,
               unselectedItemColor: Colors.grey,
               type: BottomNavigationBarType.fixed,
@@ -235,8 +244,31 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Missions'),
                 BottomNavigationBarItem(icon: Icon(Icons.access_time_filled), label: 'Temps'),
                 BottomNavigationBarItem(icon: Icon(Icons.beach_access), label: 'Congés'),
+                BottomNavigationBarItem(icon: Icon(Icons.apps), label: 'Pages'),
               ],
             ),
+    );
+  }
+
+  void _openAllPages() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          children: [
+            const ListTile(title: Text('Toutes les pages', style: TextStyle(fontWeight: FontWeight.bold))),
+            for (final destination in membreDestinations)
+              ListTile(
+                title: Text(destination.label),
+                selected: _selectedIndex == destination.index,
+                onTap: () {
+                  setState(() => _selectedIndex = destination.index);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 

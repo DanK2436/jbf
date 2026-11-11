@@ -14,6 +14,7 @@ class ClientDataService {
   List<ClientMission>? _cachedMissions;
   List<ClientFacture>? _cachedFactures;
   List<ClientAvis>? _cachedAvis;
+  String? lastError;
 
   // 1. CHARGEMENT DES DEVIS
   Future<List<ClientDevis>> fetchDevis({String? clientEmail}) async {
@@ -28,59 +29,16 @@ class ClientDataService {
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        if (list.isNotEmpty) {
-          final items = list.map((json) => ClientDevis.fromJson(json)).toList();
-          _cachedDevis = items;
-          return items;
-        }
+        final items = list.map((json) => ClientDevis.fromJson(json)).toList();
+        _cachedDevis = items;
+        lastError = null;
+        return items;
       }
-    } catch (_) {}
-
-    // Données réelles de démonstration (pour que l'application ne soit JAMAIS vide)
-    _cachedDevis ??= [
-      ClientDevis(
-        id: 'dev-001',
-        reference: 'DEV-2026-089',
-        service: '1. Catering Minier & Gestion Base-Vie (Norme HACCP)',
-        site: 'Kamoa-Kakula / Kolwezi (Lualaba)',
-        montantEstime: 145000.0,
-        statut: 'valide',
-        date: '2026-03-02',
-        description: 'Fourniture de 1 200 repas/jour pour équipe de forage et camp minier.',
-      ),
-      ClientDevis(
-        id: 'dev-002',
-        reference: 'DEV-2026-094',
-        service: '3. Chaudronnerie Lourde & Tuyauterie Haute Pression',
-        site: 'Usine Hydrométallurgique Tenke Fungurume',
-        montantEstime: 88500.0,
-        statut: 'en_cours',
-        date: '2026-03-06',
-        description: 'Remplacement de conduites acides et soudure TIG sous agrément ARSP.',
-      ),
-      ClientDevis(
-        id: 'dev-003',
-        reference: 'DEV-2026-102',
-        service: '4. Gardiennage Armé & Télésurveillance IA Minier',
-        site: 'Concession Mutanda Mining / Kolwezi',
-        montantEstime: 32000.0,
-        statut: 'en_etude',
-        date: '2026-03-09',
-        description: 'Déploiement de 24 agents de sécurité cynophiles et rondes par drone.',
-      ),
-      ClientDevis(
-        id: 'dev-004',
-        reference: 'DEV-2026-110',
-        service: '5. Génie Civil & Asphaltage Voies Lourdes',
-        site: 'Axe Lubumbashi - Kasumbalesa',
-        montantEstime: 210000.0,
-        statut: 'en_etude',
-        date: '2026-03-10',
-        description: 'Terrassement et stabilisation de plateformes pour engins CAT 777.',
-      ),
-    ];
-
-    return _cachedDevis!;
+      lastError = 'Lecture des devis refusée (${res.statusCode}).';
+    } catch (_) {
+      lastError = 'Service des devis injoignable.';
+    }
+    return [];
   }
 
   // 2. SOUMISSION NOUVEAU DEVIS
@@ -104,7 +62,7 @@ class ClientDataService {
 
     // Tentative Supabase
     try {
-      await http.post(
+      final res = await http.post(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
@@ -123,8 +81,16 @@ class ClientDataService {
           'statut': 'nouveau',
         }),
       ).timeout(const Duration(seconds: 6));
-    } catch (_) {}
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        lastError = 'Enregistrement du devis refusé (${res.statusCode}).';
+        return false;
+      }
+    } catch (_) {
+      lastError = 'Service des devis injoignable. La demande n\'est pas enregistrée.';
+      return false;
+    }
 
+    lastError = null;
     _cachedDevis ??= [];
     _cachedDevis!.insert(0, newDevis);
     return true;
@@ -143,86 +109,21 @@ class ClientDataService {
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        if (list.isNotEmpty) {
-          final items = list.map((json) => ClientMission.fromJson(json)).toList();
-          _cachedMissions = items;
-          return items;
-        }
+        final items = list.map((json) => ClientMission.fromJson(json)).toList();
+        _cachedMissions = items;
+        lastError = null;
+        return items;
       }
-    } catch (_) {}
-
-    _cachedMissions ??= [
-      ClientMission(
-        id: 'msn-001',
-        reference: 'MSN-7842',
-        titre: 'Installation Base-Vie & Unité Cuisine HACCP',
-        site: 'Site Tenke Fungurume, Camp 4',
-        chef: 'Ing. Michel KABWE (JBF)',
-        avancement: 85,
-        statut: 'en_cours',
-        dateDebut: '2026-02-01',
-        dateFin: '2026-04-15',
-      ),
-      ClientMission(
-        id: 'msn-002',
-        reference: 'MSN-7890',
-        titre: 'Révision Poutres de Roulement & Ponts Roulants',
-        site: 'Concentrateur Kamoa-Kakula',
-        chef: 'M. Patrice ILUNGA (Superviseur Mécanique)',
-        avancement: 60,
-        statut: 'en_cours',
-        dateDebut: '2026-02-20',
-        dateFin: '2026-03-30',
-      ),
-      ClientMission(
-        id: 'msn-003',
-        reference: 'MSN-7912',
-        titre: 'Audit Sécurité Périmétrique & Déploiement Vidéo IA',
-        site: 'Terminal Minier de Kasumbalesa',
-        chef: 'Capitaine David TSHIBANGU (Sécurité)',
-        avancement: 100,
-        statut: 'termine',
-        dateDebut: '2026-01-10',
-        dateFin: '2026-02-25',
-      ),
-    ];
-
-    return _cachedMissions!;
+      lastError = 'Lecture des missions refusée (${res.statusCode}).';
+    } catch (_) {
+      lastError = 'Service des missions injoignable.';
+    }
+    return [];
   }
 
-  // 4. CHARGEMENT DES FACTURES & PROFORMAS
   Future<List<ClientFacture>> fetchFactures() async {
-    _cachedFactures ??= [
-      ClientFacture(
-        id: 'fact-001',
-        reference: 'FACT-2026-041',
-        libelle: 'Prestations Catering HACCP Février 2026',
-        montantUsd: 48500.0,
-        date: '2026-02-28',
-        echeance: '2026-03-15',
-        statut: 'payee',
-      ),
-      ClientFacture(
-        id: 'fact-002',
-        reference: 'FACT-2026-058',
-        libelle: 'Acompte Travaux Tuyauterie Usine',
-        montantUsd: 35000.0,
-        date: '2026-03-05',
-        echeance: '2026-03-25',
-        statut: 'en_attente',
-      ),
-      ClientFacture(
-        id: 'fact-003',
-        reference: 'PROFORMA-2026-092',
-        libelle: 'Chiffrage Proforma Gardiennage Annuel',
-        montantUsd: 120000.0,
-        date: '2026-03-08',
-        echeance: '2026-04-01',
-        statut: 'en_attente',
-      ),
-    ];
-
-    return _cachedFactures!;
+    lastError = 'Aucune table de factures n\'est branchée. Aucun montant n\'est affiché.';
+    return [];
   }
 
   // 5. CHARGEMENT DES AVIS CLIENTS
@@ -238,42 +139,16 @@ class ClientDataService {
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        if (list.isNotEmpty) {
-          final items = list.map((json) => ClientAvis.fromJson(json)).toList();
-          _cachedAvis = items;
-          return items;
-        }
+        final items = list.map((json) => ClientAvis.fromJson(json)).toList();
+        _cachedAvis = items;
+        lastError = null;
+        return items;
       }
-    } catch (_) {}
-
-    _cachedAvis ??= [
-      ClientAvis(
-        id: 'av-1',
-        auteur: 'Jean-Luc MWAMBA',
-        entreprise: 'Glencore / Kamoto Copper Company',
-        note: 5,
-        commentaire: 'Prestation de catering irréprochable. Normes HACCP respectées à la lettre et disponibilité 24/7 des équipes JBF.',
-        date: '2026-02-24',
-      ),
-      ClientAvis(
-        id: 'av-2',
-        auteur: 'David KAZADI',
-        entreprise: 'Société Minière de Deziwa (SOMIDA)',
-        note: 5,
-        commentaire: 'Intervention d\'urgence en soudure haute pression réalisée dans les temps avec une sécurité exemplaire.',
-        date: '2026-03-01',
-      ),
-      ClientAvis(
-        id: 'av-3',
-        auteur: 'Sarah VAN DER MERWE',
-        entreprise: 'Congo Equipment Rental',
-        note: 5,
-        commentaire: 'Partenaire agréé ARSP de premier plan au Katanga. Facturation claire et suivi de projet transparent.',
-        date: '2026-03-07',
-      ),
-    ];
-
-    return _cachedAvis!;
+      lastError = 'Lecture des avis refusée (${res.statusCode}).';
+    } catch (_) {
+      lastError = 'Service des avis injoignable.';
+    }
+    return [];
   }
 
   // 6. ENREGISTRER UN AVIS
@@ -293,7 +168,7 @@ class ClientDataService {
     );
 
     try {
-      await http.post(
+      final res = await http.post(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/avis'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
@@ -309,8 +184,16 @@ class ClientDataService {
           'statut': 'publie',
         }),
       ).timeout(const Duration(seconds: 6));
-    } catch (_) {}
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        lastError = 'Enregistrement de l\'avis refusé (${res.statusCode}).';
+        return false;
+      }
+    } catch (_) {
+      lastError = 'Service des avis injoignable. L\'avis n\'est pas enregistré.';
+      return false;
+    }
 
+    lastError = null;
     _cachedAvis ??= [];
     _cachedAvis!.insert(0, newAvis);
     return true;

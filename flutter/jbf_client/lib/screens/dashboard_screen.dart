@@ -23,6 +23,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _dataService = ClientDataService();
   bool _isLoading = true;
+  String? _loadError;
   List<ClientDevis> _devisList = [];
   List<ClientMission> _missionsList = [];
   List<ClientFacture> _facturesList = [];
@@ -44,6 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _devisList = devis;
       _missionsList = missions;
       _facturesList = factures;
+      _loadError = _dataService.lastError;
       _isLoading = false;
     });
   }
@@ -75,6 +77,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_loadError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  _loadError!,
+                  style: const TextStyle(color: AppConfig.dangerRed, fontWeight: FontWeight.w600),
+                ),
+              ),
             // Welcome Header Card
             Container(
               padding: const EdgeInsets.all(22),
@@ -164,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     KpiCard(
                       title: 'Devis & Demandes',
                       value: '$totalDevis dossier(s)',
-                      subtitle: 'Budget estimé : \$${(montantEngage / 1000).toStringAsFixed(1)}k USD',
+                      subtitle: _devisList.isEmpty ? 'Aucun devis reçu' : 'Somme des montants reçus',
                       icon: Icons.request_quote_outlined,
                       color: AppConfig.brandPink,
                       onTap: () => widget.onNavigate(1),
@@ -186,10 +196,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => widget.onNavigate(3),
                     ),
                     KpiCard(
-                      title: 'Qualité & Agrément',
-                      value: '100% ARSP',
-                      subtitle: 'Norme HACCP & ISO 45001',
-                      icon: Icons.workspace_premium_outlined,
+                      title: 'Avis',
+                      value: 'Ouvrir',
+                      subtitle: 'Aucun pourcentage de qualité n\'est calculé ici',
+                      icon: Icons.star_outline,
                       color: const Color(0xFFD97706),
                       onTap: () => widget.onNavigate(4),
                     ),

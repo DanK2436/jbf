@@ -10,6 +10,7 @@ import 'avis_screen.dart';
 import 'support_screen.dart';
 import 'profil_screen.dart';
 import 'login_screen.dart';
+import '../navigation/destinations.dart';
 
 class ClientMainScreen extends StatefulWidget {
   final AuthService authService;
@@ -263,8 +264,16 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
       bottomNavigationBar: isDesktop
           ? null
           : BottomNavigationBar(
-              currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
-              onTap: (idx) => setState(() => _selectedIndex = idx),
+              currentIndex: clientMobilePrimary.contains(_selectedIndex)
+                  ? clientMobilePrimary.indexOf(_selectedIndex)
+                  : clientMobilePrimary.length,
+              onTap: (idx) {
+                if (idx == clientMobilePrimary.length) {
+                  _openAllPages();
+                  return;
+                }
+                setState(() => _selectedIndex = clientMobilePrimary[idx]);
+              },
               type: BottomNavigationBarType.fixed,
               selectedItemColor: AppConfig.brandPink,
               unselectedItemColor: Colors.grey.shade600,
@@ -273,9 +282,31 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.description), label: 'Devis'),
                 BottomNavigationBarItem(icon: Icon(Icons.precision_manufacturing), label: 'Chantiers'),
                 BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Factures'),
-                BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: 'Support'),
+                BottomNavigationBarItem(icon: Icon(Icons.apps), label: 'Pages'),
               ],
             ),
+    );
+  }
+
+  void _openAllPages() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          children: [
+            const ListTile(title: Text('Toutes les pages', style: TextStyle(fontWeight: FontWeight.bold))),
+            for (final destination in clientDestinations)
+              ListTile(
+                title: Text(destination.label),
+                selected: _selectedIndex == destination.index,
+                onTap: () {
+                  setState(() => _selectedIndex = destination.index);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 

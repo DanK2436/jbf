@@ -13,8 +13,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _idController = TextEditingController(text: AppConfig.defaultMatricule);
-  final _passwordController = TextEditingController(text: AppConfig.defaultPassword);
+  final _idController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _idController,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.badge),
-                    hintText: 'ex: JBF-M-2026-012',
+                    hintText: 'email du compte',
                   ),
                 ),
                 const SizedBox(height: 18),

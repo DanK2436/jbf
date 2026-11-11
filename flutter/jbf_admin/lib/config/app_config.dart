@@ -17,12 +17,12 @@ class AppConfig {
   static const String masterAdminPassword = 'Services+243JBF';
 
   // Brand Palette
-  static const Color brandPink = Color(0xFFE6007E);
-  static const Color brandPinkDark = Color(0xFFC4006B);
-  static const Color brandPinkLight = Color(0xFFFF2E99);
-  static const Color brandPinkTint = Color(0xFFFFF0F7);
-  static const Color grayBase = Color(0xFFAAAAAA);
-  static const Color grayDark = Color(0xFF404048);
+  static const Color brandPink = Color(0xFFDE026A);
+  static const Color brandPinkDark = Color(0xFFC8025F);
+  static const Color brandPinkLight = Color(0xFFF4AECF);
+  static const Color brandPinkTint = Color(0xFFFADCEA);
+  static const Color grayBase = Color(0xFFF6F6F7);
+  static const Color grayDark = Color(0xFF3F3F46);
   static const Color whiteSurface = Color(0xFFFFFFFF);
   static const Color blackText = Color(0xFF0C0C0E);
   static const Color successGreen = Color(0xFF047857);

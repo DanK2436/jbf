@@ -29,7 +29,7 @@ class OtpService {
   DateTime? _otpExpiresAt;
 
   String? get targetEmail => _targetEmail;
-  String? get currentOtpForDev => _currentOtp;
+  String? get currentOtpForDev => null;
 
   /// Vérifie si l'administrateur a configuré un email OTP à l'intérieur du logiciel.
   /// Renvoie null si aucun email n'a encore été enregistré (première connexion).
@@ -82,7 +82,7 @@ class OtpService {
     _otpExpiresAt = DateTime.now().add(const Duration(minutes: 10));
 
     print('\n============================================================');
-    print('🔑 [JBF ADMIN OTP] Code envoyé à $email : $_currentOtp');
+    print('🔑 [JBF ADMIN OTP] Code demandé pour $email');
     print('============================================================\n');
 
     final subject = 'JBF Service Admin — Code de vérification OTP : $_currentOtp';
@@ -136,23 +136,20 @@ class OtpService {
       if (res.statusCode >= 200 && res.statusCode < 300) {
         return {
           'success': true,
-          'code': _currentOtp,
           'message': 'Code OTP envoyé avec succès à $email',
         };
       } else {
-        // Fallback: If Brevo rejects (e.g. unverified recipient on sandbox), code is still valid in memory
+        _currentOtp = null;
         return {
-          'success': true,
-          'code': _currentOtp,
-          'warning': 'Envoi Brevo (${res.statusCode}), code actif : $_currentOtp',
+          'success': false,
+          'error': 'Le fournisseur a refusé l\'envoi du code. Aucun code n\'est actif.',
         };
       }
     } catch (e) {
-      // Local fallback in case network has transient glitch
+      _currentOtp = null;
       return {
-        'success': true,
-        'code': _currentOtp,
-        'warning': 'Réseau externe : code actif généré : $_currentOtp',
+        'success': false,
+        'error': 'Le service d\'envoi est injoignable. Aucun code n\'est actif.',
       };
     }
   }

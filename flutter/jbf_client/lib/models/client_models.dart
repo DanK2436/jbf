@@ -24,12 +24,12 @@ class ClientUser {
   factory ClientUser.fromJson(Map<String, dynamic> json) {
     return ClientUser(
       id: json['id']?.toString() ?? 'cli-${DateTime.now().millisecondsSinceEpoch}',
-      fullName: json['full_name'] ?? json['nom'] ?? json['contact_name'] ?? 'Partenaire JBF',
-      companyName: json['company_name'] ?? json['entreprise'] ?? json['societe'] ?? 'Société Partenaire',
+      fullName: json['full_name'] ?? json['nom'] ?? json['contact_name'] ?? 'Nom non renseigné',
+      companyName: json['company'] ?? json['company_name'] ?? json['entreprise'] ?? json['societe'] ?? 'Société non renseignée',
       email: json['email'] ?? '',
-      phone: json['phone'] ?? json['telephone'] ?? '+243',
-      sector: json['sector'] ?? json['secteur'] ?? 'Mines & Industrie',
-      site: json['site'] ?? json['localite'] ?? 'Haut-Katanga / Lualaba',
+      phone: json['phone'] ?? json['telephone'] ?? '',
+      sector: json['sector'] ?? json['secteur'] ?? '',
+      site: json['site'] ?? json['localite'] ?? '',
       role: json['role'] ?? 'client',
       token: json['token']?.toString(),
     );

@@ -16,8 +16,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   late TabController _tabController;
 
   // Login controllers
-  final _loginEmailController = TextEditingController(text: AppConfig.defaultEmail);
-  final _loginPasswordController = TextEditingController(text: AppConfig.defaultPassword);
+  final _loginEmailController = TextEditingController();
+  final _loginPasswordController = TextEditingController();
   bool _obscureLoginPassword = true;
 
   // Register controllers
@@ -250,25 +250,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
-                // Quick Demo Partner Button
-                OutlinedButton.icon(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          _loginEmailController.text = AppConfig.defaultEmail;
-                          _loginPasswordController.text = AppConfig.defaultPassword;
-                          _handleLogin();
-                        },
-                  icon: const Icon(Icons.flash_on, color: AppConfig.brandPink, size: 18),
-                  label: const Text('Accès Démo Partenaire (1 Clic)'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: AppConfig.brandPink),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // Quality & ARSP footer note
                 Container(

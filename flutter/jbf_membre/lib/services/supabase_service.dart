@@ -111,14 +111,7 @@ class SupabaseService {
         'site_lieu': siteLieu,
         'type_pointage': typePointage,
         'date_heure': now.toIso8601String(),
-        'latitude': -10.7183,
-        'longitude': 25.4729,
-        'precision_gps': 8.5,
-        'ip_address': '105.101.44.12 (Airtel RDC)',
-        'is_vpn': false,
-        'statut_validation': 'valide',
-        'heures_normales': typePointage == 'sortie' ? 8.0 : 0.0,
-        'heures_supplementaires': 0.0,
+        'statut_validation': 'en_attente',
       };
 
       final res = await http.post(
@@ -133,11 +126,11 @@ class SupabaseService {
           dateHeure: now,
           typePointage: typePointage,
           siteLieu: siteLieu,
-          latitude: -10.7183,
-          longitude: 25.4729,
-          ipAddress: '105.101.44.12 (Airtel RDC)',
+          latitude: 0,
+          longitude: 0,
+          ipAddress: '',
           isVpn: false,
-          statutValidation: 'valide',
+          statutValidation: 'en_attente',
         );
       }
     } catch (e) {

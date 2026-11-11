@@ -112,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Données temps réel connectées à la base de données Supabase (PostgreSQL).',
+                          'Indicateurs calculés sur les enregistrements reçus. Une liste vide n\'est pas une estimation.',
                           style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
                         ),
                       ],
@@ -224,7 +224,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     KpiCard(
                       title: 'Sécurité Pointage Anti-VPN',
                       value: '$alertesVpn Alerte(s)',
-                      subtitle: alertesVpn > 0 ? 'Examen requis' : 'Tous pointages conformes',
+                      subtitle: _pointagesList.isEmpty
+                          ? 'Aucun pointage reçu'
+                          : (alertesVpn > 0 ? 'Examen requis' : 'Aucun signal VPN dans les pointages reçus'),
                       icon: Icons.shield,
                       color: alertesVpn > 0 ? AppConfig.dangerRed : AppConfig.successGreen,
                       onTap: () => widget.onNavigate(3),
@@ -236,12 +238,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
 
             // Two-column layout
-            Row(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 3,
-                  child: Card(
+                Card(
                     child: Padding(
                       padding: const EdgeInsets.all(18.0),
                       child: Column(
@@ -290,11 +290,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: Card(
+                const SizedBox(height: 16),
+                Card(
                     child: Padding(
                       padding: const EdgeInsets.all(18.0),
                       child: Column(
@@ -359,7 +356,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ],

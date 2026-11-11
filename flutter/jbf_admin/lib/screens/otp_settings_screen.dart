@@ -98,8 +98,7 @@ class _OtpSettingsScreenState extends State<OtpSettingsScreen> {
     setState(() {
       _isSendingTest = false;
       if (res['success'] == true) {
-        final code = res['code'];
-        _statusMessage = 'Code OTP de test envoyé avec succès à $target (Code actif : $code).';
+        _statusMessage = 'Code OTP de test envoyé à $target. Le code n\'est pas affiché ici.';
         _statusIsSuccess = true;
       } else {
         _statusMessage = res['error'] ?? 'Échec de l\'envoi du code test.';

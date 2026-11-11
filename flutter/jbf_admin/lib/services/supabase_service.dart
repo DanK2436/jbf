@@ -279,7 +279,9 @@ class SupabaseService {
               poste: j['poste'] ?? 'Collaborateur',
               sectionNom: j['section_nom'] ?? 'Services Divers',
               province: j['province'] ?? 'Haut-Katanga',
-              soldeConges: int.tryParse(j['solde_conges']?.toString() ?? '18') ?? 18,
+              soldeConges: j['solde_conges'] == null
+                  ? -1
+                  : int.tryParse(j['solde_conges'].toString()) ?? -1,
               role: j['role'] ?? 'membre',
               isActive: true,
             )).toList();
@@ -303,7 +305,7 @@ class SupabaseService {
           'poste': m.poste,
           'section_nom': m.sectionNom,
           'province': m.province,
-          'solde_conges': m.soldeConges,
+          if (m.soldeConges >= 0) 'solde_conges': m.soldeConges,
           'role': 'membre',
         }),
       );

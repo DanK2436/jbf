@@ -28,7 +28,7 @@ class OtpService {
   DateTime? _otpExpiresAt;
 
   String? get targetEmail => _targetEmail;
-  String? get currentOtpForDev => _currentOtp;
+  String? get currentOtpForDev => null;
 
   Future<void> setTargetEmail(String email) async {
     _targetEmail = email.trim().toLowerCase();
@@ -50,7 +50,7 @@ class OtpService {
     _otpExpiresAt = DateTime.now().add(const Duration(minutes: 10));
 
     print('\n============================================================');
-    print('🔑 [JBF MEMBRE OTP] Code envoyé à $email : $_currentOtp');
+    print('🔑 [JBF MEMBRE OTP] Code demandé pour $email');
     print('============================================================\n');
 
     final subject = 'JBF Service Membre — Code de vérification OTP : $_currentOtp';
@@ -103,21 +103,20 @@ class OtpService {
       if (res.statusCode >= 200 && res.statusCode < 300) {
         return {
           'success': true,
-          'code': _currentOtp,
           'message': 'Code OTP envoyé à $email',
         };
       } else {
+        _currentOtp = null;
         return {
-          'success': true,
-          'code': _currentOtp,
-          'warning': 'Envoi Brevo (${res.statusCode}), code actif : $_currentOtp',
+          'success': false,
+          'error': 'Le fournisseur a refusé l\'envoi du code. Aucun code n\'est actif.',
         };
       }
     } catch (e) {
+      _currentOtp = null;
       return {
-        'success': true,
-        'code': _currentOtp,
-        'warning': 'Réseau externe : code actif généré : $_currentOtp',
+        'success': false,
+        'error': 'Le service d\'envoi est injoignable. Aucun code n\'est actif.',
       };
     }
   }
