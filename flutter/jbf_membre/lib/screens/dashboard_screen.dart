@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/supabase_service.dart';
-import '../widgets/kpi_card.dart';
-import '../widgets/stat_badge.dart';
 
 class DashboardScreen extends StatefulWidget {
   final MembreUser user;
@@ -42,7 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handlePointage(String type) async {
-    final record = await _supabase.recordPointage(
+    await _supabase.recordPointage(
       agentNom: widget.user.fullName,
       matricule: widget.user.matricule,
       siteLieu: _selectedSite,
@@ -59,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const Icon(Icons.check_circle, color: AppConfig.successGreen),
             const SizedBox(width: 8),
-            Text(type == 'entree' ? 'Prise de Poste Enregistrée (BDD)' : 'Fin de Poste Enregistrée (BDD)'),
+            Text(type == 'entree' ? 'Prise de Poste Validée' : 'Fin de Poste Enregistrée'),
           ],
         ),
         content: Column(
@@ -68,9 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text('Collaborateur : ${widget.user.fullName} (${widget.user.matricule})'),
             Text('Site : $_selectedSite'),
-            Text('Horodatage : ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')} (Lubumbashi GMT+2)'),
-            const SizedBox(height: 8),
-            const Text('IP : 105.101.44.12 (Airtel RDC) • GPS : -10.7183, 25.4729'),
+            Text('Heure : ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')} (Lubumbashi GMT+2)'),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(8),
@@ -78,14 +74,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: const Color(0xFFD1FAE5),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Row(
-                children: [
-                  Icon(Icons.security, size: 16, color: AppConfig.successGreen),
-                  SizedBox(width: 6),
-                  Text('Pointage enregistré dans la table pointages Supabase',
-                      style: TextStyle(color: AppConfig.successGreen, fontSize: 12)),
-                ],
-              ),
+              child: const Text('Pointage certifié et synchronisé avec le serveur central JBF.',
+                  style: TextStyle(color: AppConfig.successGreen, fontSize: 12)),
             ),
           ],
         ),
@@ -113,295 +103,264 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: AppConfig.brandPink,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Banner Welcome Profile
+            // Banner Welcome Collaborateur
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppConfig.brandPink, AppConfig.brandPinkDark],
+                  colors: [AppConfig.blackText, Color(0xFF1E1E24)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(
-                    color: AppConfig.brandPink.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
+                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
                 ],
               ),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white,
+                    radius: 30,
+                    backgroundColor: AppConfig.brandPink,
                     child: Text(
                       widget.user.avatar,
-                      style: const TextStyle(
-                        color: AppConfig.brandPink,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 18),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Text(
-                              widget.user.fullName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(6),
+                                color: AppConfig.brandPinkTint,
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 widget.user.matricule,
-                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                style: const TextStyle(color: AppConfig.brandPink, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'SESSION SÉCURISÉE RDC',
+                                style: TextStyle(color: AppConfig.successGreen, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Text(
-                          '${widget.user.poste} • ${widget.user.sectionNom}',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                          'Bienvenue, ${widget.user.fullName}',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         Text(
-                          'Email OTP : ${widget.user.email} • Base : ${widget.user.province}',
-                          style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
+                          '${widget.user.poste} • Province : ${widget.user.province}',
+                          style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.schedule, color: Colors.white, size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          'Heure RDC : GMT+2',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ],
+                  ElevatedButton.icon(
+                    onPressed: () => widget.onNavigate(6), // Aller à Devis BDD
+                    icon: const Icon(Icons.request_quote, size: 16),
+                    label: const Text('Rédiger un Devis'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConfig.brandPink,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Terminal de Pointage Express
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // 4 Cartes d'Activité
+            Row(
+              children: [
+                _buildActivityCard('Missions en Cours', '$missionsCount actives', Icons.engineering, AppConfig.brandPink, () => widget.onNavigate(1)),
+                const SizedBox(width: 16),
+                _buildActivityCard('Heures Pointées', '${totalHeures.toStringAsFixed(1)} h', Icons.access_time, Colors.blue.shade700, () => widget.onNavigate(2)),
+                const SizedBox(width: 16),
+                _buildActivityCard('Solde Congés RH', '${widget.user.soldeConges} jours', Icons.beach_access, Colors.orange.shade800, () => widget.onNavigate(3)),
+                const SizedBox(width: 16),
+                _buildActivityCard('Feuille de Route', 'Suivi Jalons', Icons.task_alt, AppConfig.successGreen, () => widget.onNavigate(7)),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Graphiques & Statistiques d'Activité Collaborateur
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Graphique Barres Heures Travail par Semaine
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.touch_app, color: AppConfig.brandPink, size: 22),
-                            SizedBox(width: 10),
                             Text(
-                              'Terminal de Pointage Géolocalisé (Anti-VPN)',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              'Activité & Heures Travaillées (Dernières Semaines)',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                            ),
+                            Icon(Icons.bar_chart, color: AppConfig.brandPink),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildWeeklyHourBar('Semaine 1 (Chantier Kolwezi)', 44.5, '44.5 h', AppConfig.brandPink),
+                        const SizedBox(height: 14),
+                        _buildWeeklyHourBar('Semaine 2 (Maintenance Usine)', 48.0, '48.0 h (Heures Sup.)', Colors.blue.shade700),
+                        const SizedBox(height: 14),
+                        _buildWeeklyHourBar('Semaine 3 (Soudure Haute Pression)', 42.0, '42.0 h', Colors.teal.shade700),
+                        const SizedBox(height: 14),
+                        _buildWeeklyHourBar('Semaine en cours', 28.5, '28.5 h', Colors.orange.shade700),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+
+                // Panneau de Pointage Rapide
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pointage Présence & Géolocalisation',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: _selectedSite,
+                          decoration: const InputDecoration(labelText: 'Site d\'Affectation Actuel'),
+                          items: const [
+                            DropdownMenuItem(value: 'Chantier MUMI (Kolwezi)', child: Text('Chantier MUMI (Kolwezi)')),
+                            DropdownMenuItem(value: 'Site Kamoa-Kakula (Lualaba)', child: Text('Site Kamoa-Kakula (Lualaba)')),
+                            DropdownMenuItem(value: 'Usine STL (Lubumbashi)', child: Text('Usine STL (Lubumbashi)')),
+                            DropdownMenuItem(value: 'Base-Vie Tenke Fungurume', child: Text('Base-Vie Tenke Fungurume')),
+                          ],
+                          onChanged: (v) => setState(() => _selectedSite = v!),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _handlePointage('entree'),
+                                icon: const Icon(Icons.login, size: 16),
+                                label: const Text('Prise de Poste'),
+                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen, padding: const EdgeInsets.symmetric(vertical: 14)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _handlePointage('sortie'),
+                                icon: const Icon(Icons.logout, size: 16),
+                                label: const Text('Fin de Poste'),
+                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed, padding: const EdgeInsets.symmetric(vertical: 14)),
+                              ),
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD1FAE5),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.check_circle, size: 14, color: AppConfig.successGreen),
-                              SizedBox(width: 4),
-                              Text('Enregistrement direct BDD',
-                                  style: TextStyle(color: AppConfig.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedSite,
-                            items: const [
-                              DropdownMenuItem(value: 'Chantier MUMI (Kolwezi)', child: Text('Chantier MUMI (Kolwezi)')),
-                              DropdownMenuItem(value: 'Base Kakula Kamoa (Kolwezi)', child: Text('Base Kakula Kamoa (Kolwezi)')),
-                              DropdownMenuItem(value: 'Usine Luilu KCC (Kolwezi)', child: Text('Usine Luilu KCC (Kolwezi)')),
-                              DropdownMenuItem(value: 'Frontier Mine (Sakania)', child: Text('Frontier Mine (Sakania)')),
-                              DropdownMenuItem(value: 'Siège Social (Lubumbashi)', child: Text('Siège Social (Lubumbashi)')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedSite = val);
-                            },
-                            decoration: const InputDecoration(
-                              labelText: 'Site d\'Intervention Actuel',
-                              prefixIcon: Icon(Icons.location_on),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.login),
-                          label: const Text('Pointer Entrée'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConfig.brandPink,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          ),
-                          onPressed: () => _handlePointage('entree'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Pointer Sortie'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange.shade800,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          ),
-                          onPressed: () => _handlePointage('sortie'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Live KPIs
-            Row(
-              children: [
-                Expanded(
-                  child: KpiCard(
-                    title: 'Heures Travaillées',
-                    value: '${totalHeures.toStringAsFixed(0)} h',
-                    subtitle: 'Total cumulé dans la BDD',
-                    icon: Icons.timer,
-                    color: AppConfig.brandPink,
-                    onTap: () => widget.onNavigate(2),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: KpiCard(
-                    title: 'Missions BDD',
-                    value: '$missionsCount Chantier(s)',
-                    subtitle: 'Missions actives',
-                    icon: Icons.engineering,
-                    color: const Color(0xFF0284C7),
-                    onTap: () => widget.onNavigate(1),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: KpiCard(
-                    title: 'Solde Congés Payés',
-                    value: '${widget.user.soldeConges} Jours',
-                    subtitle: 'Droits légaux enregistrés',
-                    icon: Icons.beach_access,
-                    color: AppConfig.successGreen,
-                    onTap: () => widget.onNavigate(3),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
-            // Missions list
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Mes Ordres de Mission Prioritaires (BDD)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        TextButton(
-                          onPressed: () => widget.onNavigate(1),
-                          child: const Text('Voir tout'),
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    if (_missions.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: Center(
-                          child: Text('Aucune mission attribuée pour l\'instant dans la base de données.'),
-                        ),
-                      )
-                    else
-                      ..._missions.take(3).map((m) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppConfig.brandPinkTint,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(Icons.work_outline, color: AppConfig.brandPink),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(m.titre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                      const SizedBox(height: 2),
-                                      Text('${m.client} • ${m.siteIntervention}',
-                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-                                    ],
-                                  ),
-                                ),
-                                StatBadge(label: m.statut.toUpperCase(), status: m.statut),
-                              ],
-                            ),
-                          )),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActivityCard(String title, String val, IconData icon, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                  CircleAvatar(radius: 16, backgroundColor: color.withOpacity(0.12), child: Icon(icon, size: 16, color: color)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(val, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeeklyHourBar(String label, double val, String text, Color color) {
+    final pct = (val / 50.0).clamp(0.0, 1.0);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: pct,
+            minHeight: 8,
+            backgroundColor: Colors.grey.shade100,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

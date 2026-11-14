@@ -20,88 +20,155 @@ class AuthService {
       if (jsonStr != null) {
         final map = jsonDecode(jsonStr);
         _currentUser = MembreUser.fromJson(map);
+        // Vérifier si le compte n'a pas été désactivé entre-temps
+        _verifyAccountStatus();
         return true;
       }
     } catch (_) {}
     return false;
   }
 
-  /// Step 1: Verify identifier (matricule / email) and password
-  Future<Map<String, dynamic>> verifyPasswordOnly(String identifier, String password) async {
-    final cleanId = identifier.trim();
-    final cleanPass = password.trim();
-
-    // 1. Check Supabase profiles table directly
+  Future<void> _verifyAccountStatus() async {
+    if (_currentUser == null) return;
     try {
-      final isEmail = cleanId.contains('@');
-      final queryField = isEmail ? 'email' : 'matricule';
-      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?$queryField=eq.$cleanId&select=*';
-
+      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.${_currentUser!.id}&select=is_disabled,statut_compte';
       final res = await http.get(
         Uri.parse(url),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
         },
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
         if (list.isNotEmpty) {
           final p = list.first;
-          _currentUser = MembreUser.fromJson(p);
-          _pendingEmail = p['email'] ?? 'dankande3@gmail.com';
-          return {
-            'success': true,
-            'user': _currentUser,
-            'email': _pendingEmail,
-          };
+          if (p['is_disabled'] == true || p['statut_compte'] == 'desactive') {
+            await logout();
+          }
         }
       }
     } catch (_) {}
+  }
 
-    // 2. Default Collaborator Account (Jean-Pierre Mulamba)
-    if ((cleanId.toUpperCase() == AppConfig.defaultMatricule ||
-            cleanId.toLowerCase() == 'jp.mulamba@jbf-services.cd') &&
-        cleanPass == AppConfig.defaultPassword) {
-      _currentUser = MembreUser(
-        id: 'mbr-012',
-        fullName: 'Jean-Pierre Mulamba',
-        email: 'jp.mulamba@jbf-services.cd',
-        matricule: 'JBF-M-2026-012',
-        poste: 'Chef d\'Équipe Soudure & Tuyauterie',
-        sectionNom: 'Maintenance & Soudure',
-        province: 'Lualaba (Kolwezi)',
-        soldeConges: 14,
-        avatar: 'JM',
-        token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      _pendingEmail = _currentUser!.email;
-      return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+  /// Authentification Réelle Collaborateur JBF via Supabase
+  Future<Map<String, dynamic>> verifyPasswordOnly(String identifier, String password) async {
+    final cleanId = identifier.trim();
+    final cleanPass = password.trim();
+
+    if (cleanId.isEmpty || cleanPass.isEmpty) {
+      return {'success': false, 'error': 'Veuillez saisir votre matricule ou email et votre mot de passe.'};
     }
 
-    // 3. Fallback generic collaborator login if starts with JBF-
-    if (cleanId.toUpperCase().startsWith('JBF-') && cleanPass.length >= 4) {
-      _currentUser = MembreUser(
-        id: 'mbr-custom',
-        fullName: 'Agent Terrain JBF',
-        email: 'agent@jbf-services.cd',
-        matricule: cleanId.toUpperCase(),
-        poste: 'Technicien Spécialisé',
-        sectionNom: 'Sous-traitance Industrielle',
-        province: 'Haut-Katanga (Lubumbashi)',
-        soldeConges: 18,
-        avatar: 'AT',
-        token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      _pendingEmail = _currentUser!.email;
-      return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
-    }
+    try {
+      String emailToAuth = cleanId;
+      final isEmail = cleanId.contains('@');
 
-    return {
-      'success': false,
-      'error': 'Matricule ou mot de passe incorrect. Exemple : ${AppConfig.defaultMatricule} / ${AppConfig.defaultPassword}',
-    };
+      // 1. Si matricule fourni, retrouver l'email associé
+      if (!isEmail) {
+        final lookupUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?matricule=eq.$cleanId&select=email,is_disabled,statut_compte';
+        final lookupRes = await http.get(
+          Uri.parse(lookupUrl),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 5));
+
+        if (lookupRes.statusCode == 200) {
+          final List<dynamic> list = jsonDecode(lookupRes.body);
+          if (list.isNotEmpty) {
+            final p = list.first;
+            if (p['is_disabled'] == true || p['statut_compte'] == 'desactive') {
+              return {'success': false, 'error': 'Votre compte a été désactivé par l\'administrateur JBF.'};
+            }
+            if (p['email'] != null && (p['email'] as String).isNotEmpty) {
+              emailToAuth = p['email'];
+            }
+          } else {
+            return {'success': false, 'error': 'Matricule non répertorié dans la base des agents JBF.'};
+          }
+        }
+      }
+
+      // 2. Authentification auprès de Supabase Auth
+      final authUrl = '${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password';
+      final authRes = await http.post(
+        Uri.parse(authUrl),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': emailToAuth,
+          'password': cleanPass,
+        }),
+      ).timeout(const Duration(seconds: 6));
+
+      if (authRes.statusCode == 200) {
+        final authData = jsonDecode(authRes.body);
+        final accessToken = authData['access_token'];
+        final userId = authData['user']?['id'];
+
+        // 3. Charger le profil réel
+        final profileUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*';
+        final profRes = await http.get(
+          Uri.parse(profileUrl),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer $accessToken',
+          },
+        );
+
+        if (profRes.statusCode == 200) {
+          final List<dynamic> profList = jsonDecode(profRes.body);
+          if (profList.isNotEmpty) {
+            final profile = profList.first;
+            if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
+              return {'success': false, 'error': 'Votre compte a été désactivé par la Direction JBF.'};
+            }
+
+            profile['token'] = accessToken;
+            _currentUser = MembreUser.fromJson(profile);
+            _pendingEmail = profile['email'];
+            await completeLogin();
+            return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+          }
+        }
+      }
+
+      // 4. Compte officiel par défaut si configuré (mode secours)
+      if ((cleanId.toUpperCase() == AppConfig.defaultMatricule ||
+              cleanId.toLowerCase() == 'jp.mulamba@jbf-services.cd') &&
+          cleanPass == AppConfig.defaultPassword) {
+        _currentUser = MembreUser(
+          id: 'mbr-012',
+          fullName: 'Jean-Pierre Mulamba',
+          email: 'jp.mulamba@jbf-services.cd',
+          matricule: 'JBF-M-2026-012',
+          poste: 'Chef d\'Équipe Soudure & Tuyauterie',
+          sectionNom: 'Maintenance & Soudure',
+          province: 'Lualaba (Kolwezi)',
+          soldeConges: 14,
+          avatar: 'JM',
+          token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
+        );
+        _pendingEmail = _currentUser!.email;
+        await completeLogin();
+        return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+      }
+
+      return {
+        'success': false,
+        'error': 'Matricule/Email ou mot de passe incorrect. Vérifiez vos accès auprès du service RH.',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erreur de connexion au serveur : ${e.toString()}',
+      };
+    }
   }
 
   Future<void> completeLogin() async {

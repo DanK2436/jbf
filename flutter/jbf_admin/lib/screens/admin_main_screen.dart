@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'dashboard_screen.dart';
-import 'devis_screen.dart';
+import 'users_management_screen.dart';
+import 'projets_commandes_screen.dart';
 import 'missions_screen.dart';
+import 'devis_screen.dart';
+import 'services_screen.dart';
+import 'rh_competences_screen.dart';
+import 'recrutement_admin_screen.dart';
+import 'finance_screen.dart';
+import 'communication_cms_screen.dart';
 import 'pointages_screen.dart';
-import 'conges_screen.dart';
-import 'avis_screen.dart';
-import 'membres_screen.dart';
-import 'sous_admins_screen.dart';
 import 'otp_settings_screen.dart';
 import 'login_screen.dart';
 
@@ -26,13 +29,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   final List<String> _titles = [
     'Super Dashboard Exécutif',
-    'Demandes de Devis & Chiffrage',
-    'Gestion des Chantiers & Missions',
-    'Contrôle des Pointages & Anti-VPN',
-    'Validation des Congés RH',
-    'Modération des Avis Clients',
-    'Annuaire des Collaborateurs',
-    'Gestion des Sous-Administrateurs',
+    'Gestion des Utilisateurs (Clients, Membres, Sous-Admins)',
+    'Commandes & Projets Complexes (WBS & Budget)',
+    'Missions, Chantiers & Livrables Sécurisés',
+    'Réception Devis Membres & Chiffrage Client',
+    'Catalogue Dynamique des Services (15)',
+    'Ressources Humaines & Cartographie des Compétences',
+    'Recrutement & Candidatures Déposées (Activer/Désactiver)',
+    'Gestion Financière, Écritures & Reçus Clients',
+    'Communication, CMS & Live Chat Visiteurs',
+    'Contrôle des Pointages & Traçabilité IP / Anti-VPN',
     'Sécurité OTP Admin Principal',
   ];
 
@@ -41,20 +47,26 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 0:
         return DashboardScreen(onNavigate: (index) => setState(() => _selectedIndex = index));
       case 1:
-        return const DevisScreen();
+        return const UsersManagementScreen();
       case 2:
-        return const MissionsScreen();
+        return const ProjetsCommandesScreen();
       case 3:
-        return const PointagesScreen();
+        return const MissionsScreen();
       case 4:
-        return const CongesScreen();
+        return const DevisScreen();
       case 5:
-        return const AvisScreen();
+        return const ServicesScreen();
       case 6:
-        return const MembresScreen();
+        return const RhCompetencesScreen();
       case 7:
-        return const SousAdminsScreen();
+        return const RecrutementAdminScreen();
       case 8:
+        return const FinanceScreen();
+      case 9:
+        return const CommunicationCmsScreen();
+      case 10:
+        return const PointagesScreen();
+      case 11:
         return const OtpSettingsScreen();
       default:
         return const DashboardScreen(onNavigate: _dummyNavigate);
@@ -92,7 +104,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   @override
   Widget build(BuildContext context) {
     final user = widget.authService.currentUser;
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
       appBar: AppBar(
@@ -121,10 +133,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               children: [
                 Text(
                   _titles[_selectedIndex],
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 const Text(
-                  'JBF Service SARL — Espace Administration Native',
+                  'JBF Service SARL — Espace Administration Native RDC',
                   style: TextStyle(fontSize: 11, color: Colors.white70),
                 ),
               ],
@@ -132,7 +144,6 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           ],
         ),
         actions: [
-          // User chip
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(
@@ -165,7 +176,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                 IconButton(
                   icon: const Icon(Icons.shield_outlined, color: Colors.white),
                   tooltip: 'Sécurité OTP Admin',
-                  onPressed: () => setState(() => _selectedIndex = 8),
+                  onPressed: () => setState(() => _selectedIndex = 11),
                 ),
                 const SizedBox(width: 4),
                 IconButton(
@@ -183,7 +194,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           // Desktop sidebar navigation
           if (isDesktop)
             Container(
-              width: 250,
+              width: 265,
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(right: BorderSide(color: Colors.grey.shade200)),
@@ -191,17 +202,20 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 children: [
-                  _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Tableau de Bord'),
-                  _buildNavItem(1, Icons.request_quote_outlined, Icons.request_quote, 'Devis & Commandes'),
-                  _buildNavItem(2, Icons.engineering_outlined, Icons.engineering, 'Missions & Chantiers'),
-                  _buildNavItem(3, Icons.fingerprint, Icons.fingerprint, 'Pointages & Anti-VPN'),
+                  _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Tableau de Bord Exécutif'),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildNavItem(4, Icons.beach_access_outlined, Icons.beach_access, 'Validation Congés'),
-                  _buildNavItem(5, Icons.star_outline, Icons.star, 'Modération Avis'),
-                  _buildNavItem(6, Icons.people_outline, Icons.people, 'Membres RH'),
-                  _buildNavItem(7, Icons.admin_panel_settings_outlined, Icons.admin_panel_settings, 'Sous-Administrateurs'),
+                  _buildNavItem(1, Icons.people_outline, Icons.people, 'Gestion Utilisateurs'),
+                  _buildNavItem(2, Icons.account_tree_outlined, Icons.account_tree, 'Commandes & Projets WBS'),
+                  _buildNavItem(3, Icons.engineering_outlined, Icons.engineering, 'Missions & Chantiers'),
+                  _buildNavItem(4, Icons.request_quote_outlined, Icons.request_quote, 'Devis & Chiffrage Client'),
+                  _buildNavItem(5, Icons.handyman_outlined, Icons.handyman, 'Catalogue des Services'),
+                  _buildNavItem(6, Icons.badge_outlined, Icons.badge, 'RH & Compétences'),
+                  _buildNavItem(7, Icons.folder_shared_outlined, Icons.folder_shared, 'Recrutement & CV Déposés'),
+                  _buildNavItem(8, Icons.account_balance_outlined, Icons.account_balance, 'Finance & Reçus'),
+                  _buildNavItem(9, Icons.campaign_outlined, Icons.campaign, 'Communication, CMS & Chat'),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildNavItem(8, Icons.shield_outlined, Icons.shield, 'Sécurité OTP Direction'),
+                  _buildNavItem(10, Icons.fingerprint, Icons.fingerprint, 'Pointages & Anti-VPN'),
+                  _buildNavItem(11, Icons.shield_outlined, Icons.shield, 'Sécurité OTP Direction'),
                 ],
               ),
             ),
@@ -210,7 +224,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           Expanded(child: _buildBody()),
         ],
       ),
-      // Mobile Drawer if width < 900
+      // Mobile Drawer if width < 960
       drawer: isDesktop
           ? null
           : Drawer(
@@ -230,81 +244,79 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     ),
                   ),
                   _buildDrawerItem(0, Icons.dashboard, 'Tableau de Bord'),
-                  _buildDrawerItem(1, Icons.request_quote, 'Devis & Commandes'),
-                  _buildDrawerItem(2, Icons.engineering, 'Missions & Chantiers'),
-                  _buildDrawerItem(3, Icons.fingerprint, 'Pointages & Anti-VPN'),
-                  _buildDrawerItem(4, Icons.beach_access, 'Validation Congés'),
-                  _buildDrawerItem(5, Icons.star, 'Modération Avis'),
-                  _buildDrawerItem(6, Icons.people, 'Membres RH'),
-                  _buildDrawerItem(7, Icons.admin_panel_settings, 'Sous-Administrateurs'),
-                  _buildDrawerItem(8, Icons.shield, 'Sécurité OTP Direction'),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: AppConfig.dangerRed),
-                    title: const Text('Déconnexion', style: TextStyle(color: AppConfig.dangerRed)),
-                    onTap: _handleLogout,
-                  ),
+                  _buildDrawerItem(1, Icons.people, 'Gestion Utilisateurs'),
+                  _buildDrawerItem(2, Icons.account_tree, 'Commandes & Projets WBS'),
+                  _buildDrawerItem(3, Icons.engineering, 'Missions & Chantiers'),
+                  _buildDrawerItem(4, Icons.request_quote, 'Devis & Chiffrage Client'),
+                  _buildDrawerItem(5, Icons.handyman, 'Catalogue des Services'),
+                  _buildDrawerItem(6, Icons.badge, 'RH & Compétences'),
+                  _buildDrawerItem(7, Icons.folder_shared, 'Recrutement & CV Déposés'),
+                  _buildDrawerItem(8, Icons.account_balance, 'Finance & Reçus'),
+                  _buildDrawerItem(9, Icons.campaign, 'Communication, CMS & Chat'),
+                  _buildDrawerItem(10, Icons.fingerprint, 'Pointages & Anti-VPN'),
+                  _buildDrawerItem(11, Icons.shield, 'Sécurité OTP Direction'),
                 ],
               ),
-            ),
-      // Mobile bottom bar for top 4 items if on small screens
-      bottomNavigationBar: isDesktop
-          ? null
-          : BottomNavigationBar(
-              currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-              onTap: (idx) => setState(() => _selectedIndex = idx),
-              selectedItemColor: AppConfig.brandPink,
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-                BottomNavigationBarItem(icon: Icon(Icons.request_quote), label: 'Devis'),
-                BottomNavigationBarItem(icon: Icon(Icons.engineering), label: 'Missions'),
-                BottomNavigationBarItem(icon: Icon(Icons.fingerprint), label: 'Pointage'),
-              ],
             ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
     final isSelected = _selectedIndex == index;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        tileColor: isSelected ? AppConfig.brandPinkTint : Colors.transparent,
-        leading: Icon(
-          isSelected ? activeIcon : icon,
-          color: isSelected ? AppConfig.brandPink : Colors.grey.shade700,
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppConfig.brandPinkDark : AppConfig.blackText,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: 14,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: isSelected ? AppConfig.brandPinkTint : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => setState(() => _selectedIndex = index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? filledIcon : outlineIcon,
+                  color: isSelected ? AppConfig.brandPink : Colors.grey.shade700,
+                  size: 20,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected ? AppConfig.brandPink : Colors.grey.shade800,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        onTap: () => setState(() => _selectedIndex = index),
       ),
     );
   }
 
   Widget _buildDrawerItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
+
     return ListTile(
       leading: Icon(icon, color: isSelected ? AppConfig.brandPink : Colors.grey.shade700),
       title: Text(
         label,
         style: TextStyle(
-          color: isSelected ? AppConfig.brandPink : AppConfig.blackText,
+          color: isSelected ? AppConfig.brandPink : Colors.black87,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 13,
         ),
       ),
+      selected: isSelected,
       onTap: () {
-        setState(() => _selectedIndex = index);
         Navigator.of(context).pop();
+        setState(() => _selectedIndex = index);
       },
     );
   }

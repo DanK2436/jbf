@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../models/client_models.dart';
 import '../services/client_data_service.dart';
-import '../widgets/stat_badge.dart';
 
 class MissionsScreen extends StatefulWidget {
   final ClientUser client;
@@ -18,6 +19,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
   final _dataService = ClientDataService();
   bool _isLoading = true;
   List<ClientMission> _missions = [];
+  Map<String, List<Map<String, dynamic>>> _missionsEtapes = {};
 
   @override
   void initState() {
@@ -28,6 +30,21 @@ class _MissionsScreenState extends State<MissionsScreen> {
   Future<void> _loadMissions() async {
     setState(() => _isLoading = true);
     final list = await _dataService.fetchMissions();
+
+    // Charger les étapes réelles pour chaque mission
+    for (var m in list) {
+      try {
+        final url = '${AppConfig.apiBaseUrl}/client/missions/${m.id}/progression';
+        final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          if (data['etapes'] != null) {
+            _missionsEtapes[m.id] = (data['etapes'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
+          }
+        }
+      } catch (_) {}
+    }
+
     if (!mounted) return;
     setState(() {
       _missions = list;
@@ -35,8 +52,8 @@ class _MissionsScreenState extends State<MissionsScreen> {
     });
   }
 
-  Future<void> _contactChef(String chef, String missionRef) async {
-    final uri = Uri.parse('https://wa.me/243970349724?text=Bonjour,%20question%20sur%20le%20chantier%20$missionRef%20(Supervisé%20par%20$chef)');
+  Future<void> _contactSupport(String ref) async {
+    final uri = Uri.parse('https://wa.me/243970349724?text=Bonjour,%20je%20souhaite%20valider%20le%20paiement%20de%20ma%20mission%20$ref');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -45,6 +62,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F7FA),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppConfig.brandPink))
           : RefreshIndicator(
@@ -52,7 +70,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
               color: AppConfig.brandPink,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -63,12 +81,12 @@ class _MissionsScreenState extends State<MissionsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Suivi des Chantiers & Interventions',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                              'Suivi de Progression des Projets',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppConfig.blackText),
                             ),
                             Text(
-                              'Opérations actives sur sites miniers (Haut-Katanga & Lualaba)',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                              'Accès conditionnel sécurisé : réservé aux projets dont le paiement a été validé par la Direction JBF',
+                              style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
                             ),
                           ],
                         ),
@@ -81,142 +99,208 @@ class _MissionsScreenState extends State<MissionsScreen> {
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.radar, color: Color(0xFF16A34A), size: 16),
+                              Icon(Icons.shield_outlined, size: 16, color: AppConfig.successGreen),
                               SizedBox(width: 6),
-                              Text(
-                                'Supervision GPS Directe',
-                                style: TextStyle(color: Color(0xFF15803D), fontWeight: FontWeight.bold, fontSize: 12),
-                              ),
+                              Text('Portail Partenaire Certifié', style: TextStyle(color: Color(0xFF166534), fontSize: 11, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _missions.length,
-                      itemBuilder: (context, idx) {
-                        final m = _missions[idx];
-                        final isDone = m.statut == 'termine';
+                    if (_missions.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                        child: const Center(
+                          child: Text('Aucun projet actif pour votre compte client actuellement.'),
+                        ),
+                      )
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _missions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final m = _missions[index];
+                          // Vérification conditionnelle du paiement
+                          final bool isPaiementValide = m.statut == 'en_cours' || m.progressionPct > 0;
+                          final etapes = _missionsEtapes[m.id] ?? [];
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(18.0),
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 3)),
+                              ],
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: AppConfig.brandPink.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text(
-                                            m.reference,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: AppConfig.brandPink,
-                                              fontSize: 12,
+                                // Entête Projet
+                                Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: isPaiementValide ? AppConfig.brandPinkTint : Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          Icons.engineering,
+                                          color: isPaiementValide ? AppConfig.brandPink : Colors.grey.shade600,
+                                          size: 26,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              m.titre,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppConfig.blackText),
                                             ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Réf: ${m.codeMission} • Site : ${m.siteIntervention} • Chef d\'Équipe : ${m.chefEquipe}',
+                                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: isPaiementValide ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          isPaiementValide ? 'Paiement Confirmé' : 'Paiement En Attente',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: isPaiementValide ? AppConfig.successGreen : Colors.amber.shade900,
                                           ),
                                         ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          'Période : ${m.dateDebut} au ${m.dateFin}',
-                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                        ),
-                                      ],
-                                    ),
-                                    StatBadge(
-                                      label: isDone ? 'Chantier Livré' : 'En Exécution (${m.avancement}%)',
-                                      color: isDone ? AppConfig.successGreen : const Color(0xFF0284C7),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  m.titre,
-                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppConfig.blackText),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.pin_drop, size: 16, color: AppConfig.brandPink),
-                                    const SizedBox(width: 4),
-                                    Text(m.site, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-
-                                // Progress bar
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('Avancement des travaux :', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                                        Text('${m.avancement}% Réalisé', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppConfig.brandPink)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: LinearProgressIndicator(
-                                        value: m.avancement / 100.0,
-                                        minHeight: 8,
-                                        backgroundColor: Colors.grey.shade200,
-                                        color: isDone ? AppConfig.successGreen : AppConfig.brandPink,
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 16),
 
-                                // Bottom supervisor & actions
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
+                                const Divider(height: 1),
+
+                                // Zone Conditionnelle
+                                if (!isPaiementValide)
+                                  Container(
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFFFFBEB),
+                                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                                    ),
+                                    child: Row(
                                       children: [
-                                        const CircleAvatar(
-                                          radius: 14,
-                                          backgroundColor: AppConfig.brandPink,
-                                          child: Icon(Icons.person, size: 16, color: Colors.white),
+                                        const Icon(Icons.lock_outline, color: Color(0xFFD97706), size: 28),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Suivi Détaillé & Livrables Verrouillés',
+                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF92400E)),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              const Text(
+                                                'La progression étape par étape et les PV techniques seront débloqués dès confirmation du règlement de l\'acompte par la Direction JBF.',
+                                                style: TextStyle(fontSize: 12.5, color: Color(0xFFB45309)),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Superviseur : ${m.chef}',
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                        const SizedBox(width: 12),
+                                        ElevatedButton(
+                                          onPressed: () => _contactSupport(m.codeMission),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFFD97706),
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: const Text('Valider le Paiement'),
                                         ),
                                       ],
                                     ),
-                                    ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppConfig.whatsappGreen,
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                      ),
-                                      onPressed: () => _contactChef(m.chef, m.reference),
-                                      icon: const Icon(Icons.chat, size: 16),
-                                      label: const Text('Joindre Superviseur', style: TextStyle(fontSize: 12)),
+                                  )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Barre de progression
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(6),
+                                                child: LinearProgressIndicator(
+                                                  value: (m.progressionPct / 100.0).clamp(0.0, 1.0),
+                                                  minHeight: 9,
+                                                  backgroundColor: Colors.grey.shade200,
+                                                  color: AppConfig.brandPink,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Text('${m.progressionPct}% achevé', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 18),
+
+                                        // Étapes et jalons
+                                        const Text('Jalons et Livrables Validés par JBF :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                                        const SizedBox(height: 10),
+
+                                        if (etapes.isEmpty)
+                                          Text(
+                                            'Rapport terrain : ${m.dernierRapport.isNotEmpty ? m.dernierRapport : "Chantier en cours selon le cahier des charges."}',
+                                            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                                          )
+                                        else
+                                          Column(
+                                            children: etapes.map((e) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(bottom: 8.0),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(Icons.check_circle, size: 18, color: AppConfig.successGreen),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: Text(
+                                                        e['titre_etape'] ?? 'Jalon validé',
+                                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                                      ),
+                                                    ),
+                                                    const Text('✓ Conforme', style: TextStyle(fontSize: 11, color: AppConfig.successGreen, fontWeight: FontWeight.bold)),
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
                               ],
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),

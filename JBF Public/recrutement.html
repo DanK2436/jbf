@@ -1,0 +1,484 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Recrutement &amp; Carrières — Rejoindre JBF Service SARL | RDC</title>
+  
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="shortcut icon" href="../assets/favicon.ico">
+  <meta name="theme-color" content="#0C0C0E">
+
+  <meta name="keywords" content="recrutement JBF Service, emploi mines RDC, emploi BTP Lubumbashi, recrutement soudeur Kolwezi, travail catering minier, carrières JBF, postuler sous-traitance RDC, offre emploi Haut-Katanga, Lualaba, Kinshasa, ingénieur minier RDC, chauffeur poids lourd Kolwezi">
+  <meta name="description" content="Déposez votre candidature en ligne sans compte auprès de JBF Service SARL. Rejoignez nos équipes industrielles, minières, BTP et logistique à travers les 26 provinces de la RDC.">
+  
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .job-hero {
+      background: linear-gradient(135deg, rgba(12,12,14,0.92) 0%, rgba(230,0,126,0.25) 100%), url('assets/hero-bg.jpg') center/cover;
+      padding: 90px 20px 60px;
+      color: #fff;
+      text-align: center;
+    }
+    .job-container {
+      max-width: 900px;
+      margin: -40px auto 70px;
+      padding: 0 20px;
+    }
+    .job-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+      border: 1px solid #ebebf0;
+      padding: 40px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .job-card {
+        padding: 24px;
+      }
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .form-label span.req {
+      color: #e6007e;
+    }
+    .form-control {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid #dcdce2;
+      border-radius: 10px;
+      font-size: 14.5px;
+      transition: all 0.25s ease;
+      background: #fafafc;
+      box-sizing: border-box;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: #e6007e;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(230,0,126,0.1);
+    }
+    .file-dropzone {
+      border: 2px dashed #dcdce2;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      background: #fdfdfd;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .file-dropzone:hover {
+      border-color: #e6007e;
+      background: #fff9fc;
+    }
+    .file-dropzone input {
+      display: none;
+    }
+    .file-name-preview {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #e6007e;
+      font-weight: 600;
+    }
+    .notice-box {
+      background: #f4f5f8;
+      border-left: 4px solid #e6007e;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+      font-size: 13.5px;
+      color: #444;
+      line-height: 1.6;
+    }
+    .btn-submit-job {
+      background: #e6007e;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    .btn-submit-job:hover {
+      background: #c7006d;
+      transform: translateY(-1px);
+    }
+    .success-panel {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #e8f5e9;
+      color: #2e7d32;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-transparent" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="JBF Service" class="brand-logo-img" decoding="async" width="160" height="48">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html" class="nav-link">Accueil</a></li>
+        <li><a href="services.html" class="nav-link">Services</a></li>
+        <li><a href="gallery.html" class="nav-link">Galerie</a></li>
+        <li><a href="avis.html" class="nav-link">Avis Clients</a></li>
+        <li><a href="blog.html" class="nav-link">Actualités</a></li>
+        <li><a href="recrutement.html" class="nav-link active">Carrières / Emploi</a></li>
+        <li><a href="about.html" class="nav-link">À Propos</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="../JBF Client/auth/login.html" class="btn btn-pink btn-sm">Espace Client</a>
+        <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="job-hero">
+    <div style="max-width: 800px; margin: 0 auto;">
+      <span style="background: rgba(230,0,126,0.25); color: #ffb3db; border: 1px solid rgba(230,0,126,0.5); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+        Recrutement &amp; Insertion Professionnelle RDC
+      </span>
+      <h1 style="font-size: 38px; font-weight: 800; margin: 20px 0 12px; line-height: 1.2;">
+        Rejoignez les Équipes de JBF Service
+      </h1>
+      <p style="font-size: 16px; color: #d0d0d8; line-height: 1.6; max-width: 650px; margin: 0 auto;">
+        Postulez directement en ligne sans avoir besoin de créer un compte préalable. Nos recruteurs étudient chaque candidature et transmettent une convocation officielle par email et sur vos applications.
+      </p>
+    </div>
+  </section>
+
+  <!-- Formulaire de Candidature -->
+  <div class="job-container">
+    <div class="job-card">
+      <div id="closedBanner" style="display: none; text-align: center; padding: 40px 20px;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px;">⏸</div>
+        <h2 style="font-size: 24px; color: #0C0C0E; margin-bottom: 10px;">Campagnes de Recrutement Actuellement Closes</h2>
+        <p style="font-size: 15px; color: #555; max-width: 580px; margin: 0 auto 24px; line-height: 1.6;">
+          La Direction des Ressources Humaines de JBF Service SARL ne reçoit pas de nouvelles candidatures spontanées pour le moment.
+          Nos équipes reviendront vers vous lors de l'ouverture de la prochaine session d'embauche sur nos sites miniers et chantiers.
+        </p>
+        <a href="index.html" class="btn btn-pink" style="display: inline-block; padding: 12px 24px; border-radius: 8px;">Retourner à l'Accueil</a>
+      </div>
+
+      <div class="notice-box" id="jobNoticeBox">
+        <strong>Information Candidat :</strong> Ce formulaire s'adresse aux techniciens, ouvriers qualifiés, ingénieurs et cadres administratifs désireux de rejoindre JBF Service. Dès validation de votre dossier, vous recevrez une convocation officielle horodatée pour un entretien d'embauche.
+      </div>
+
+      <div id="successPanel" class="success-panel">
+        <div class="success-icon">✓</div>
+        <h2 style="font-size: 26px; color: #0C0C0E; margin-bottom: 10px;">Candidature Enregistrée avec Succès !</h2>
+        <p style="font-size: 15px; color: #555; max-width: 550px; margin: 0 auto 20px; line-height: 1.6;">
+          Merci pour votre intérêt envers JBF Service SARL. Votre dossier a été transmis à la Direction des Ressources Humaines.
+        </p>
+        <div style="background: #f8f9fc; padding: 16px; border-radius: 8px; display: inline-block; margin-bottom: 25px;">
+          <span style="font-size: 13px; color: #777;">Numéro de suivi de candidature :</span><br>
+          <strong id="candRefNum" style="font-size: 18px; color: #e6007e;">JBF-REC-2026-PENDING</strong>
+        </div>
+        <p style="font-size: 13.5px; color: #666;">
+          Vous recevrez un email d'accusé de réception et votre convocation officielle dès la première sélection de votre profil.
+        </p>
+        <a href="index.html" class="btn btn-pink" style="display: inline-block; margin-top: 20px; padding: 12px 24px; border-radius: 8px;">Retour à l'accueil</a>
+      </div>
+
+      <form id="jobForm">
+        <div class="form-grid">
+          <!-- Nom complet -->
+          <div class="form-group">
+            <label class="form-label">Nom Complet &amp; Post-nom <span class="req">*</span></label>
+            <input type="text" id="nomComplet" class="form-control" placeholder="ex: Jean-Pierre Mulamba Kazadi" required>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label">Adresse Email Active <span class="req">*</span></label>
+            <input type="email" id="email" class="form-control" placeholder="ex: jp.mulamba@gmail.com" required>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-group">
+            <label class="form-label">Numéro de Téléphone (WhatsApp de préférence) <span class="req">*</span></label>
+            <input type="tel" id="telephone" class="form-control" placeholder="ex: +243 97 130 6666" required>
+          </div>
+
+          <!-- Province -->
+          <div class="form-group">
+            <label class="form-label">Province de Résidence Actuelle <span class="req">*</span></label>
+            <select id="province" class="form-control" required>
+              <option value="" disabled selected>Sélectionnez votre province</option>
+              <option value="Haut-Katanga">Haut-Katanga (Lubumbashi, Likasi)</option>
+              <option value="Lualaba">Lualaba (Kolwezi, Fungurume)</option>
+              <option value="Kinshasa">Kinshasa</option>
+              <option value="Kongo Central">Kongo Central (Matadi, Boma)</option>
+              <option value="Haut-Lomami">Haut-Lomami (Kamina)</option>
+              <option value="Tanganyika">Tanganyika (Kalemie)</option>
+              <option value="Nord-Kivu">Nord-Kivu (Goma, Beni)</option>
+              <option value="Sud-Kivu">Sud-Kivu (Bukavu)</option>
+              <option value="Ituri">Ituri (Bunia)</option>
+              <option value="Haut-Uele">Haut-Uele (Isiro, Doko)</option>
+              <option value="Bas-Uele">Bas-Uele (Buta)</option>
+              <option value="Tshopo">Tshopo (Kisangani)</option>
+              <option value="Kasaï-Oriental">Kasaï-Oriental (Mbuji-Mayi)</option>
+              <option value="Kasaï-Central">Kasaï-Central (Kananga)</option>
+              <option value="Kasaï">Kasaï (Tshikapa)</option>
+              <option value="Autre Province RDC">Autre Province RDC</option>
+            </select>
+          </div>
+
+          <!-- Domaine d'expertise -->
+          <div class="form-group">
+            <label class="form-label">Domaine Métier / Spécialité <span class="req">*</span></label>
+            <select id="domaineExpertise" class="form-control" required>
+              <option value="" disabled selected>Sélectionnez votre corps de métier</option>
+              <option value="Soudure TIG/MIG & Tuyauterie Industrielle">Soudure TIG/MIG &amp; Tuyauterie Industrielle</option>
+              <option value="BTP, Génie Civil & Construction">BTP, Génie Civil &amp; Construction</option>
+              <option value="Extraction & Exploitation Minière">Extraction &amp; Exploitation Minière</option>
+              <option value="Catering Industriel, Cuisine & Hôtellerie Base-Vie">Catering Industriel, Cuisine &amp; Hôtellerie Base-Vie</option>
+              <option value="Conduite d'Engins Lourds & Bennes 8x4">Conduite d'Engins Lourds &amp; Bennes 8x4</option>
+              <option value="Maintenance Mécanique & Électromécanique">Maintenance Mécanique &amp; Électromécanique</option>
+              <option value="Électricité Haute/Moyenne Tension & Groupes">Électricité Haute/Moyenne Tension &amp; Groupes</option>
+              <option value="Forage Hydraulique & Assainissement">Forage Hydraulique &amp; Assainissement</option>
+              <option value="Sécurité Industrielle, Gardiennage & Sûreté">Sécurité Industrielle, Gardiennage &amp; Sûreté</option>
+              <option value="QHSE, Hygiène & Audit Environnemental">QHSE, Hygiène &amp; Audit Environnemental</option>
+              <option value="Topographie & Arpentage de Mines">Topographie &amp; Arpentage de Mines</option>
+              <option value="Administration, Logistique & Comptabilité">Administration, Logistique &amp; Comptabilité</option>
+            </select>
+          </div>
+
+          <!-- Années d'expérience -->
+          <div class="form-group">
+            <label class="form-label">Années d'Expérience Professionnelle <span class="req">*</span></label>
+            <input type="number" id="anneesExperience" class="form-control" min="0" max="45" placeholder="ex: 5" required>
+          </div>
+
+          <!-- CV Upload / Lien -->
+          <div class="form-group full-width">
+            <label class="form-label">Curriculum Vitae (CV à jour) <span class="req">*</span></label>
+            <div class="file-dropzone" onclick="document.getElementById('cvFileInput').click()">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e6007e" stroke-width="2" style="margin-bottom: 6px;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <p style="margin: 0; font-size: 13.5px; color: #333; font-weight: 600;">Cliquez pour sélectionner votre fichier CV</p>
+              <span style="font-size: 11.5px; color: #888;">Formats acceptés : PDF, Word (.docx), max 10 Mo</span>
+              <div id="cvFileName" class="file-name-preview"></div>
+              <input type="file" id="cvFileInput" accept=".pdf,.doc,.docx" onchange="handleFileSelected(this, 'cvFileName')">
+            </div>
+            <input type="hidden" id="cvBase64">
+          </div>
+
+          <!-- Lettre & Diplômes facultatifs -->
+          <div class="form-group full-width">
+            <label class="form-label">Autres Dossiers (Certificats, Diplômes, Permis, Habilitations minières)</label>
+            <div class="file-dropzone" onclick="document.getElementById('docsFileInput').click()">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 6px;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p style="margin: 0; font-size: 13px; color: #555;">Cliquez pour ajouter des attestations complémentaires</p>
+              <div id="docsFileName" class="file-name-preview"></div>
+              <input type="file" id="docsFileInput" accept=".pdf,.jpg,.jpeg,.png,.docx" multiple onchange="handleMultipleFiles(this, 'docsFileName')">
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 25px;">
+          <button type="submit" id="submitBtn" class="btn-submit-job">
+            Transmettre Ma Candidature à la Direction JBF
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer JBF Standard -->
+  <footer class="footer" style="background: #0C0C0E; color: #aaa; padding: 40px 20px; text-align: center; font-size: 13px;">
+    <p style="margin-bottom: 6px;">© 2026 JBF Service SARL — Tous droits réservés. Agréé ARSP RDC.</p>
+    <p>Lubumbashi • Kolwezi • Kinshasa • Goma • Matadi • 26 Provinces</p>
+  </footer>
+
+  <script>
+    function toggleNav() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('active');
+    }
+
+    async function checkRecrutementStatut() {
+      try {
+        const res = await fetch('/api/recrutement/statut');
+        const data = await res.json();
+        if (data && data.recrutement_actif === false) {
+          document.getElementById('jobForm').style.display = 'none';
+          const notice = document.getElementById('jobNoticeBox');
+          if (notice) notice.style.display = 'none';
+          document.getElementById('closedBanner').style.display = 'block';
+        }
+      } catch (_) {
+        try {
+          const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+          const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+          const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          const { data } = await sb.from('config_cles_api').select('*').eq('cle_nom', 'recrutement_actif').single();
+          if (data && (data.cle_valeur === 'false' || data.is_active === false)) {
+            document.getElementById('jobForm').style.display = 'none';
+            const notice = document.getElementById('jobNoticeBox');
+            if (notice) notice.style.display = 'none';
+            document.getElementById('closedBanner').style.display = 'block';
+          }
+        } catch (_) {}
+      }
+    }
+    checkRecrutementStatut();
+
+    let cvDataUrl = '';
+    let otherDocs = [];
+
+    function handleFileSelected(input, displayId) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        document.getElementById(displayId).textContent = '✓ ' + file.name + ' (' + Math.round(file.size / 1024) + ' Ko)';
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          cvDataUrl = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleMultipleFiles(input, displayId) {
+      if (input.files && input.files.length > 0) {
+        const names = [];
+        otherDocs = [];
+        for (let i = 0; i < input.files.length; i++) {
+          const file = input.files[i];
+          names.push(file.name);
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            otherDocs.push({ nom: file.name, data: e.target.result });
+          };
+          reader.readAsDataURL(file);
+        }
+        document.getElementById(displayId).textContent = '✓ ' + names.length + ' document(s) sélectionné(s) : ' + names.join(', ');
+      }
+    }
+
+    document.getElementById('jobForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours et chiffrement du dossier...';
+
+      const payload = {
+        nom_complet: document.getElementById('nomComplet').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        telephone: document.getElementById('telephone').value.trim(),
+        province_residence: document.getElementById('province').value,
+        domaine_expertise: document.getElementById('domaineExpertise').value,
+        annees_experience: parseInt(document.getElementById('anneesExperience').value, 10) || 0,
+        cv_url: cvDataUrl || 'https://jbf-service.com/uploads/cv-en-cours.pdf',
+        diplomes_attestations_urls: otherDocs
+      };
+
+      try {
+        // Tentative envoi API backend
+        const res = await fetch('/api/candidatures/postuler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('jobForm').style.display = 'none';
+          document.getElementById('successPanel').style.display = 'block';
+          if (data.candidature && data.candidature.id) {
+            document.getElementById('candRefNum').textContent = 'JBF-REC-' + data.candidature.id.substring(0, 8).toUpperCase();
+          }
+        } else {
+          alert('Erreur lors de la transmission : ' + (data.error || 'Erreur inconnue'));
+          btn.disabled = false;
+          btn.textContent = 'Transmettre Ma Candidature à la Direction JBF';
+        }
+      } catch (err) {
+        console.warn('Backend local non joignable, enregistrement direct Supabase...');
+        // Fallback Supabase direct client
+        try {
+          const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+          const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+          const { data, error } = await supabase.from('candidatures').insert([{
+            nom_complet: payload.nom_complet,
+            email: payload.email,
+            telephone: payload.telephone,
+            province_residence: payload.province_residence,
+            domaine_expertise: payload.domaine_expertise,
+            annees_experience: payload.annees_experience,
+            cv_url: payload.cv_url,
+            statut: 'en_attente'
+          }]).select();
+
+          if (error) throw error;
+
+          document.getElementById('jobForm').style.display = 'none';
+          document.getElementById('successPanel').style.display = 'block';
+          if (data && data[0]) {
+            document.getElementById('candRefNum').textContent = 'JBF-REC-' + data[0].id.substring(0, 8).toUpperCase();
+          }
+        } catch (sbErr) {
+          alert('Erreur : ' + sbErr.message);
+          btn.disabled = false;
+          btn.textContent = 'Transmettre Ma Candidature à la Direction JBF';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+

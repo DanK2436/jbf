@@ -18,137 +18,120 @@ class AuthService {
       if (jsonStr != null) {
         final map = jsonDecode(jsonStr);
         _currentUser = ClientUser.fromJson(map);
+        // Vérifier si le compte est actif
+        _verifyAccountStatus();
         return true;
       }
     } catch (_) {}
     return false;
   }
 
-  /// Connexion Client (vérification email & mot de passe)
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final cleanEmail = email.trim().toLowerCase();
-    final cleanPass = password.trim();
-
-    if (cleanEmail.isEmpty || cleanPass.isEmpty) {
-      return {'success': false, 'error': 'Veuillez saisir votre email et mot de passe.'};
-    }
-
-    // 1. Démo Client Rapide
-    if ((cleanEmail == AppConfig.defaultEmail || cleanEmail.contains('client') || cleanEmail.contains('partenaire')) &&
-        (cleanPass == AppConfig.defaultPassword || cleanPass.length >= 6)) {
-      _currentUser = ClientUser(
-        id: 'cli-demo-01',
-        fullName: 'Directeur des Opérations Minières',
-        companyName: AppConfig.defaultCompany,
-        email: cleanEmail,
-        phone: '+243 970 349 724',
-        sector: 'Catering Minier & BTP',
-        site: 'Kolwezi / Tenke Fungurume',
-        role: 'client',
-        token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      await completeLogin();
-      return {'success': true};
-    }
-
-    // 2. Recherche Supabase profiles
+  Future<void> _verifyAccountStatus() async {
+    if (_currentUser == null) return;
     try {
+      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.${_currentUser!.id}&select=is_disabled,statut_compte';
       final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=*'),
+        Uri.parse(url),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
         },
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
         if (list.isNotEmpty) {
           final p = list.first;
-          _currentUser = ClientUser.fromJson(p);
-          await completeLogin();
-          return {'success': true};
+          if (p['is_disabled'] == true || p['statut_compte'] == 'desactive') {
+            await logout();
+          }
         }
       }
     } catch (_) {}
-
-    // Fallback: Créer session locale valide pour tout client ayant un mot de passe >= 6
-    if (cleanPass.length >= 6) {
-      final company = cleanEmail.split('@').first.toUpperCase();
-      _currentUser = ClientUser(
-        id: 'cli-${DateTime.now().millisecondsSinceEpoch}',
-        fullName: 'Responsable $company',
-        companyName: '$company RDC SARL',
-        email: cleanEmail,
-        phone: '+243 822 357 053',
-        sector: 'Sous-traitance & Énergie',
-        site: 'Lubumbashi (Siège)',
-        role: 'client',
-        token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      await completeLogin();
-      return {'success': true};
-    }
-
-    return {
-      'success': false,
-      'error': 'Identifiants client incorrects ou mot de passe trop court.',
-    };
   }
 
-  /// Inscription d'un nouveau partenaire / client
-  Future<Map<String, dynamic>> register({
-    required String companyName,
-    required String contactName,
-    required String email,
-    required String phone,
-    required String password,
-    String? sector,
-    String? site,
-  }) async {
+  /// Connexion Client Réelle via Supabase Auth
+  Future<Map<String, dynamic>> login(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();
-    final cleanComp = companyName.trim();
+    final cleanPass = password.trim();
 
-    if (cleanEmail.isEmpty || cleanComp.isEmpty || password.length < 6) {
-      return {'success': false, 'error': 'Veuillez remplir tous les champs obligatoires (mot de passe min. 6 car.).'};
+    if (cleanEmail.isEmpty || cleanPass.isEmpty) {
+      return {'success': false, 'error': 'Veuillez renseigner votre email et mot de passe.'};
     }
 
-    final newClient = ClientUser(
-      id: 'cli-${DateTime.now().millisecondsSinceEpoch}',
-      fullName: contactName.trim(),
-      companyName: cleanComp,
-      email: cleanEmail,
-      phone: phone.trim(),
-      sector: sector ?? 'Sous-traitance Minière',
-      site: site ?? 'Katanga / Lualaba',
-      role: 'client',
-      token: 'token-reg-${DateTime.now().millisecondsSinceEpoch}',
-    );
-
-    // Insertion optionnelle dans Supabase
     try {
-      await http.post(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+      // 1. Appel Supabase Auth
+      final authUrl = '${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password';
+      final authRes = await http.post(
+        Uri.parse(authUrl),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal',
         },
         body: jsonEncode({
-          'id': newClient.id,
           'email': cleanEmail,
-          'full_name': newClient.fullName,
-          'company': cleanComp,
-          'phone': newClient.phone,
-          'role': 'client',
+          'password': cleanPass,
         }),
       ).timeout(const Duration(seconds: 6));
-    } catch (_) {}
 
-    _currentUser = newClient;
-    await completeLogin();
-    return {'success': true};
+      if (authRes.statusCode == 200) {
+        final authData = jsonDecode(authRes.body);
+        final accessToken = authData['access_token'];
+        final userId = authData['user']?['id'];
+
+        // 2. Récupération profil client réel
+        final profileUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*';
+        final profRes = await http.get(
+          Uri.parse(profileUrl),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer $accessToken',
+          },
+        );
+
+        if (profRes.statusCode == 200) {
+          final List<dynamic> profList = jsonDecode(profRes.body);
+          if (profList.isNotEmpty) {
+            final profile = profList.first;
+            if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
+              return {'success': false, 'error': 'Votre compte client a été désactivé par l\'administration JBF.'};
+            }
+
+            profile['token'] = accessToken;
+            _currentUser = ClientUser.fromJson(profile);
+            await completeLogin();
+            return {'success': true};
+          }
+        }
+      }
+
+      // 3. Fallback compte démonstration officiel si configuré
+      if (cleanEmail == AppConfig.defaultEmail && cleanPass == AppConfig.defaultPassword) {
+        _currentUser = ClientUser(
+          id: 'cli-demo-01',
+          fullName: 'Direction des Opérations Minières',
+          companyName: AppConfig.defaultCompany,
+          email: cleanEmail,
+          phone: '+243 970 349 724',
+          sector: 'Catering Minier & BTP',
+          site: 'Kolwezi / Tenke Fungurume',
+          role: 'client',
+          token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
+        );
+        await completeLogin();
+        return {'success': true};
+      }
+
+      return {
+        'success': false,
+        'error': 'Adresse email ou mot de passe incorrect. Veuillez vérifier vos identifiants.',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Impossible de joindre le serveur d\'authentification : ${e.toString()}',
+      };
+    }
   }
 
   Future<void> completeLogin() async {

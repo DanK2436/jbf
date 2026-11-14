@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/admin_models.dart';
 import '../services/supabase_service.dart';
@@ -11,130 +13,158 @@ class DevisScreen extends StatefulWidget {
   State<DevisScreen> createState() => _DevisScreenState();
 }
 
-class _DevisScreenState extends State<DevisScreen> {
+class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _supabase = SupabaseService();
   bool _isLoading = true;
-  List<DevisItem> _devis = [];
+  List<DevisItem> _devisClients = [];
+  List<Map<String, dynamic>> _devisMembres = [];
   String _selectedFilter = 'tous';
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadDevis();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadAllDevis();
   }
 
-  Future<void> _loadDevis() async {
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAllDevis() async {
     setState(() => _isLoading = true);
     final list = await _supabase.fetchDevis();
+
+    // Charger les devis soumis par les membres
+    List<Map<String, dynamic>> membresList = [];
+    try {
+      final res = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/devis_membres?select=*&order=created_at.desc'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final l = jsonDecode(res.body) as List;
+        membresList = l.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (_) {}
+
     if (!mounted) return;
     setState(() {
-      _devis = list;
+      _devisClients = list;
+      _devisMembres = membresList;
       _isLoading = false;
     });
   }
 
-  List<DevisItem> get _filteredDevis {
-    return _devis.where((d) {
-      final matchesFilter = _selectedFilter == 'tous' || d.statut == _selectedFilter;
-      final matchesSearch = _searchQuery.isEmpty ||
-          d.societe.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          d.nom.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          d.services.any((s) => s.toLowerCase().contains(_searchQuery.toLowerCase()));
-      return matchesFilter && matchesSearch;
-    }).toList();
-  }
-
-  void _showChiffrageDialog(DevisItem item) {
-    final montantCtrl = TextEditingController(text: item.montantUsd > 0 ? item.montantUsd.toStringAsFixed(0) : '');
-    final chefCtrl = TextEditingController(text: item.chefEquipe);
-    final effectifCtrl = TextEditingController(text: item.effectif > 0 ? item.effectif.toString() : '');
-    String statut = item.statut;
+  void _showValiderDevisMembreDialog(Map<String, dynamic> devis) {
+    final margeCtrl = TextEditingController(text: '20');
+    final totalHt = (devis['total_ht'] as num?)?.toDouble() ?? 0.0;
+    double margePct = 20.0;
+    double prixFinal = totalHt * (1 + margePct / 100);
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text('Traitement & Chiffrage BDD — ${item.societe.isNotEmpty ? item.societe : item.nom}'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 500,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Prestations: ${item.services.join(", ")}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Localité: ${item.localite} • Contact: ${item.telephone}'),
-                  const SizedBox(height: 12),
-                  const Text('Statut du dossier', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    value: statut,
-                    items: const [
-                      DropdownMenuItem(value: 'nouveau', child: Text('Nouveau / En attente')),
-                      DropdownMenuItem(value: 'en_cours', child: Text('En cours d\'étude')),
-                      DropdownMenuItem(value: 'traite', child: Text('Traité & Validé')),
-                      DropdownMenuItem(value: 'rejete', child: Text('Rejeté / Sans suite')),
+        builder: (context, setDlgState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.verified, color: AppConfig.brandPink),
+              const SizedBox(width: 8),
+              Text('Valider & Transmettre au Client — ${devis['numero_devis'] ?? 'Devis'}'),
+            ],
+          ),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Projet : ${devis['projet_prestation'] ?? 'Prestation'}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('Client destinataire : ${devis['nom_client'] ?? 'Client'}'),
+                Text('Collaborateur / Auteur : ${devis['nom_collaborateur'] ?? 'Membre JBF'}'),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Coût des Matériaux & MO (Membre) :'),
+                    Text('${totalHt.toStringAsFixed(2)} USD', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: margeCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Marge Commerciale JBF (%)', suffixText: '%'),
+                  onChanged: (val) {
+                    final p = double.tryParse(val) ?? 0.0;
+                    setDlgState(() {
+                      margePct = p;
+                      prixFinal = totalHt * (1 + margePct / 100);
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppConfig.brandPinkTint,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppConfig.brandPink.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Prix Final Facturé au Client :', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        '${prixFinal.toStringAsFixed(2)} USD',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppConfig.brandPink),
+                      ),
                     ],
-                    onChanged: (val) {
-                      if (val != null) setDialogState(() => statut = val);
-                    },
-                    decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                   ),
-                  const SizedBox(height: 16),
-                  const Text('Montant Estimé (USD)', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: montantCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      prefixText: '\$ ',
-                      hintText: 'ex: 45000',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Chef d\'Équipe Désigné', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: chefCtrl,
-                    decoration: const InputDecoration(hintText: 'ex: Ir. Jean-Pierre Mulamba'),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Effectif Prévisionnel (Agents)', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: effectifCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(hintText: 'ex: 12'),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Annuler'),
-            ),
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
               onPressed: () async {
-                final double m = double.tryParse(montantCtrl.text) ?? 0.0;
-                final int eff = int.tryParse(effectifCtrl.text) ?? 0;
                 Navigator.of(ctx).pop();
-
-                await _supabase.updateDevisStatut(
-                  item.id,
-                  statut,
-                  montant: m,
-                  chef: chefCtrl.text,
-                  effectif: eff,
-                );
-                _loadDevis();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Devis mis à jour dans la base de données Supabase')),
-                );
+                try {
+                  final devisId = devis['id'];
+                  await http.patch(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/devis_membres?id=eq.$devisId'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                      'Content-Type': 'application/json',
+                    },
+                    body: jsonEncode({
+                      'statut': 'transmis_client',
+                      'marge_appliquee_pct': margePct,
+                      'prix_final_client': prixFinal,
+                      'updated_at': DateTime.now().toIso8601String(),
+                    }),
+                  );
+                  _loadAllDevis();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Devis validé et expédié au client avec la marge appliquée !'),
+                      backgroundColor: AppConfig.successGreen,
+                    ),
+                  );
+                } catch (_) {}
               },
-              child: const Text('Enregistrer dans Supabase'),
+              child: const Text('Valider & Transmettre au Client'),
             ),
           ],
         ),
@@ -144,205 +174,188 @@ class _DevisScreenState extends State<DevisScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppConfig.brandPink));
-    }
-
-    final devis = _filteredDevis;
-
-    return RefreshIndicator(
-      onRefresh: _loadDevis,
-      color: AppConfig.brandPink,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Gestion des Demandes de Devis (Base de Données)',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    Text('Données réelles extraites de la table demandes_devis Supabase',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: AppConfig.brandPink),
-                  tooltip: 'Actualiser la base de données',
-                  onPressed: _loadDevis,
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
-            // Filters and Search Bar
-            Row(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF6F7FA),
+      body: Column(
+        children: [
+          // Header Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            color: Colors.white,
+            child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText: 'Rechercher par entreprise, client ou prestation...',
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      fillColor: Colors.white,
-                      filled: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onChanged: (val) => setState(() => _searchQuery = val),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Gestion & Chiffrage des Devis',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppConfig.blackText),
+                      ),
+                      Text(
+                        'Traitement des demandes clients & Réception des devis chiffrés par les membres de terrain',
+                        style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 14),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'tous', label: Text('Tous')),
-                    ButtonSegment(value: 'nouveau', label: Text('Nouveaux')),
-                    ButtonSegment(value: 'en_cours', label: Text('En cours')),
-                    ButtonSegment(value: 'traite', label: Text('Traités')),
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  indicatorColor: AppConfig.brandPink,
+                  labelColor: AppConfig.brandPink,
+                  unselectedLabelColor: Colors.grey.shade600,
+                  tabs: [
+                    Tab(icon: const Icon(Icons.inbox), text: 'Demandes Clients Directes (${_devisClients.length})'),
+                    Tab(icon: const Icon(Icons.engineering), text: 'Devis Reçus des Membres (${_devisMembres.length})'),
                   ],
-                  selected: {_selectedFilter},
-                  onSelectionChanged: (val) => setState(() => _selectedFilter = val.first),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+          ),
 
-            // Devis List
-            Expanded(
-              child: devis.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.inbox, size: 48, color: Colors.grey.shade400),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Aucune demande de devis trouvée dans la base de données.',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Actualiser'),
-                            onPressed: _loadDevis,
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: devis.length,
-                      itemBuilder: (context, index) {
-                        final item = devis[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 22,
-                                      backgroundColor: AppConfig.brandPinkTint,
-                                      child: const Icon(Icons.business_center, color: AppConfig.brandPink),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                item.societe.isNotEmpty ? item.societe : item.nom,
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              StatBadge(label: item.statut.toUpperCase(), status: item.statut),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text('Contact : ${item.nom} • ${item.telephone} • ${item.email}',
-                                              style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-                                          const SizedBox(height: 2),
-                                          Text('Localité : ${item.localite} • Reçu le ${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}',
-                                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        if (item.montantUsd > 0)
-                                          Text(
-                                            '\$${item.montantUsd.toStringAsFixed(0)} USD',
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                              color: AppConfig.successGreen,
-                                            ),
-                                          )
-                                        else
-                                          const Text('À chiffrer',
-                                              style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
-                                        const SizedBox(height: 6),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.edit_note, size: 16),
-                                          label: const Text('Chiffrer / Traiter'),
-                                          style: ElevatedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                          ),
-                                          onPressed: () => _showChiffrageDialog(item),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 20),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: item.services
-                                      .map((s) => Chip(
-                                            label: Text(s, style: const TextStyle(fontSize: 11)),
-                                            backgroundColor: Colors.grey.shade100,
-                                            padding: EdgeInsets.zero,
-                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          ))
-                                      .toList(),
-                                ),
-                                if (item.message.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      'Détail du besoin : ${item.message}',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppConfig.brandPink))
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // TAB 1 : Devis Clients Directs
+                      _buildClientsTab(),
+
+                      // TAB 2 : Devis Membres
+                      _buildMembresTab(),
+                    ],
+                  ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildClientsTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _devisClients.length,
+      itemBuilder: (context, i) {
+        final d = _devisClients[i];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppConfig.brandPinkTint,
+                  child: const Icon(Icons.request_quote, color: AppConfig.brandPink),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        d.societe.isNotEmpty ? d.societe : d.nom,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      Text('Prestations: ${d.services.join(", ")} • Ville: ${d.localite}'),
+                      Text('Contact: ${d.email} • Tél: ${d.telephone}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      d.montantUsd > 0 ? '\$${d.montantUsd.toStringAsFixed(0)} USD' : 'En attente chiffrage',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: d.montantUsd > 0 ? AppConfig.successGreen : Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    StatBadge(label: d.statut.toUpperCase(), status: d.statut),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMembresTab() {
+    if (_devisMembres.isEmpty) {
+      return const Center(child: Text('Aucun devis soumis par les membres de terrain pour le moment.'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(24),
+      itemCount: _devisMembres.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, i) {
+        final d = _devisMembres[i];
+        final numDevis = d['numero_devis'] ?? 'DEVIS-MBR';
+        final membre = d['nom_collaborateur'] ?? 'Membre JBF';
+        final client = d['nom_client'] ?? 'Client Partenaire';
+        final projet = d['projet_prestation'] ?? 'Prestation';
+        final totalHt = (d['total_ht'] as num?)?.toDouble() ?? 0.0;
+        final statut = d['statut'] ?? 'transmis_admin';
+
+        return Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue.shade50,
+                child: Icon(Icons.handyman, color: Colors.blue.shade700),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(numDevis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
+                          child: Text('Chiffré par : $membre', style: TextStyle(fontSize: 11, color: Colors.blue.shade800)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('Client cible : $client • Projet : $projet'),
+                    Text('Coût chiffré : ${totalHt.toStringAsFixed(2)} USD (Matériaux + Main d\'œuvre)'),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _showValiderDevisMembreDialog(d),
+                    icon: const Icon(Icons.check, size: 16),
+                    label: const Text('Appliquer Marge & Envoyer Client'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

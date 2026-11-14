@@ -12,4 +12,5 @@ Allow: /assets/seo-keywords.txt
 Allow: /assets/favicon.svg
 Allow: /assets/favicon.png
 
-Sitemap: https://jbf-service.cd/sitemap.xml
+Sitemap: https://jbf-service.com/sitemap.xml
+

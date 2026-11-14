@@ -22,8 +22,12 @@
   const heroSection = document.getElementById('hero');
   if (!canvas || !heroSection) return;
 
-  // Détection des préférences utilisateur (mouvement réduit)
+  // Détection des préférences utilisateur (mouvement réduit ou petit écran mobile)
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion || window.innerWidth < 768) {
+    console.log('[JBF 3D] Mode ultra-rapide mobile / motion réduit activé.');
+    return;
+  }
 
   // Variables de scène Three.js
   let renderer, scene, camera;

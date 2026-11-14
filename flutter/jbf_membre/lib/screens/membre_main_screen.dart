@@ -7,6 +7,8 @@ import 'timesheet_screen.dart';
 import 'leaves_screen.dart';
 import 'chat_screen.dart';
 import 'resources_screen.dart';
+import 'devis_membre_screen.dart';
+import 'progression_mission_screen.dart';
 import 'login_screen.dart';
 
 class MembreMainScreen extends StatefulWidget {
@@ -28,6 +30,8 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
     'Mes Congés & Absences RH',
     'Messagerie & Canaux d\'Équipe',
     'Bibliothèque Documentaire HSE',
+    'Devis & Base Locale Matériaux (Hors-Ligne)',
+    'Feuille de Route & Progression des Missions',
   ];
 
   Widget _buildBody() {
@@ -48,6 +52,10 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
         return ChatScreen(user: user);
       case 5:
         return const ResourcesScreen();
+      case 6:
+        return DevisMembreScreen(user: user);
+      case 7:
+        return ProgressionMissionScreen(user: user);
       default:
         return DashboardScreen(
           user: user,
@@ -85,7 +93,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
   @override
   Widget build(BuildContext context) {
     final user = widget.authService.currentUser;
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
       appBar: AppBar(
@@ -93,10 +101,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: Image.asset(
@@ -104,7 +109,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.engineering, color: AppConfig.brandPink, size: 20),
+                  errorBuilder: (_, __, ___) => const Icon(Icons.badge, color: AppConfig.brandPink, size: 20),
                 ),
               ),
             ),
@@ -112,28 +117,22 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _titles[_selectedIndex],
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${user?.fullName ?? "Collaborateur"} (${user?.matricule ?? ""}) • JBF Service RDC',
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
-                ),
+                Text(_titles[_selectedIndex], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                const Text('JBF Service Collaborateurs — RDC', style: TextStyle(fontSize: 11, color: Colors.white70)),
               ],
             ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: Colors.white24,
                   child: Text(
-                    user?.avatar ?? 'JM',
+                    user?.avatar ?? 'MB',
                     style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -143,17 +142,10 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user?.fullName ?? 'Jean-Pierre Mulamba',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      Text(
-                        user?.poste ?? 'Chef d\'Équipe',
-                        style: const TextStyle(fontSize: 10, color: Colors.white70),
-                      ),
+                      Text(user?.fullName ?? 'Collaborateur', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(user?.matricule ?? 'JBF-M', style: const TextStyle(fontSize: 10, color: Colors.white70)),
                     ],
                   ),
-                const SizedBox(width: 10),
                 IconButton(
                   icon: const Icon(Icons.logout, color: Colors.white),
                   tooltip: 'Déconnexion',
@@ -168,7 +160,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
         children: [
           if (isDesktop)
             Container(
-              width: 250,
+              width: 260,
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(right: BorderSide(color: Colors.grey.shade200)),
@@ -177,11 +169,13 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 children: [
                   _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Tableau de Bord'),
-                  _buildNavItem(1, Icons.assignment_outlined, Icons.assignment, 'Mes Missions'),
-                  _buildNavItem(2, Icons.access_time_outlined, Icons.access_time_filled, 'Feuilles de Temps'),
-                  _buildNavItem(3, Icons.beach_access_outlined, Icons.beach_access, 'Mes Congés & Absences'),
+                  _buildNavItem(1, Icons.engineering_outlined, Icons.engineering, 'Mes Missions'),
+                  _buildNavItem(6, Icons.request_quote_outlined, Icons.request_quote, 'Devis & BDD Matériaux'),
+                  _buildNavItem(7, Icons.task_alt_outlined, Icons.task_alt, 'Progression des Missions'),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildNavItem(4, Icons.chat_bubble_outline, Icons.chat_bubble, 'Messagerie Équipe'),
+                  _buildNavItem(2, Icons.access_time_outlined, Icons.access_time, 'Pointages & Horaires'),
+                  _buildNavItem(3, Icons.beach_access_outlined, Icons.beach_access, 'Mes Congés RH'),
+                  _buildNavItem(4, Icons.chat_outlined, Icons.chat, 'Messagerie Équipe'),
                   _buildNavItem(5, Icons.folder_outlined, Icons.folder, 'Bibliothèque HSE'),
                 ],
               ),
@@ -197,88 +191,86 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 children: [
                   UserAccountsDrawerHeader(
                     decoration: const BoxDecoration(color: AppConfig.brandPink),
-                    accountName: Text(user?.fullName ?? 'Jean-Pierre Mulamba'),
-                    accountEmail: Text('${user?.matricule} • ${user?.poste}'),
+                    accountName: Text(user?.fullName ?? 'Collaborateur'),
+                    accountEmail: Text('${user?.matricule} • ${user?.email}'),
                     currentAccountPicture: CircleAvatar(
                       backgroundColor: Colors.white,
                       child: Text(
-                        user?.avatar ?? 'JM',
+                        user?.avatar ?? 'MB',
                         style: const TextStyle(color: AppConfig.brandPink, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
                   _buildDrawerItem(0, Icons.dashboard, 'Tableau de Bord'),
-                  _buildDrawerItem(1, Icons.assignment, 'Mes Missions'),
-                  _buildDrawerItem(2, Icons.access_time_filled, 'Feuilles de Temps'),
-                  _buildDrawerItem(3, Icons.beach_access, 'Mes Congés'),
-                  _buildDrawerItem(4, Icons.chat_bubble, 'Messagerie Équipe'),
+                  _buildDrawerItem(1, Icons.engineering, 'Mes Missions'),
+                  _buildDrawerItem(6, Icons.request_quote, 'Devis & BDD Matériaux'),
+                  _buildDrawerItem(7, Icons.task_alt, 'Progression des Missions'),
+                  _buildDrawerItem(2, Icons.access_time, 'Pointages & Horaires'),
+                  _buildDrawerItem(3, Icons.beach_access, 'Mes Congés RH'),
+                  _buildDrawerItem(4, Icons.chat, 'Messagerie Équipe'),
                   _buildDrawerItem(5, Icons.folder, 'Bibliothèque HSE'),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: AppConfig.dangerRed),
-                    title: const Text('Déconnexion', style: TextStyle(color: AppConfig.dangerRed)),
-                    onTap: _handleLogout,
-                  ),
                 ],
               ),
-            ),
-      bottomNavigationBar: isDesktop
-          ? null
-          : BottomNavigationBar(
-              currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-              onTap: (idx) => setState(() => _selectedIndex = idx),
-              selectedItemColor: AppConfig.brandPink,
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-                BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Missions'),
-                BottomNavigationBarItem(icon: Icon(Icons.access_time_filled), label: 'Temps'),
-                BottomNavigationBarItem(icon: Icon(Icons.beach_access), label: 'Congés'),
-              ],
             ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
     final isSelected = _selectedIndex == index;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        tileColor: isSelected ? AppConfig.brandPinkTint : Colors.transparent,
-        leading: Icon(
-          isSelected ? activeIcon : icon,
-          color: isSelected ? AppConfig.brandPink : Colors.grey.shade700,
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppConfig.brandPinkDark : AppConfig.blackText,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: 14,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: isSelected ? AppConfig.brandPinkTint : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => setState(() => _selectedIndex = index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? filledIcon : outlineIcon,
+                  color: isSelected ? AppConfig.brandPink : Colors.grey.shade700,
+                  size: 20,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected ? AppConfig.brandPink : Colors.grey.shade800,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        onTap: () => setState(() => _selectedIndex = index),
       ),
     );
   }
 
   Widget _buildDrawerItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
+
     return ListTile(
       leading: Icon(icon, color: isSelected ? AppConfig.brandPink : Colors.grey.shade700),
       title: Text(
         label,
         style: TextStyle(
-          color: isSelected ? AppConfig.brandPink : AppConfig.blackText,
+          color: isSelected ? AppConfig.brandPink : Colors.black87,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 13,
         ),
       ),
+      selected: isSelected,
       onTap: () {
-        setState(() => _selectedIndex = index);
         Navigator.of(context).pop();
+        setState(() => _selectedIndex = index);
       },
     );
   }

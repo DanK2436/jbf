@@ -1686,6 +1686,16 @@ app.post('/api/mail/send', async (req, res) => {
 });
 
 // =============================================================
+// 10.4 NOUVELLES ROUTES ÉVOLUTIONS V2 (Admin, RH, Finance, Progression, .JBF, Candidatures)
+// =============================================================
+const createEvolutionsV2Router = require('./routes_evolutions_v2');
+app.use('/api', createEvolutionsV2Router({
+  supabaseAdmin,
+  supabasePublic,
+  sendTransactionalEmail
+}));
+
+// =============================================================
 // 10.5 FICHIERS STATIQUES & PLATEFORME WEB
 // =============================================================
 // Protection stricte contre l'exposition de fichiers sensibles et de secrets
