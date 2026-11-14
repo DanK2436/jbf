@@ -37,8 +37,8 @@ class _MembresScreenState extends State<MembresScreen> {
     final phoneCtrl = TextEditingController(text: '+243');
     final matCtrl = TextEditingController(text: 'JBF-M-2026-0${_membres.length + 10}');
     final posteCtrl = TextEditingController();
-    final secCtrl = TextEditingController(text: 'Sous-traitance Minière');
-    final provCtrl = TextEditingController(text: 'Lualaba (Kolwezi)');
+    final secCtrl = TextEditingController();
+    final provCtrl = TextEditingController();
 
     showDialog(
       context: context,

@@ -162,9 +162,9 @@ class _RecrutementAdminScreenState extends State<RecrutementAdminScreen> {
     final candId = cand['id'];
     final candNom = cand['nom_complet'];
     final candEmail = cand['email'];
-    final dateCtrl = TextEditingController(text: '25 Novembre 2026 à 10h00 (Heure de Lubumbashi)');
-    final lieuCtrl = TextEditingController(text: 'Direction Générale JBF Services, Siège Lubumbashi (ou Visioconférence)');
-    final consignesCtrl = TextEditingController(text: 'Veuillez vous munir de vos originaux de diplômes, pièces d\'identité et certificats d\'aptitude médicale.');
+    final dateCtrl = TextEditingController();
+    final lieuCtrl = TextEditingController();
+    final consignesCtrl = TextEditingController();
 
     showDialog(
       context: context,

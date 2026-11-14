@@ -61,23 +61,6 @@ class _DevisMembreScreenState extends State<DevisMembreScreen> {
     setState(() {
       _catalogueLocal = list;
       _isLoading = false;
-      if (_lignes.isEmpty && list.isNotEmpty) {
-        // Pré-remplir avec 2 lignes d'exemple
-        _lignes.add(DevisLigne(
-          designation: list[0].designation,
-          unite: list[0].unite,
-          quantite: 50,
-          prixUnitaire: list[0].prixUnitaire,
-        ));
-        if (list.length > 1) {
-          _lignes.add(DevisLigne(
-            designation: list[1].designation,
-            unite: list[1].unite,
-            quantite: 30,
-            prixUnitaire: list[1].prixUnitaire,
-          ));
-        }
-      }
     });
   }
 

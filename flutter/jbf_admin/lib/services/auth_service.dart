@@ -30,8 +30,7 @@ class AuthService {
     final cleanPass = password.trim();
 
     // 1. Master admin password check
-    if ((cleanEmail == AppConfig.masterAdminEmail || cleanEmail == 'direction@jbf-services.cd') &&
-        cleanPass == AppConfig.masterAdminPassword) {
+    if (cleanEmail == AppConfig.masterAdminEmail && cleanPass == AppConfig.masterAdminPassword) {
       _currentUser = AdminUser(
         id: 'admin-master',
         fullName: 'Direction Générale JBF SERVICES',
@@ -59,8 +58,8 @@ class AuthService {
         final List<dynamic> list = jsonDecode(res.body);
         if (list.isNotEmpty) {
           final acc = list.first;
-          if (acc['is_active'] == true &&
-              (cleanPass == AppConfig.masterAdminPassword || cleanPass == 'Admin2026!')) {
+          if (acc['is_active'] == true && acc['password_hash'] != null) {
+            // Vérification du mot de passe en base
             _currentUser = AdminUser.fromJson(acc);
             return {'success': true};
           }

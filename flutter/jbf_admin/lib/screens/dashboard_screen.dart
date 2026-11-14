@@ -23,9 +23,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<MissionItem> _missionsList = [];
   List<PointageLog> _pointagesList = [];
 
-  // Statistiques financières V2
-  double _caTotalEncaisse = 142500.0;
-  double _depensesMois = 51200.0;
+  // Statistiques financières V2 (Strictement réelles, aucune simulation)
+  double _caTotalEncaisse = 0.0;
+  double _depensesMois = 0.0;
   int _totalUtilisateurs = 0;
 
   @override
@@ -56,12 +56,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (_) {}
 
+    // Calculer la trésorerie réelle depuis les écritures comptables
+    double totalRecettes = 0.0;
+    double totalDepenses = 0.0;
+    try {
+      final resFinance = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/comptabilite_ecritures?select=type_operation,montant'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 4));
+      if (resFinance.statusCode == 200) {
+        final ecritures = jsonDecode(resFinance.body) as List;
+        for (var e in ecritures) {
+          final m = (e['montant'] as num?)?.toDouble() ?? 0.0;
+          if (e['type_operation'] == 'recette_client') {
+            totalRecettes += m;
+          } else {
+            totalDepenses += m;
+          }
+        }
+      }
+    } catch (_) {}
+
     if (!mounted) return;
     setState(() {
       _devisList = devis;
       _missionsList = missions;
       _pointagesList = pointages;
       _otpConfiguredEmail = otpEmail;
+      _caTotalEncaisse = totalRecettes;
+      _depensesMois = totalDepenses;
       _isLoading = false;
     });
   }
@@ -242,34 +268,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Répartition de l\'Activité par Secteur',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                    child: Builder(builder: (context) {
+                      final totalItems = _missionsList.length + _devisList.length;
+                      if (totalItems == 0) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 36),
+                            child: Text(
+                              'Aucune commande ou mission enregistrée pour le moment.',
+                              style: TextStyle(color: Colors.grey, fontSize: 13),
                             ),
-                            Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        _buildSectorBar('Sous-traitance Minière & Extraction', 0.52, '52%', AppConfig.brandPink),
-                        const SizedBox(height: 14),
-                        _buildSectorBar('BTP, Génie Civil & Construction', 0.24, '24%', Colors.blue.shade700),
-                        const SizedBox(height: 14),
-                        _buildSectorBar('Catering Industriel & Base-Vie', 0.14, '14%', Colors.orange.shade700),
-                        const SizedBox(height: 14),
-                        _buildSectorBar('Maintenance Industrielle & Usinage', 0.10, '10%', Colors.teal.shade700),
-                      ],
-                    ),
+                          ),
+                        );
+                      }
+
+                      int minesCount = 0;
+                      int btpCount = 0;
+                      int cateringCount = 0;
+                      int maintenanceCount = 0;
+
+                      void categorize(String text) {
+                        final t = text.toLowerCase();
+                        if (t.contains('mine') || t.contains('forage') || t.contains('extraction')) {
+                          minesCount++;
+                        } else if (t.contains('btp') || t.contains('civil') || t.contains('terrassement') || t.contains('construction')) {
+                          btpCount++;
+                        } else if (t.contains('cater') || t.contains('repas') || t.contains('cuisine') || t.contains('haccp')) {
+                          cateringCount++;
+                        } else {
+                          maintenanceCount++;
+                        }
+                      }
+
+                      for (var m in _missionsList) {
+                        categorize('${m.titre} ${m.serviceNom}');
+                      }
+                      for (var d in _devisList) {
+                        categorize('${d.service} ${d.message}');
+                      }
+
+                      final pMines = (minesCount / totalItems);
+                      final pBtp = (btpCount / totalItems);
+                      final pCatering = (cateringCount / totalItems);
+                      final pMaint = (maintenanceCount / totalItems);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Répartition Réelle de l\'Activité par Secteur',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                              ),
+                              Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          _buildSectorBar('Sous-traitance Minière & Extraction', pMines, '${(pMines * 100).toStringAsFixed(0)}% ($minesCount)', AppConfig.brandPink),
+                          const SizedBox(height: 14),
+                          _buildSectorBar('BTP, Génie Civil & Construction', pBtp, '${(pBtp * 100).toStringAsFixed(0)}% ($btpCount)', Colors.blue.shade700),
+                          const SizedBox(height: 14),
+                          _buildSectorBar('Catering Industriel & Base-Vie', pCatering, '${(pCatering * 100).toStringAsFixed(0)}% ($cateringCount)', Colors.orange.shade700),
+                          const SizedBox(height: 14),
+                          _buildSectorBar('Maintenance Industrielle & Mécano-Soudure', pMaint, '${(pMaint * 100).toStringAsFixed(0)}% ($maintenanceCount)', Colors.teal.shade700),
+                        ],
+                      );
+                    }),
                   ),
                 ),
                 const SizedBox(width: 20),
 
-                // Colonne Droite : Provinces & Alertes
+                // Colonne Droite : Provinces Réelles
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -279,20 +350,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Activité par Province (RDC)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildProvinceTile('Haut-Katanga (Lubumbashi, Likasi)', '45%', AppConfig.brandPink),
-                        _buildProvinceTile('Lualaba (Kolwezi, Fungurume)', '38%', Colors.blue.shade700),
-                        _buildProvinceTile('Kinshasa & Kongo Central', '12%', Colors.teal.shade700),
-                        _buildProvinceTile('Nord-Kivu & Haut-Uele', '5%', Colors.orange.shade700),
-                      ],
-                    ),
+                    child: Builder(builder: (context) {
+                      final totalItems = _missionsList.length + _devisList.length;
+                      if (totalItems == 0) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 36),
+                            child: Text(
+                              'Aucune affectation provinciale enregistrée.',
+                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                            ),
+                          ),
+                        );
+                      }
+
+                      int katangaCount = 0;
+                      int lualabaCount = 0;
+                      int kinshasaCount = 0;
+                      int autresCount = 0;
+
+                      void checkProvince(String text) {
+                        final t = text.toLowerCase();
+                        if (t.contains('lualaba') || t.contains('kolwezi') || t.contains('fungurume')) {
+                          lualabaCount++;
+                        } else if (t.contains('katanga') || t.contains('lubumbashi') || t.contains('likasi') || t.contains('kasumbalesa')) {
+                          katangaCount++;
+                        } else if (t.contains('kinshasa') || t.contains('matadi') || t.contains('boma')) {
+                          kinshasaCount++;
+                        } else {
+                          autresCount++;
+                        }
+                      }
+
+                      for (var m in _missionsList) {
+                        checkProvince('${m.siteIntervention} ${m.description}');
+                      }
+                      for (var d in _devisList) {
+                        checkProvince('${d.localite} ${d.message}');
+                      }
+
+                      final pKat = (katangaCount / totalItems);
+                      final pLua = (lualabaCount / totalItems);
+                      final pKin = (kinshasaCount / totalItems);
+                      final pAut = (autresCount / totalItems);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Activité Réelle par Province (RDC)',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildProvinceTile('Haut-Katanga (Lubumbashi, Likasi)', '${(pKat * 100).toStringAsFixed(0)}% ($katangaCount)', AppConfig.brandPink),
+                          _buildProvinceTile('Lualaba (Kolwezi, Fungurume)', '${(pLua * 100).toStringAsFixed(0)}% ($lualabaCount)', Colors.blue.shade700),
+                          _buildProvinceTile('Kinshasa & Kongo Central', '${(pKin * 100).toStringAsFixed(0)}% ($kinshasaCount)', Colors.teal.shade700),
+                          _buildProvinceTile('Autres Provinces RDC', '${(pAut * 100).toStringAsFixed(0)}% ($autresCount)', Colors.orange.shade700),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ],

@@ -69,11 +69,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 11:
         return const OtpSettingsScreen();
       default:
-        return const DashboardScreen(onNavigate: _dummyNavigate);
+        return const DashboardScreen(onNavigate: _noOpNavigate);
     }
   }
 
-  static void _dummyNavigate(int _) {}
+  static void _noOpNavigate(int _) {}
 
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(

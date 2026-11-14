@@ -50,11 +50,11 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       }
     } catch (_) {}
 
-    // Fallback simulation / locale
+    // En l'absence de données ou en cas d'erreur réseau, initialisation à zéro réel (aucune simulation)
     if (mounted) {
       setState(() {
-        _totalRecettes = 125400.0;
-        _totalDepenses = 48200.0;
+        _totalRecettes = 0.0;
+        _totalDepenses = 0.0;
         _isLoading = false;
       });
     }
@@ -177,7 +177,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
     final clientNameCtrl = TextEditingController();
     final clientEmailCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
-    final motifCtrl = TextEditingController(text: 'Acompte sur prestation de sous-traitance industrielle');
+    final motifCtrl = TextEditingController();
 
     showDialog(
       context: context,

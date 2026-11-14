@@ -681,7 +681,7 @@
         expiresAt: Date.now() + 10 * 60 * 1000
       }));
 
-      // Envoi via service mail (Brevo / Resend / Relais / Simulation)
+      // Envoi transactionnel via Brevo / Relais SMTP officiel
       let mailResult = null;
       if (window.JBFMailService) {
         mailResult = await window.JBFMailService.sendClientLoginOtp(email, activeEmailOtp);

@@ -272,7 +272,7 @@ class SupabaseService {
               typeFichier: j['type_fichier'] ?? 'PDF',
               taille: j['taille'] ?? '2.0 MB',
               description: j['description'] ?? '',
-              downloadUrl: j['fichier_url'] ?? 'https://jbf-service.cd',
+              downloadUrl: j['fichier_url'] ?? 'https://jbf-service.com',
             )).toList();
       }
     } catch (e) {

@@ -138,27 +138,6 @@ class AuthService {
         }
       }
 
-      // 4. Compte officiel par défaut si configuré (mode secours)
-      if ((cleanId.toUpperCase() == AppConfig.defaultMatricule ||
-              cleanId.toLowerCase() == 'jp.mulamba@jbf-services.cd') &&
-          cleanPass == AppConfig.defaultPassword) {
-        _currentUser = MembreUser(
-          id: 'mbr-012',
-          fullName: 'Jean-Pierre Mulamba',
-          email: 'jp.mulamba@jbf-services.cd',
-          matricule: 'JBF-M-2026-012',
-          poste: 'Chef d\'Équipe Soudure & Tuyauterie',
-          sectionNom: 'Maintenance & Soudure',
-          province: 'Lualaba (Kolwezi)',
-          soldeConges: 14,
-          avatar: 'JM',
-          token: 'token-mbr-${DateTime.now().millisecondsSinceEpoch}',
-        );
-        _pendingEmail = _currentUser!.email;
-        await completeLogin();
-        return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
-      }
-
       return {
         'success': false,
         'error': 'Matricule/Email ou mot de passe incorrect. Vérifiez vos accès auprès du service RH.',

@@ -165,14 +165,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
     final fileContentCtrl = TextEditingController();
     String selectedExt = 'jbf';
 
-    final List<Map<String, String>> demoFiles = [
-      {'nom': 'Plan_Topographique_Site.dwg', 'format': 'dwg', 'taille': '12.4 Mo'},
-      {'nom': 'Cahier_des_Charges_MUMI.docx', 'format': 'docx', 'taille': '2.1 Mo'},
-      {'nom': 'Bordereau_Quantitatif_BTP.xlsx', 'format': 'xlsx', 'taille': '850 Ko'},
-      {'nom': 'Plan_Armature_Beton.dxf', 'format': 'dxf', 'taille': '4.2 Mo'},
-      {'nom': 'Modelisation_Structure_3D.stl', 'format': 'stl', 'taille': '18.1 Mo'},
-      {'nom': 'Rapport_Confidentiel_Direction.jbf', 'format': 'jbf', 'taille': '440 Ko (Chiffré AES-256)'},
-    ];
+    final List<Map<String, String>> missionFiles = [];
 
     showDialog(
       context: context,
@@ -196,35 +189,53 @@ class _MissionsScreenState extends State<MissionsScreen> {
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 14),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 220),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: demoFiles.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, i) {
-                      final f = demoFiles[i];
-                      final isJbf = f['format'] == 'jbf';
-                      return ListTile(
-                        dense: true,
-                        leading: Icon(
-                          isJbf ? Icons.security : Icons.insert_drive_file,
-                          color: isJbf ? AppConfig.brandPink : Colors.blue.shade700,
-                        ),
-                        title: Text(f['nom']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        subtitle: Text(f['taille']!, style: const TextStyle(fontSize: 11)),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.download, size: 18),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Ouverture sécurisée de ${f['nom']}')),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                if (missionFiles.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Aucun fichier attaché à cette mission pour l\'instant.\nUtilisez le formulaire ci-dessous pour générer ou joindre un document chiffré.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 220),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: missionFiles.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final f = missionFiles[i];
+                        final isJbf = f['format'] == 'jbf';
+                        return ListTile(
+                          dense: true,
+                          leading: Icon(
+                            isJbf ? Icons.security : Icons.insert_drive_file,
+                            color: isJbf ? AppConfig.brandPink : Colors.blue.shade700,
+                          ),
+                          title: Text(f['nom']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          subtitle: Text(f['taille']!, style: const TextStyle(fontSize: 11)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.download, size: 18),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Ouverture sécurisée de ${f['nom']}')),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
                 const Divider(height: 24),
                 const Text('Créer et chiffrer un document .JBF pour les membres :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 8),
@@ -296,11 +307,11 @@ class _MissionsScreenState extends State<MissionsScreen> {
   void _showAddMissionDialog() {
     final titreCtrl = TextEditingController();
     final clientCtrl = TextEditingController();
-    final siteCtrl = TextEditingController(text: 'Kolwezi / Haut-Katanga');
-    final serviceCtrl = TextEditingController(text: 'Sous-traitance Minière');
+    final siteCtrl = TextEditingController();
+    final serviceCtrl = TextEditingController();
     final respCtrl = TextEditingController();
-    final budgetCtrl = TextEditingController(text: '45000');
-    final effectifCtrl = TextEditingController(text: '10');
+    final budgetCtrl = TextEditingController();
+    final effectifCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
     showDialog(

@@ -12,10 +12,6 @@ class AppConfig {
   static const String supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
 
-  // Demo Credentials for field access
-  static const String defaultMatricule = 'JBF-M-2026-012';
-  static const String defaultPassword = 'Membre2026!';
-
   // Brand Palette
   static const Color brandPink = Color(0xFFE6007E);
   static const Color brandPinkDark = Color(0xFFC4006B);

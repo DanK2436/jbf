@@ -12,15 +12,10 @@ class AppConfig {
   static const String supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
 
-  // Demo Credentials for quick partner testing
-  static const String defaultEmail = 'partenaire@mining-katanga.cd';
-  static const String defaultPassword = 'Client2026!';
-  static const String defaultCompany = 'Mining & Engineering Corp RDC';
-
   // WhatsApp Support contacts
   static const String whatsappPrimary = '+243970349724';
   static const String whatsappSecondary = '+243822357053';
-  static const String supportEmail = 'contact@jbf-services.cd';
+  static const String supportEmail = 'contact@jbf-service.com';
   static const String headquarters = 'Lubumbashi, Haut-Katanga, RDC (Agrément ARSP)';
 
   // Brand Palette

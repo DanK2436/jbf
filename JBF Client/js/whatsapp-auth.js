@@ -89,19 +89,17 @@ class WhatsAppAuthService {
         return { success: false, message: 'Erreur de communication avec le serveur WhatsApp.' };
       }
     } else {
-      // Mode simulation élégant pour démo et tests immédiats
-      console.log(`%c[JBF WhatsApp Auth] Code OTP généré pour ${formattedPhone} : ${otpCode}`, 'color: #E6007E; font-weight: bold; font-size: 14px;');
+      // Passerelle WhatsApp non configurée sur le serveur
       return {
-        success: true,
+        success: false,
         phone: formattedPhone,
-        demoCode: otpCode,
-        message: `Code envoyé par WhatsApp ! (En mode test immédiat, votre code est : ${otpCode})`
+        message: 'Le module d\'envoi WhatsApp officiel nécessite la configuration de la passerelle API. Veuillez vous authentifier avec votre adresse e-mail ou mot de passe.'
       };
     }
   }
 
   // Vérifier le code OTP saisi
-  verifyOTP(enteredCode) {
+  async verifyOTP(enteredCode) {
     const raw = sessionStorage.getItem(this.sessionKey);
     if (!raw) {
       return { success: false, message: 'Aucune demande de code en cours. Veuillez recommencer.' };
@@ -122,21 +120,52 @@ class WhatsAppAuthService {
     if (enteredCode.trim() === data.otp.trim()) {
       sessionStorage.removeItem(this.sessionKey);
 
-      // Créer la session client connectée
+      // Récupérer le vrai profil client depuis Supabase
+      let clientProfile = null;
+      try {
+        const sbUrl = 'https://dvzwqxcaiagczyonrhsg.supabase.co/rest/v1/profiles?phone=eq.' + encodeURIComponent(data.phone) + '&select=*';
+        const res = await fetch(sbUrl, {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+          }
+        });
+        if (res.ok) {
+          const list = await res.json();
+          if (list && list.length > 0) {
+            clientProfile = list[0];
+          }
+        }
+      } catch (_) {}
+
+      if (!clientProfile) {
+        return {
+          success: false,
+          message: 'Aucun compte client n\'est associé à ce numéro de téléphone. Veuillez créer un compte ou contacter le service support.'
+        };
+      }
+
+      if (clientProfile.is_disabled === true || clientProfile.statut_compte === 'desactive') {
+        return {
+          success: false,
+          message: 'Votre compte client a été désactivé par l\'administration JBF.'
+        };
+      }
+
       const clientSession = {
-        id: 'cli-' + Date.now().toString().slice(-4),
-        companyName: 'Société Partenaire JBF',
-        contactName: 'Responsable Opérations',
-        phone: data.phone,
-        whatsapp: data.phone,
+        id: clientProfile.id,
+        companyName: clientProfile.company_name || clientProfile.full_name || 'Client JBF Service',
+        contactName: clientProfile.full_name || 'Partenaire',
+        name: clientProfile.full_name,
+        email: clientProfile.email,
+        phone: clientProfile.phone || data.phone,
+        whatsapp: clientProfile.phone || data.phone,
         authProvider: 'whatsapp',
-        city: 'Kinshasa / Katanga',
-        avatar: 'WA',
-        token: 'jbf-client-token-' + Math.random().toString(36).substring(2)
+        city: clientProfile.province || 'RDC',
+        role: 'client',
+        token: 'jbf-token-' + Date.now()
       };
 
-      clientSession.name = clientSession.contactName;
-      clientSession.role = 'client';
       const sessionJson = JSON.stringify(clientSession);
       localStorage.setItem('JBF_CLIENT_SESSION', sessionJson);
       localStorage.setItem('jbf_client_session', sessionJson);

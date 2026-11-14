@@ -17,27 +17,45 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
   String _targetAudience = 'tous'; // 'tous', 'clients', 'membres'
   bool _isSendingNotification = false;
 
-  // Chat
+  // Chat en direct (Données réelles uniquement)
   final TextEditingController _chatReplyCtrl = TextEditingController();
-  final List<Map<String, dynamic>> _chatMessages = [
-    {
-      'expediteur': 'Visiteur Web (Lubumbashi)',
-      'message': 'Bonjour, quel est le délai moyen pour une cotation de soudure industrielle haute pression ?',
-      'heure': '14:22',
-      'est_visiteur': true,
-    },
-    {
-      'expediteur': 'Chef de Projet JBF (Opérateur)',
-      'message': 'Bonjour ! Nos devis de chaudronnerie et soudure certifiée sont émis sous 24h ouvrées.',
-      'heure': '14:25',
-      'est_visiteur': false,
-    },
-  ];
+  final List<Map<String, dynamic>> _chatMessages = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadLiveChatMessages();
+  }
+
+  Future<void> _loadLiveChatMessages() async {
+    try {
+      final url = '${AppConfig.supabaseUrl}/rest/v1/messages_chat?order=created_at.asc&limit=50';
+      final res = await http.get(
+        Uri.parse(url),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        if (mounted) {
+          setState(() {
+            _chatMessages.clear();
+            for (var m in list) {
+              final isVisiteur = m['expediteur_role'] != 'admin';
+              _chatMessages.add({
+                'expediteur': m['expediteur_nom'] ?? (isVisiteur ? 'Visiteur Web' : 'Direction JBF'),
+                'message': m['message'] ?? '',
+                'heure': m['created_at'] != null ? m['created_at'].toString().substring(11, 16) : '',
+                'est_visiteur': isVisiteur,
+              });
+            }
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -300,9 +318,28 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
 
             // Message list
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _chatMessages.length,
+              child: _chatMessages.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chat_bubble_outline, size: 40, color: Colors.grey),
+                          SizedBox(height: 12),
+                          Text(
+                            'Aucun message en direct pour le moment.',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Les échanges avec les visiteurs du site web s\'afficheront ici en temps réel.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _chatMessages.length,
                 itemBuilder: (context, i) {
                   final msg = _chatMessages[i];
                   final isVisiteur = msg['est_visiteur'] == true;

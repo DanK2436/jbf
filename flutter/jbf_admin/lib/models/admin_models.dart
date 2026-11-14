@@ -305,7 +305,7 @@ class KpiStats {
   });
 }
 
-// Dummy unique key helper if needed
+// Unique key helper if needed
 class UniqueKey {
   @override
   String toString() => 'k_${DateTime.now().microsecondsSinceEpoch}';

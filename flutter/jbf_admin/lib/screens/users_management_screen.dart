@@ -236,7 +236,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
   void _showAddUserDialog() {
     final emailCtrl = TextEditingController();
     final nameCtrl = TextEditingController();
-    final passCtrl = TextEditingController(text: 'JbfPass2026!');
+    final passCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final companyCtrl = TextEditingController();
     final posteCtrl = TextEditingController();

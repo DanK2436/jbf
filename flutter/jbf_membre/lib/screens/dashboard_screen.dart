@@ -231,13 +231,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        _buildWeeklyHourBar('Semaine 1 (Chantier Kolwezi)', 44.5, '44.5 h', AppConfig.brandPink),
-                        const SizedBox(height: 14),
-                        _buildWeeklyHourBar('Semaine 2 (Maintenance Usine)', 48.0, '48.0 h (Heures Sup.)', Colors.blue.shade700),
-                        const SizedBox(height: 14),
-                        _buildWeeklyHourBar('Semaine 3 (Soudure Haute Pression)', 42.0, '42.0 h', Colors.teal.shade700),
-                        const SizedBox(height: 14),
-                        _buildWeeklyHourBar('Semaine en cours', 28.5, '28.5 h', Colors.orange.shade700),
+                        if (_pointages.isEmpty)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 30),
+                              child: Text(
+                                'Aucun pointage d\'heures enregistré pour le moment.\nUtilisez le module ci-contre pour valider votre prise de poste.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                              ),
+                            ),
+                          )
+                        else
+                          Builder(builder: (context) {
+                            // Calcul réel des heures par site d'intervention
+                            final Map<String, double> hoursPerSite = {};
+                            for (var p in _pointages) {
+                              final site = p.siteLieu.isNotEmpty ? p.siteLieu : 'Site Général';
+                              hoursPerSite[site] = (hoursPerSite[site] ?? 0.0) + p.heuresNormales + p.heuresSup;
+                            }
+
+                            final entries = hoursPerSite.entries.take(4).toList();
+                            final colors = [AppConfig.brandPink, Colors.blue.shade700, Colors.teal.shade700, Colors.orange.shade700];
+
+                            return Column(
+                              children: [
+                                for (int i = 0; i < entries.length; i++) ...[
+                                  if (i > 0) const SizedBox(height: 14),
+                                  _buildWeeklyHourBar(
+                                    entries[i].key,
+                                    entries[i].value,
+                                    '${entries[i].value.toStringAsFixed(1)} h',
+                                    colors[i % colors.length],
+                                  ),
+                                ],
+                              ],
+                            );
+                          }),
                       ],
                     ),
                   ),

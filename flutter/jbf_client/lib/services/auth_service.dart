@@ -105,23 +105,6 @@ class AuthService {
         }
       }
 
-      // 3. Fallback compte démonstration officiel si configuré
-      if (cleanEmail == AppConfig.defaultEmail && cleanPass == AppConfig.defaultPassword) {
-        _currentUser = ClientUser(
-          id: 'cli-demo-01',
-          fullName: 'Direction des Opérations Minières',
-          companyName: AppConfig.defaultCompany,
-          email: cleanEmail,
-          phone: '+243 970 349 724',
-          sector: 'Catering Minier & BTP',
-          site: 'Kolwezi / Tenke Fungurume',
-          role: 'client',
-          token: 'token-cli-${DateTime.now().millisecondsSinceEpoch}',
-        );
-        await completeLogin();
-        return {'success': true};
-      }
-
       return {
         'success': false,
         'error': 'Adresse email ou mot de passe incorrect. Veuillez vérifier vos identifiants.',
