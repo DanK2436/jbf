@@ -110,6 +110,12 @@ class ClientMission {
     required this.dateFin,
   });
 
+  int get progressionPct => avancement;
+  String get codeMission => reference;
+  String get siteIntervention => site;
+  String get chefEquipe => chef;
+  String get dernierRapport => '';
+
   factory ClientMission.fromJson(Map<String, dynamic> json) {
     final rawId = json['id']?.toString() ?? '';
     final shortRef = rawId.length > 5 ? rawId.substring(rawId.length - 5) : rawId;

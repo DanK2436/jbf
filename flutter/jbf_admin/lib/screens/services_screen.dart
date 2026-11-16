@@ -184,7 +184,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               if (titleCtrl.text.isEmpty || descShortCtrl.text.isEmpty) return;
               Navigator.of(ctx).pop();
 
-              final payload = {
+              final Map<String, dynamic> payload = {
                 'titre': titleCtrl.text.trim(),
                 'categorie': catCtrl.text.trim(),
                 'description_courte': descShortCtrl.text.trim(),
@@ -206,7 +206,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     body: jsonEncode(payload),
                   );
                 } else {
-                  payload['code_service'] = 'SRV-${Date.now().toString().slice(-4)}';
+                  payload['code_service'] = 'SRV-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
                   payload['est_actif'] = true;
                   await http.post(
                     Uri.parse('${AppConfig.supabaseUrl}/rest/v1/services_catalogue'),

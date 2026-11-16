@@ -239,7 +239,7 @@ class _ProjetsCommandesScreenState extends State<ProjetsCommandesScreen> with Si
         final site = m['site_intervention'] ?? m['site_lieu'] ?? 'RDC';
 
         return Container(
-          margin: const EdgeInsets.bottom: 16),
+          margin: const EdgeInsets.only(bottom: 16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -364,8 +364,10 @@ class _ProjetsCommandesScreenState extends State<ProjetsCommandesScreen> with Si
         SizedBox(
           width: 340,
           child: Container(
-            color: Colors.white,
-            border: Border(right: BorderSide(color: Colors.grey.shade200)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(right: BorderSide(color: Colors.grey.shade200)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

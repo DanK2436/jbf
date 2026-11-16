@@ -170,8 +170,10 @@ class _ProgressionMissionScreenState extends State<ProgressionMissionScreen> {
           SizedBox(
             width: 340,
             child: Container(
-              color: Colors.white,
-              border: Border(right: BorderSide(color: Colors.grey.shade200)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(right: BorderSide(color: Colors.grey.shade200)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -123,6 +123,54 @@ class AuthService {
     await prefs.setString(_sessionKey, jsonEncode(_currentUser!.toJson()));
   }
 
+  /// Inscription d'un nouveau compte client dans Supabase
+  Future<Map<String, dynamic>> register({
+    required String companyName,
+    required String contactName,
+    required String email,
+    required String phone,
+    required String password,
+    required String sector,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPass = password.trim();
+
+    if (cleanEmail.isEmpty || cleanPass.isEmpty || contactName.trim().isEmpty) {
+      return {'success': false, 'error': 'Veuillez remplir tous les champs obligatoires.'};
+    }
+
+    try {
+      final signupUrl = '${AppConfig.supabaseUrl}/auth/v1/signup';
+      final res = await http.post(
+        Uri.parse(signupUrl),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': cleanEmail,
+          'password': cleanPass,
+          'data': {
+            'full_name': contactName.trim(),
+            'company_name': companyName.trim(),
+            'phone': phone.trim(),
+            'sector': sector,
+            'role': 'client',
+          }
+        }),
+      ).timeout(const Duration(seconds: 8));
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        return await login(cleanEmail, cleanPass);
+      } else {
+        final err = jsonDecode(res.body);
+        return {'success': false, 'error': err['msg'] ?? err['error_description'] ?? 'Erreur lors de l\'inscription.'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Impossible de contacter le serveur : ${e.toString()}'};
+    }
+  }
+
   Future<void> logout() async {
     _currentUser = null;
     final prefs = await SharedPreferences.getInstance();
