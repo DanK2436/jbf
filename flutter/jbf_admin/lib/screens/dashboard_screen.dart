@@ -304,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         categorize('${m.titre} ${m.serviceNom}');
                       }
                       for (var d in _devisList) {
-                        categorize('${d.service} ${d.message}');
+                        categorize('${d.services.join(' ')} ${d.message}');
                       }
 
                       final pMines = (minesCount / totalItems);

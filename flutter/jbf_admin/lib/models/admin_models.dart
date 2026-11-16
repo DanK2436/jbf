@@ -83,6 +83,8 @@ class DevisItem {
     required this.createdAt,
   });
 
+  String get service => services.join(', ');
+
   factory DevisItem.fromJson(Map<String, dynamic> json) {
     List<String> serv = [];
     if (json['services'] is List) {

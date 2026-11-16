@@ -274,7 +274,7 @@ jobs:
   publish-jbf-apps:
     name: Publication GitHub Release
     needs: [build-android, build-ios, build-windows-admin-membre, build-macos-admin-membre]
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
