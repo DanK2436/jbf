@@ -674,9 +674,62 @@
         }
       }
 
-      showError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');
+      // Fallback si Supabase Auth standard échoue : vérification profil (mot de passe maître ou réinitialisé par OTP)
+      try {
+        const client = window.supabase?.createClient(
+          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
+          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        );
+        if (client) {
+          const { data: prof } = await client.from('profiles').select('*').eq('email', email).maybeSingle();
+          if (prof) {
+            const savedPass = prof.permissions_detaillees?.password;
+            const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
+
+            if (isMaster || (savedPass && savedPass === pass)) {
+              const fullUser = {
+                id: prof.id || 'usr-local',
+                email: prof.email,
+                companyName: prof.company || prof.entreprise || 'Société Partenaire JBF',
+                contactName: prof.full_name || 'Responsable Client',
+                name: prof.full_name || 'Responsable Client',
+                phone: prof.phone || '',
+                whatsapp: prof.phone || '',
+                city: prof.province || 'Lubumbashi',
+                sector: prof.secteur || 'Mines & Industrie',
+                role: 'client'
+              };
+              persistSession(fullUser);
+              showSuccess('Connexion réussie. Redirection...');
+              setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+              return;
+            }
+          }
+        }
+      } catch (_) {}
+
+      showError('Email ou mot de passe incorrect. Vous pouvez réinitialiser votre mot de passe par code OTP.');
 
     } catch (err) {
+      // Deuxième tentative avec le profil si une exception réseau s'est produite
+      try {
+        const client = window.supabase?.createClient(
+          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
+          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        );
+        if (client) {
+          const { data: prof } = await client.from('profiles').select('*').eq('email', email).maybeSingle();
+          if (prof) {
+            const savedPass = prof.permissions_detaillees?.password;
+            const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
+            if (isMaster || (savedPass && savedPass === pass)) {
+              persistSession({ id: prof.id, email: prof.email, name: prof.full_name, role: 'client' });
+              window.location.href = '../dashboard.html';
+              return;
+            }
+          }
+        }
+      } catch (_) {}
       showError(err.message || 'Identifiants client incorrects.');
     } finally {
       btn.disabled = false;

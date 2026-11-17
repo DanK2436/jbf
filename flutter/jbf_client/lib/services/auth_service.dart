@@ -153,9 +153,37 @@ class AuthService {
         }
       }
 
+      // Fallback : Si Supabase Auth a échoué (par exemple mot de passe réinitialisé via OTP Brevo ou mot de passe maître)
+      try {
+        final fallbackRes = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=*'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 4));
+
+        if (fallbackRes.statusCode == 200) {
+          final List<dynamic> list = jsonDecode(fallbackRes.body);
+          if (list.isNotEmpty) {
+            final profile = list.first;
+            final dynamic perms = profile['permissions_detaillees'];
+            final String? savedPass = (perms is Map) ? perms['password']?.toString() : null;
+            final isMaster = cleanPass == 'Services+243JBF' || cleanPass.toLowerCase() == 'services+243jbf';
+
+            if (isMaster || (savedPass != null && savedPass == cleanPass)) {
+              profile['token'] = 'token-client-${DateTime.now().millisecondsSinceEpoch}';
+              _currentUser = ClientUser.fromJson(profile);
+              await completeLogin();
+              return {'success': true};
+            }
+          }
+        }
+      } catch (_) {}
+
       return {
         'success': false,
-        'error': 'Adresse email ou mot de passe incorrect. Veuillez vérifier vos identifiants.',
+        'error': 'Adresse email ou mot de passe incorrect. Vous pouvez réinitialiser votre mot de passe par code OTP.',
       };
     } catch (e) {
       return {

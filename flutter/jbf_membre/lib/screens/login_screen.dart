@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'membre_main_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -186,7 +187,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                      );
+                    },
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    child: const Text(
+                      'Mot de passe oublié ? (OTP Brevo)',
+                      style: TextStyle(color: AppConfig.brandPink, fontSize: 12.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
 
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,

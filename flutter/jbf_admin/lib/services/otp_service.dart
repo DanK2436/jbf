@@ -21,7 +21,7 @@ class OtpService {
     ]);
   }
   static const String _prefOtpKey = 'jbf_admin_configured_otp_email';
-  static const String _senderEmail = 'bintijudith104@gmail.com';
+  static const String _senderEmail = 'dankande3@gmail.com';
   static const String _senderName = 'JBF SERVICES SARL';
 
   String? _currentOtp;

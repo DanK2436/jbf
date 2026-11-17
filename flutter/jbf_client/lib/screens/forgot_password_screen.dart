@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../services/otp_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,17 +13,26 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  int _step = 1; // 1: Email, 2: OTP + New Password, 3: Success
   bool _isLoading = false;
-  bool _emailSent = false;
   String? _errorMessage;
+  String? _successMessage;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _otpController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleReset() async {
+  Future<void> _handleSendOtp() async {
     final email = _emailController.text.trim().toLowerCase();
     if (email.isEmpty || !email.contains('@')) {
       setState(() => _errorMessage = 'Veuillez saisir une adresse email valide.');
@@ -35,33 +45,82 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      final res = await http.post(
-        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/recover'),
-        headers: {
-          'apikey': AppConfig.supabaseAnonKey,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 6));
+      final res = await OtpService().sendOtpEmail(email);
+      if (!mounted) return;
 
-      if (res.statusCode == 200 || res.statusCode == 204) {
-        setState(() {
-          _isLoading = false;
-          _emailSent = true;
-        });
-      } else {
-        // Envoi via API de notification / Brevo ou validation directe
-        setState(() {
-          _isLoading = false;
-          _emailSent = true;
-        });
-      }
-    } catch (_) {
       setState(() {
         _isLoading = false;
-        _emailSent = true;
+        _step = 2;
+        _successMessage = res['warning'] ?? 'Un code OTP à 6 chiffres a été envoyé par email via Brevo à $email.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Erreur lors de l\'envoi de l\'email : $e';
       });
     }
+  }
+
+  Future<void> _handleVerifyAndReset() async {
+    final code = _otpController.text.trim();
+    final newPass = _newPasswordController.text.trim();
+    final confirmPass = _confirmPasswordController.text.trim();
+
+    if (code.length != 6) {
+      setState(() => _errorMessage = 'Veuillez renseigner le code OTP à 6 chiffres.');
+      return;
+    }
+
+    if (newPass.length < 6) {
+      setState(() => _errorMessage = 'Le mot de passe doit comporter au moins 6 caractères.');
+      return;
+    }
+
+    if (newPass != confirmPass) {
+      setState(() => _errorMessage = 'Les deux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final isValid = OtpService().verifyOtp(code);
+    if (!isValid) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Code OTP incorrect ou expiré (validité 10 minutes).';
+      });
+      return;
+    }
+
+    // Mise à jour du mot de passe dans Supabase profiles
+    final email = _emailController.text.trim().toLowerCase();
+    try {
+      await http.patch(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$email'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'permissions_detaillees': {
+            'password': newPass,
+            'updated_via_otp': true,
+            'reset_at': DateTime.now().toIso8601String(),
+          },
+        }),
+      );
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _step = 3;
+    });
   }
 
   @override
@@ -69,7 +128,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Mot de Passe Oublié', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Récupération de Compte (OTP Brevo)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         backgroundColor: Colors.white,
         foregroundColor: AppConfig.blackText,
         elevation: 0,
@@ -78,7 +137,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 440),
+            constraints: const BoxConstraints(maxWidth: 460),
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -92,106 +151,205 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ],
             ),
-            child: _emailSent ? _buildSuccessView() : _buildFormView(),
+            child: _buildCurrentStep(),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFormView() {
+  Widget _buildCurrentStep() {
+    switch (_step) {
+      case 1:
+        return _buildStep1Email();
+      case 2:
+        return _buildStep2OtpAndNewPassword();
+      case 3:
+      default:
+        return _buildStep3Success();
+    }
+  }
+
+  Widget _buildStep1Email() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: AppConfig.brandPinkTint,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.lock_reset, color: AppConfig.brandPink, size: 32),
+          padding: const EdgeInsets.all(14),
+          decoration: const BoxDecoration(color: AppConfig.brandPinkTint, shape: BoxShape.circle),
+          child: const Icon(Icons.mark_email_read_outlined, size: 40, color: AppConfig.brandPink),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         const Text(
-          'Réinitialisation du Mot de Passe',
+          'Mot de Passe Oublié ?',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          'Indiquez votre adresse email professionnelle. Nous vous transmettrons un lien sécurisé pour définir un nouveau mot de passe.',
+          'Recevez un code de vérification OTP sécurisé par email pour définir un nouveau mot de passe.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
         ),
         const SizedBox(height: 24),
         if (_errorMessage != null) ...[
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEE2E2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(_errorMessage!, style: const TextStyle(color: AppConfig.dangerRed, fontSize: 13)),
+            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+            child: Text(_errorMessage!, style: const TextStyle(color: AppConfig.dangerRed, fontSize: 12.5)),
           ),
           const SizedBox(height: 16),
         ],
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: 'Email Professionnel Client',
-            prefixIcon: Icon(Icons.email_outlined),
-            hintText: 'partenaire@mining.cd',
+          decoration: InputDecoration(
+            labelText: 'Votre Adresse Email',
+            prefixIcon: const Icon(Icons.email_outlined),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _isLoading ? null : _handleReset,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppConfig.brandPink,
             padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
+          onPressed: _isLoading ? null : _handleSendOtp,
           child: _isLoading
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Envoyer le Lien de Réinitialisation', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Retour à la page de connexion'),
+              : const Text('Envoyer le Code OTP par Email', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
         ),
       ],
     );
   }
 
-  Widget _buildSuccessView() {
+  Widget _buildStep2OtpAndNewPassword() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.mark_email_read_outlined, color: AppConfig.successGreen, size: 56),
-        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: const BoxDecoration(color: AppConfig.brandPinkTint, shape: BoxShape.circle),
+          child: const Icon(Icons.security, size: 40, color: AppConfig.brandPink),
+        ),
+        const SizedBox(height: 16),
         const Text(
-          'Instructions Transmises !',
+          'Vérification & Nouveau Mot de Passe',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
-          'Si un compte client correspond à l\'adresse ${_emailController.text}, un lien de réinitialisation sécurisé vous a été transmis par email.',
+          'Saisissez le code à 6 chiffres reçu par email ainsi que votre nouveau mot de passe.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.5),
+          style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
         ),
-        const SizedBox(height: 26),
+        const SizedBox(height: 20),
+        if (_successMessage != null) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+            child: Text(_successMessage!, style: const TextStyle(color: AppConfig.successGreen, fontSize: 12)),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (_errorMessage != null) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+            child: Text(_errorMessage!, style: const TextStyle(color: AppConfig.dangerRed, fontSize: 12)),
+          ),
+          const SizedBox(height: 12),
+        ],
+        TextField(
+          controller: _otpController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 8),
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: '000000',
+            labelText: 'Code de Sécurité OTP (6 chiffres)',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _newPasswordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Nouveau Mot de Passe',
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _confirmPasswordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Confirmer le Mot de Passe',
+            prefixIcon: const Icon(Icons.lock_outline),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppConfig.brandPink,
             padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Retour à la Connexion'),
+          onPressed: _isLoading ? null : _handleVerifyAndReset,
+          child: _isLoading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Enregistrer le Nouveau Mot de Passe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: () => setState(() => _step = 1),
+          child: const Text('Renvoyer un nouveau code', style: TextStyle(color: Colors.grey)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep3Success() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Icon(Icons.check_circle, size: 60, color: AppConfig.successGreen),
+        const SizedBox(height: 16),
+        const Text(
+          'Mot de Passe Réinitialisé !',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Votre nouveau mot de passe est enregistré. Vous pouvez maintenant vous connecter à votre espace client.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppConfig.brandPink,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Se Connecter Maintenant', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

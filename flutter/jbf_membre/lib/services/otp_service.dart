@@ -20,7 +20,7 @@ class OtpService {
       70, 118, 103, 83, 88, 115, 77, 98, 74,
     ]);
   }
-  static const String _senderEmail = 'bintijudith104@gmail.com';
+  static const String _senderEmail = 'dankande3@gmail.com';
   static const String _senderName = 'JBF SERVICES SARL';
 
   String? _currentOtp;
