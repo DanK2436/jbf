@@ -7,7 +7,9 @@ import '../services/supabase_service.dart';
 import '../widgets/stat_badge.dart';
 
 class MissionsScreen extends StatefulWidget {
-  const MissionsScreen({super.key});
+  final MembreUser? user;
+
+  const MissionsScreen({super.key, this.user});
 
   @override
   State<MissionsScreen> createState() => _MissionsScreenState();
@@ -17,6 +19,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
   final _supabase = SupabaseService();
   bool _isLoading = true;
   List<MembreMission> _missions = [];
+  String _filterMode = 'toutes'; // 'mes_missions' ou 'toutes'
 
   @override
   void initState() {
@@ -26,12 +29,36 @@ class _MissionsScreenState extends State<MissionsScreen> {
 
   Future<void> _loadMissions() async {
     setState(() => _isLoading = true);
-    final list = await _supabase.fetchMissions();
+    final list = await _supabase.fetchMissions(
+      agentNom: widget.user?.fullName,
+      agentId: widget.user?.id,
+      agentMatricule: widget.user?.matricule,
+    );
     if (!mounted) return;
     setState(() {
       _missions = list;
       _isLoading = false;
     });
+  }
+
+  List<MembreMission> get _displayedMissions {
+    if (_filterMode == 'toutes' || widget.user == null) {
+      return _missions;
+    }
+    final myName = widget.user!.fullName.toLowerCase();
+    final myId = widget.user!.id.toLowerCase();
+    final myMat = widget.user!.matricule.toLowerCase();
+
+    return _missions.where((m) {
+      final chef = m.chefEquipe.toLowerCase();
+      final desc = m.description.toLowerCase();
+      final isAssigned = chef == myId ||
+          chef == myMat ||
+          chef.contains(myName) ||
+          desc.contains(myName) ||
+          desc.contains(myMat);
+      return isAssigned;
+    }).toList();
   }
 
   void _showDelegationDialog(MembreMission m) {
@@ -205,6 +232,8 @@ class _MissionsScreenState extends State<MissionsScreen> {
       return const Center(child: CircularProgressIndicator(color: AppConfig.brandPink));
     }
 
+    final missions = _displayedMissions;
+
     return RefreshIndicator(
       onRefresh: _loadMissions,
       color: AppConfig.brandPink,
@@ -221,41 +250,70 @@ class _MissionsScreenState extends State<MissionsScreen> {
                   children: [
                     const Text('Mes Ordres de Mission & Chantiers (BDD)',
                         style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text('Données réelles de la table missions Supabase',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                    Text(
+                      widget.user != null
+                          ? 'Agent connecté : ${widget.user!.fullName} (${widget.user!.matricule}) • ${_missions.length} mission(s) au total'
+                          : 'Données réelles de la table missions Supabase',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: AppConfig.brandPink),
-                  tooltip: 'Actualiser',
-                  onPressed: _loadMissions,
+                Row(
+                  children: [
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'toutes', label: Text('Toutes les Missions')),
+                        ButtonSegment(value: 'mes_missions', label: Text('Mes Affectations')),
+                      ],
+                      selected: {_filterMode},
+                      onSelectionChanged: (val) => setState(() => _filterMode = val.first),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: AppConfig.brandPink),
+                      tooltip: 'Actualiser',
+                      onPressed: _loadMissions,
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 18),
 
             Expanded(
-              child: _missions.isEmpty
+              child: missions.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade400),
                           const SizedBox(height: 12),
-                          const Text('Aucune mission trouvée dans la base de données.', style: TextStyle(color: Colors.grey)),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Actualiser'),
-                            onPressed: _loadMissions,
+                          Text(
+                            _filterMode == 'mes_missions'
+                                ? 'Aucune mission directement assignée à votre profil (${widget.user?.fullName}).'
+                                : 'Aucune mission trouvée dans la base de données.',
+                            style: const TextStyle(color: Colors.grey),
                           ),
+                          const SizedBox(height: 10),
+                          if (_filterMode == 'mes_missions')
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.list),
+                              label: const Text('Voir toutes les missions'),
+                              onPressed: () => setState(() => _filterMode = 'toutes'),
+                            )
+                          else
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Actualiser'),
+                              onPressed: _loadMissions,
+                            ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _missions.length,
+                      itemCount: missions.length,
                       itemBuilder: (context, index) {
-                        final m = _missions[index];
+                        final m = missions[index];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 14),
                           child: Padding(

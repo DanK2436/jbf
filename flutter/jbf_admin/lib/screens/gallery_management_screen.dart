@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
@@ -126,13 +127,50 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
     }
   }
 
+  Future<String?> _uploadFileToSupabaseStorage(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) return null;
+      final bytes = await file.readAsBytes();
+      final fileName = filePath.split(Platform.isWindows ? '\\' : '/').last;
+      final cleanName = '${DateTime.now().millisecondsSinceEpoch}_${fileName.replaceAll(' ', '_')}';
+
+      // 1. Essai d'upload dans le bucket Supabase Storage 'galerie'
+      try {
+        final uploadUrl = '${AppConfig.supabaseUrl}/storage/v1/object/galerie/$cleanName';
+        final res = await http.post(
+          Uri.parse(uploadUrl),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'image/jpeg',
+          },
+          body: bytes,
+        );
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          return '${AppConfig.supabaseUrl}/storage/v1/object/public/galerie/$cleanName';
+        }
+      } catch (_) {}
+
+      // 2. Repli autonome : Encodage Base64 Data URI
+      final ext = fileName.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+      final b64 = base64Encode(bytes);
+      return 'data:image/$ext;base64,$b64';
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _showAddOrEditDialog([GalleryItemModel? item]) {
     final isEditing = item != null;
     final titreCtrl = TextEditingController(text: item?.titre ?? '');
     final urlCtrl = TextEditingController(text: item?.mediaUrl ?? '');
+    final localPathCtrl = TextEditingController();
     final descCtrl = TextEditingController(text: item?.description ?? '');
     String selectedCat = item?.categorie ?? 'Mines & Extraction';
     String selectedType = item?.typeMedia ?? 'image';
+    String sourceMode = 'lien'; // 'lien' ou 'upload'
+    bool isUploading = false;
     bool isPublie = item?.estPublie ?? true;
 
     showDialog(
@@ -147,7 +185,7 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
             ],
           ),
           content: SizedBox(
-            width: 520,
+            width: 540,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -184,22 +222,110 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  const Text('URL / Chemin du Fichier *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: urlCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'https://jbf-service.com/assets/... ou URL CDN',
-                      prefixIcon: Icon(Icons.link),
-                    ),
+                  const SizedBox(height: 16),
+
+                  // Sélecteur de méthode : Lien Web vs Upload Fichier
+                  const Text('Mode d\'Importation du Média :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'lien', label: Text('Lien Direct (URL)'), icon: Icon(Icons.link, size: 16)),
+                      ButtonSegment(value: 'upload', label: Text('Upload Fichier (PC/Mobile)'), icon: Icon(Icons.upload_file, size: 16)),
+                    ],
+                    selected: {sourceMode},
+                    onSelectionChanged: (v) => setDlgState(() => sourceMode = v.first),
                   ),
                   const SizedBox(height: 14),
+
+                  if (sourceMode == 'lien') ...[
+                    const Text('URL du Média en Ligne *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: urlCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'https://jbf-service.com/assets/... ou URL CDN / Image',
+                        prefixIcon: Icon(Icons.link),
+                      ),
+                      onChanged: (_) => setDlgState(() {}),
+                    ),
+                  ] else ...[
+                    const Text('Sélectionner le fichier sur votre appareil *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: localPathCtrl,
+                            decoration: const InputDecoration(
+                              hintText: 'Chemin du fichier (ex: C:\\Photos\\chantier.jpg ou /sdcard/...)',
+                              prefixIcon: Icon(Icons.folder_open),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          onPressed: isUploading
+                              ? null
+                              : () async {
+                                  if (localPathCtrl.text.trim().isEmpty) return;
+                                  setDlgState(() => isUploading = true);
+                                  final uploadedUrl = await _uploadFileToSupabaseStorage(localPathCtrl.text.trim());
+                                  setDlgState(() {
+                                    isUploading = false;
+                                    if (uploadedUrl != null) {
+                                      urlCtrl.text = uploadedUrl;
+                                    }
+                                  });
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(uploadedUrl != null
+                                          ? 'Fichier chargé et préparé avec succès !'
+                                          : 'Fichier introuvable au chemin indiqué.'),
+                                      backgroundColor: uploadedUrl != null ? AppConfig.successGreen : AppConfig.dangerRed,
+                                    ),
+                                  );
+                                },
+                          icon: isUploading
+                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.cloud_upload, size: 16),
+                          label: const Text('Charger'),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                        ),
+                      ],
+                    ),
+                    if (urlCtrl.text.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, size: 16, color: AppConfig.successGreen),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Fichier prêt pour publication : ${urlCtrl.text.startsWith('data:') ? 'Image convertie en données HD' : urlCtrl.text}',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF166534)),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                  const SizedBox(height: 14),
+
                   const Text('Description Technique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 6),
                   TextField(
                     controller: descCtrl,
-                    maxLines: 3,
+                    maxLines: 2,
                     decoration: const InputDecoration(hintText: 'Contexte du chantier, localisation en RDC, effectifs mobilisés...'),
                   ),
                   const SizedBox(height: 14),
@@ -219,9 +345,13 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
               onPressed: () async {
-                if (titreCtrl.text.isEmpty || urlCtrl.text.isEmpty) {
+                final effectiveUrl = urlCtrl.text.trim().isNotEmpty
+                    ? urlCtrl.text.trim()
+                    : localPathCtrl.text.trim();
+
+                if (titreCtrl.text.isEmpty || effectiveUrl.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Veuillez renseigner le titre et l\'URL du média.')),
+                    const SnackBar(content: Text('Veuillez renseigner le titre et l\'image (lien ou upload).')),
                   );
                   return;
                 }
@@ -234,10 +364,10 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                   'categorie': selectedCat,
                   'type': selectedType == 'video' ? 'video' : 'photo',
                   'type_media': selectedType,
-                  'url': urlCtrl.text.trim(),
-                  'media_url': urlCtrl.text.trim(),
-                  'img_url': urlCtrl.text.trim(),
-                  'video_url': selectedType == 'video' ? urlCtrl.text.trim() : null,
+                  'url': effectiveUrl,
+                  'media_url': effectiveUrl,
+                  'img_url': effectiveUrl,
+                  'video_url': selectedType == 'video' ? effectiveUrl : null,
                   'description': descCtrl.text.trim(),
                   'publie': isPublie,
                   'est_publie': isPublie,

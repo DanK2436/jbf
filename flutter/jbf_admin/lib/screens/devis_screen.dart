@@ -5,6 +5,7 @@ import '../config/app_config.dart';
 import '../models/admin_models.dart';
 import '../services/supabase_service.dart';
 import '../widgets/stat_badge.dart';
+import 'client_chat_admin_screen.dart';
 
 class DevisScreen extends StatefulWidget {
   const DevisScreen({super.key});
@@ -265,12 +266,135 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
     );
   }
 
+  Future<void> _accepterDevisClient(DevisItem d) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: AppConfig.successGreen),
+            SizedBox(width: 8),
+            Text('Accepter cette Demande de Devis'),
+          ],
+        ),
+        content: Text(
+          'Accepter la demande de ${d.nom} (${d.societe}) ?\n\nCela va passer le statut à "Accepté" et ouvrir automatiquement une conversation avec le client pour lui transmettre les devis et partager les fichiers.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Accepter & Ouvrir la Conversation'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // 1. Mettre à jour le statut dans demandes_devis
+    try {
+      await http.patch(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis?id=eq.${d.id}'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'statut': 'accepte'}),
+      );
+    } catch (_) {}
+
+    // 2. Créer le message automatique d'ouverture de conversation
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'canal_type': 'client_${d.id}',
+          'expediteur_nom': 'Direction Générale JBF',
+          'expediteur_avatar': 'DG',
+          'section_nom': d.services.isNotEmpty ? d.services.first : 'Devis',
+          'message': 'Bonjour ${d.nom}, votre demande de devis (${d.services.join(", ")}) a été acceptée par la Direction Générale JBF Services SARL. Vous pouvez échanger directement vos fichiers et devis détaillés ici.',
+          'created_at': DateTime.now().toIso8601String(),
+        }),
+      );
+    } catch (_) {}
+
+    _loadAllDevis();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Devis accepté ! Ouverture de la conversation client...'),
+        backgroundColor: AppConfig.successGreen,
+      ),
+    );
+
+    // 3. Ouvrir directement la conversation dans ClientChatAdminScreen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ClientChatAdminScreen(
+          preselectedClientId: d.id,
+          preselectedClientName: d.nom,
+          preselectedClientEmail: d.email,
+          preselectedCompany: d.societe,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _refuserDevisClient(DevisItem d) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Refuser cette Demande de Devis'),
+        content: Text('Voulez-vous marquer comme refusée la demande de ${d.nom} (${d.societe}) ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Refuser le Devis'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await http.patch(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis?id=eq.${d.id}'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'statut': 'refuse'}),
+      );
+      _loadAllDevis();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Demande de devis refusée.'), backgroundColor: AppConfig.dangerRed),
+      );
+    } catch (_) {}
+  }
+
   Widget _buildClientsTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(24),
       itemCount: _devisClients.length,
       itemBuilder: (context, i) {
         final d = _devisClients[i];
+        final isAccepte = d.statut == 'accepte' || d.statut == 'valide';
+        final isRefuse = d.statut == 'refuse';
+
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
@@ -293,6 +417,10 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
                       ),
                       Text('Prestations: ${d.services.join(", ")} • Ville: ${d.localite}'),
                       Text('Contact: ${d.email} • Tél: ${d.telephone}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      if (d.message.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text('Note : ${d.message}', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey.shade700)),
+                      ],
                     ],
                   ),
                 ),
@@ -309,6 +437,44 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
                     ),
                     const SizedBox(height: 6),
                     StatBadge(label: d.statut.toUpperCase(), status: d.statut),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        if (!isAccepte && !isRefuse) ...[
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                            icon: const Icon(Icons.check, size: 14),
+                            label: const Text('Accepter'),
+                            onPressed: () => _accepterDevisClient(d),
+                          ),
+                          const SizedBox(width: 6),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(foregroundColor: AppConfig.dangerRed, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                            icon: const Icon(Icons.close, size: 14),
+                            label: const Text('Refuser'),
+                            onPressed: () => _refuserDevisClient(d),
+                          ),
+                        ] else if (isAccepte) ...[
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                            icon: const Icon(Icons.chat, size: 14),
+                            label: const Text('Ouvrir Chat & Partager Devis'),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ClientChatAdminScreen(
+                                    preselectedClientId: d.id,
+                                    preselectedClientName: d.nom,
+                                    preselectedClientEmail: d.email,
+                                    preselectedCompany: d.societe,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ],
@@ -376,11 +542,50 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _showValiderDevisMembreDialog(d),
-                    icon: const Icon(Icons.check, size: 16),
-                    label: const Text('Appliquer Marge & Envoyer Client'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _showValiderDevisMembreDialog(d),
+                        icon: const Icon(Icons.check, size: 16),
+                        label: const Text('Valider & Appliquer Marge'),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: AppConfig.dangerRed),
+                        tooltip: 'Refuser / Supprimer ce devis membre',
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              title: const Text('Refuser ce devis membre ?'),
+                              content: Text('Voulez-vous supprimer le devis $numDevis soumis par $membre ?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Annuler')),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
+                                  onPressed: () => Navigator.of(c).pop(true),
+                                  child: const Text('Supprimer'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            final id = d['id']?.toString() ?? '';
+                            try {
+                              await http.delete(
+                                Uri.parse('${AppConfig.supabaseUrl}/rest/v1/devis_membres?id=eq.$id'),
+                                headers: {
+                                  'apikey': AppConfig.supabaseAnonKey,
+                                  'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                                },
+                              );
+                            } catch (_) {}
+                            _loadAllDevis();
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

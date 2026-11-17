@@ -24,7 +24,18 @@ class ClientChatItem {
 }
 
 class ClientChatAdminScreen extends StatefulWidget {
-  const ClientChatAdminScreen({super.key});
+  final String? preselectedClientId;
+  final String? preselectedClientName;
+  final String? preselectedClientEmail;
+  final String? preselectedCompany;
+
+  const ClientChatAdminScreen({
+    super.key,
+    this.preselectedClientId,
+    this.preselectedClientName,
+    this.preselectedClientEmail,
+    this.preselectedCompany,
+  });
 
   @override
   State<ClientChatAdminScreen> createState() => _ClientChatAdminScreenState();
@@ -72,11 +83,37 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
               unreadCount: 1,
             )).toList();
 
+        // Si un client spécifique a été demandé (ex: suite à l'acceptation d'un devis)
+        if (widget.preselectedClientId != null && widget.preselectedClientId!.isNotEmpty) {
+          final alreadyThere = mapped.any((c) => c.id == widget.preselectedClientId || c.clientEmail == widget.preselectedClientEmail);
+          if (!alreadyThere) {
+            mapped.insert(
+              0,
+              ClientChatItem(
+                id: widget.preselectedClientId!,
+                clientName: widget.preselectedClientName ?? 'Client Partenaire',
+                clientEmail: widget.preselectedClientEmail ?? '',
+                company: widget.preselectedCompany ?? 'Demandeur de Devis',
+                lastMessage: 'Devis accepté — Début des échanges',
+                lastDate: DateTime.now(),
+                unreadCount: 0,
+              ),
+            );
+          }
+        }
+
         if (mounted) {
           setState(() {
             _clients = mapped;
             if (_clients.isNotEmpty) {
-              _selectedClient = _clients.first;
+              if (widget.preselectedClientId != null) {
+                _selectedClient = _clients.firstWhere(
+                  (c) => c.id == widget.preselectedClientId || c.clientEmail == widget.preselectedClientEmail,
+                  orElse: () => _clients.first,
+                );
+              } else {
+                _selectedClient = _clients.first;
+              }
               _loadClientMessages(_selectedClient!);
             }
             _isLoading = false;
@@ -88,38 +125,22 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
 
     if (mounted) {
       setState(() {
-        if (_clients.isEmpty) {
+        if (widget.preselectedClientId != null && widget.preselectedClientId!.isNotEmpty) {
           _clients = [
             ClientChatItem(
-              id: 'c-1',
-              clientName: 'Directeur Approvisionnements',
-              clientEmail: 'procurement@tenke.cd',
-              company: 'Tenke Fungurume Mining S.A.',
-              lastMessage: 'Ajustement effectif équipe soudure site Fungurume',
-              lastDate: DateTime.now().subtract(const Duration(minutes: 15)),
-              unreadCount: 2,
-            ),
-            ClientChatItem(
-              id: 'c-2',
-              clientName: 'Responsable Base-Vie',
-              clientEmail: 'catering@kamoa.cd',
-              company: 'Kamoa Copper SA',
-              lastMessage: 'Validation du planning des repas HACCP semaine prochaine',
-              lastDate: DateTime.now().subtract(const Duration(hours: 2)),
-              unreadCount: 0,
-            ),
-            ClientChatItem(
-              id: 'c-3',
-              clientName: 'Chef de Chantier Génie Civil',
-              clientEmail: 'contact@btp-lualaba.cd',
-              company: 'Enterprise Mining Kolwezi',
-              lastMessage: 'Besoin de 2 camions bennes 8x4 supplémentaires',
-              lastDate: DateTime.now().subtract(const Duration(days: 1)),
+              id: widget.preselectedClientId!,
+              clientName: widget.preselectedClientName ?? 'Client Partenaire',
+              clientEmail: widget.preselectedClientEmail ?? '',
+              company: widget.preselectedCompany ?? 'Demandeur de Devis',
+              lastMessage: 'Devis accepté — Début des échanges',
+              lastDate: DateTime.now(),
               unreadCount: 0,
             ),
           ];
           _selectedClient = _clients.first;
           _loadClientMessages(_selectedClient!);
+        } else {
+          _clients = [];
         }
         _isLoading = false;
       });

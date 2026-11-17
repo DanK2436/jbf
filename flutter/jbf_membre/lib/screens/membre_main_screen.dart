@@ -42,7 +42,7 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
           onNavigate: (idx) => setState(() => _selectedIndex = idx),
         );
       case 1:
-        return const MissionsScreen();
+        return MissionsScreen(user: user);
       case 2:
         return LeavesScreen(user: user);
       case 3:

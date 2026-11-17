@@ -109,41 +109,10 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
       }
     } catch (_) {}
 
-    // Contacts par défaut
     if (mounted) {
       setState(() {
-        _contacts = [
-          MemberContactItem(
-            id: 'c-1',
-            name: 'Ing. Michel Mukendi',
-            email: 'm.mukendi@jbf.cd',
-            role: 'Responsable Domaine',
-            domain: 'Mines & Carrières',
-          ),
-          MemberContactItem(
-            id: 'c-2',
-            name: 'Sarah Ilunga',
-            email: 's.ilunga@jbf.cd',
-            role: 'Chef d\'équipe',
-            domain: 'Génie Civil & BTP',
-          ),
-          MemberContactItem(
-            id: 'c-3',
-            name: 'Patrick Mwamba',
-            email: 'p.mwamba@jbf.cd',
-            role: 'Superviseur',
-            domain: 'Maintenance Industrielle',
-          ),
-          MemberContactItem(
-            id: 'c-4',
-            name: 'Junior Kalala',
-            email: 'j.kalala@jbf.cd',
-            role: 'Membre simple',
-            domain: 'Logistique & Transport',
-          ),
-        ];
-        _selectedContact = _contacts.first;
-        _loadMemberMessages(_selectedContact!);
+        _contacts = [];
+        _selectedContact = null;
         _isLoadingContacts = false;
       });
     }

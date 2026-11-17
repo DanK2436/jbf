@@ -62,6 +62,15 @@ class MateriauxLocalService {
     await saveMateriaux(list);
   }
 
+  Future<void> updateMateriau(MateriauItem item) async {
+    final list = await getMateriaux();
+    final idx = list.indexWhere((x) => x.id == item.id);
+    if (idx != -1) {
+      list[idx] = item;
+      await saveMateriaux(list);
+    }
+  }
+
   Future<void> deleteMateriau(String id) async {
     final list = await getMateriaux();
     list.removeWhere((item) => item.id == id);

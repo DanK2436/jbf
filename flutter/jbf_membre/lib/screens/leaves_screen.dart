@@ -173,6 +173,183 @@ class _LeavesScreenState extends State<LeavesScreen> {
     );
   }
 
+  void _showEditLeaveDialog(LeaveRequest l) {
+    String type = l.typeConge;
+    DateTime debut = l.dateDebut;
+    DateTime fin = l.dateFin;
+    final motifCtrl = TextEditingController(text: l.motif);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final diff = fin.difference(debut).inDays + 1;
+
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.edit_note, color: AppConfig.brandPink),
+                SizedBox(width: 8),
+                Text('Modifier la Demande de Congé'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: SizedBox(
+                width: 480,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Agent : ${widget.user.fullName} (${widget.user.matricule})',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 14),
+                    const Text('Nature de l\'Absence', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: ['Annuel', 'Maladie', 'Famille', 'Maternite'].contains(type) ? type : 'Annuel',
+                      items: const [
+                        DropdownMenuItem(value: 'Annuel', child: Text('Congé Annuel Payé')),
+                        DropdownMenuItem(value: 'Maladie', child: Text('Arrêt Maladie / Hospitalisation')),
+                        DropdownMenuItem(value: 'Famille', child: Text('Événement Familial / Mariage / Deuil')),
+                        DropdownMenuItem(value: 'Maternite', child: Text('Congé Maternité / Paternité')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setDialogState(() => type = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Date de début', style: TextStyle(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.calendar_today, size: 16),
+                                label: Text('${debut.day}/${debut.month}/${debut.year}'),
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: debut,
+                                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                                  );
+                                  if (picked != null) setDialogState(() => debut = picked);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Date de fin', style: TextStyle(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.calendar_today, size: 16),
+                                label: Text('${fin.day}/${fin.month}/${fin.year}'),
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: fin,
+                                    firstDate: debut,
+                                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                                  );
+                                  if (picked != null) setDialogState(() => fin = picked);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppConfig.brandPinkTint,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text('Durée recalculée : $diff jours ouvrés',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppConfig.brandPinkDark)),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Motif & Justification', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: motifCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(hintText: 'Précisez la raison de votre demande...'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  final ok = await _supabase.updateLeaveRequest(
+                    id: l.id,
+                    typeConge: type,
+                    debut: debut,
+                    fin: fin,
+                    jours: diff > 0 ? diff : 1,
+                    motif: motifCtrl.text.trim(),
+                  );
+                  _loadLeaves();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(ok ? 'Demande de congé mise à jour avec succès.' : 'Erreur lors de la mise à jour.'),
+                      backgroundColor: ok ? AppConfig.successGreen : AppConfig.dangerRed,
+                    ),
+                  );
+                },
+                child: const Text('Enregistrer les modifications'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _deleteLeave(LeaveRequest l) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer cette demande de congé ?'),
+        content: Text('Êtes-vous certain de vouloir annuler votre demande de congé du ${l.dateDebut.day}/${l.dateDebut.month}/${l.dateDebut.year} ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Non, garder')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Oui, supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final ok = await _supabase.deleteLeaveRequest(l.id);
+      _loadLeaves();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok ? 'Demande de congé supprimée avec succès.' : 'Erreur lors de la suppression.'),
+          backgroundColor: ok ? AppConfig.successGreen : AppConfig.dangerRed,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -323,6 +500,17 @@ class _LeavesScreenState extends State<LeavesScreen> {
                                     ),
                                   ),
                                   StatBadge(label: l.statut.toUpperCase(), status: l.statut),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
+                                    tooltip: 'Modifier',
+                                    onPressed: () => _showEditLeaveDialog(l),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: AppConfig.dangerRed, size: 20),
+                                    tooltip: 'Supprimer',
+                                    onPressed: () => _deleteLeave(l),
+                                  ),
                                 ],
                               ),
                             );

@@ -19,7 +19,7 @@ class SupabaseService {
   // -------------------------------------------------------------
   // MISSIONS DU MEMBRE
   // -------------------------------------------------------------
-  Future<List<MembreMission>> fetchMissions({String? agentNom}) async {
+  Future<List<MembreMission>> fetchMissions({String? agentNom, String? agentId, String? agentMatricule}) async {
     try {
       final res = await http.get(
         Uri.parse('$_baseUrl/missions?select=*&order=created_at.desc'),
@@ -27,20 +27,24 @@ class SupabaseService {
       );
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        return list.map((j) => MembreMission(
-              id: j['id']?.toString() ?? '',
-              titre: j['titre'] ?? 'Mission Terrain',
-              client: j['client'] ?? 'Client Partenaire',
-              siteIntervention: j['site_intervention'] ?? 'RDC',
-              serviceNom: j['service_nom'] ?? 'Sous-traitance',
-              dateDebut: DateTime.tryParse(j['date_debut'] ?? '') ?? DateTime.now(),
-              dateFin: DateTime.tryParse(j['date_fin'] ?? ''),
-              description: j['description'] ?? '',
-              statut: j['statut'] ?? 'en_cours',
-              chefEquipe: j['assigned_to'] ?? '',
-              effectif: int.tryParse(j['effectif']?.toString() ?? '1') ?? 1,
-              rapport: j['rapport'] ?? '',
-            )).toList();
+        return list.map((j) {
+          final chef = (j['assigned_to'] ?? j['responsable_jbf'] ?? '').toString();
+          return MembreMission(
+            id: j['id']?.toString() ?? '',
+            titre: j['titre'] ?? 'Mission Terrain',
+            client: j['client'] ?? j['client_nom'] ?? 'Client Partenaire',
+            siteIntervention: j['site_intervention'] ?? j['site_lieu'] ?? 'RDC',
+            serviceNom: j['service_nom'] ?? j['service'] ?? j['prestation'] ?? 'Sous-traitance',
+            dateDebut: DateTime.tryParse(j['date_debut'] ?? '') ?? DateTime.now(),
+            dateFin: DateTime.tryParse(j['date_fin'] ?? ''),
+            description: j['description'] ?? j['observations'] ?? '',
+            statut: j['statut'] ?? 'en_cours',
+            chefEquipe: chef,
+            effectif: int.tryParse(j['effectif']?.toString() ?? '1') ?? 1,
+            progression: (j['progression_pct'] as num?)?.toDouble() ?? 0.0,
+            rapport: j['rapport'] ?? '',
+          );
+        }).toList();
       }
     } catch (e) {
       print('Erreur fetchMissions membre: $e');
@@ -203,13 +207,56 @@ class SupabaseService {
     }
   }
 
+  Future<bool> updateLeaveRequest({
+    required String id,
+    required String typeConge,
+    required DateTime debut,
+    required DateTime fin,
+    required int jours,
+    required String motif,
+  }) async {
+    try {
+      final res = await http.patch(
+        Uri.parse('$_baseUrl/demandes_conges?id=eq.$id'),
+        headers: _headers,
+        body: jsonEncode({
+          'type_conge': typeConge,
+          'date_debut': debut.toIso8601String().split('T')[0],
+          'date_fin': fin.toIso8601String().split('T')[0],
+          'nombre_jours': jours,
+          'motif': motif,
+        }),
+      );
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (e) {
+      print('Erreur updateLeaveRequest: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteLeaveRequest(String id) async {
+    try {
+      final res = await http.delete(
+        Uri.parse('$_baseUrl/demandes_conges?id=eq.$id'),
+        headers: _headers,
+      );
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (e) {
+      print('Erreur deleteLeaveRequest: $e');
+      return false;
+    }
+  }
+
   // -------------------------------------------------------------
   // MESSAGES CHAT
   // -------------------------------------------------------------
   Future<List<ChatMessage>> fetchChatMessages(String canal, {String? myName}) async {
     try {
+      final url = canal.startsWith('in.')
+          ? '$_baseUrl/messages_chat?canal_type=$canal&order=created_at.asc'
+          : '$_baseUrl/messages_chat?canal_type=eq.$canal&order=created_at.asc';
       final res = await http.get(
-        Uri.parse('$_baseUrl/messages_chat?canal_type=eq.$canal&order=created_at.asc'),
+        Uri.parse(url),
         headers: _headers,
       );
       if (res.statusCode == 200) {

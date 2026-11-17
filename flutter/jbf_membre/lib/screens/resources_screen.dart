@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/supabase_service.dart';
@@ -142,8 +143,17 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                                 ),
                                 OutlinedButton.icon(
                                   icon: const Icon(Icons.download, size: 16),
-                                  label: const Text('Consulter'),
-                                  onPressed: () {
+                                  label: const Text('Consulter / Télécharger'),
+                                  onPressed: () async {
+                                    if (doc.downloadUrl.isNotEmpty) {
+                                      final uri = Uri.tryParse(doc.downloadUrl);
+                                      if (uri != null) {
+                                        try {
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                        } catch (_) {}
+                                      }
+                                    }
+                                    if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Ouverture du document : ${doc.titre}')),
                                     );

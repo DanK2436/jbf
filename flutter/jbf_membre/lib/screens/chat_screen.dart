@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/supabase_service.dart';
@@ -18,21 +20,25 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   bool _isLoading = true;
 
   // Canaux
-  String _currentCanal = 'direction_generale';
+  late String _currentCanal;
   String _subCanalCollaboration = 'chef_avec_membres';
 
   List<ChatMessage> _messages = [];
   final _msgController = TextEditingController();
 
+  String get _directionCanalQuery =>
+      'in.(membre_${widget.user.id},membre_${widget.user.email},direction_generale)';
+
   @override
   void initState() {
     super.initState();
+    _currentCanal = _directionCanalQuery;
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         setState(() {
           if (_tabController.index == 0) {
-            _currentCanal = 'direction_generale';
+            _currentCanal = _directionCanalQuery;
           } else {
             _currentCanal = _subCanalCollaboration;
           }
@@ -66,14 +72,69 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
     _msgController.clear();
 
+    final canalToSend = _tabController.index == 0
+        ? 'membre_${widget.user.id}'
+        : _currentCanal;
+
     await _supabase.sendChatMessage(
       senderName: widget.user.fullName,
       avatar: widget.user.avatar,
       message: text,
-      canal: _currentCanal,
+      canal: canalToSend,
     );
 
     _loadMessages();
+  }
+
+  Future<void> _editMessage(ChatMessage msg) async {
+    final editCtrl = TextEditingController(text: msg.message);
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.edit, color: AppConfig.brandPink, size: 20),
+            SizedBox(width: 8),
+            Text('Modifier le message'),
+          ],
+        ),
+        content: TextField(
+          controller: editCtrl,
+          autofocus: true,
+          maxLines: 3,
+          decoration: const InputDecoration(labelText: 'Texte du message', border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+            onPressed: () => Navigator.of(ctx).pop(editCtrl.text.trim()),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (newText != null && newText.isNotEmpty && newText != msg.message) {
+      try {
+        final res = await http.patch(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.${msg.id}'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'message': newText}),
+        );
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          _loadMessages();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Message modifié avec succès.'), backgroundColor: AppConfig.successGreen),
+          );
+        }
+      } catch (_) {}
+    }
   }
 
   Future<void> _deleteMessage(ChatMessage msg) async {
@@ -286,12 +347,27 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
-                                              InkWell(
-                                                onTap: () => _deleteMessage(msg),
-                                                child: Icon(
-                                                  Icons.delete_outline,
-                                                  size: 14,
-                                                  color: isMe ? Colors.white54 : Colors.grey.shade500,
+                                              Tooltip(
+                                                message: 'Modifier ce message',
+                                                child: InkWell(
+                                                  onTap: () => _editMessage(msg),
+                                                  child: Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 14,
+                                                    color: isMe ? Colors.white70 : Colors.blue.shade600,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Tooltip(
+                                                message: 'Supprimer ce message',
+                                                child: InkWell(
+                                                  onTap: () => _deleteMessage(msg),
+                                                  child: Icon(
+                                                    Icons.delete_outline,
+                                                    size: 14,
+                                                    color: isMe ? Colors.white70 : AppConfig.dangerRed,
+                                                  ),
                                                 ),
                                               ),
                                             ],

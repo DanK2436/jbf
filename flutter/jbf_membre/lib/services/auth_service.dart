@@ -60,7 +60,41 @@ class AuthService {
       return {'success': false, 'error': 'Veuillez saisir votre matricule ou email et votre mot de passe.'};
     }
 
+    final lowerId = cleanId.toLowerCase();
+    // 0. Sécurité stricte : Les identifiants admin ne passent PAS dans membre
+    final isAdminEmail = lowerId == 'services@admin.jbf' ||
+        lowerId == 'direction@jbf-services.cd' ||
+        lowerId == 'dankande22@gmail.com' ||
+        lowerId == 'ingenieurkande@gmail.com';
+
+    if (isAdminEmail) {
+      return {
+        'success': false,
+        'error': 'Ce compte est réservé à la Direction et aux Administrateurs. Veuillez utiliser l\'application JBF Admin.'
+      };
+    }
+
     try {
+      // Vérifier si le compte appartient à la table des administrateurs
+      try {
+        final adminCheck = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts?email=eq.$lowerId&select=email'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 3));
+        if (adminCheck.statusCode == 200) {
+          final List aList = jsonDecode(adminCheck.body);
+          if (aList.isNotEmpty) {
+            return {
+              'success': false,
+              'error': 'Les identifiants administrateurs ne sont pas autorisés sur l\'espace Membre. Veuillez utiliser JBF Admin.'
+            };
+          }
+        }
+      } catch (_) {}
+
       String emailToAuth = cleanId;
       final isEmail = cleanId.contains('@');
 
@@ -144,6 +178,14 @@ class AuthService {
 
         if (profList.isNotEmpty) {
           final profile = profList.first;
+          final role = (profile['role'] ?? '').toString().toLowerCase();
+          if (role == 'admin' || role == 'super_admin' || role == 'direction' || role == 'sous_admin') {
+            return {
+              'success': false,
+              'error': 'Ce compte est un compte administrateur ($role). Accès interdit sur le portail Membre.',
+            };
+          }
+
           if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
             return {'success': false, 'error': 'Votre compte a été désactivé par la Direction JBF.'};
           }
@@ -186,7 +228,7 @@ class AuthService {
         }
       }
 
-      // Fallback : Si Supabase Auth a échoué (mot de passe réinitialisé via Brevo OTP ou mot de passe maître)
+      // Fallback : Si Supabase Auth a échoué (mot de passe réinitialisé ou mot de passe maître)
       try {
         final fallbackRes = await http.get(
           Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$emailToAuth&select=*'),
@@ -200,6 +242,14 @@ class AuthService {
           final List<dynamic> list = jsonDecode(fallbackRes.body);
           if (list.isNotEmpty) {
             final profile = list.first;
+            final role = (profile['role'] ?? '').toString().toLowerCase();
+            if (role == 'admin' || role == 'super_admin' || role == 'direction' || role == 'sous_admin') {
+              return {
+                'success': false,
+                'error': 'Ce compte est un compte administrateur. Accès interdit sur le portail Membre.',
+              };
+            }
+
             final dynamic perms = profile['permissions_detaillees'];
             final String? savedPass = (perms is Map) ? perms['password']?.toString() : null;
             final isMaster = cleanPass == 'Services+243JBF' || cleanPass.toLowerCase() == 'services+243jbf';
@@ -217,7 +267,7 @@ class AuthService {
 
       return {
         'success': false,
-        'error': 'Matricule/Email ou mot de passe incorrect. Vous pouvez réinitialiser votre mot de passe par code OTP.',
+        'error': 'Matricule/Email ou mot de passe incorrect.',
       };
     } catch (e) {
       return {
