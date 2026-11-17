@@ -20,7 +20,6 @@ class AuthService {
       if (jsonStr != null) {
         final map = jsonDecode(jsonStr);
         _currentUser = MembreUser.fromJson(map);
-        // Vérifier si le compte n'a pas été désactivé entre-temps
         _verifyAccountStatus();
         return true;
       }
@@ -112,6 +111,7 @@ class AuthService {
         final userId = authData['user']?['id'];
 
         // 3. Charger le profil réel
+        List<dynamic> profList = [];
         final profileUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*';
         final profRes = await http.get(
           Uri.parse(profileUrl),
@@ -122,19 +122,67 @@ class AuthService {
         );
 
         if (profRes.statusCode == 200) {
-          final List<dynamic> profList = jsonDecode(profRes.body);
-          if (profList.isNotEmpty) {
-            final profile = profList.first;
-            if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
-              return {'success': false, 'error': 'Votre compte a été désactivé par la Direction JBF.'};
-            }
+          profList = jsonDecode(profRes.body);
+        }
 
-            profile['token'] = accessToken;
-            _currentUser = MembreUser.fromJson(profile);
-            _pendingEmail = profile['email'];
-            await completeLogin();
-            return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+        // Si non trouvé par ID, chercher par email
+        if (profList.isEmpty) {
+          final profByEmailRes = await http.get(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$emailToAuth&select=*'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+          if (profByEmailRes.statusCode == 200) {
+            final List<dynamic> emailList = jsonDecode(profByEmailRes.body);
+            if (emailList.isNotEmpty) {
+              profList = emailList;
+            }
           }
+        }
+
+        if (profList.isNotEmpty) {
+          final profile = profList.first;
+          if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
+            return {'success': false, 'error': 'Votre compte a été désactivé par la Direction JBF.'};
+          }
+
+          profile['token'] = accessToken;
+          _currentUser = MembreUser.fromJson(profile);
+          _pendingEmail = profile['email'];
+          await completeLogin();
+          return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
+        } else {
+          // Création automatique de la fiche profil membre
+          final autoProfile = {
+            'id': userId,
+            'email': emailToAuth,
+            'full_name': emailToAuth.split('@')[0],
+            'matricule': !isEmail ? cleanId : 'JBF-M-2026',
+            'poste': 'Collaborateur Terrain',
+            'section_nom': 'Général',
+            'province': 'Haut-Katanga',
+            'role': 'membre',
+            'token': accessToken,
+          };
+
+          try {
+            await http.post(
+              Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+              headers: {
+                'apikey': AppConfig.supabaseAnonKey,
+                'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode(autoProfile),
+            );
+          } catch (_) {}
+
+          _currentUser = MembreUser.fromJson(autoProfile);
+          _pendingEmail = emailToAuth;
+          await completeLogin();
+          return {'success': true, 'user': _currentUser, 'email': _pendingEmail};
         }
       }
 

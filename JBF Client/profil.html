@@ -270,10 +270,11 @@
     const sb = getSb();
     if (sb && (session.id || clientEmail)) {
       try {
+        const isUuid = session.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.id);
         let query = sb.from('profiles').select('*');
-        if (session.id) {
+        if (isUuid) {
           query = query.eq('id', session.id);
-        } else {
+        } else if (clientEmail) {
           query = query.eq('email', clientEmail);
         }
         const { data, error } = await query.maybeSingle();
@@ -344,10 +345,11 @@
           updated_at: new Date().toISOString()
         };
 
-        if (session.id) {
-          await sb.from('profiles').upsert({ id: session.id, ...updatePayload });
+        const isUuid = session.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.id);
+        if (isUuid) {
+          await sb.from('profiles').update(updatePayload).eq('id', session.id);
         } else {
-          await sb.from('profiles').upsert(updatePayload, { onConflict: 'email' });
+          await sb.from('profiles').update(updatePayload).eq('email', session.email);
         }
       } catch (err) {
         console.warn('[Supabase Profile Update]', err);

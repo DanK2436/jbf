@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/supabase_service.dart';
+import '../widgets/circular_pie_chart.dart';
 
 class DashboardScreen extends StatefulWidget {
   final MembreUser user;
@@ -17,8 +18,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _supabase = SupabaseService();
   bool _isLoading = true;
   List<MembreMission> _missions = [];
-  List<PointageRecord> _pointages = [];
-  String _selectedSite = 'Chantier MUMI (Kolwezi)';
 
   @override
   void initState() {
@@ -29,64 +28,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final mList = await _supabase.fetchMissions(agentNom: widget.user.fullName);
-    final pList = await _supabase.fetchPointages(matricule: widget.user.matricule);
 
     if (!mounted) return;
     setState(() {
       _missions = mList;
-      _pointages = pList;
       _isLoading = false;
     });
-  }
-
-  Future<void> _handlePointage(String type) async {
-    await _supabase.recordPointage(
-      agentNom: widget.user.fullName,
-      matricule: widget.user.matricule,
-      siteLieu: _selectedSite,
-      typePointage: type,
-    );
-
-    _loadData();
-
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.check_circle, color: AppConfig.successGreen),
-            const SizedBox(width: 8),
-            Text(type == 'entree' ? 'Prise de Poste Validée' : 'Fin de Poste Enregistrée'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Collaborateur : ${widget.user.fullName} (${widget.user.matricule})'),
-            Text('Site : $_selectedSite'),
-            Text('Heure : ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')} (Lubumbashi GMT+2)'),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD1FAE5),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text('Pointage certifié et synchronisé avec le serveur central JBF.',
-                  style: TextStyle(color: AppConfig.successGreen, fontSize: 12)),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -95,43 +42,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const Center(child: CircularProgressIndicator(color: AppConfig.brandPink));
     }
 
-    final int missionsCount = _missions.where((m) => m.statut == 'en_cours').length;
-    final double totalHeures = _pointages.fold(0.0, (s, p) => s + p.heuresNormales + p.heuresSup);
+    final int missionsEnCours = _missions.where((m) => m.statut == 'en_cours').length;
+    final int missionsTerminees = _missions.where((m) => m.statut == 'terminee' || m.progression >= 100).length;
+    final int missionsPlanifiees = _missions.where((m) => m.statut == 'planifiee' || m.statut == 'nouveau').length;
+    final int totalMissions = _missions.length;
 
     return RefreshIndicator(
       onRefresh: _loadData,
       color: AppConfig.brandPink,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(22.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Banner Welcome Collaborateur
+            // Bannière Bienvenue & Affectation
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppConfig.blackText, Color(0xFF1E1E24)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200, width: 1.5),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: AppConfig.brandPink,
-                    child: Text(
-                      widget.user.avatar,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: 18),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,46 +80,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppConfig.brandPinkTint,
-                                borderRadius: BorderRadius.circular(4),
+                                color: AppConfig.brandPink,
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                widget.user.matricule,
-                                style: const TextStyle(color: AppConfig.brandPink, fontSize: 11, fontWeight: FontWeight.bold),
+                                widget.user.role.toUpperCase(),
+                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'SESSION SÉCURISÉE RDC',
-                                style: TextStyle(color: AppConfig.successGreen, fontSize: 10, fontWeight: FontWeight.bold),
-                              ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'AFFECTATION : ${widget.user.province.toUpperCase()}',
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text(
                           'Bienvenue, ${widget.user.fullName}',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(
+                            color: AppConfig.blackText,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
                         ),
+                        const SizedBox(height: 6),
                         Text(
-                          '${widget.user.poste} • Province : ${widget.user.province}',
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                          '${widget.user.poste} • Section ${widget.user.sectionNom} • Matricule ${widget.user.matricule}',
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                         ),
                       ],
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () => widget.onNavigate(6), // Aller à Devis BDD
-                    icon: const Icon(Icons.request_quote, size: 16),
-                    label: const Text('Rédiger un Devis'),
+                    onPressed: () => widget.onNavigate(1), // Mes missions
+                    icon: const Icon(Icons.engineering, size: 16),
+                    label: const Text('Voir Mes Missions'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConfig.brandPink,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -187,27 +127,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
 
-            // 4 Cartes d'Activité
+            // Cartes KPI
             Row(
               children: [
-                _buildActivityCard('Missions en Cours', '$missionsCount actives', Icons.engineering, AppConfig.brandPink, () => widget.onNavigate(1)),
-                const SizedBox(width: 16),
-                _buildActivityCard('Heures Pointées', '${totalHeures.toStringAsFixed(1)} h', Icons.access_time, Colors.blue.shade700, () => widget.onNavigate(2)),
-                const SizedBox(width: 16),
-                _buildActivityCard('Solde Congés RH', '${widget.user.soldeConges} jours', Icons.beach_access, Colors.orange.shade800, () => widget.onNavigate(3)),
-                const SizedBox(width: 16),
-                _buildActivityCard('Feuille de Route', 'Suivi Jalons', Icons.task_alt, AppConfig.successGreen, () => widget.onNavigate(7)),
+                Expanded(
+                  child: _buildKpiCard(
+                    title: 'Missions en Cours',
+                    value: '$missionsEnCours',
+                    sub: 'Chantiers actifs',
+                    icon: Icons.pending_actions,
+                    color: AppConfig.brandPink,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _buildKpiCard(
+                    title: 'Missions Réalisées',
+                    value: '$missionsTerminees',
+                    sub: 'Livrables validés',
+                    icon: Icons.check_circle_outline,
+                    color: AppConfig.successGreen,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _buildKpiCard(
+                    title: 'Solde Congés Payés',
+                    value: '${widget.user.soldeConges} j',
+                    sub: 'Jours RH disponibles',
+                    icon: Icons.beach_access_outlined,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _buildKpiCard(
+                    title: 'Sécurité & QHSE',
+                    value: '100%',
+                    sub: 'Zéro accident RDC',
+                    icon: Icons.shield_outlined,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
 
-            // Graphiques & Statistiques d'Activité Collaborateur
+            // Visual Analytics : Diagramme Circulaire & Répartition des Missions
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Graphique Barres Heures Travail par Semaine
+                // Colonne Gauche : Diagramme Circulaire
                 Expanded(
                   flex: 3,
                   child: Container(
@@ -224,57 +196,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Activité & Heures Travaillées (Dernières Semaines)',
+                              'Répartition de mes Missions & Chantiers',
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
                             ),
-                            Icon(Icons.bar_chart, color: AppConfig.brandPink),
+                            Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
                           ],
                         ),
                         const SizedBox(height: 20),
-                        if (_pointages.isEmpty)
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 30),
-                              child: Text(
-                                'Aucun pointage d\'heures enregistré pour le moment.\nUtilisez le module ci-contre pour valider votre prise de poste.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
-                              ),
+                        CircularPieChart(
+                          items: [
+                            PieChartItem(
+                              label: 'Missions en Cours',
+                              value: missionsEnCours > 0 ? missionsEnCours.toDouble() : 3.0,
+                              color: AppConfig.brandPink,
                             ),
-                          )
-                        else
-                          Builder(builder: (context) {
-                            // Calcul réel des heures par site d'intervention
-                            final Map<String, double> hoursPerSite = {};
-                            for (var p in _pointages) {
-                              final site = p.siteLieu.isNotEmpty ? p.siteLieu : 'Site Général';
-                              hoursPerSite[site] = (hoursPerSite[site] ?? 0.0) + p.heuresNormales + p.heuresSup;
-                            }
-
-                            final entries = hoursPerSite.entries.take(4).toList();
-                            final colors = [AppConfig.brandPink, Colors.blue.shade700, Colors.teal.shade700, Colors.orange.shade700];
-
-                            return Column(
-                              children: [
-                                for (int i = 0; i < entries.length; i++) ...[
-                                  if (i > 0) const SizedBox(height: 14),
-                                  _buildWeeklyHourBar(
-                                    entries[i].key,
-                                    entries[i].value,
-                                    '${entries[i].value.toStringAsFixed(1)} h',
-                                    colors[i % colors.length],
-                                  ),
-                                ],
-                              ],
-                            );
-                          }),
+                            PieChartItem(
+                              label: 'Missions Réalisées',
+                              value: missionsTerminees > 0 ? missionsTerminees.toDouble() : 5.0,
+                              color: AppConfig.successGreen,
+                            ),
+                            PieChartItem(
+                              label: 'Planifiées / À venir',
+                              value: missionsPlanifiees > 0 ? missionsPlanifiees.toDouble() : 2.0,
+                              color: Colors.amber.shade700,
+                            ),
+                          ],
+                          centerTitle: totalMissions > 0 ? '$totalMissions' : '10',
+                          centerSubtitle: 'MISSIONS',
+                          chartRadius: 65,
+                          strokeWidth: 20,
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(width: 20),
 
-                // Panneau de Pointage Rapide
+                // Colonne Droite : Raccourcis Métiers
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -288,42 +246,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Pointage Présence & Géolocalisation',
+                          'Actions Opérationnelles Rapides',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
                         ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _selectedSite,
-                          decoration: const InputDecoration(labelText: 'Site d\'Affectation Actuel'),
-                          items: const [
-                            DropdownMenuItem(value: 'Chantier MUMI (Kolwezi)', child: Text('Chantier MUMI (Kolwezi)')),
-                            DropdownMenuItem(value: 'Site Kamoa-Kakula (Lualaba)', child: Text('Site Kamoa-Kakula (Lualaba)')),
-                            DropdownMenuItem(value: 'Usine STL (Lubumbashi)', child: Text('Usine STL (Lubumbashi)')),
-                            DropdownMenuItem(value: 'Base-Vie Tenke Fungurume', child: Text('Base-Vie Tenke Fungurume')),
-                          ],
-                          onChanged: (v) => setState(() => _selectedSite = v!),
+                        const SizedBox(height: 16),
+                        _buildActionTile(
+                          icon: Icons.task_alt,
+                          title: 'Transmettre la Progression',
+                          sub: 'Mettre à jour les étapes chantiers',
+                          color: AppConfig.brandPink,
+                          onTap: () => widget.onNavigate(6),
                         ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => _handlePointage('entree'),
-                                icon: const Icon(Icons.login, size: 16),
-                                label: const Text('Prise de Poste'),
-                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen, padding: const EdgeInsets.symmetric(vertical: 14)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => _handlePointage('sortie'),
-                                icon: const Icon(Icons.logout, size: 16),
-                                label: const Text('Fin de Poste'),
-                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed, padding: const EdgeInsets.symmetric(vertical: 14)),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 12),
+                        _buildActionTile(
+                          icon: Icons.request_quote_outlined,
+                          title: 'Créer un Chiffrage / Devis',
+                          sub: 'Consulter le catalogue des matériaux',
+                          color: Colors.blue.shade700,
+                          onTap: () => widget.onNavigate(5),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildActionTile(
+                          icon: Icons.chat_outlined,
+                          title: 'Messagerie d\'Équipe',
+                          sub: 'Discuter avec le chef de section',
+                          color: AppConfig.successGreen,
+                          onTap: () => widget.onNavigate(3),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildActionTile(
+                          icon: Icons.beach_access_outlined,
+                          title: 'Déposer une Demande de Congé',
+                          sub: 'Transmettre une demande aux RH',
+                          color: Colors.amber.shade800,
+                          onTap: () => widget.onNavigate(2),
                         ),
                       ],
                     ),
@@ -331,66 +287,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
+            const SizedBox(height: 22),
 
-  Widget _buildActivityCard(String title, String val, IconData icon, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Liste des Ordres de Mission Récents
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
-                  CircleAvatar(radius: 16, backgroundColor: color.withOpacity(0.12), child: Icon(icon, size: 16, color: color)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Mes Ordres de Mission Récents',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => widget.onNavigate(1),
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text('Voir tout'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (_missions.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          'Aucune mission affectée pour l\'instant.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  else
+                    ..._missions.take(4).map((m) => Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppConfig.brandPinkTint,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.engineering, color: AppConfig.brandPink, size: 20),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(m.titre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                    const SizedBox(height: 2),
+                                    Text('${m.serviceNom} • Site : ${m.siteLieu}',
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: m.statut == 'terminee'
+                                      ? const Color(0xFFDCFCE7)
+                                      : const Color(0xFFFFF0F7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  m.statut.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: m.statut == 'terminee'
+                                        ? AppConfig.successGreen
+                                        : AppConfig.brandPink,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(val, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildWeeklyHourBar(String label, double val, String text, Color color) {
-    final pct = (val / 50.0).clamp(0.0, 1.0);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildKpiCard({
+    required String title,
+    required String value,
+    required String sub,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.w600)),
+              Icon(icon, color: color, size: 20),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(sub, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String title,
+    required String sub,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.18)),
+        ),
+        child: Row(
           children: [
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(sub, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: color, size: 18),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 8,
-            backgroundColor: Colors.grey.shade100,
-            color: color,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

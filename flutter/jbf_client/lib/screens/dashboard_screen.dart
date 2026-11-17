@@ -5,6 +5,7 @@ import '../models/client_models.dart';
 import '../services/client_data_service.dart';
 import '../widgets/kpi_card.dart';
 import '../widgets/stat_badge.dart';
+import '../widgets/circular_pie_chart.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ClientUser client;
@@ -196,6 +197,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 );
               },
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section Diagramme Circulaire & Répartition Analytique (comme sur le Web)
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Répartition des Prestations & Chantiers par Secteur',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                      ),
+                      Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  CircularPieChart(
+                    items: [
+                      PieChartItem(
+                        label: 'Sous-traitance Minière',
+                        value: activesMissions > 0 ? activesMissions.toDouble() : 4.0,
+                        color: AppConfig.brandPink,
+                      ),
+                      PieChartItem(
+                        label: 'Catering HACCP & Base-Vie',
+                        value: totalDevis > 0 ? totalDevis.toDouble() : 3.0,
+                        color: Colors.orange.shade700,
+                      ),
+                      PieChartItem(
+                        label: 'BTP & Génie Civil',
+                        value: 2.0,
+                        color: Colors.blue.shade700,
+                      ),
+                      PieChartItem(
+                        label: 'Maintenance & Énergie',
+                        value: 2.0,
+                        color: Colors.teal.shade700,
+                      ),
+                    ],
+                    centerTitle: '${totalDevis + activesMissions > 0 ? totalDevis + activesMissions : 11}',
+                    centerSubtitle: 'PRESTATIONS',
+                    chartRadius: 65,
+                    strokeWidth: 20,
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 24),

@@ -803,7 +803,9 @@ function renderServices() {
   const grid = document.getElementById('servicesGrid');
   const countLbl = document.getElementById('resultsCount');
 
-  const filtered = JBF_SERVICES_DATA.filter(s => {
+  const activeServices = JBF_SERVICES_DATA.filter(s => !s._disabled);
+
+  const filtered = activeServices.filter(s => {
     const matchCat = (currentCat === 'all') ||
       (s.category.toLowerCase().includes(currentCat.toLowerCase())) ||
       (currentCat === 'Mines & Industrie' && (s.category.includes('Mines') || s.title.includes('Mines') || s.title.includes('Engins') || s.title.includes('Protection'))) ||
@@ -905,8 +907,38 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeDrawer();
 });
 
+async function syncActiveServicesFromSupabase() {
+  try {
+    const res = await fetch('https://dvzwqxcaiagczyonrhsg.supabase.co/rest/v1/services_catalogue?select=code_service,titre,est_actif', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+      }
+    });
+    if (res.ok) {
+      const dbServices = await res.json();
+      if (Array.isArray(dbServices) && dbServices.length > 0) {
+        dbServices.forEach(dbS => {
+          if (dbS.est_actif === false) {
+            const found = JBF_SERVICES_DATA.find(s => 
+              s.code === dbS.code_service || 
+              (dbS.code_service && s.code && s.code.replace('SRV-', '') === dbS.code_service.replace('SRV-', '')) ||
+              s.title.toLowerCase().trim() === (dbS.titre || '').toLowerCase().trim()
+            );
+            if (found) found._disabled = true;
+          }
+        });
+        renderServices();
+      }
+    }
+  } catch (e) {
+    console.warn('Sync services error:', e);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderServices();
+  syncActiveServicesFromSupabase();
   const urlParams = new URLSearchParams(window.location.search);
   const serviceParam = urlParams.get('service');
   if (serviceParam) {

@@ -29,7 +29,7 @@ class AuthService {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPass = password.trim();
 
-    // 1. Master admin password check
+    // 1. Master admin credentials
     if (cleanEmail == AppConfig.masterAdminEmail && cleanPass == AppConfig.masterAdminPassword) {
       _currentUser = AdminUser(
         id: 'admin-master',
@@ -41,10 +41,64 @@ class AuthService {
         permissions: ['*'],
         token: 'token-admin-${DateTime.now().millisecondsSinceEpoch}',
       );
+      await completeLogin();
       return {'success': true};
     }
 
-    // 2. Query Supabase admin_accounts directly
+    // 2. Check Supabase Auth
+    try {
+      final authUrl = '${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password';
+      final authRes = await http.post(
+        Uri.parse(authUrl),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': cleanEmail,
+          'password': cleanPass,
+        }),
+      ).timeout(const Duration(seconds: 6));
+
+      if (authRes.statusCode == 200) {
+        final authData = jsonDecode(authRes.body);
+        final accessToken = authData['access_token'];
+        final userId = authData['user']?['id'];
+
+        // Vérifier dans profiles
+        final profRes = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId&select=*'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer $accessToken',
+          },
+        );
+
+        if (profRes.statusCode == 200) {
+          final List<dynamic> list = jsonDecode(profRes.body);
+          if (list.isNotEmpty) {
+            final p = list.first;
+            final role = p['role']?.toString().toLowerCase() ?? '';
+            if (role == 'admin' || role == 'sous_admin' || role == 'super_admin') {
+              _currentUser = AdminUser(
+                id: p['id']?.toString() ?? userId,
+                fullName: p['full_name'] ?? 'Administrateur JBF',
+                email: cleanEmail,
+                role: role == 'sous_admin' ? 'Sous-Administrateur' : 'Super Administrateur',
+                site: p['province'] ?? 'Lubumbashi',
+                avatar: (p['full_name'] ?? 'AD').toString().substring(0, 2).toUpperCase(),
+                permissions: (p['permissions'] as List?)?.map((e) => e.toString()).toList() ?? ['*'],
+                token: accessToken,
+              );
+              await completeLogin();
+              return {'success': true};
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Fallback: Query Supabase admin_accounts table
     try {
       final res = await http.get(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts?email=eq.$cleanEmail&select=*'),
@@ -58,9 +112,9 @@ class AuthService {
         final List<dynamic> list = jsonDecode(res.body);
         if (list.isNotEmpty) {
           final acc = list.first;
-          if (acc['is_active'] == true && acc['password_hash'] != null) {
-            // Vérification du mot de passe en base
+          if (acc['is_active'] == true && (acc['password'] == cleanPass || acc['password_hash'] == cleanPass)) {
             _currentUser = AdminUser.fromJson(acc);
+            await completeLogin();
             return {'success': true};
           }
         }
@@ -69,7 +123,7 @@ class AuthService {
 
     return {
       'success': false,
-      'error': 'Mot de passe incorrect pour le compte administrateur $cleanEmail.',
+      'error': 'Identifiants administrateur incorrects ou compte non autorisé.',
     };
   }
 

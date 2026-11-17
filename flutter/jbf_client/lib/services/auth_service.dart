@@ -90,7 +90,24 @@ class AuthService {
         );
 
         if (profRes.statusCode == 200) {
-          final List<dynamic> profList = jsonDecode(profRes.body);
+          List<dynamic> profList = jsonDecode(profRes.body);
+          if (profList.isEmpty) {
+            // Recherche de secours par adresse email
+            final profByEmailRes = await http.get(
+              Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=*'),
+              headers: {
+                'apikey': AppConfig.supabaseAnonKey,
+                'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+              },
+            );
+            if (profByEmailRes.statusCode == 200) {
+              final List<dynamic> emailList = jsonDecode(profByEmailRes.body);
+              if (emailList.isNotEmpty) {
+                profList = emailList;
+              }
+            }
+          }
+
           if (profList.isNotEmpty) {
             final profile = profList.first;
             if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
@@ -99,6 +116,37 @@ class AuthService {
 
             profile['token'] = accessToken;
             _currentUser = ClientUser.fromJson(profile);
+            await completeLogin();
+            return {'success': true};
+          } else {
+            // Création automatique de la fiche profil pour le compte client valide
+            final userMeta = authData['user']?['user_metadata'] ?? {};
+            final autoProfile = {
+              'id': userId,
+              'email': cleanEmail,
+              'full_name': userMeta['full_name'] ?? cleanEmail.split('@')[0],
+              'company': userMeta['company'] ?? 'Société Partenaire JBF',
+              'phone': userMeta['phone'] ?? '',
+              'province': 'Haut-Katanga',
+              'secteur': userMeta['sector'] ?? 'Mines & Industrie',
+              'role': 'client',
+              'token': accessToken,
+            };
+
+            // Insertion en arrière-plan
+            try {
+              await http.post(
+                Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+                headers: {
+                  'apikey': AppConfig.supabaseAnonKey,
+                  'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                  'Content-Type': 'application/json',
+                },
+                body: jsonEncode(autoProfile),
+              );
+            } catch (_) {}
+
+            _currentUser = ClientUser.fromJson(autoProfile);
             await completeLogin();
             return {'success': true};
           }

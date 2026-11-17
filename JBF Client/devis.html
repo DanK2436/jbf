@@ -303,6 +303,64 @@
   </div>
 </div>
 
+<!-- MODAL MODIFIER UN DEVIS -->
+<div class="modal-overlay" id="editQuoteModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="bi bi-pencil-square" style="color: var(--brand-pink);"></i>
+        <h3>Modifier la Demande de Devis</h3>
+      </div>
+      <button class="modal-close" onclick="window.clientCore.closeModal('editQuoteModal')">&times;</button>
+    </div>
+    <form onsubmit="handleSaveEditQuote(event)">
+      <input type="hidden" id="editQuoteId">
+      <div class="modal-body">
+        <div class="form-group">
+          <label><span>Service / Pôle JBF</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-briefcase input-icon"></i>
+            <select id="editModalServiceSelect" class="form-control" required>
+              <option value="Catering & Restauration HACCP">1. Catering Industriel & Restauration HACCP</option>
+              <option value="Sous-traitance Minière">2. Sous-traitance Minière & Extraction</option>
+              <option value="BTP & Génie Civil">3. BTP, Génie Civil & Fondations</option>
+              <option value="Maintenance & Soudure">4. Maintenance Industrielle, Soudure & Chaudronnerie</option>
+              <option value="Gardiennage & Sécurité">5. Sécurité Industrielle & Gardiennage de Sites</option>
+              <option value="Énergie MT/HT & Groupes Électrogènes">6. Énergie MT/HT & Groupes Électrogènes</option>
+              <option value="Transport Personnel & Location Engins">7. Transport du Personnel & Location d'Engins</option>
+              <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
+              <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
+              <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
+              <option value="Gestion des Déchets & Assainissement">11. Gestion des Déchets & Assainissement</option>
+              <option value="Audit HSE & Contrôle Qualité">12. Audit HSE & Contrôle Qualité</option>
+              <option value="Plomberie & Traitement des Eaux">13. Plomberie & Traitement des Eaux</option>
+              <option value="Fournitures Générales de Bureau">14. Fournitures Générales de Bureau</option>
+              <option value="Import-Export & Transit">15. Import-Export & Transit Douanier</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><span>Lieu / Concession en RDC</span><span class="label-req">*</span></label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-pin-map input-icon"></i>
+            <input type="text" id="editModalSiteInput" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><span>Cahier des charges ou description</span></label>
+          <textarea id="editModalDescInput" class="form-control" rows="4"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.clientCore.closeModal('editQuoteModal')">Annuler</button>
+        <button type="submit" class="btn btn-primary btn-sm btn-3d" id="btnSaveEditQuote"><i class="bi bi-check-circle"></i> Enregistrer les Modifications</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="../supabase/jbf-storage-cache.js"></script>
@@ -484,7 +542,13 @@
           <td>${montant}</td>
           <td><span class="badge-status ${isValide ? 'valide' : 'en_etude'}">${statusLabel}</span></td>
           <td style="text-align: right;">
-            <div class="table-actions">
+            <div class="table-actions" style="display: flex; gap: 6px; justify-content: flex-end;">
+              <button class="btn btn-sm btn-secondary" title="Modifier le devis" onclick="openEditQuoteModal('${d.id}')">
+                <i class="bi bi-pencil"></i> Modifier
+              </button>
+              <button class="btn btn-sm" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; padding: 4px 8px; border-radius: 6px;" title="Supprimer le devis" onclick="confirmDeleteQuote('${d.id}')">
+                <i class="bi bi-trash"></i>
+              </button>
               <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Discussion sur le devis #${(d.id || '').toString().slice(-4)}')">
                 <i class="bi bi-whatsapp"></i> Échanger
               </button>
@@ -610,6 +674,114 @@
     window.clientCore.closeModal('newQuoteModal');
     loadClientQuotes();
     window.clientCore.showToast('Votre demande de devis a été enregistrée avec succès.', 'success');
+  }
+
+  function openEditQuoteModal(quoteId) {
+    const q = allClientQuotes.find(item => String(item.id) === String(quoteId));
+    if (!q) return;
+
+    document.getElementById('editQuoteId').value = q.id;
+    const srv = Array.isArray(q.services) ? q.services[0] : (q.service || q.prestation || 'Catering & Restauration HACCP');
+    const select = document.getElementById('editModalServiceSelect');
+    for (let i = 0; i < select.options.length; i++) {
+      if (select.options[i].value.includes(srv) || srv.includes(select.options[i].value)) {
+        select.selectedIndex = i;
+        break;
+      }
+    }
+    document.getElementById('editModalSiteInput').value = q.localite || q.site || '';
+    document.getElementById('editModalDescInput').value = q.message || q.cahier_charges || q.description || '';
+
+    window.clientCore.openModal('editQuoteModal');
+  }
+
+  async function handleSaveEditQuote(e) {
+    e.preventDefault();
+    const qId = document.getElementById('editQuoteId').value;
+    const newService = document.getElementById('editModalServiceSelect').value;
+    const newSite = document.getElementById('editModalSiteInput').value.trim();
+    const newDesc = document.getElementById('editModalDescInput').value.trim();
+
+    const saveBtn = document.getElementById('btnSaveEditQuote');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mise à jour...';
+    }
+
+    // 1. Mise à jour Supabase
+    const sb = getSb();
+    if (sb) {
+      try {
+        await sb.from('demandes_devis').update({
+          services: [newService],
+          localite: newSite,
+          message: newDesc,
+          updated_at: new Date().toISOString()
+        }).eq('id', qId);
+      } catch (err) {
+        console.warn('[Supabase Update Quote]', err);
+      }
+    }
+
+    // 2. Mise à jour LocalStorage
+    try {
+      const stored = localStorage.getItem('JBF_DEVIS_LOCAL');
+      if (stored) {
+        let list = JSON.parse(stored);
+        list = list.map(item => {
+          if (String(item.id) === String(qId)) {
+            return {
+              ...item,
+              services: [newService],
+              service: newService,
+              localite: newSite,
+              site: newSite,
+              message: newDesc
+            };
+          }
+          return item;
+        });
+        localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(list));
+      }
+    } catch (_) {}
+
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Enregistrer les Modifications';
+    }
+
+    window.clientCore.closeModal('editQuoteModal');
+    loadClientQuotes();
+    window.clientCore.showToast('Devis mis à jour avec succès.', 'success');
+  }
+
+  async function confirmDeleteQuote(quoteId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement cette demande de devis ?')) {
+      return;
+    }
+
+    // 1. Supabase
+    const sb = getSb();
+    if (sb) {
+      try {
+        await sb.from('demandes_devis').delete().eq('id', quoteId);
+      } catch (err) {
+        console.warn('[Supabase Delete Quote]', err);
+      }
+    }
+
+    // 2. LocalStorage
+    try {
+      const stored = localStorage.getItem('JBF_DEVIS_LOCAL');
+      if (stored) {
+        let list = JSON.parse(stored);
+        list = list.filter(item => String(item.id) !== String(quoteId));
+        localStorage.setItem('JBF_DEVIS_LOCAL', JSON.stringify(list));
+      }
+    } catch (_) {}
+
+    loadClientQuotes();
+    window.clientCore.showToast('Devis supprimé avec succès.', 'info');
   }
 </script>
 

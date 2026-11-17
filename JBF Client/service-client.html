@@ -221,6 +221,58 @@
         </div>
       </div>
 
+      <!-- MESSAGERIE INSTANTANÉE EN DIRECT (CHAT SERVICE CLIENT JBF) -->
+      <div class="card spatial-3d-card" style="margin-bottom: 24px; overflow: hidden; border: 1.5px solid var(--border-subtle);">
+        <div class="card-header" style="background: linear-gradient(135deg, #0C0C0E 0%, #1E1E24 100%); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 0 12px rgba(230,0,126,0.5);">
+              DG
+            </div>
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">Chef de Projet &amp; Direction Technique JBF</div>
+              <div style="font-size: 0.76rem; color: #10B981; display: flex; align-items: center; gap: 5px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+                En ligne • Permanence RDC 24/7 (Lubumbashi, Kolwezi, Kinshasa)
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-whatsapp" onclick="window.clientCore.openWhatsAppDirect('Échange en direct depuis le chat client JBF')" style="padding: 6px 12px; font-size: 0.78rem;">
+            <i class="bi bi-whatsapp"></i> Continuer sur WhatsApp
+          </button>
+        </div>
+
+        <!-- Zone des messages de chat -->
+        <div id="liveChatMessagesContainer" style="height: 320px; overflow-y: auto; background: #F8FAFC; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Messages générés dynamiquement -->
+        </div>
+
+        <!-- Pilules de questions rapides -->
+        <div style="background: #FFFFFF; border-top: 1px solid var(--border-subtle); padding: 8px 16px; display: flex; gap: 8px; overflow-x: auto;">
+          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Demande de point sur l\'avancement de mon devis.')">
+            📋 Statut Devis
+          </button>
+          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Besoin d\'un compte-rendu de progression chantier/mission.')">
+            🏗 Avancement Chantier
+          </button>
+          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Question concernant le règlement ou la facture proforma.')">
+            💳 Facturation
+          </button>
+          <button type="button" class="btn btn-sm" style="background: #FFF1F2; color: #E11D48; font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #FECDD3;" onclick="sendQuickChatMessage('Urgence opérationnelle sur notre site minier.')">
+            🚨 Urgence Concession
+          </button>
+        </div>
+
+        <!-- Barre de saisie de message -->
+        <div style="background: #FFFFFF; border-top: 1px solid var(--border-subtle); padding: 12px 16px;">
+          <form onsubmit="handleSendChatMessage(event)" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="liveChatMessageInput" class="form-control" placeholder="Écrivez votre message à la direction opérationnelle JBF..." style="flex: 1; padding: 10px 14px; font-size: 0.88rem; border-radius: 24px;" required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-3d" id="btnSendChatMessage" style="padding: 10px 18px; border-radius: 24px; font-weight: 700;">
+              <i class="bi bi-send-fill"></i> <span>Envoyer</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
       <!-- FORMULAIRE OUVERTURE TICKET TECHNIQUE -->
       <div class="support-grid">
         
@@ -370,6 +422,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadClientTickets();
+    loadChatMessages();
   });
 
   async function loadClientTickets() {
@@ -501,7 +554,113 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // --- CHAT SERVICE CLIENT EN DIRECT ---
+  const CHAT_STORAGE_KEY = 'JBF_LIVE_CHAT_MSGS';
+  let chatMessages = [
+    {
+      id: 'm-1',
+      sender: 'Chef de Projet JBF (Lubumbashi)',
+      text: 'Bonjour et bienvenue sur l\'assistance en direct JBF Service ! En quoi pouvons-nous vous accompagner sur votre site aujourd\'hui ?',
+      time: '08:30',
+      isClient: false
+    }
+  ];
+
+  function loadChatMessages() {
+    try {
+      const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (stored) chatMessages = JSON.parse(stored);
+    } catch (_) {}
+    renderChatMessages();
+  }
+
+  function renderChatMessages() {
+    const container = document.getElementById('liveChatMessagesContainer');
+    if (!container) return;
+
+    container.innerHTML = chatMessages.map(m => {
+      const isClient = m.isClient;
+      return `
+        <div style="display: flex; justify-content: ${isClient ? 'flex-end' : 'flex-start'}; align-items: flex-end; gap: 8px;">
+          ${!isClient ? `
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-pink); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              JBF
+            </div>
+          ` : ''}
+          <div style="max-width: 75%; background: ${isClient ? 'var(--brand-pink)' : '#FFFFFF'}; color: ${isClient ? '#FFFFFF' : 'var(--text-primary)'}; padding: 10px 14px; border-radius: ${isClient ? '14px 14px 2px 14px' : '14px 14px 14px 2px'}; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: ${isClient ? 'none' : '1px solid #E2E8F0'}; font-size: 0.88rem; line-height: 1.45;">
+            <div style="font-size: 0.72rem; opacity: 0.8; margin-bottom: 3px; font-weight: 700;">
+              ${escapeHtml(m.sender)}
+            </div>
+            <div>${escapeHtml(m.text)}</div>
+            <div style="font-size: 0.68rem; opacity: 0.75; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+              <span>${m.time}</span>
+              ${isClient ? '<i class="bi bi-check2-all" style="font-size: 13px;"></i>' : ''}
+            </div>
+          </div>
+          ${isClient ? `
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: #0C0C0E; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              VOUS
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function handleSendChatMessage(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('liveChatMessageInput');
+    const text = input ? input.value.trim() : '';
+    if (!text) return;
+
+    postChatMessage(text);
+    if (input) input.value = '';
+  }
+
+  function sendQuickChatMessage(txt) {
+    postChatMessage(txt);
+  }
+
+  function postChatMessage(text) {
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const newMsg = {
+      id: 'm-' + Date.now(),
+      sender: 'Vous',
+      text: text,
+      time: timeStr,
+      isClient: true
+    };
+
+    chatMessages.push(newMsg);
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages));
+    } catch (_) {}
+    renderChatMessages();
+
+    // Réponse automatique de prise en charge immédiate
+    setTimeout(() => {
+      const respTime = new Date();
+      const respTimeStr = `${String(respTime.getHours()).padStart(2, '0')}:${String(respTime.getMinutes()).padStart(2, '0')}`;
+      chatMessages.push({
+        id: 'm-' + Date.now(),
+        sender: 'Direction Opérationnelle JBF',
+        text: 'Votre message a bien été transmis au chef de projet assigné. Nous vous répondons dans les plus brefs délais.',
+        time: respTimeStr,
+        isClient: false
+      });
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages));
+      } catch (_) {}
+      renderChatMessages();
+    }, 1200);
+  }
+
   window.handleCreateTicket = handleCreateTicket;
+  window.handleSendChatMessage = handleSendChatMessage;
+  window.sendQuickChatMessage = sendQuickChatMessage;
 </script>
 
 </body>

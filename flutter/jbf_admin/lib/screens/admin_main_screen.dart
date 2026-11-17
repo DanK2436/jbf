@@ -11,7 +11,11 @@ import 'rh_competences_screen.dart';
 import 'recrutement_admin_screen.dart';
 import 'finance_screen.dart';
 import 'communication_cms_screen.dart';
-import 'pointages_screen.dart';
+import 'client_chat_admin_screen.dart';
+import 'gallery_management_screen.dart';
+import 'cms_content_manager_screen.dart';
+import 'evaluations_screen.dart';
+import 'audit_screen.dart';
 import 'otp_settings_screen.dart';
 import 'login_screen.dart';
 
@@ -37,8 +41,12 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     'Ressources Humaines & Cartographie des Compétences',
     'Recrutement & Candidatures Déposées (Activer/Désactiver)',
     'Gestion Financière, Écritures & Reçus Clients',
-    'Communication, CMS & Live Chat Visiteurs',
-    'Contrôle des Pointages & Traçabilité IP / Anti-VPN',
+    'Communication, CMS & Chat Membres/Responsables',
+    'Live Chat Dédié Clients B2B & Support',
+    'Galerie Photos & Vidéos (CMS)',
+    'Gestion & Activation des Contenus (Site & Apps)',
+    'Modération & Vérification des Évaluations Clients',
+    'Audit Système & Journal des Opérations Traçables',
     'Sécurité OTP Admin Principal',
   ];
 
@@ -65,8 +73,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 9:
         return const CommunicationCmsScreen();
       case 10:
-        return const PointagesScreen();
+        return const ClientChatAdminScreen();
       case 11:
+        return const GalleryManagementScreen();
+      case 12:
+        return const CmsContentManagerScreen();
+      case 13:
+        return const EvaluationsScreen();
+      case 14:
+        return const AuditScreen();
+      case 15:
         return const OtpSettingsScreen();
       default:
         return const DashboardScreen(onNavigate: _noOpNavigate);
@@ -128,18 +144,22 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _titles[_selectedIndex],
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  'JBF Service SARL — Espace Administration Native RDC',
-                  style: TextStyle(fontSize: 11, color: Colors.white70),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _titles[_selectedIndex],
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const Text(
+                    'JBF Service SARL — Espace Administration Native RDC',
+                    style: TextStyle(fontSize: 11, color: Colors.white70),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -176,7 +196,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                 IconButton(
                   icon: const Icon(Icons.shield_outlined, color: Colors.white),
                   tooltip: 'Sécurité OTP Admin',
-                  onPressed: () => setState(() => _selectedIndex = 11),
+                  onPressed: () => setState(() => _selectedIndex = 15),
                 ),
                 const SizedBox(width: 4),
                 IconButton(
@@ -194,13 +214,13 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           // Desktop sidebar navigation
           if (isDesktop)
             Container(
-              width: 265,
+              width: 275,
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(right: BorderSide(color: Colors.grey.shade200)),
               ),
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 children: [
                   _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Tableau de Bord Exécutif'),
                   const Divider(indent: 16, endIndent: 16),
@@ -212,10 +232,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildNavItem(6, Icons.badge_outlined, Icons.badge, 'RH & Compétences'),
                   _buildNavItem(7, Icons.folder_shared_outlined, Icons.folder_shared, 'Recrutement & CV Déposés'),
                   _buildNavItem(8, Icons.account_balance_outlined, Icons.account_balance, 'Finance & Reçus'),
-                  _buildNavItem(9, Icons.campaign_outlined, Icons.campaign, 'Communication, CMS & Chat'),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildNavItem(10, Icons.fingerprint, Icons.fingerprint, 'Pointages & Anti-VPN'),
-                  _buildNavItem(11, Icons.shield_outlined, Icons.shield, 'Sécurité OTP Direction'),
+                  _buildNavItem(9, Icons.forum_outlined, Icons.forum, 'Chat Membres & Domaines'),
+                  _buildNavItem(10, Icons.support_agent_outlined, Icons.support_agent, 'Chat Dédié Clients B2B'),
+                  _buildNavItem(11, Icons.photo_library_outlined, Icons.photo_library, 'Galerie Photos & Vidéos'),
+                  _buildNavItem(12, Icons.tune_outlined, Icons.tune, 'Contenus & Textes CMS'),
+                  _buildNavItem(13, Icons.rate_review_outlined, Icons.rate_review, 'Évaluations & Avis'),
+                  _buildNavItem(14, Icons.policy_outlined, Icons.policy, 'Audit & Sécurité Système'),
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildNavItem(15, Icons.shield_outlined, Icons.shield, 'Sécurité OTP Direction'),
                 ],
               ),
             ),
@@ -252,9 +277,14 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildDrawerItem(6, Icons.badge, 'RH & Compétences'),
                   _buildDrawerItem(7, Icons.folder_shared, 'Recrutement & CV Déposés'),
                   _buildDrawerItem(8, Icons.account_balance, 'Finance & Reçus'),
-                  _buildDrawerItem(9, Icons.campaign, 'Communication, CMS & Chat'),
-                  _buildDrawerItem(10, Icons.fingerprint, 'Pointages & Anti-VPN'),
-                  _buildDrawerItem(11, Icons.shield, 'Sécurité OTP Direction'),
+                  const Divider(),
+                  _buildDrawerItem(9, Icons.forum, 'Chat Membres & Domaines'),
+                  _buildDrawerItem(10, Icons.support_agent, 'Chat Dédié Clients B2B'),
+                  _buildDrawerItem(11, Icons.photo_library, 'Galerie Photos & Vidéos'),
+                  _buildDrawerItem(12, Icons.tune, 'Contenus & Textes CMS'),
+                  _buildDrawerItem(13, Icons.rate_review, 'Évaluations & Avis'),
+                  _buildDrawerItem(14, Icons.policy, 'Audit & Sécurité'),
+                  _buildDrawerItem(15, Icons.shield, 'Sécurité OTP Direction'),
                 ],
               ),
             ),
@@ -265,7 +295,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     final isSelected = _selectedIndex == index;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       child: Material(
         color: isSelected ? AppConfig.brandPinkTint : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
@@ -273,22 +303,22 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           borderRadius: BorderRadius.circular(10),
           onTap: () => setState(() => _selectedIndex = index),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             child: Row(
               children: [
                 Icon(
                   isSelected ? filledIcon : outlineIcon,
                   color: isSelected ? AppConfig.brandPink : Colors.grey.shade700,
-                  size: 20,
+                  size: 19,
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
                       color: isSelected ? AppConfig.brandPink : Colors.grey.shade800,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13,
+                      fontSize: 12.5,
                     ),
                   ),
                 ),

@@ -5,6 +5,7 @@ import '../config/app_config.dart';
 import '../models/admin_models.dart';
 import '../services/supabase_service.dart';
 import '../services/otp_service.dart';
+import '../widgets/circular_pie_chart.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int) onNavigate;
@@ -113,22 +114,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Banner Direction Exécutive
+            // Banner Direction Exécutive (Couleur harmonisée avec le reste de la page)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppConfig.blackText, Color(0xFF1E1E24)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: Colors.grey.shade200, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -152,9 +149,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
+                            Text(
                               'SUPERVISION MULTI-PROVINCES EN TEMPS RÉEL',
-                              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
@@ -162,7 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const Text(
                           'JBF Service SARL — Tableau de Bord Stratégique',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppConfig.blackText,
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
@@ -171,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 6),
                         Text(
                           'Mines & Énergie (Katanga / Lualaba) • BTP & Génie Civil • Catering Industriel • 26 Provinces',
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                         ),
                       ],
                     ),
@@ -325,7 +322,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 20),
+                          CircularPieChart(
+                            items: [
+                              PieChartItem(
+                                label: 'Mines & Extraction',
+                                value: minesCount > 0 ? minesCount.toDouble() : 4.0,
+                                color: AppConfig.brandPink,
+                              ),
+                              PieChartItem(
+                                label: 'BTP & Génie Civil',
+                                value: btpCount > 0 ? btpCount.toDouble() : 3.0,
+                                color: Colors.blue.shade700,
+                              ),
+                              PieChartItem(
+                                label: 'Catering HACCP',
+                                value: cateringCount > 0 ? cateringCount.toDouble() : 3.0,
+                                color: Colors.orange.shade700,
+                              ),
+                              PieChartItem(
+                                label: 'Maintenance & Soudure',
+                                value: maintenanceCount > 0 ? maintenanceCount.toDouble() : 2.0,
+                                color: Colors.teal.shade700,
+                              ),
+                            ],
+                            centerTitle: totalItems > 0 ? '$totalItems' : '12',
+                            centerSubtitle: 'DOSSIERS',
+                            chartRadius: 60,
+                            strokeWidth: 18,
+                          ),
+                          const SizedBox(height: 20),
+                          const Divider(height: 1),
+                          const SizedBox(height: 16),
                           _buildSectorBar('Sous-traitance Minière & Extraction', pMines, '${(pMines * 100).toStringAsFixed(0)}% ($minesCount)', AppConfig.brandPink),
                           const SizedBox(height: 14),
                           _buildSectorBar('BTP, Génie Civil & Construction', pBtp, '${(pBtp * 100).toStringAsFixed(0)}% ($btpCount)', Colors.blue.shade700),

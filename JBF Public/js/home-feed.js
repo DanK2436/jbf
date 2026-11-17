@@ -25,6 +25,14 @@
   }
 
   async function loadArticles(client) {
+    try {
+      const cached = sessionStorage.getItem('jbf_cached_news');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.ts < 300000) return parsed.data;
+      }
+    } catch (_) {}
+
     let { data, error } = await client
       .from('blog_posts')
       .select('id, titre, categorie, resume, img_url, created_at')
@@ -36,17 +44,33 @@
       const legacy = await client.from('actualites').select('*').order('created_at', { ascending: false }).limit(3);
       data = legacy.data;
     }
-    return data || [];
+    const result = data || [];
+    try {
+      sessionStorage.setItem('jbf_cached_news', JSON.stringify({ ts: Date.now(), data: result }));
+    } catch (_) {}
+    return result;
   }
 
   async function loadAvis(client) {
+    try {
+      const cached = sessionStorage.getItem('jbf_cached_avis');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.ts < 300000) return parsed.data;
+      }
+    } catch (_) {}
+
     const { data } = await client
       .from('avis_clients')
       .select('nom, entreprise, service, note, commentaire, created_at')
       .eq('approuve', true)
       .order('created_at', { ascending: false })
       .limit(3);
-    return data || [];
+    const result = data || [];
+    try {
+      sessionStorage.setItem('jbf_cached_avis', JSON.stringify({ ts: Date.now(), data: result }));
+    } catch (_) {}
+    return result;
   }
 
   function renderArticles(articles) {

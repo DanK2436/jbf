@@ -30,7 +30,7 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
     'Factures & Devis Validés',
     'Avis & Satisfaction',
     'Service Client & Support 24/7',
-    'Profil Entreprise & Agrément',
+    'Profil Entreprise & Paramètres du Compte',
   ];
 
   Widget _buildBody() {
@@ -219,7 +219,7 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
                   const Divider(indent: 16, endIndent: 16),
                   _buildNavItem(4, Icons.star_outline, Icons.star, 'Avis & Évaluations'),
                   _buildNavItem(5, Icons.support_agent_outlined, Icons.support_agent, 'Service Client 24/7'),
-                  _buildNavItem(6, Icons.apartment_outlined, Icons.apartment, 'Profil Entreprise'),
+                  _buildNavItem(6, Icons.apartment_outlined, Icons.apartment, 'Profil & Paramètres'),
                 ],
               ),
             ),
@@ -250,7 +250,7 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
                   _buildDrawerItem(3, Icons.receipt_long, 'Factures & Règlements'),
                   _buildDrawerItem(4, Icons.star, 'Avis & Évaluations'),
                   _buildDrawerItem(5, Icons.support_agent, 'Service Client 24/7'),
-                  _buildDrawerItem(6, Icons.apartment, 'Profil Entreprise'),
+                  _buildDrawerItem(6, Icons.apartment, 'Profil & Paramètres'),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.logout, color: AppConfig.dangerRed),

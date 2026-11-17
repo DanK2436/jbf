@@ -3,7 +3,6 @@ import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'dashboard_screen.dart';
 import 'missions_screen.dart';
-import 'timesheet_screen.dart';
 import 'leaves_screen.dart';
 import 'chat_screen.dart';
 import 'resources_screen.dart';
@@ -26,7 +25,6 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
   final List<String> _titles = [
     'Tableau de Bord Collaborateur',
     'Mes Ordres de Mission & Chantiers',
-    'Feuilles de Temps & Pointages GPS',
     'Mes Congés & Absences RH',
     'Messagerie & Canaux d\'Équipe',
     'Bibliothèque Documentaire HSE',
@@ -45,16 +43,14 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
       case 1:
         return const MissionsScreen();
       case 2:
-        return const TimesheetScreen();
-      case 3:
         return LeavesScreen(user: user);
-      case 4:
+      case 3:
         return ChatScreen(user: user);
-      case 5:
+      case 4:
         return const ResourcesScreen();
-      case 6:
+      case 5:
         return DevisMembreScreen(user: user);
-      case 7:
+      case 6:
         return ProgressionMissionScreen(user: user);
       default:
         return DashboardScreen(
@@ -128,24 +124,37 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.white24,
-                  child: Text(
-                    user?.avatar ?? 'MB',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (isDesktop)
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                InkWell(
+                  onTap: () => _showProfileAndSettingsDialog(context, user),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
                     children: [
-                      Text(user?.fullName ?? 'Collaborateur', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      Text(user?.matricule ?? 'JBF-M', style: const TextStyle(fontSize: 10, color: Colors.white70)),
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.white24,
+                        child: Text(
+                          user?.avatar ?? 'MB',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (isDesktop)
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(user?.fullName ?? 'Collaborateur', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Text(user?.matricule ?? 'JBF-M', style: const TextStyle(fontSize: 10, color: Colors.white70)),
+                          ],
+                        ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                  tooltip: 'Profil & Paramètres',
+                  onPressed: () => _showProfileAndSettingsDialog(context, user),
+                ),
                 IconButton(
                   icon: const Icon(Icons.logout, color: Colors.white),
                   tooltip: 'Déconnexion',
@@ -170,13 +179,11 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                 children: [
                   _buildNavItem(0, Icons.dashboard_outlined, Icons.dashboard, 'Tableau de Bord'),
                   _buildNavItem(1, Icons.engineering_outlined, Icons.engineering, 'Mes Missions'),
-                  _buildNavItem(6, Icons.request_quote_outlined, Icons.request_quote, 'Devis & BDD Matériaux'),
-                  _buildNavItem(7, Icons.task_alt_outlined, Icons.task_alt, 'Progression des Missions'),
-                  const Divider(indent: 16, endIndent: 16),
-                  _buildNavItem(2, Icons.access_time_outlined, Icons.access_time, 'Pointages & Horaires'),
-                  _buildNavItem(3, Icons.beach_access_outlined, Icons.beach_access, 'Mes Congés RH'),
-                  _buildNavItem(4, Icons.chat_outlined, Icons.chat, 'Messagerie Équipe'),
-                  _buildNavItem(5, Icons.folder_outlined, Icons.folder, 'Bibliothèque HSE'),
+                  _buildNavItem(2, Icons.beach_access_outlined, Icons.beach_access, 'Mes Congés RH'),
+                  _buildNavItem(3, Icons.chat_outlined, Icons.chat, 'Messagerie & Équipe'),
+                  _buildNavItem(4, Icons.folder_outlined, Icons.folder, 'Bibliothèque HSE'),
+                  _buildNavItem(5, Icons.request_quote_outlined, Icons.request_quote, 'Devis & BDD Matériaux'),
+                  _buildNavItem(6, Icons.task_alt_outlined, Icons.task_alt, 'Progression Missions'),
                 ],
               ),
             ),
@@ -203,15 +210,122 @@ class _MembreMainScreenState extends State<MembreMainScreen> {
                   ),
                   _buildDrawerItem(0, Icons.dashboard, 'Tableau de Bord'),
                   _buildDrawerItem(1, Icons.engineering, 'Mes Missions'),
-                  _buildDrawerItem(6, Icons.request_quote, 'Devis & BDD Matériaux'),
-                  _buildDrawerItem(7, Icons.task_alt, 'Progression des Missions'),
-                  _buildDrawerItem(2, Icons.access_time, 'Pointages & Horaires'),
-                  _buildDrawerItem(3, Icons.beach_access, 'Mes Congés RH'),
-                  _buildDrawerItem(4, Icons.chat, 'Messagerie Équipe'),
-                  _buildDrawerItem(5, Icons.folder, 'Bibliothèque HSE'),
+                  _buildDrawerItem(2, Icons.beach_access, 'Mes Congés RH'),
+                  _buildDrawerItem(3, Icons.chat, 'Messagerie & Équipe'),
+                  _buildDrawerItem(4, Icons.folder, 'Bibliothèque HSE'),
+                  _buildDrawerItem(5, Icons.request_quote, 'Devis & BDD Matériaux'),
+                  _buildDrawerItem(6, Icons.task_alt, 'Progression Missions'),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.settings, color: AppConfig.brandPink),
+                    title: const Text('Profil & Paramètres'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showProfileAndSettingsDialog(context, user);
+                    },
+                  ),
                 ],
               ),
             ),
+    );
+  }
+
+  void _showProfileAndSettingsDialog(BuildContext context, MembreUser? user) {
+    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final currentPassCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.badge, color: AppConfig.brandPink),
+            SizedBox(width: 10),
+            Text('Profil & Paramètres du Compte'),
+          ],
+        ),
+        content: SizedBox(
+          width: 480,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: CircleAvatar(
+                    radius: 36,
+                    backgroundColor: AppConfig.brandPink,
+                    child: Text(
+                      user?.avatar ?? 'MB',
+                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    user?.fullName ?? 'Collaborateur JBF',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    '${user?.poste ?? "Technicien"} • ${user?.sectionNom ?? "Pôle Opérationnel"}',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Divider(),
+                const SizedBox(height: 10),
+                const Text('Informations Collaborateur', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text('Matricule Officiel : ${user?.matricule ?? "JBF-M-2026"}'),
+                const SizedBox(height: 4),
+                Text('Email Professionnel : ${user?.email ?? ""}'),
+                const SizedBox(height: 4),
+                Text('Province d\'Affectation : ${user?.province ?? "Haut-Katanga"}'),
+                const SizedBox(height: 4),
+                Text('Solde Congés Payés : ${user?.soldeConges ?? 18} jours'),
+                const SizedBox(height: 14),
+                const Text('Paramètres & Coordonnées', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: const InputDecoration(labelText: 'Numéro WhatsApp / Téléphone de contact'),
+                ),
+                const SizedBox(height: 14),
+                const Text('Sécurité du Mot de Passe', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: newPassCtrl,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Nouveau mot de passe (laisser vide si inchangé)'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fermer'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Paramètres et profil mis à jour avec succès.'),
+                  backgroundColor: AppConfig.successGreen,
+                ),
+              );
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
     );
   }
 

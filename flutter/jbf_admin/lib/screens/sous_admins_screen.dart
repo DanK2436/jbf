@@ -120,6 +120,120 @@ class _SousAdminsScreenState extends State<SousAdminsScreen> {
     );
   }
 
+  void _showEditPermissionsDialog(SousAdminItem sa) {
+    final Map<String, String> availablePages = {
+      'dashboard': 'Tableau de bord exécutif',
+      'utilisateurs': 'Gestion des utilisateurs & rôles',
+      'projets': 'Commandes & Projets Complexes WBS',
+      'missions': 'Missions & Chantiers opérationnels',
+      'devis': 'Devis clients & chiffrages membres',
+      'services': 'Catalogue des services (15)',
+      'rh': 'Ressources Humaines & Compétences',
+      'recrutement': 'Candidatures & Recrutement public',
+      'finances': 'Finances, Écritures & Reçus',
+      'communication': 'Communication & CMS diffusion',
+      'galerie': 'Galerie Médias (Photos & Vidéos)',
+      'chat_clients': 'Messagerie dédiée aux clients',
+      'cms_dynamic': 'Configuration & Toggles de contenus',
+      'evaluations': 'Contrôle & Validation des Évaluations',
+      'audit': 'Traçabilité & Journal d\'audit',
+    };
+
+    final Set<String> currentPerms = Set.from(sa.permissions);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.security, color: AppConfig.brandPink),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Accès aux Pages — ${sa.fullName}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 500,
+            height: 420,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cochez les pages et modules auxquels ce sous-administrateur a le droit d\'accéder :',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView(
+                    children: availablePages.entries.map((entry) {
+                      final isGranted = currentPerms.contains(entry.key) || currentPerms.contains('*');
+                      return CheckboxListTile(
+                        dense: true,
+                        activeColor: AppConfig.brandPink,
+                        title: Text(entry.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        subtitle: Text('Code permission : ${entry.key}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        value: isGranted,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              currentPerms.add(entry.key);
+                            } else {
+                              currentPerms.remove(entry.key);
+                              currentPerms.remove('*');
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                setState(() => _isLoading = true);
+
+                try {
+                  // Mise à jour permissions dans Supabase
+                  await _supabase.client
+                      .from('admin_accounts')
+                      .update({'permissions': currentPerms.toList()})
+                      .eq('id', sa.id);
+                } catch (e) {
+                  debugPrint('Erreur mise à jour permissions: $e');
+                }
+
+                _loadSousAdmins();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Permissions des pages mises à jour avec succès.'),
+                    backgroundColor: AppConfig.successGreen,
+                  ),
+                );
+              },
+              child: const Text('Enregistrer les Accès'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -201,13 +315,23 @@ class _SousAdminsScreenState extends State<SousAdminsScreen> {
                                   ),
                                 ],
                               ),
-                              trailing: Switch(
-                                value: sa.isActive,
-                                activeColor: AppConfig.brandPink,
-                                onChanged: (val) async {
-                                  await _supabase.toggleSousAdmin(sa.id, val);
-                                  _loadSousAdmins();
-                                },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.security_update_good, color: AppConfig.brandPink, size: 20),
+                                    tooltip: 'Définir les pages et permissions autorisées',
+                                    onPressed: () => _showEditPermissionsDialog(sa),
+                                  ),
+                                  Switch(
+                                    value: sa.isActive,
+                                    activeColor: AppConfig.brandPink,
+                                    onChanged: (val) async {
+                                      await _supabase.toggleSousAdmin(sa.id, val);
+                                      _loadSousAdmins();
+                                    },
+                                  ),
+                                ],
                               ),
                             );
                           },

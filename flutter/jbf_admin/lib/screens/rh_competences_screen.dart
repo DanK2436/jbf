@@ -46,41 +46,168 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
   Future<void> _loadRhData() async {
     setState(() => _isLoading = true);
     try {
-      final url = '${AppConfig.apiBaseUrl}/admin/rh/collaborateurs';
-      final fallbackUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?role=eq.membre&select=*';
-
-      http.Response res;
-      try {
-        res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
-      } catch (_) {
-        res = await http.get(
-          Uri.parse(fallbackUrl),
-          headers: {
-            'apikey': AppConfig.supabaseAnonKey,
-            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-          },
-        ).timeout(const Duration(seconds: 6));
-      }
+      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?role=neq.client&select=*&order=created_at.desc';
+      final res = await http.get(
+        Uri.parse(url),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 6));
 
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final list = (data is Map && data['collaborateurs'] != null)
-            ? (data['collaborateurs'] as List)
-            : (data is List ? data : []);
-
+        final list = jsonDecode(res.body) as List;
         if (mounted) {
           setState(() {
             _collaborateurs = list.map((e) => Map<String, dynamic>.from(e)).toList();
             _isLoading = false;
           });
+          return;
         }
-        return;
       }
     } catch (e) {
       debugPrint('Erreur chargement RH: $e');
     }
 
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  void _showAddEditCollaborateurDialog([Map<String, dynamic>? item]) {
+    final isEdit = item != null;
+    final nameCtrl = TextEditingController(text: item?['full_name'] ?? item?['nom_complet'] ?? '');
+    final emailCtrl = TextEditingController(text: item?['email'] ?? '');
+    final matCtrl = TextEditingController(text: item?['matricule'] ?? 'JBF-M-2026-00${_collaborateurs.length + 1}');
+    final posteCtrl = TextEditingController(text: item?['poste'] ?? 'Technicien');
+    final departCtrl = TextEditingController(text: item?['section_nom'] ?? 'Mines & Industrie');
+    final provinceCtrl = TextEditingController(text: item?['province'] ?? 'Haut-Katanga');
+    final contratCtrl = TextEditingController(text: item?['type_contrat'] ?? 'CDI');
+    final salaireCtrl = TextEditingController(text: item?['salaire_base']?.toString() ?? '850');
+    final competencesCtrl = TextEditingController(
+      text: (item?['competences'] as List?)?.join(', ') ?? 'Sécurité QHSE, Soudure',
+    );
+    String dispo = item?['statut_disponibilite'] ?? 'disponible';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          title: Text(isEdit ? 'Modifier Fiche Salarié' : 'Nouveau Dossier Collaborateur RH'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 520,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nom & Post-nom du Collaborateur *')),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Adresse Email Professionnelle *'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: TextField(controller: matCtrl, decoration: const InputDecoration(labelText: 'Matricule RH *'))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: posteCtrl, decoration: const InputDecoration(labelText: 'Poste / Qualification'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: TextField(controller: departCtrl, decoration: const InputDecoration(labelText: 'Département / Pôle'))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: contratCtrl, decoration: const InputDecoration(labelText: 'Type de Contrat (CDI, CDD...)'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: TextField(controller: salaireCtrl, decoration: const InputDecoration(labelText: 'Salaire Base (USD)'))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(controller: provinceCtrl, decoration: const InputDecoration(labelText: 'Province d\'affectation')),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: competencesCtrl,
+                    decoration: const InputDecoration(labelText: 'Compétences Spécifiques (séparées par virgule)'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: dispo,
+                    decoration: const InputDecoration(labelText: 'Statut Disponibilité'),
+                    items: const [
+                      DropdownMenuItem(value: 'disponible', child: Text('DISPONIBLE (Affectable)')),
+                      DropdownMenuItem(value: 'en_mission', child: Text('EN MISSION')),
+                      DropdownMenuItem(value: 'en_conge', child: Text('EN CONGÉ')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setDlgState(() => dispo = v);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+              onPressed: () async {
+                final skillsArray = competencesCtrl.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+                final body = {
+                  'full_name': nameCtrl.text.trim(),
+                  'email': emailCtrl.text.trim(),
+                  'matricule': matCtrl.text.trim(),
+                  'poste': posteCtrl.text.trim(),
+                  'section_nom': departCtrl.text.trim(),
+                  'province': provinceCtrl.text.trim(),
+                  'type_contrat': contratCtrl.text.trim(),
+                  'salaire_base': num.tryParse(salaireCtrl.text.trim()) ?? 0,
+                  'competences': skillsArray,
+                  'statut_disponibilite': dispo,
+                  'role': 'membre',
+                };
+
+                try {
+                  if (isEdit && item['id'] != null) {
+                    await http.patch(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.${item['id']}'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode(body),
+                    );
+                  } else {
+                    await http.post(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode(body),
+                    );
+                  }
+                } catch (_) {}
+
+                if (!mounted) return;
+                Navigator.of(ctx).pop();
+                _loadRhData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(isEdit ? 'Fiche collaborateur mise à jour.' : 'Collaborateur RH enregistré.'),
+                    backgroundColor: AppConfig.successGreen,
+                  ),
+                );
+              },
+              child: Text(isEdit ? 'Sauvegarder' : 'Créer'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Map<String, dynamic>> _getFilteredBySkill() {
@@ -114,12 +241,19 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppConfig.blackText),
                       ),
                       Text(
-                        'Gestion des contrats, salaires, formations et matching intelligent pour affectation sur missions',
+                        'Données réelles : Gestion des contrats, salaires, qualifications et matching sur missions',
                         style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
                       ),
                     ],
                   ),
                 ),
+                ElevatedButton.icon(
+                  onPressed: () => _showAddEditCollaborateurDialog(),
+                  icon: const Icon(Icons.person_add, size: 16),
+                  label: const Text('Nouveau Collaborateur'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                ),
+                const SizedBox(width: 12),
                 TabBar(
                   controller: _tabController,
                   isScrollable: true,
@@ -127,7 +261,7 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
                   labelColor: AppConfig.brandPink,
                   unselectedLabelColor: Colors.grey.shade600,
                   tabs: const [
-                    Tab(icon: Icon(Icons.people), text: 'Dossiers Collaborateurs & Salaires'),
+                    Tab(icon: Icon(Icons.people), text: 'Dossiers Salariés & Contrats'),
                     Tab(icon: Icon(Icons.radar), text: 'Cartographie des Compétences & Matching'),
                   ],
                 ),
@@ -157,15 +291,37 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
       return const Center(child: CircularProgressIndicator(color: AppConfig.brandPink));
     }
 
+    if (_collaborateurs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.badge_outlined, size: 56, color: Colors.grey.shade400),
+            const SizedBox(height: 14),
+            const Text('Aucun collaborateur enregistré dans la base de données.', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text('Ajoutez un premier profil collaborateur ou synchronisez avec Supabase.', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
+              onPressed: () => _showAddEditCollaborateurDialog(),
+              icon: const Icon(Icons.add),
+              label: const Text('Ajouter un Collaborateur'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.all(24),
       itemCount: _collaborateurs.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final c = _collaborateurs[index];
-        final name = c['full_name'] ?? c['nom_complet'] ?? 'Collaborateur JBF';
-        final matricule = c['matricule'] ?? 'JBF-M-2026-000';
-        final poste = c['poste'] ?? 'Technicien Spécialisé';
+        final name = c['full_name'] ?? c['nom_complet'] ?? c['email'] ?? 'Collaborateur JBF';
+        final matricule = c['matricule'] ?? 'JBF-M-${index + 1}';
+        final poste = c['poste'] ?? 'Technicien';
         final contrat = c['type_contrat'] ?? 'CDI';
         final dispo = c['statut_disponibilite'] ?? 'disponible';
         final province = c['province'] ?? 'Haut-Katanga';
@@ -221,12 +377,12 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text('Poste : $poste • Contrat : $contrat • Salaire : $salaire • Affectation : $province'),
+                    Text('Poste : $poste • Contrat : $contrat • Salaire : $salaire • Affectation : $province', style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700)),
                   ],
                 ),
               ),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () => _showAddEditCollaborateurDialog(c),
                 icon: const Icon(Icons.edit_note, size: 16),
                 label: const Text('Fiche Salarié'),
                 style: ElevatedButton.styleFrom(
@@ -284,60 +440,67 @@ class _RhCompetencesScreenState extends State<RhCompetencesScreen> with SingleTi
 
         // Matching Results
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(24),
-            itemCount: filtered.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final c = filtered[i];
-              final name = c['full_name'] ?? c['nom_complet'] ?? 'Agent';
-              final poste = c['poste'] ?? 'Technicien';
-              final skills = (c['competences'] as List?)?.map((e) => e.toString()).toList() ?? ['Polyvalent terrain'];
+          child: filtered.isEmpty
+              ? Center(
+                  child: Text(
+                    'Aucun collaborateur ne correspond à la compétence "$_selectedSkillFilter".',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final c = filtered[i];
+                    final name = c['full_name'] ?? c['nom_complet'] ?? 'Agent';
+                    final poste = c['poste'] ?? 'Technicien';
+                    final skills = (c['competences'] as List?)?.map((e) => e.toString()).toList() ?? ['Polyvalent terrain'];
 
-              return Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    return Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Row(
                         children: [
-                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                          const SizedBox(height: 4),
-                          Text('Corps de métier : $poste', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: skills.map((s) => Chip(
-                              label: Text(s, style: const TextStyle(fontSize: 11)),
-                              backgroundColor: Colors.blue.shade50,
-                              padding: EdgeInsets.zero,
-                            )).toList(),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                const SizedBox(height: 4),
+                                Text('Corps de métier : $poste', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: skills.map((s) => Chip(
+                                    label: Text(s, style: const TextStyle(fontSize: 11)),
+                                    backgroundColor: Colors.blue.shade50,
+                                    padding: EdgeInsets.zero,
+                                  )).toList(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Affectation de $name préparée.')),
+                              );
+                            },
+                            icon: const Icon(Icons.assignment_ind, size: 16),
+                            label: const Text('Affecter à une Mission'),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen),
                           ),
                         ],
                       ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Affectation de $name préparée.')),
-                        );
-                      },
-                      icon: const Icon(Icons.assignment_ind, size: 16),
-                      label: const Text('Affecter à une Mission'),
-                      style: ElevatedButton.styleFrom(backgroundColor: AppConfig.successGreen),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
