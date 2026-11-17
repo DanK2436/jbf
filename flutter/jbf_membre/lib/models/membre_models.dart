@@ -2,6 +2,7 @@ class MembreUser {
   final String id;
   final String fullName;
   final String email;
+  final String phone;
   final String matricule;
   final String poste;
   final String sectionNom;
@@ -15,6 +16,7 @@ class MembreUser {
     required this.id,
     required this.fullName,
     required this.email,
+    this.phone = '+243',
     required this.matricule,
     required this.poste,
     required this.sectionNom,
@@ -30,6 +32,7 @@ class MembreUser {
       id: json['id']?.toString() ?? 'mbr-1',
       fullName: json['name'] ?? json['full_name'] ?? 'Jean-Pierre Mulamba',
       email: json['email'] ?? 'jp.mulamba@jbf-services.cd',
+      phone: json['phone'] ?? '+243',
       matricule: json['matricule'] ?? 'JBF-M-2026-012',
       poste: json['poste'] ?? 'Chef d\'Équipe Soudure & Tuyauterie',
       sectionNom: json['section_nom'] ?? 'Maintenance & Soudure',
@@ -45,6 +48,7 @@ class MembreUser {
         'id': id,
         'name': fullName,
         'email': email,
+        'phone': phone,
         'matricule': matricule,
         'poste': poste,
         'section_nom': sectionNom,
