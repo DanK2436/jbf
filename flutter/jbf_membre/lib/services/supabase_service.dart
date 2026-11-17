@@ -254,6 +254,32 @@ class SupabaseService {
     }
   }
 
+  Future<bool> deleteChatMessage(String id) async {
+    try {
+      final res = await http.delete(
+        Uri.parse('$_baseUrl/messages_chat?id=eq.$id'),
+        headers: _headers,
+      );
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (e) {
+      print('Erreur deleteChatMessage: $e');
+      return false;
+    }
+  }
+
+  Future<bool> clearChatCanal(String canal) async {
+    try {
+      final res = await http.delete(
+        Uri.parse('$_baseUrl/messages_chat?canal_type=eq.$canal'),
+        headers: _headers,
+      );
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (e) {
+      print('Erreur clearChatCanal: $e');
+      return false;
+    }
+  }
+
   // -------------------------------------------------------------
   // RESSOURCES HSE
   // -------------------------------------------------------------

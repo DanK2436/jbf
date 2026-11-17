@@ -197,7 +197,7 @@ class _CmsContentManagerScreenState extends State<CmsContentManagerScreen> {
                         controller: _phoneWhatsappCtrl,
                         decoration: const InputDecoration(
                           labelText: 'Numéro WhatsApp Officiel (Affiché sur Web/Apps)',
-                          prefixIcon: Icon(Icons.whatsapp, color: Color(0xFF25D366)),
+                          prefixIcon: Icon(Icons.chat_bubble, color: Color(0xFF25D366)),
                         ),
                       ),
                     ),

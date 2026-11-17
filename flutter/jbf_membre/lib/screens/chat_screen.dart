@@ -98,7 +98,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         _messages.removeWhere((m) => m.id == msg.id);
       });
       try {
-        await _supabase.client.from('messages_chat').delete().eq('id', msg.id);
+        await _supabase.deleteChatMessage(msg.id);
       } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         _messages.clear();
       });
       try {
-        await _supabase.client.from('messages_chat').delete().eq('canal', _currentCanal);
+        await _supabase.clearChatCanal(_currentCanal);
       } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../models/membre_models.dart';
 import '../services/auth_service.dart';
 import 'dashboard_screen.dart';
 import 'missions_screen.dart';

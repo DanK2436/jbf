@@ -6,6 +6,7 @@ class MembreUser {
   final String poste;
   final String sectionNom;
   final String province;
+  final String role;
   int soldeConges;
   final String avatar;
   final String token;
@@ -18,6 +19,7 @@ class MembreUser {
     required this.poste,
     required this.sectionNom,
     this.province = 'Haut-Katanga (Lubumbashi)',
+    this.role = 'Membre Collaborateur',
     this.soldeConges = 18,
     required this.avatar,
     required this.token,
@@ -32,6 +34,7 @@ class MembreUser {
       poste: json['poste'] ?? 'Chef d\'Équipe Soudure & Tuyauterie',
       sectionNom: json['section_nom'] ?? 'Maintenance & Soudure',
       province: json['province'] ?? 'Lualaba (Kolwezi)',
+      role: json['role'] ?? 'Membre Collaborateur',
       soldeConges: int.tryParse(json['solde_conges']?.toString() ?? '18') ?? 18,
       avatar: json['avatar'] ?? 'JM',
       token: json['token'] ?? 'token-membre',
@@ -46,6 +49,7 @@ class MembreUser {
         'poste': poste,
         'section_nom': sectionNom,
         'province': province,
+        'role': role,
         'solde_conges': soldeConges,
         'avatar': avatar,
         'token': token,
@@ -64,7 +68,10 @@ class MembreMission {
   String statut; // planifiee, en_cours, terminee
   final String chefEquipe;
   final int effectif;
+  final double progression;
   String rapport;
+
+  String get siteLieu => siteIntervention;
 
   MembreMission({
     required this.id,
@@ -78,6 +85,7 @@ class MembreMission {
     this.statut = 'en_cours',
     this.chefEquipe = '',
     this.effectif = 1,
+    this.progression = 0.0,
     this.rapport = '',
   });
 }

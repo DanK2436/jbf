@@ -183,7 +183,7 @@ class _AuditScreenState extends State<AuditScreen> {
       case 'success':
         return AppConfig.successGreen;
       default:
-        return AppConfig.primaryBlue;
+        return const Color(0xFF2563EB);
     }
   }
 
