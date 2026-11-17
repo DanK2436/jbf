@@ -414,13 +414,13 @@
     let session = window.clientCore?.getClientSession() || {};
 
     const newRev = {
-      id: 'rev-' + Date.now(),
-      client_id: session?.id || null,
+      client_id: (session?.id && session.id.length > 20) ? session.id : null,
       nom: session?.companyName || session?.name || 'Client Partenaire',
       entreprise: session?.companyName || session?.name || 'Mon Entreprise',
       service: service,
       site: site,
       note: Number(rating),
+      stars: Number(rating),
       commentaire: text,
       approuve: false,
       created_at: new Date().toISOString()
@@ -430,10 +430,18 @@
     const sb = getSb();
     if (sb) {
       try {
-        await sb.from('avis_clients').insert([newRev]);
+        const { data, error } = await sb.from('avis_clients').insert([newRev]).select();
+        if (data && data[0] && data[0].id) {
+          newRev.id = data[0].id;
+        } else {
+          newRev.id = 'rev-' + Date.now();
+        }
       } catch (err) {
         console.warn('[Sync Supabase avis]', err);
+        newRev.id = 'rev-' + Date.now();
       }
+    } else {
+      newRev.id = 'rev-' + Date.now();
     }
 
     // 2. Local cache

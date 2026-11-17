@@ -139,7 +139,7 @@ class ClientDataService {
   Future<List<ClientAvis>> fetchAvis() async {
     try {
       final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/avis?select=*&order=created_at.desc'),
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/avis_clients?select=*&order=created_at.desc'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -177,7 +177,7 @@ class ClientDataService {
 
     try {
       await http.post(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/avis'),
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/avis_clients'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -185,11 +185,15 @@ class ClientDataService {
           'Prefer': 'return=minimal',
         },
         body: jsonEncode({
-          'auteur': auteur,
+          'nom': auteur,
+          'prenom': auteur.split(' ').first,
           'entreprise': entreprise,
           'note': note,
+          'stars': note,
+          'service': 'Prestation JBF Client',
           'commentaire': commentaire,
-          'statut': 'publie',
+          'approuve': false,
+          'created_at': DateTime.now().toIso8601String(),
         }),
       ).timeout(const Duration(seconds: 6));
     } catch (_) {}

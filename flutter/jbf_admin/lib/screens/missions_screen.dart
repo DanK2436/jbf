@@ -17,6 +17,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
   final _supabase = SupabaseService();
   bool _isLoading = true;
   List<MissionItem> _missions = [];
+  List<Map<String, dynamic>> _availableChefs = [];
   String _selectedStatut = 'toutes';
 
   @override
@@ -28,9 +29,51 @@ class _MissionsScreenState extends State<MissionsScreen> {
   Future<void> _loadMissions() async {
     setState(() => _isLoading = true);
     final list = await _supabase.fetchMissions();
+
+    // Charger les membres pour l'affectation directe aux Chefs d'équipe
+    List<Map<String, dynamic>> chefs = [];
+    try {
+      final res = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?role=eq.membre&select=*'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final List<dynamic> l = jsonDecode(res.body);
+        chefs = l.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (_) {}
+
+    if (chefs.isEmpty) {
+      chefs = [
+        {
+          'id': 'chef-1',
+          'full_name': 'Ing. Michel Mukendi',
+          'poste': 'Chef d\'équipe',
+          'section_nom': 'Sous-traitance Minière & Extraction',
+        },
+        {
+          'id': 'chef-2',
+          'full_name': 'Sarah Ilunga',
+          'poste': 'Chef d\'équipe',
+          'section_nom': 'BTP, Génie Civil & Fondations',
+        },
+        {
+          'id': 'chef-3',
+          'full_name': 'Patrick Mwamba',
+          'poste': 'Superviseur',
+          'section_nom': 'Maintenance Industrielle & Soudure',
+        },
+      ];
+    }
+
     if (!mounted) return;
     setState(() {
       _missions = list;
+      _availableChefs = chefs;
       _isLoading = false;
     });
   }
@@ -307,83 +350,249 @@ class _MissionsScreenState extends State<MissionsScreen> {
   void _showAddMissionDialog() {
     final titreCtrl = TextEditingController();
     final clientCtrl = TextEditingController();
-    final siteCtrl = TextEditingController();
-    final serviceCtrl = TextEditingController();
-    final respCtrl = TextEditingController();
-    final budgetCtrl = TextEditingController();
-    final effectifCtrl = TextEditingController();
+    final siteCtrl = TextEditingController(text: 'Kolwezi / Haut-Katanga');
+    final budgetCtrl = TextEditingController(text: '12500');
+    final effectifCtrl = TextEditingController(text: '4');
     final descCtrl = TextEditingController();
+
+    String selectedService = '1. Catering Minier & Gestion Base-Vie (Norme HACCP)';
+    final List<String> servicesList = [
+      '1. Catering Minier & Gestion Base-Vie (Norme HACCP)',
+      '2. Maintenance Industrielle & Électromécanique',
+      '3. Logistique Minière, Fret Lourd & Transport',
+      '4. BTP Minier, Terrassement & Génie Civil',
+      '5. Énergie MT/HT & Groupes Électrogènes',
+      '6. Sécurité Industrielle, Gardiennage & Cynophile',
+      '7. Climatisation Industrielle & Froid',
+      '8. Topographie, Forage & Sondage Minier',
+      '9. Tuyauterie Industrielle & Soudure Haute Pression',
+      '10. Nettoyage Industriel & Décontamination Chimique',
+      '11. Télécoms, Fibre Optique & Radiocommunication',
+      '12. Fourniture Industrielle & Équipements EPI',
+      '13. Traitement des Eaux Usées & Environnement',
+      '14. Audit HSE, Conformité Minière & RSE',
+      '15. Informatique, Réseaux & Vidéosurveillance',
+    ];
+
+    Map<String, dynamic>? selectedChef;
+    if (_availableChefs.isNotEmpty) {
+      selectedChef = _availableChefs.firstWhere(
+        (c) => (c['poste'] ?? c['role_service'] ?? '').toString().toLowerCase().contains('chef'),
+        orElse: () => _availableChefs.first,
+      );
+    }
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Créer un Nouvel Ordre de Mission (Supabase BDD)'),
-        content: SingleChildScrollView(
-          child: SizedBox(
-            width: 520,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: titreCtrl, decoration: const InputDecoration(hintText: 'Intitulé de la mission *')),
-                const SizedBox(height: 10),
-                TextField(controller: clientCtrl, decoration: const InputDecoration(hintText: 'Nom du Client ou Société *')),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(child: TextField(controller: siteCtrl, decoration: const InputDecoration(hintText: 'Site d\'intervention'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: TextField(controller: serviceCtrl, decoration: const InputDecoration(hintText: 'Prestation'))),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(child: TextField(controller: respCtrl, decoration: const InputDecoration(hintText: 'Superviseur JBF'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: TextField(controller: effectifCtrl, decoration: const InputDecoration(hintText: 'Effectif'))),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                TextField(controller: budgetCtrl, decoration: const InputDecoration(hintText: 'Budget prévisionnel (USD)')),
-                const SizedBox(height: 10),
-                TextField(controller: descCtrl, maxLines: 3, decoration: const InputDecoration(hintText: 'Spécifications techniques, EPI obligatoires...')),
-              ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.assignment_turned_in, color: AppConfig.brandPink),
+              SizedBox(width: 8),
+              Text('Créer et Affecter un Ordre de Mission'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 580,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppConfig.brandPinkTint,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppConfig.brandPink.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.supervised_user_circle, color: AppConfig.brandPink, size: 22),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Chaîne d\'affectation opérationnelle : La mission est d\'abord attribuée au Chef d\'équipe sélectionné. Ce dernier reçoit l\'ordre de mission et procède à la délégation vers ses superviseurs et membres simples.',
+                            style: TextStyle(fontSize: 12, color: AppConfig.brandPink),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: titreCtrl,
+                    decoration: const InputDecoration(labelText: 'Intitulé de la Mission *', hintText: 'ex: Maintenance Concasseur Primaire TFM'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: clientCtrl,
+                          decoration: const InputDecoration(labelText: 'Client / Société Minière *', hintText: 'ex: Tenke Fungurume Mining'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: siteCtrl,
+                          decoration: const InputDecoration(labelText: 'Site d\'Intervention *', hintText: 'ex: Usine Luita / Fungurume'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedService,
+                    decoration: const InputDecoration(labelText: 'Pôle de Service JBF *'),
+                    items: servicesList.map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis))).toList(),
+                    onChanged: (v) => setDlgState(() => selectedService = v!),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Sélecteur Obligatoire du Chef d'équipe
+                  const Text('Affectation au Membre Référent (Chef d\'équipe) *',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFC),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppConfig.brandPink),
+                    ),
+                    child: DropdownButton<Map<String, dynamic>>(
+                      value: selectedChef,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items: _availableChefs.map((chef) {
+                        final nom = chef['full_name'] ?? chef['nom_complet'] ?? 'Collaborateur';
+                        final poste = chef['poste'] ?? chef['role_service'] ?? 'Chef d\'équipe';
+                        final sec = chef['section_nom'] ?? 'Général';
+                        return DropdownMenuItem<Map<String, dynamic>>(
+                          value: chef,
+                          child: Text('$nom — $poste ($sec)', overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        );
+                      }).toList(),
+                      onChanged: (v) => setDlgState(() => selectedChef = v),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: effectifCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: 'Effectif Estimé (Agents)', hintText: '4'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: budgetCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(labelText: 'Budget Alloué (USD)', hintText: '12500'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Spécifications Techniques, Consignes HSE & EPI',
+                      hintText: 'Préciser les équipements obligatoires, cadences et règles de sécurité applicables...',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConfig.brandPink,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              onPressed: () async {
+                if (titreCtrl.text.isEmpty || clientCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez renseigner le titre de la mission et le client.')),
+                  );
+                  return;
+                }
+
+                Navigator.of(ctx).pop();
+                setState(() => _isLoading = true);
+
+                final chefNom = selectedChef != null
+                    ? (selectedChef!['full_name'] ?? selectedChef!['nom_complet'] ?? 'Chef d\'équipe')
+                    : 'Chef d\'équipe JBF';
+                final chefId = selectedChef != null ? selectedChef!['id']?.toString() : null;
+
+                final newMission = MissionItem(
+                  id: '',
+                  titre: titreCtrl.text.trim(),
+                  client: clientCtrl.text.trim(),
+                  siteIntervention: siteCtrl.text.trim(),
+                  serviceNom: selectedService,
+                  dateDebut: DateTime.now(),
+                  dateFin: DateTime.now().add(const Duration(days: 30)),
+                  assignedTo: chefNom,
+                  assignedToId: chefId,
+                  budgetUsd: double.tryParse(budgetCtrl.text) ?? 0.0,
+                  effectif: int.tryParse(effectifCtrl.text) ?? 1,
+                  description: descCtrl.text.trim(),
+                  statut: 'en_cours',
+                );
+
+                final success = await _supabase.createMission(newMission);
+
+                // Notifier le chef d'équipe via le chat membre
+                if (chefId != null) {
+                  try {
+                    await http.post(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode({
+                        'expediteur_id': 'admin',
+                        'expediteur_nom': 'Direction Générale JBF',
+                        'expediteur_avatar': 'DG',
+                        'canal_type': 'membre_$chefId',
+                        'section_nom': selectedService,
+                        'message': 'Bonjour $chefNom, un nouvel ordre de mission vous a été assigné : "${titreCtrl.text.trim()}" sur le site "${siteCtrl.text.trim()}". Vous pouvez désormais planifier l\'intervention et déléguer les étapes à vos superviseurs et membres simples.',
+                        'created_at': DateTime.now().toIso8601String(),
+                      }),
+                    );
+                  } catch (_) {}
+                }
+
+                await _loadMissions();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success
+                          ? 'Mission créée et transmise au Chef d\'équipe $chefNom avec succès !'
+                          : 'Ordre de mission enregistré dans la base Supabase.'),
+                      backgroundColor: AppConfig.successGreen,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.send, size: 18),
+              label: const Text('Créer & Affecter au Chef d\'équipe'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
-            onPressed: () async {
-              if (titreCtrl.text.isEmpty || clientCtrl.text.isEmpty) return;
-              Navigator.of(ctx).pop();
-
-              final newMission = MissionItem(
-                id: '',
-                titre: titreCtrl.text,
-                client: clientCtrl.text,
-                siteIntervention: siteCtrl.text,
-                serviceNom: serviceCtrl.text,
-                dateDebut: DateTime.now(),
-                dateFin: DateTime.now().add(const Duration(days: 30)),
-                assignedTo: respCtrl.text,
-                budgetUsd: double.tryParse(budgetCtrl.text) ?? 0.0,
-                effectif: int.tryParse(effectifCtrl.text) ?? 1,
-                description: descCtrl.text,
-                statut: 'en_cours',
-              );
-
-              await _supabase.createMission(newMission);
-              _loadMissions();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Nouvel ordre de mission enregistré dans la base Supabase')),
-              );
-            },
-            child: const Text('Enregistrer dans Supabase'),
-          ),
-        ],
       ),
     );
   }

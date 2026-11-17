@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/supabase_service.dart';
@@ -30,6 +32,108 @@ class _MissionsScreenState extends State<MissionsScreen> {
       _missions = list;
       _isLoading = false;
     });
+  }
+
+  void _showDelegationDialog(MembreMission m) {
+    final agentCtrl = TextEditingController();
+    final roleCtrl = TextEditingController(text: 'Superviseur');
+    final tacheCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.hub, color: AppConfig.brandPink),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Délégation Opérationnelle — ${m.titre}', overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 500,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'En tant que Chef d\'équipe, affectez des lots de travail ou déléguez des portions d\'intervention à vos superviseurs et membres simples.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: agentCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nom du Membre / Superviseur *',
+                      hintText: 'ex: Patrick Mwamba ou Junior Kalala',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: roleCtrl.text,
+                    decoration: const InputDecoration(labelText: 'Niveau / Statut dans l\'équipe'),
+                    items: const [
+                      DropdownMenuItem(value: 'Superviseur', child: Text('Superviseur de Chantier')),
+                      DropdownMenuItem(value: 'Membre simple', child: Text('Membre simple (Technicien/Opérateur)')),
+                      DropdownMenuItem(value: 'Spécialiste HSE', child: Text('Spécialiste HSE')),
+                    ],
+                    onChanged: (v) => setDlgState(() => roleCtrl.text = v!),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: tacheCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Tâche / Lot de travail confié *',
+                      hintText: 'ex: Supervision du montage charpente, contrôle des serrages...',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+              onPressed: () async {
+                if (agentCtrl.text.isEmpty || tacheCtrl.text.isEmpty) return;
+                Navigator.of(ctx).pop();
+
+                final newAgent = '${agentCtrl.text.trim()} (${roleCtrl.text}) : ${tacheCtrl.text.trim()}';
+
+                // Sauvegarder dans agents_assignes Supabase
+                try {
+                  await http.patch(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/missions?id=eq.${m.id}'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                      'Content-Type': 'application/json',
+                    },
+                    body: jsonEncode({
+                      'observations': '${m.description.isNotEmpty ? "${m.description}\n" : ""}[Délégation Chef d\'équipe] $newAgent',
+                    }),
+                  );
+                } catch (_) {}
+
+                _loadMissions();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Tâche déléguée à ${agentCtrl.text} enregistrée avec succès.'),
+                    backgroundColor: AppConfig.successGreen,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Confirmer la Délégation'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showReportDialog(MembreMission m) {
@@ -188,10 +292,21 @@ class _MissionsScreenState extends State<MissionsScreen> {
                                         ],
                                       ),
                                     ),
-                                    ElevatedButton.icon(
-                                      icon: const Icon(Icons.edit_note, size: 16),
-                                      label: const Text('Rapport Terrain'),
-                                      onPressed: () => _showReportDialog(m),
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B)),
+                                          icon: const Icon(Icons.group_add, size: 16),
+                                          label: const Text('Déléguer'),
+                                          onPressed: () => _showDelegationDialog(m),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.edit_note, size: 16),
+                                          label: const Text('Rapport Terrain'),
+                                          onPressed: () => _showReportDialog(m),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),

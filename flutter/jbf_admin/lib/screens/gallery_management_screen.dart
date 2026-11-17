@@ -25,14 +25,18 @@ class GalleryItemModel {
   });
 
   factory GalleryItemModel.fromJson(Map<String, dynamic> j) {
+    final rawType = (j['type'] ?? j['type_media'] ?? '').toString().toLowerCase();
+    final url = (j['url'] ?? j['media_url'] ?? j['img_url'] ?? j['video_url'] ?? '').toString();
+    final isVideo = rawType.contains('vid') || url.endsWith('.mp4') || url.contains('youtube') || url.contains('vimeo');
+
     return GalleryItemModel(
       id: j['id']?.toString() ?? '',
       titre: j['titre'] ?? j['title'] ?? 'Réalisation JBF',
       categorie: j['categorie'] ?? j['category'] ?? 'Général',
-      typeMedia: j['type_media'] ?? (j['media_url']?.toString().endsWith('.mp4') == true ? 'video' : 'image'),
-      mediaUrl: j['media_url'] ?? j['url'] ?? 'assets/gallery_construction.jpg',
+      typeMedia: isVideo ? 'video' : 'image',
+      mediaUrl: url.isNotEmpty ? url : 'assets/gallery_construction.jpg',
       description: j['description'] ?? '',
-      estPublie: j['est_publie'] == null ? true : (j['est_publie'] == true),
+      estPublie: j['publie'] != null ? (j['publie'] == true) : (j['est_publie'] == null ? true : (j['est_publie'] == true)),
       ordre: int.tryParse(j['ordre']?.toString() ?? '0') ?? 0,
     );
   }
@@ -78,9 +82,12 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
 
   Future<void> _loadGallery() async {
     setState(() => _isLoading = true);
+    List<GalleryItemModel> fetched = [];
+
+    // 1. Charger depuis galerie_items (Supabase)
     try {
       final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_medias?select=*&order=ordre.asc,created_at.desc'),
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_items?select=*&order=created_at.desc'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -89,59 +96,31 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        if (mounted) {
-          setState(() {
-            _items = list.map((e) => GalleryItemModel.fromJson(e)).toList();
-            _isLoading = false;
-          });
-          return;
-        }
+        fetched = list.map((e) => GalleryItemModel.fromJson(e)).toList();
       }
     } catch (_) {}
 
-    // Éléments réels de base par défaut
+    // 2. Si galerie_items est vide, vérifier la table synonyme gallery_images
+    if (fetched.isEmpty) {
+      try {
+        final res2 = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/gallery_images?select=*&order=created_at.desc'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 4));
+
+        if (res2.statusCode == 200) {
+          final List<dynamic> list2 = jsonDecode(res2.body);
+          fetched = list2.map((e) => GalleryItemModel.fromJson(e)).toList();
+        }
+      } catch (_) {}
+    }
+
     if (mounted) {
       setState(() {
-        if (_items.isEmpty) {
-          _items = [
-            GalleryItemModel(
-              id: 'gal-1',
-              titre: 'Terrassement Grande Masse & Décapage Minier',
-              categorie: 'Mines & Extraction',
-              typeMedia: 'image',
-              mediaUrl: 'assets/gallery_mining.jpg',
-              description: 'Opération d\'excavation lourde et criblage en concession minière Lualaba.',
-              estPublie: true,
-            ),
-            GalleryItemModel(
-              id: 'gal-2',
-              titre: 'Érection de Charpente Métallique Industrielle',
-              categorie: 'BTP & Génie Civil',
-              typeMedia: 'image',
-              mediaUrl: 'assets/gallery_construction.jpg',
-              description: 'Assemblage de hangars haute portée pour stockage de concentrés.',
-              estPublie: true,
-            ),
-            GalleryItemModel(
-              id: 'gal-3',
-              titre: 'Service Catering & Repas Chauds 3x8 Base-Vie',
-              categorie: 'Catering HACCP',
-              typeMedia: 'image',
-              mediaUrl: 'assets/gallery_catering.jpg',
-              description: 'Cuisine industrielle certifiée HACCP pour camp de brousse de 1200 ouvriers.',
-              estPublie: true,
-            ),
-            GalleryItemModel(
-              id: 'gal-4',
-              titre: 'Vidéo : Alignement Laser et Soudure TIG Haute Pression',
-              categorie: 'Maintenance & Soudure',
-              typeMedia: 'video',
-              mediaUrl: 'assets/videos/soudure_mumi.mp4',
-              description: 'Intervention d\'urgence sur tuyauterie d\'acide inox 316L.',
-              estPublie: true,
-            ),
-          ];
-        }
+        _items = fetched;
         _isLoading = false;
       });
     }
@@ -253,17 +232,21 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                 final payload = {
                   'titre': titreCtrl.text.trim(),
                   'categorie': selectedCat,
+                  'type': selectedType == 'video' ? 'video' : 'photo',
                   'type_media': selectedType,
+                  'url': urlCtrl.text.trim(),
                   'media_url': urlCtrl.text.trim(),
+                  'img_url': urlCtrl.text.trim(),
+                  'video_url': selectedType == 'video' ? urlCtrl.text.trim() : null,
                   'description': descCtrl.text.trim(),
+                  'publie': isPublie,
                   'est_publie': isPublie,
-                  'updated_at': DateTime.now().toIso8601String(),
                 };
 
                 try {
                   if (isEditing) {
                     await http.patch(
-                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_medias?id=eq.${item.id}'),
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_items?id=eq.${item.id}'),
                       headers: {
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -271,9 +254,21 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                       },
                       body: jsonEncode(payload),
                     );
+                    try {
+                      await http.patch(
+                        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/gallery_images?id=eq.${item.id}'),
+                        headers: {
+                          'apikey': AppConfig.supabaseAnonKey,
+                          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                          'Content-Type': 'application/json',
+                        },
+                        body: jsonEncode(payload),
+                      );
+                    } catch (_) {}
                   } else {
+                    payload['created_at'] = DateTime.now().toIso8601String();
                     await http.post(
-                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_medias'),
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_items'),
                       headers: {
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -281,6 +276,17 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                       },
                       body: jsonEncode(payload),
                     );
+                    try {
+                      await http.post(
+                        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/gallery_images'),
+                        headers: {
+                          'apikey': AppConfig.supabaseAnonKey,
+                          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                          'Content-Type': 'application/json',
+                        },
+                        body: jsonEncode(payload),
+                      );
+                    } catch (_) {}
                   }
                 } catch (_) {}
 
@@ -322,12 +328,21 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
       setState(() => _items.removeWhere((i) => i.id == item.id));
       try {
         await http.delete(
-          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_medias?id=eq.${item.id}'),
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_items?id=eq.${item.id}'),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           },
         );
+        try {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/gallery_images?id=eq.${item.id}'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        } catch (_) {}
       } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -39,7 +39,7 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
     setState(() => _isLoading = true);
     final list = await _supabase.fetchDevis();
 
-    // Charger les devis soumis par les membres
+    // 1. Charger les devis soumis par les membres depuis devis_membres
     List<Map<String, dynamic>> membresList = [];
     try {
       final res = await http.get(
@@ -56,9 +56,41 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
       }
     } catch (_) {}
 
+    // 2. Extraire également les devis membres reçus via demandes_devis
+    final clientOnlyList = <DevisItem>[];
+    for (final d in list) {
+      final isMembreDevis = d.statut == 'transmis_admin' ||
+          d.societe.startsWith('JBF Terrain') ||
+          d.services.any((s) => s.toLowerCase().contains('devis membre')) ||
+          d.message.toLowerCase().contains('chiffré par') ||
+          d.message.toLowerCase().contains('chiffrage officiel');
+
+      if (isMembreDevis) {
+        // Ajouter dans la liste des devis membres si pas déjà présent
+        final alreadyIn = membresList.any((m) => (m['numero_devis'] ?? m['id']) == d.id);
+        if (!alreadyIn) {
+          membresList.add({
+            'id': d.id,
+            'numero_devis': d.id.startsWith('DEV-') ? d.id : 'DEV-MBR-${d.id.substring(0, d.id.length > 8 ? 8 : d.id.length)}',
+            'nom_collaborateur': d.nom,
+            'nom_client': d.societe.replaceFirst('JBF Terrain — ', '').replaceFirst('JBF Terrain - ', ''),
+            'projet_prestation': d.services.isNotEmpty ? d.services.first.replaceFirst('Devis Membre: ', '') : 'Prestation Terrain',
+            'site_intervention': d.localite,
+            'total_ht': d.montantUsd,
+            'devise': 'USD',
+            'statut': d.statut,
+            'notes_direction': d.message,
+            'created_at': d.createdAt.toIso8601String(),
+          });
+        }
+      } else {
+        clientOnlyList.add(d);
+      }
+    }
+
     if (!mounted) return;
     setState(() {
-      _devisClients = list;
+      _devisClients = clientOnlyList;
       _devisMembres = membresList;
       _isLoading = false;
     });

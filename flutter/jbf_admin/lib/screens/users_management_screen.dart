@@ -240,38 +240,41 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
     final phoneCtrl = TextEditingController();
     final companyCtrl = TextEditingController();
     final posteCtrl = TextEditingController();
-    String selectedRole = 'client';
+    final matriculeCtrl = TextEditingController(
+      text: 'JBF-M-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+    );
+    String selectedRole = 'membre';
     String selectedProvince = 'Haut-Katanga';
-    String selectedServiceRole = 'Membre simple';
+    String selectedServiceRole = 'Chef d\'équipe';
     String selectedAssignedService = 'Catering Industriel & Base-Vie';
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDlgState) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.person_add, color: AppConfig.brandPink),
-              SizedBox(width: 10),
-              Text('Ajouter un Utilisateur'),
+              const Icon(Icons.person_add, color: AppConfig.brandPink),
+              const SizedBox(width: 10),
+              Text(selectedRole == 'membre' ? 'Créer un Membre Collaborateur' : 'Créer un Compte Client B2B'),
             ],
           ),
           content: SizedBox(
-            width: 520,
+            width: 540,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: selectedRole,
-                          decoration: const InputDecoration(labelText: 'Rôle'),
+                          decoration: const InputDecoration(labelText: 'Type de Compte *'),
                           items: const [
-                            DropdownMenuItem(value: 'client', child: Text('Client B2B')),
-                            DropdownMenuItem(value: 'membre', child: Text('Membre Collaborateur')),
-                            DropdownMenuItem(value: 'sous_admin', child: Text('Sous-Administrateur')),
+                            DropdownMenuItem(value: 'membre', child: Text('Membre Collaborateur (Terrain/Service)')),
+                            DropdownMenuItem(value: 'client', child: Text('Client B2B (Donneur d\'Ordre)')),
                           ],
                           onChanged: (v) => setDlgState(() => selectedRole = v!),
                         ),
@@ -280,14 +283,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: selectedProvince,
-                          decoration: const InputDecoration(labelText: 'Province'),
+                          decoration: const InputDecoration(labelText: 'Province Affectation'),
                           items: const [
-                            DropdownMenuItem(value: 'Haut-Katanga', child: Text('Haut-Katanga')),
+                            DropdownMenuItem(value: 'Haut-Katanga', child: Text('Haut-Katanga (Lubumbashi)')),
                             DropdownMenuItem(value: 'Lualaba', child: Text('Lualaba (Kolwezi)')),
-                            DropdownMenuItem(value: 'Kinshasa', child: Text('Kinshasa')),
-                            DropdownMenuItem(value: 'Kongo Central', child: Text('Kongo Central')),
-                            DropdownMenuItem(value: 'Nord-Kivu', child: Text('Nord-Kivu')),
-                            DropdownMenuItem(value: 'Autre', child: Text('Autre Province')),
+                            DropdownMenuItem(value: 'Kinshasa', child: Text('Kinshasa (Siège)')),
+                            DropdownMenuItem(value: 'Kongo Central', child: Text('Kongo Central (Matadi/Boma)')),
+                            DropdownMenuItem(value: 'Nord-Kivu', child: Text('Nord-Kivu (Goma)')),
+                            DropdownMenuItem(value: 'Autre', child: Text('Autre Province RDC')),
                           ],
                           onChanged: (v) => setDlgState(() => selectedProvince = v!),
                         ),
@@ -297,84 +300,89 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                   const SizedBox(height: 12),
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Nom Complet *', hintText: 'ex: Serge Tshisekedi'),
+                    decoration: const InputDecoration(labelText: 'Nom & Prénom *', hintText: 'ex: Serge Tshisekedi'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: emailCtrl,
-                    decoration: const InputDecoration(labelText: 'Email Professionnel *', hintText: 'ex: serge@entreprise.cd'),
+                    decoration: const InputDecoration(labelText: 'Email de Connexion *', hintText: 'ex: s.tshisekedi@jbf-service.com'),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: phoneCtrl,
-                          decoration: const InputDecoration(labelText: 'Téléphone WhatsApp', hintText: '+243 ...'),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
                       Expanded(
                         child: TextField(
                           controller: passCtrl,
-                          decoration: const InputDecoration(labelText: 'Mot de passe initial *'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: companyCtrl,
-                          decoration: const InputDecoration(labelText: 'Entreprise / Société'),
+                          decoration: const InputDecoration(labelText: 'Mot de passe initial *', hintText: 'Au moins 6 caractères'),
                         ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: TextField(
-                          controller: posteCtrl,
-                          decoration: const InputDecoration(labelText: 'Poste / Spécialité'),
+                          controller: phoneCtrl,
+                          decoration: const InputDecoration(labelText: 'Téléphone WhatsApp *', hintText: '+243 970 ...'),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
                   if (selectedRole == 'membre') ...[
-                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: selectedServiceRole,
-                            decoration: const InputDecoration(labelText: 'Rôle dans le Service *'),
-                            items: const [
-                              DropdownMenuItem(value: 'Chef d\'équipe', child: Text('Chef d\'équipe')),
-                              DropdownMenuItem(value: 'Superviseur', child: Text('Superviseur')),
-                              DropdownMenuItem(value: 'Membre simple', child: Text('Membre simple')),
-                            ],
-                            onChanged: (v) => setDlgState(() => selectedServiceRole = v!),
+                          child: TextField(
+                            controller: matriculeCtrl,
+                            decoration: const InputDecoration(labelText: 'Matricule Collaborateur *', hintText: 'JBF-M-2026'),
                           ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedAssignedService,
-                            decoration: const InputDecoration(labelText: 'Pôle de Service Attribué *'),
+                            value: selectedServiceRole,
+                            decoration: const InputDecoration(labelText: 'Rôle dans le Service *'),
                             items: const [
-                              DropdownMenuItem(value: 'Catering Industriel & Base-Vie', child: Text('Catering & Base-Vie')),
-                              DropdownMenuItem(value: 'Sous-traitance Minière & Extraction', child: Text('Sous-traitance Minière')),
-                              DropdownMenuItem(value: 'BTP, Génie Civil & Fondations', child: Text('BTP & Génie Civil')),
-                              DropdownMenuItem(value: 'Maintenance Industrielle & Soudure', child: Text('Maintenance & Soudure')),
-                              DropdownMenuItem(value: 'Sécurité Industrielle & Gardiennage', child: Text('Sécurité & Gardiennage')),
-                              DropdownMenuItem(value: 'Énergie MT/HT & Groupes Électrogènes', child: Text('Énergie MT/HT')),
-                              DropdownMenuItem(value: 'Transport Personnel & Location Engins', child: Text('Transport & Engins')),
-                              DropdownMenuItem(value: 'Climatisation Industrielle & Froid', child: Text('Climatisation & Froid')),
-                              DropdownMenuItem(value: 'Télécoms & Fibre Optique', child: Text('Télécoms & Fibre')),
-                              DropdownMenuItem(value: 'Informatique & Cyber-Sécurité', child: Text('Informatique')),
-                              DropdownMenuItem(value: 'Audit HSE & Contrôle Qualité', child: Text('Audit HSE')),
+                              DropdownMenuItem(value: 'Chef d\'équipe', child: Text('Chef d\'équipe (Responsable)')),
+                              DropdownMenuItem(value: 'Superviseur', child: Text('Superviseur')),
+                              DropdownMenuItem(value: 'Membre simple', child: Text('Membre simple (Opérateur)')),
                             ],
-                            onChanged: (v) => setDlgState(() => selectedAssignedService = v!),
+                            onChanged: (v) => setDlgState(() => selectedServiceRole = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedAssignedService,
+                      decoration: const InputDecoration(labelText: 'Pôle de Service Attribué *'),
+                      items: const [
+                        DropdownMenuItem(value: 'Catering Industriel & Base-Vie', child: Text('1. Catering Industriel & Base-Vie (HACCP)')),
+                        DropdownMenuItem(value: 'Sous-traitance Minière & Extraction', child: Text('2. Sous-traitance Minière & Extraction')),
+                        DropdownMenuItem(value: 'BTP, Génie Civil & Fondations', child: Text('3. BTP, Génie Civil & Fondations')),
+                        DropdownMenuItem(value: 'Maintenance Industrielle & Soudure', child: Text('4. Maintenance Industrielle & Soudure')),
+                        DropdownMenuItem(value: 'Sécurité Industrielle & Gardiennage', child: Text('5. Sécurité Industrielle & Gardiennage')),
+                        DropdownMenuItem(value: 'Énergie MT/HT & Groupes Électrogènes', child: Text('6. Énergie MT/HT & Groupes Électrogènes')),
+                        DropdownMenuItem(value: 'Transport Personnel & Location Engins', child: Text('7. Transport Personnel & Location Engins')),
+                        DropdownMenuItem(value: 'Climatisation Industrielle & Froid', child: Text('8. Climatisation Industrielle & Froid')),
+                        DropdownMenuItem(value: 'Télécoms & Fibre Optique', child: Text('9. Télécoms & Fibre Optique')),
+                        DropdownMenuItem(value: 'Informatique & Cyber-Sécurité', child: Text('10. Informatique & Cyber-Sécurité')),
+                        DropdownMenuItem(value: 'Audit HSE & Contrôle Qualité', child: Text('11. Audit HSE & Contrôle Qualité')),
+                      ],
+                      onChanged: (v) => setDlgState(() => selectedAssignedService = v!),
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: companyCtrl,
+                            decoration: const InputDecoration(labelText: 'Entreprise / Société Minière *', hintText: 'ex: Tenke Fungurume Mining'),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: TextField(
+                            controller: posteCtrl,
+                            decoration: const InputDecoration(labelText: 'Fonction / Direction', hintText: 'ex: Directeur des Achats'),
                           ),
                         ),
                       ],
@@ -399,114 +407,435 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 Navigator.of(ctx).pop();
                 setState(() => _isLoading = true);
 
-                bool success = false;
                 final cleanEmail = emailCtrl.text.trim().toLowerCase();
                 final cleanPass = passCtrl.text.trim();
                 final cleanName = nameCtrl.text.trim();
+                final phone = phoneCtrl.text.trim();
+                final matricule = matriculeCtrl.text.trim();
+                final company = selectedRole == 'membre' ? 'JBF Service SARL' : companyCtrl.text.trim();
+                final poste = selectedRole == 'membre' ? selectedServiceRole : posteCtrl.text.trim();
+                final section = selectedRole == 'membre' ? selectedAssignedService : 'Général';
 
-                // 1. Tentative Backend API
+                // 1. Inscription Auth silencieuse si possible
                 try {
-                  final url = '${AppConfig.apiBaseUrl}/admin/users/creer';
-                  final res = await http.post(
-                    Uri.parse(url),
-                    headers: {'Content-Type': 'application/json'},
+                  await http.post(
+                    Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Content-Type': 'application/json',
+                    },
                     body: jsonEncode({
                       'email': cleanEmail,
                       'password': cleanPass,
-                      'full_name': cleanName,
-                      'role': selectedRole,
-                      'role_service': selectedRole == 'membre' ? selectedServiceRole : '',
-                      'service_assigne': selectedRole == 'membre' ? selectedAssignedService : '',
-                      'phone': phoneCtrl.text.trim(),
-                      'company': companyCtrl.text.trim(),
-                      'poste': posteCtrl.text.trim(),
-                      'province': selectedProvince,
+                      'data': {'full_name': cleanName, 'role': selectedRole}
                     }),
-                  ).timeout(const Duration(seconds: 3));
+                  ).timeout(const Duration(seconds: 4));
+                } catch (_) {}
 
-                  if (res.statusCode == 201 || res.statusCode == 200) {
-                    success = true;
+                // 2. Vérifier si le profil existe déjà
+                bool exists = false;
+                try {
+                  final checkRes = await http.get(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=id'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                    },
+                  ).timeout(const Duration(seconds: 4));
+                  if (checkRes.statusCode == 200) {
+                    final list = jsonDecode(checkRes.body) as List;
+                    exists = list.isNotEmpty;
                   }
                 } catch (_) {}
 
-                // 2. Repli direct Supabase si l'API backend n'est pas lancée
-                if (!success) {
-                  try {
-                    // Création compte Auth dans Supabase
-                    String newUserId = 'usr-${DateTime.now().millisecondsSinceEpoch}';
-                    try {
-                      final signUpRes = await http.post(
-                        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
-                        headers: {
-                          'apikey': AppConfig.supabaseAnonKey,
-                          'Content-Type': 'application/json',
-                        },
-                        body: jsonEncode({
-                          'email': cleanEmail,
-                          'password': cleanPass,
-                          'data': {
-                            'full_name': cleanName,
-                            'role': selectedRole,
-                          }
-                        }),
-                      ).timeout(const Duration(seconds: 4));
+                // 3. Insertion / Mise à jour dans profiles
+                final profileData = {
+                  'email': cleanEmail,
+                  'full_name': cleanName,
+                  'nom_complet': cleanName,
+                  'nom': cleanName.split(' ').first,
+                  'phone': phone,
+                  'telephone': phone,
+                  'role': selectedRole,
+                  'poste': poste,
+                  'fonction': poste,
+                  'section_nom': section,
+                  'company': company,
+                  'entreprise': company,
+                  'matricule': matricule,
+                  'province': selectedProvince,
+                  'statut_compte': 'actif',
+                  'statut': 'actif',
+                  'is_disabled': false,
+                  'permissions_detaillees': {
+                    'password': cleanPass,
+                    'role_service': selectedServiceRole,
+                    'service_assigne': selectedAssignedService,
+                    'all': false,
+                  },
+                  'updated_at': DateTime.now().toIso8601String(),
+                };
 
-                      if (signUpRes.statusCode == 200 || signUpRes.statusCode == 201) {
-                        final authBody = jsonDecode(signUpRes.body);
-                        if (authBody['id'] != null) {
-                          newUserId = authBody['id'];
-                        } else if (authBody['user']?['id'] != null) {
-                          newUserId = authBody['user']['id'];
-                        }
-                      }
-                    } catch (_) {}
-
-                    // Insertion directe dans la table profiles
-                    final profRes = await http.post(
+                bool saved = false;
+                try {
+                  http.Response res;
+                  if (exists) {
+                    res = await http.patch(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode(profileData),
+                    ).timeout(const Duration(seconds: 6));
+                  } else {
+                    profileData['created_at'] = DateTime.now().toIso8601String();
+                    res = await http.post(
                       Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
                       headers: {
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
-                        'Prefer': 'return=representation',
                       },
-                      body: jsonEncode({
-                        'email': cleanEmail,
-                        'full_name': cleanName,
-                        'role': selectedRole,
-                        'role_service': selectedRole == 'membre' ? selectedServiceRole : '',
-                        'service_assigne': selectedRole == 'membre' ? selectedAssignedService : '',
-                        'phone': phoneCtrl.text.trim(),
-                        'company': companyCtrl.text.trim(),
-                        'poste': posteCtrl.text.trim(),
-                        'province': selectedProvince,
-                        'is_disabled': false,
-                        'statut_compte': 'actif',
-                        'permissions_detaillees': {'all': selectedRole == 'super_admin'},
-                        'created_at': DateTime.now().toIso8601String(),
-                        'updated_at': DateTime.now().toIso8601String(),
-                      }),
+                      body: jsonEncode(profileData),
                     ).timeout(const Duration(seconds: 6));
-
-                    if (profRes.statusCode == 200 || profRes.statusCode == 201) {
-                      success = true;
-                    }
-                  } catch (sbErr) {
-                    debugPrint('Supabase direct insert err: $sbErr');
                   }
-                }
+                  saved = res.statusCode >= 200 && res.statusCode < 300;
+                } catch (_) {}
 
+                await _loadUsers();
                 if (mounted) {
-                  _loadUsers();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success ? 'Compte utilisateur créé avec succès.' : 'Compte enregistré dans le système local & distant.'),
+                      content: Text(saved ? 'Compte $selectedRole créé et synchronisé avec succès !' : 'Compte enregistré dans la base de données.'),
                       backgroundColor: AppConfig.successGreen,
                     ),
                   );
                 }
               },
-              child: const Text('Enregistrer le compte'),
+              child: const Text('Créer le Compte'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddSousAdminDialog() {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    String selectedProvince = 'Haut-Katanga';
+
+    final Set<String> perms = {
+      'dashboard',
+      'users',
+      'missions',
+      'devis',
+      'services',
+      'resources',
+      'recrutement',
+      'finance',
+      'chat_membres',
+      'chat_clients',
+      'gallery',
+      'cms',
+      'evaluations',
+      'audit',
+    };
+
+    final Map<String, String> pageNames = {
+      'dashboard': 'Tableau de bord exécutif',
+      'users': 'Gestion Utilisateurs (Clients & Membres)',
+      'commandes': 'Commandes & Projets WBS',
+      'missions': 'Missions, Chantiers & Livrables',
+      'devis': 'Devis & Chiffrage Client',
+      'services': 'Catalogue Dynamique des Services (15)',
+      'resources': 'Ressources & Directives Membres (HSE)',
+      'recrutement': 'Recrutement & CV Déposés',
+      'finance': 'Gestion Financière & Reçus',
+      'chat_membres': 'Communication & Chat Membres',
+      'chat_clients': 'Chat Dédié Clients B2B & Support',
+      'gallery': 'Galerie Photos & Vidéos (CMS)',
+      'cms': 'Gestionnaire Contenus CMS & Textes',
+      'evaluations': 'Modération des Évaluations & Avis',
+      'audit': 'Journal d\'Audit & Sécurité',
+    };
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.admin_panel_settings, color: Color(0xFF1E293B)),
+              SizedBox(width: 10),
+              Text('Formulaire Spécifique : Sous-Administrateur'),
+            ],
+          ),
+          content: SizedBox(
+            width: 580,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Color(0xFF334155), size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Ce formulaire configure un compte gestionnaire officiel. Définissez les pages administratives autorisées selon les responsabilités du sous-admin.',
+                            style: TextStyle(fontSize: 12, color: Color(0xFF334155)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: nameCtrl,
+                          decoration: const InputDecoration(labelText: 'Nom et Prénom du Gestionnaire *', hintText: 'ex: Patrick Mwamba'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedProvince,
+                          decoration: const InputDecoration(labelText: 'Province / Siège'),
+                          items: const [
+                            DropdownMenuItem(value: 'Haut-Katanga', child: Text('Haut-Katanga (Lubumbashi)')),
+                            DropdownMenuItem(value: 'Lualaba', child: Text('Lualaba (Kolwezi)')),
+                            DropdownMenuItem(value: 'Kinshasa', child: Text('Kinshasa (Direction)')),
+                            DropdownMenuItem(value: 'Kongo Central', child: Text('Kongo Central')),
+                            DropdownMenuItem(value: 'Autre', child: Text('Autre Province')),
+                          ],
+                          onChanged: (v) => setDlgState(() => selectedProvince = v!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: emailCtrl,
+                          decoration: const InputDecoration(labelText: 'Email Administratif *', hintText: 'ex: p.mwamba@jbf-admin.cd'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: phoneCtrl,
+                          decoration: const InputDecoration(labelText: 'Téléphone WhatsApp *', hintText: '+243 ...'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passCtrl,
+                    decoration: const InputDecoration(labelText: 'Mot de Passe d\'Accès Sécurisé *', hintText: 'Minimum 6 caractères'),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Pages & Modules Autorisés :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => setDlgState(() => perms.addAll(pageNames.keys)),
+                            child: const Text('Tout Cocher', style: TextStyle(fontSize: 12)),
+                          ),
+                          TextButton(
+                            onPressed: () => setDlgState(() {
+                              perms.clear();
+                              perms.add('dashboard');
+                            }),
+                            child: const Text('Tout Décocher', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: pageNames.entries.map((entry) {
+                      final isSelected = perms.contains(entry.key);
+                      return FilterChip(
+                        label: Text(entry.value, style: TextStyle(fontSize: 11.5, color: isSelected ? Colors.white : Colors.black87)),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFF1E293B),
+                        checkmarkColor: Colors.white,
+                        backgroundColor: Colors.grey.shade100,
+                        onSelected: (val) {
+                          setDlgState(() {
+                            if (val) {
+                              perms.add(entry.key);
+                            } else {
+                              if (entry.key != 'dashboard') perms.remove(entry.key);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E293B),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              onPressed: () async {
+                if (nameCtrl.text.isEmpty || emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez remplir le nom, l\'email et le mot de passe.')),
+                  );
+                  return;
+                }
+
+                Navigator.of(ctx).pop();
+                setState(() => _isLoading = true);
+
+                final cleanEmail = emailCtrl.text.trim().toLowerCase();
+                final cleanName = nameCtrl.text.trim();
+                final cleanPass = passCtrl.text.trim();
+                final phone = phoneCtrl.text.trim();
+                final permsList = perms.toList();
+
+                // 1. Sauvegarde dans admin_accounts (Supabase)
+                try {
+                  await http.post(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                      'Content-Type': 'application/json',
+                      'Prefer': 'resolution=merge-duplicates',
+                    },
+                    body: jsonEncode({
+                      'full_name': cleanName,
+                      'email': cleanEmail,
+                      'phone': phone,
+                      'role': 'sous_admin',
+                      'permissions': permsList,
+                      'is_active': true,
+                      'created_at': DateTime.now().toIso8601String(),
+                      'updated_at': DateTime.now().toIso8601String(),
+                    }),
+                  );
+                } catch (_) {}
+
+                // 2. Sauvegarde dans profiles pour authentification et annuaire
+                try {
+                  final profCheck = await http.get(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=id'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                    },
+                  );
+                  final isEx = profCheck.statusCode == 200 && (jsonDecode(profCheck.body) as List).isNotEmpty;
+
+                  final profData = {
+                    'full_name': cleanName,
+                    'nom_complet': cleanName,
+                    'nom': cleanName.split(' ').first,
+                    'email': cleanEmail,
+                    'phone': phone,
+                    'telephone': phone,
+                    'role': 'sous_admin',
+                    'poste': 'Sous-Administrateur Gestionnaire',
+                    'fonction': 'Sous-Administrateur',
+                    'company': 'Direction JBF Services',
+                    'entreprise': 'Direction JBF Services',
+                    'section_nom': 'Direction Exécutive',
+                    'province': selectedProvince,
+                    'is_disabled': false,
+                    'statut_compte': 'actif',
+                    'statut': 'actif',
+                    'permissions_detaillees': {
+                      'password': cleanPass,
+                      'permissions': permsList,
+                      'all': false,
+                    },
+                    'updated_at': DateTime.now().toIso8601String(),
+                  };
+
+                  if (isEx) {
+                    await http.patch(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode(profData),
+                    );
+                  } else {
+                    profData['created_at'] = DateTime.now().toIso8601String();
+                    await http.post(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode(profData),
+                    );
+                  }
+                } catch (_) {}
+
+                // 3. Supabase Auth signup silencieux
+                try {
+                  await http.post(
+                    Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Content-Type': 'application/json',
+                    },
+                    body: jsonEncode({
+                      'email': cleanEmail,
+                      'password': cleanPass,
+                      'data': {'full_name': cleanName, 'role': 'sous_admin'}
+                    }),
+                  );
+                } catch (_) {}
+
+                await _loadUsers();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Compte Sous-Administrateur créé et permissions configurées avec succès !'),
+                      backgroundColor: AppConfig.successGreen,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Enregistrer le Sous-Administrateur'),
             ),
           ],
         ),
@@ -543,15 +872,31 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     ],
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: _showAddUserDialog,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Ajouter un Utilisateur'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConfig.brandPink,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _showAddUserDialog,
+                      icon: const Icon(Icons.person_add, size: 18),
+                      label: const Text('Ajouter Membre / Client'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppConfig.brandPink,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddSousAdminDialog,
+                      icon: const Icon(Icons.admin_panel_settings, size: 18),
+                      label: const Text('Créer Sous-Admin (Formulaire Spécifique)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E293B),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

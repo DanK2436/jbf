@@ -47,6 +47,7 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
   List<Map<String, dynamic>> _memberMessages = [];
   final TextEditingController _memberMsgCtrl = TextEditingController();
   bool _isLoadingContacts = false;
+  bool _isLoadingChat = false;
 
   // Chat Visiteurs Web
   final TextEditingController _visitorReplyCtrl = TextEditingController();
@@ -148,35 +149,54 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
     }
   }
 
-  void _loadMemberMessages(MemberContactItem contact) {
-    setState(() {
-      _memberMessages = [
-        {
-          'id': 'm1',
-          'sender': contact.name,
-          'text': 'Bonjour Direction, point d\'étape sur le déploiement secteur ${contact.domain}.',
-          'time': '09:15',
-          'isMe': false,
+  Future<void> _loadMemberMessages(MemberContactItem contact) async {
+    setState(() => _isLoadingChat = true);
+    List<Map<String, dynamic>> realMessages = [];
+
+    try {
+      final res = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(membre_${contact.id},membre_${contact.email})&order=created_at.asc'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
         },
-        {
-          'id': 'm2',
-          'sender': 'Direction JBF',
-          'text': 'Bien reçu ${contact.name}. Les approbations de sécurité ont été validées.',
-          'time': '09:30',
-          'isMe': true,
-        },
-      ];
-    });
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(res.body);
+        for (var row in list) {
+          final dt = DateTime.tryParse(row['created_at'] ?? '') ?? DateTime.now();
+          final isMe = row['expediteur_id'] == 'admin' || (row['expediteur_nom'] ?? '').toString().contains('Direction');
+          realMessages.add({
+            'id': row['id']?.toString() ?? '',
+            'sender': row['expediteur_nom'] ?? (isMe ? 'Direction JBF' : contact.name),
+            'text': row['message'] ?? '',
+            'time': '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
+            'isMe': isMe,
+          });
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _memberMessages = realMessages;
+        _isLoadingChat = false;
+      });
+    }
   }
 
-  void _sendMemberMessage() {
+  Future<void> _sendMemberMessage() async {
     final text = _memberMsgCtrl.text.trim();
     if (text.isEmpty || _selectedContact == null) return;
+    _memberMsgCtrl.clear();
 
     final now = DateTime.now();
+    final tempId = 'm_${now.millisecondsSinceEpoch}';
+
     setState(() {
       _memberMessages.add({
-        'id': 'm_${now.millisecondsSinceEpoch}',
+        'id': tempId,
         'sender': 'Direction JBF',
         'text': text,
         'time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
@@ -184,50 +204,113 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
       });
     });
 
-    _memberMsgCtrl.clear();
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'expediteur_id': 'admin',
+          'expediteur_nom': 'Direction Générale JBF',
+          'expediteur_avatar': 'DG',
+          'canal_type': 'membre_${_selectedContact!.id}',
+          'section_nom': _selectedContact!.domain,
+          'message': text,
+          'created_at': now.toIso8601String(),
+        }),
+      );
+    } catch (_) {}
   }
 
-  void _deleteMemberMessage(int index) {
-    showDialog(
+  Future<void> _deleteMemberMessage(int index) async {
+    if (index >= _memberMessages.length) return;
+    final msg = _memberMessages[index];
+    final msgId = msg['id']?.toString() ?? '';
+
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer ce message ?'),
         content: const Text('Ce message sera définitivement supprimé de cette conversation.'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              setState(() {
-                _memberMessages.removeAt(index);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Message supprimé avec succès.')),
-              );
-            },
+            onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Supprimer'),
           ),
         ],
       ),
     );
+
+    if (confirm == true) {
+      setState(() {
+        _memberMessages.removeAt(index);
+      });
+
+      if (msgId.isNotEmpty && !msgId.startsWith('m_')) {
+        try {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$msgId'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        } catch (_) {}
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Message supprimé avec succès.')),
+        );
+      }
+    }
   }
 
-  void _clearMemberConversation() {
+  Future<void> _clearMemberConversation() async {
     if (_selectedContact == null) return;
-    showDialog(
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Effacer la conversation avec ${_selectedContact!.name} ?'),
-        content: const Text('Tous les messages de cet échange seront supprimés.'),
+        content: const Text('Tous les messages échangés avec ce membre seront définitivement supprimés.'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              setState(() {
-                _memberMessages.clear();
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Effacer la discussion'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _memberMessages.clear();
+      });
+
+      try {
+        await http.delete(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(membre_${_selectedContact!.id},membre_${_selectedContact!.email})'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        );
+      } catch (_) {}
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Conversation effacée avec succès.')),
+        );
+      }
+    }
+  }
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Conversation entièrement effacée.')),

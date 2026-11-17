@@ -75,22 +75,37 @@ class SupabaseService {
 
   Future<bool> createMission(MissionItem m) async {
     try {
+      final codeMission = 'MSN-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+      final Map<String, dynamic> body = {
+        'titre': m.titre,
+        'code_mission': codeMission,
+        'client': m.client,
+        'client_nom': m.client,
+        'site_intervention': m.siteIntervention,
+        'site_lieu': m.siteIntervention,
+        'prestation': m.serviceNom,
+        'service': m.serviceNom,
+        'description': m.description,
+        'statut': m.statut.isNotEmpty ? m.statut : 'en_cours',
+        'responsable_jbf': m.assignedTo,
+        'agents_assignes': [m.assignedTo],
+        'progression_pct': 0,
+        'observations': 'Budget: ${m.budgetUsd.toStringAsFixed(0)} USD • Effectif: ${m.effectif} agent(s)',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      body['date_debut'] = m.dateDebut.toIso8601String();
+      if (m.dateFin != null) {
+        body['date_fin'] = m.dateFin!.toIso8601String();
+      }
+      if (m.assignedToId != null && m.assignedToId!.length > 20 && !m.assignedToId!.startsWith('usr-')) {
+        body['assigned_to'] = m.assignedToId;
+      }
+
       final res = await http.post(
         Uri.parse('$_baseUrl/missions'),
         headers: _headers,
-        body: jsonEncode({
-          'titre': m.titre,
-          'client': m.client,
-          'site_intervention': m.siteIntervention,
-          'service_nom': m.serviceNom,
-          'date_debut': m.dateDebut.toIso8601String(),
-          'date_fin': m.dateFin?.toIso8601String(),
-          'description': m.description,
-          'statut': m.statut,
-          'budget_usd': m.budgetUsd,
-          'effectif': m.effectif,
-          'rapport': m.rapport,
-        }),
+        body: jsonEncode(body),
       );
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
@@ -372,7 +387,10 @@ class SupabaseService {
     try {
       final res = await http.post(
         Uri.parse('$_baseUrl/admin_accounts'),
-        headers: _headers,
+        headers: {
+          ..._headers,
+          'Prefer': 'resolution=merge-duplicates',
+        },
         body: jsonEncode({
           'full_name': sa.fullName,
           'email': sa.email,
@@ -381,6 +399,32 @@ class SupabaseService {
           'is_active': true,
         }),
       );
+
+      // Enregistrer également dans la table profiles
+      try {
+        await http.post(
+          Uri.parse('$_baseUrl/profiles'),
+          headers: {
+            ..._headers,
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: jsonEncode({
+            'full_name': sa.fullName,
+            'nom_complet': sa.fullName,
+            'email': sa.email,
+            'role': 'sous_admin',
+            'poste': 'Sous-Administrateur',
+            'company': 'Direction JBF Services',
+            'statut_compte': 'actif',
+            'is_disabled': false,
+            'permissions_detaillees': {
+              'permissions': sa.permissions,
+              'password': 'Services+243JBF',
+            },
+          }),
+        );
+      } catch (_) {}
+
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
       print('Erreur createSousAdmin: $e');

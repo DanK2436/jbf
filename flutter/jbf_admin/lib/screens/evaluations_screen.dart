@@ -27,12 +27,12 @@ class EvaluationItem {
   factory EvaluationItem.fromJson(Map<String, dynamic> j) {
     return EvaluationItem(
       id: j['id']?.toString() ?? '',
-      nom: j['nom'] ?? j['client_nom'] ?? 'Partenaire',
-      entreprise: j['entreprise'] ?? j['company'] ?? 'Société Industrielle',
-      service: j['service'] ?? j['prestation'] ?? 'Sous-traitance Générale',
-      note: int.tryParse(j['note']?.toString() ?? '5') ?? 5,
-      commentaire: j['commentaire'] ?? j['avis'] ?? '',
-      date: DateTime.tryParse(j['created_at'] ?? '') ?? DateTime.now(),
+      nom: j['nom'] ?? j['client_nom'] ?? j['auteur'] ?? 'Partenaire Client',
+      entreprise: j['entreprise'] ?? j['company'] ?? j['societe'] ?? 'Société Industrielle',
+      service: j['service'] ?? j['prestation'] ?? j['categorie'] ?? 'Prestation JBF',
+      note: int.tryParse(j['note']?.toString() ?? j['stars']?.toString() ?? '5') ?? 5,
+      commentaire: j['commentaire'] ?? j['avis'] ?? j['message'] ?? '',
+      date: DateTime.tryParse(j['created_at'] ?? j['date_avis'] ?? '') ?? DateTime.now(),
       approuve: j['approuve'] == true,
     );
   }
@@ -79,43 +79,8 @@ class _EvaluationsScreenState extends State<EvaluationsScreen> {
       }
     } catch (_) {}
 
-    // Évaluations de démonstration de secours
     if (mounted) {
       setState(() {
-        if (_evaluations.isEmpty) {
-          _evaluations = [
-            EvaluationItem(
-              id: 'ev-1',
-              nom: 'Serge Kalombo',
-              entreprise: 'Metalkol SA (Kolwezi)',
-              service: 'Catering Industriel & Base-Vie',
-              note: 5,
-              commentaire: 'Excellente gestion de la chaîne du froid et respect scrupuleux des normes HACCP pour nos 850 ouvriers en poste continu.',
-              date: DateTime.now().subtract(const Duration(days: 2)),
-              approuve: true,
-            ),
-            EvaluationItem(
-              id: 'ev-2',
-              nom: 'Jean-Paul Ilunga',
-              entreprise: 'Kipushi Corporation',
-              service: 'Maintenance & Soudure TIG',
-              note: 4,
-              commentaire: 'Intervention d\'urgence remarquable sur notre colonne d\'acide. Équipe professionnelle et réactive.',
-              date: DateTime.now().subtract(const Duration(days: 5)),
-              approuve: false, // En attente
-            ),
-            EvaluationItem(
-              id: 'ev-3',
-              nom: 'Alain Mwamba',
-              entreprise: 'BTP Katanga Grands Travaux',
-              service: 'Terrassement & Génie Civil',
-              note: 5,
-              commentaire: 'Livraison du radier béton armé 350kg/m² avec 3 jours d\'avance sur le planning prévisionnel.',
-              date: DateTime.now().subtract(const Duration(days: 10)),
-              approuve: true,
-            ),
-          ];
-        }
         _isLoading = false;
       });
     }

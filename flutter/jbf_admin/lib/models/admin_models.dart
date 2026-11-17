@@ -89,25 +89,31 @@ class DevisItem {
     List<String> serv = [];
     if (json['services'] is List) {
       serv = (json['services'] as List).map((e) => e.toString()).toList();
-    } else if (json['services'] != null) {
+    } else if (json['services'] != null && json['services'].toString().isNotEmpty) {
       serv = [json['services'].toString()];
+    } else if (json['prestation'] != null && json['prestation'].toString().isNotEmpty) {
+      serv = [json['prestation'].toString()];
     }
+
+    final double montant = (json['montant_usd'] != null)
+        ? double.tryParse(json['montant_usd'].toString()) ?? 0.0
+        : ((json['montant_estime'] != null)
+            ? double.tryParse(json['montant_estime'].toString()) ?? 0.0
+            : (double.tryParse(json['total_ht']?.toString() ?? '0') ?? 0.0));
 
     return DevisItem(
       id: json['id']?.toString() ?? UniqueKey().toString(),
-      nom: json['nom'] ?? 'Client Inconnu',
-      societe: json['societe'] ?? '',
-      telephone: json['telephone'] ?? '',
-      email: json['email'] ?? '',
-      services: serv,
-      localite: json['localite'] ?? 'Lubumbashi',
-      message: json['message'] ?? '',
+      nom: json['nom'] ?? json['client_nom'] ?? json['nom_collaborateur'] ?? 'Client Partenaire',
+      societe: json['societe'] ?? json['client_societe'] ?? json['nom_client'] ?? json['company'] ?? 'Société Partenaire',
+      telephone: json['telephone'] ?? json['client_telephone'] ?? json['phone'] ?? '',
+      email: json['email'] ?? json['client_email'] ?? '',
+      services: serv.isNotEmpty ? serv : ['Prestation Industrielle JBF'],
+      localite: json['localite'] ?? json['site_intervention'] ?? 'Haut-Katanga / RDC',
+      message: json['message'] ?? json['details_besoin'] ?? json['description'] ?? '',
       statut: json['statut'] ?? 'nouveau',
-      montantUsd: (json['montant_usd'] != null)
-          ? double.tryParse(json['montant_usd'].toString()) ?? 0.0
-          : 0.0,
-      chefEquipe: json['chef_equipe'] ?? '',
-      effectif: int.tryParse(json['effectif']?.toString() ?? '0') ?? 0,
+      montantUsd: montant,
+      chefEquipe: json['chef_equipe'] ?? json['responsable_jbf'] ?? '',
+      effectif: int.tryParse(json['effectif']?.toString() ?? '1') ?? 1,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -125,6 +131,7 @@ class MissionItem {
   DateTime? dateFin;
   String description;
   String assignedTo;
+  String? assignedToId;
   String statut; // planifiee, en_cours, terminee, suspendue
   double budgetUsd;
   int effectif;
@@ -140,6 +147,7 @@ class MissionItem {
     this.dateFin,
     this.description = '',
     this.assignedTo = '',
+    this.assignedToId,
     this.statut = 'en_cours',
     this.budgetUsd = 0.0,
     this.effectif = 1,
@@ -150,17 +158,18 @@ class MissionItem {
     return MissionItem(
       id: json['id']?.toString() ?? UniqueKey().toString(),
       titre: json['titre'] ?? 'Mission Terrain',
-      client: json['client'] ?? 'Partenaire JBF',
-      siteIntervention: json['site_intervention'] ?? 'Haut-Katanga',
-      serviceNom: json['service_nom'] ?? 'Sous-traitance Minière',
+      client: json['client'] ?? json['client_nom'] ?? 'Partenaire JBF',
+      siteIntervention: json['site_intervention'] ?? json['site_lieu'] ?? 'Haut-Katanga',
+      serviceNom: json['service_nom'] ?? json['service'] ?? json['prestation'] ?? 'Sous-traitance Minière',
       dateDebut: json['date_debut'] != null
           ? DateTime.tryParse(json['date_debut'].toString()) ?? DateTime.now()
           : DateTime.now(),
       dateFin: json['date_fin'] != null
           ? DateTime.tryParse(json['date_fin'].toString())
           : null,
-      description: json['description'] ?? '',
-      assignedTo: json['assigned_to'] ?? '',
+      description: json['description'] ?? json['observations'] ?? '',
+      assignedTo: json['responsable_jbf'] ?? json['assigned_to'] ?? '',
+      assignedToId: json['assigned_to']?.toString(),
       statut: json['statut'] ?? 'en_cours',
       budgetUsd: (json['budget_usd'] != null)
           ? double.tryParse(json['budget_usd'].toString()) ?? 0.0

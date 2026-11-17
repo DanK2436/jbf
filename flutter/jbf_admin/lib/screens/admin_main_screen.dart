@@ -7,7 +7,7 @@ import 'projets_commandes_screen.dart';
 import 'missions_screen.dart';
 import 'devis_screen.dart';
 import 'services_screen.dart';
-import 'rh_competences_screen.dart';
+import 'resources_admin_screen.dart';
 import 'recrutement_admin_screen.dart';
 import 'finance_screen.dart';
 import 'communication_cms_screen.dart';
@@ -38,7 +38,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     'Missions, Chantiers & Livrables Sécurisés',
     'Réception Devis Membres & Chiffrage Client',
     'Catalogue Dynamique des Services (15)',
-    'Ressources Humaines & Cartographie des Compétences',
+    'Bibliothèque Documentaire & Ressources Membres (HSE)',
     'Recrutement & Candidatures Déposées (Activer/Désactiver)',
     'Gestion Financière, Écritures & Reçus Clients',
     'Communication, CMS & Chat Membres/Responsables',
@@ -65,7 +65,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 5:
         return const ServicesScreen();
       case 6:
-        return const RhCompetencesScreen();
+        return const ResourcesAdminScreen();
       case 7:
         return const RecrutementAdminScreen();
       case 8:
@@ -229,8 +229,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildNavItem(3, Icons.engineering_outlined, Icons.engineering, 'Missions & Chantiers'),
                   _buildNavItem(4, Icons.request_quote_outlined, Icons.request_quote, 'Devis & Chiffrage Client'),
                   _buildNavItem(5, Icons.handyman_outlined, Icons.handyman, 'Catalogue des Services'),
-                  _buildNavItem(6, Icons.badge_outlined, Icons.badge, 'RH & Compétences'),
-                  _buildNavItem(7, Icons.folder_shared_outlined, Icons.folder_shared, 'Recrutement & CV Déposés'),
+                  _buildNavItem(6, Icons.folder_shared_outlined, Icons.folder_shared, 'Ressources Membres'),
+                  _buildNavItem(7, Icons.assignment_ind_outlined, Icons.assignment_ind, 'Recrutement & CV Déposés'),
                   _buildNavItem(8, Icons.account_balance_outlined, Icons.account_balance, 'Finance & Reçus'),
                   const Divider(indent: 16, endIndent: 16),
                   _buildNavItem(9, Icons.forum_outlined, Icons.forum, 'Chat Membres & Domaines'),
@@ -274,8 +274,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   _buildDrawerItem(3, Icons.engineering, 'Missions & Chantiers'),
                   _buildDrawerItem(4, Icons.request_quote, 'Devis & Chiffrage Client'),
                   _buildDrawerItem(5, Icons.handyman, 'Catalogue des Services'),
-                  _buildDrawerItem(6, Icons.badge, 'RH & Compétences'),
-                  _buildDrawerItem(7, Icons.folder_shared, 'Recrutement & CV Déposés'),
+                  _buildDrawerItem(6, Icons.folder_shared, 'Ressources Membres'),
+                  _buildDrawerItem(7, Icons.assignment_ind, 'Recrutement & CV Déposés'),
                   _buildDrawerItem(8, Icons.account_balance, 'Finance & Reçus'),
                   const Divider(),
                   _buildDrawerItem(9, Icons.forum, 'Chat Membres & Domaines'),

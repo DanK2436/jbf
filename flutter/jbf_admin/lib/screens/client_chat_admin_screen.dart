@@ -126,58 +126,88 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
     }
   }
 
-  void _loadClientMessages(ClientChatItem client) {
-    setState(() {
-      _messages = [
-        {
-          'id': 'm-1',
-          'sender': client.clientName,
-          'company': client.company,
-          'text': 'Bonjour Direction JBF. Nous aimerions faire un point sur nos prestations en cours.',
-          'time': '10:15',
-          'isAdmin': false,
+  Future<void> _loadClientMessages(ClientChatItem client) async {
+    List<Map<String, dynamic>> realMessages = [];
+
+    try {
+      final res = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(client_${client.id},client_${client.clientEmail})&order=created_at.asc'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
         },
-        {
-          'id': 'm-2',
-          'sender': 'Direction Générale JBF',
-          'company': 'JBF Services SARL',
-          'text': 'Bonjour Monsieur. Notre directeur technique et nos équipes sont mobilisés. Quel point souhaitez-vous aborder ?',
-          'time': '10:20',
-          'isAdmin': true,
-        },
-        {
-          'id': 'm-3',
-          'sender': client.clientName,
-          'company': client.company,
-          'text': client.lastMessage,
-          'time': '10:28',
-          'isAdmin': false,
-        },
-      ];
-    });
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(res.body);
+        for (var row in list) {
+          final dt = DateTime.tryParse(row['created_at'] ?? '') ?? DateTime.now();
+          final isAdmin = row['expediteur_id'] == 'admin' || (row['expediteur_nom'] ?? '').toString().contains('Direction');
+          realMessages.add({
+            'id': row['id']?.toString() ?? '',
+            'sender': row['expediteur_nom'] ?? (isAdmin ? 'Direction Générale JBF' : client.clientName),
+            'company': isAdmin ? 'JBF Services SARL' : client.company,
+            'text': row['message'] ?? '',
+            'time': '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
+            'isAdmin': isAdmin,
+          });
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _messages = realMessages;
+      });
+    }
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _selectedClient == null) return;
+    _msgCtrl.clear();
 
     final now = DateTime.now();
     final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final tempId = 'm-${now.millisecondsSinceEpoch}';
 
     setState(() {
       _messages.add({
-        'id': 'm-${DateTime.now().millisecondsSinceEpoch}',
+        'id': tempId,
         'sender': 'Direction Générale JBF',
         'company': 'JBF Services SARL',
         'text': text,
         'time': timeStr,
         'isAdmin': true,
       });
-      _msgCtrl.clear();
     });
+
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'expediteur_id': 'admin',
+          'expediteur_nom': 'Direction Générale JBF',
+          'expediteur_avatar': 'DG',
+          'canal_type': 'client_${_selectedClient!.id}',
+          'section_nom': _selectedClient!.company,
+          'message': text,
+          'created_at': now.toIso8601String(),
+        }),
+      );
+    } catch (_) {}
   }
 
   Future<void> _deleteMessage(int index) async {
+    if (index >= _messages.length) return;
+    final msg = _messages[index];
+    final msgId = msg['id']?.toString() ?? '';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -196,10 +226,24 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
 
     if (confirm == true) {
       setState(() => _messages.removeAt(index));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message supprimé.')),
-      );
+
+      if (msgId.isNotEmpty && !msgId.startsWith('m-')) {
+        try {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$msgId'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        } catch (_) {}
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Message supprimé.')),
+        );
+      }
     }
   }
 
@@ -223,10 +267,22 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
 
     if (confirm == true) {
       setState(() => _messages.clear());
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fil de discussion effacé avec succès.')),
-      );
+
+      try {
+        await http.delete(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(client_${_selectedClient!.id},client_${_selectedClient!.clientEmail})'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        );
+      } catch (_) {}
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fil de discussion effacé avec succès.')),
+        );
+      }
     }
   }
 

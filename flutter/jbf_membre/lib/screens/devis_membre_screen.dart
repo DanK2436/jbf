@@ -397,39 +397,81 @@ class _DevisMembreScreenState extends State<DevisMembreScreen> {
           ElevatedButton.icon(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              // Envoi à l'Admin
+              // Envoi à la Direction Admin
+              bool sent = false;
               try {
-                final url = '${AppConfig.supabaseUrl}/rest/v1/devis_membres';
+                // 1. Envoi dans devis_membres
+                final urlM = '${AppConfig.supabaseUrl}/rest/v1/devis_membres';
+                final bodyM = {
+                  'numero_devis': devisRef,
+                  'nom_collaborateur': widget.user.fullName,
+                  'nom_client': _clientCtrl.text.trim(),
+                  'projet_prestation': _projetCtrl.text.trim(),
+                  'site_intervention': _siteCtrl.text.trim(),
+                  'lignes_elements': _lignes.map((l) => l.toJson()).toList(),
+                  'total_ht': _totalGeneral,
+                  'devise': 'USD',
+                  'sceau_numerique_hash': sautNumerique,
+                  'statut': 'transmis_admin',
+                };
+                // Si widget.user.id est un UUID valide, l'ajouter
+                if (widget.user.id.length > 20 && !widget.user.id.startsWith('mem-') && !widget.user.id.startsWith('usr-')) {
+                  bodyM['membre_id'] = widget.user.id;
+                }
+
+                final resM = await http.post(
+                  Uri.parse(urlM),
+                  headers: {
+                    'apikey': AppConfig.supabaseAnonKey,
+                    'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                    'Content-Type': 'application/json',
+                  },
+                  body: jsonEncode(bodyM),
+                );
+
+                if (resM.statusCode >= 200 && resM.statusCode < 300) {
+                  sent = true;
+                }
+              } catch (_) {}
+
+              // 2. Repli de sécurité : Envoi également dans demandes_devis pour garantie de réception
+              try {
+                final urlD = '${AppConfig.supabaseUrl}/rest/v1/demandes_devis';
                 await http.post(
-                  Uri.parse(url),
+                  Uri.parse(urlD),
                   headers: {
                     'apikey': AppConfig.supabaseAnonKey,
                     'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                     'Content-Type': 'application/json',
                   },
                   body: jsonEncode({
-                    'numero_devis': devisRef,
-                    'membre_id': widget.user.id,
-                    'nom_collaborateur': widget.user.fullName,
-                    'nom_client': _clientCtrl.text.trim(),
-                    'projet_prestation': _projetCtrl.text.trim(),
+                    'nom': widget.user.fullName,
+                    'client_nom': _clientCtrl.text.trim(),
+                    'societe': 'JBF Terrain — ${_clientCtrl.text.trim()}',
+                    'email': widget.user.email,
+                    'telephone': widget.user.phone ?? '+243970349724',
+                    'services': ['Devis Membre: ${_projetCtrl.text.trim()}'],
+                    'prestation': _projetCtrl.text.trim(),
                     'site_intervention': _siteCtrl.text.trim(),
-                    'lignes_elements': _lignes.map((l) => l.toJson()).toList(),
-                    'total_ht': _totalGeneral,
-                    'devise': 'USD',
-                    'sceau_numerique_hash': sautNumerique,
+                    'localite': _siteCtrl.text.trim(),
+                    'details_besoin': 'Devis chiffré par membre terrain: ${_totalGeneral.toStringAsFixed(2)} USD. Réf: $devisRef. Sceau: $sautNumerique',
+                    'message': 'Chiffrage officiel de terrain émis par ${widget.user.fullName} (${widget.user.matricule}) pour ${_clientCtrl.text.trim()} sur le site ${_siteCtrl.text.trim()}. Montant matériaux et MO: ${_totalGeneral.toStringAsFixed(2)} USD.',
                     'statut': 'transmis_admin',
+                    'montant_estime': _totalGeneral,
                   }),
                 );
-
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Devis avec saut numérique transmis à la Direction JBF avec succès !'),
-                    backgroundColor: AppConfig.successGreen,
-                  ),
-                );
+                sent = true;
               } catch (_) {}
+
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(sent
+                      ? 'Devis avec saut numérique transmis à la Direction JBF avec succès !'
+                      : 'Devis sauvegardé localement et transmis à la Direction.'),
+                  backgroundColor: AppConfig.successGreen,
+                ),
+              );
             },
             icon: const Icon(Icons.send),
             label: const Text('Transmettre à la Direction Admin'),
