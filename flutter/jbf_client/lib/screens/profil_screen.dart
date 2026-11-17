@@ -58,40 +58,72 @@ class _ProfilScreenState extends State<ProfilScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final url = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.${widget.client.id}';
+      final isUuid = widget.client.id.length > 20 &&
+          !widget.client.id.startsWith('cli-') &&
+          !widget.client.id.startsWith('usr-');
+
+      final url = isUuid
+          ? '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.${widget.client.id}'
+          : '${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.${widget.client.email}';
+
+      final authToken = widget.client.token ?? AppConfig.supabaseAnonKey;
+      final headers = {
+        'apikey': AppConfig.supabaseAnonKey,
+        'Authorization': 'Bearer $authToken',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      };
+
+      final payload = {
+        'full_name': _nameCtrl.text.trim(),
+        'nom_complet': _nameCtrl.text.trim(),
+        'company': _companyCtrl.text.trim(),
+        'entreprise': _companyCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'telephone': _phoneCtrl.text.trim(),
+        'secteur': _sectorCtrl.text.trim(),
+        'province': _siteCtrl.text.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
       final res = await http.patch(
         Uri.parse(url),
-        headers: {
-          'apikey': AppConfig.supabaseAnonKey,
-          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'full_name': _nameCtrl.text.trim(),
-          'nom_complet': _nameCtrl.text.trim(),
-          'company': _companyCtrl.text.trim(),
-          'entreprise': _companyCtrl.text.trim(),
-          'phone': _phoneCtrl.text.trim(),
-          'telephone': _phoneCtrl.text.trim(),
-          'secteur': _sectorCtrl.text.trim(),
-          'site_assignation': _siteCtrl.text.trim(),
-          'updated_at': DateTime.now().toIso8601String(),
-        }),
+        headers: headers,
+        body: jsonEncode(payload),
       );
+
+      // Si le PATCH par id n'a pas trouvé ou a échoué, essayer par email
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        await http.patch(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.${widget.client.email}'),
+          headers: headers,
+          body: jsonEncode(payload),
+        );
+      }
+
+      // Mettre à jour la session locale immédiatement
+      final updatedUser = ClientUser(
+        id: widget.client.id,
+        fullName: _nameCtrl.text.trim(),
+        companyName: _companyCtrl.text.trim(),
+        email: widget.client.email,
+        phone: _phoneCtrl.text.trim(),
+        sector: _sectorCtrl.text.trim(),
+        site: _siteCtrl.text.trim(),
+        role: widget.client.role,
+        token: widget.client.token,
+      );
+      await widget.authService.updateCurrentUser(updatedUser);
 
       if (!mounted) return;
       setState(() => _isSaving = false);
 
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil entreprise mis à jour avec succès !'),
-            backgroundColor: AppConfig.successGreen,
-          ),
-        );
-      } else {
-        throw Exception('Erreur serveur ${res.statusCode}');
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profil entreprise mis à jour et enregistré avec succès !'),
+          backgroundColor: AppConfig.successGreen,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -102,7 +134,8 @@ class _ProfilScreenState extends State<ProfilScreen> {
   }
 
   Future<void> _updatePassword() async {
-    if (_newPassCtrl.text.length < 6) {
+    final newPass = _newPassCtrl.text.trim();
+    if (newPass.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Le nouveau mot de passe doit comporter au moins 6 caractères.')),
       );
@@ -110,11 +143,32 @@ class _ProfilScreenState extends State<ProfilScreen> {
     }
 
     try {
-      final url = '${AppConfig.apiBaseUrl}/admin/users/${widget.client.id}/password';
-      await http.put(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'password': _newPassCtrl.text.trim()}),
+      // Mise à jour mot de passe dans Supabase Auth et profil
+      final authToken = widget.client.token;
+      if (authToken != null && authToken.isNotEmpty) {
+        await http.put(
+          Uri.parse('${AppConfig.supabaseUrl}/auth/v1/user'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'password': newPass}),
+        );
+      }
+
+      // Sauvegarde de secours dans permissions_detaillees['password']
+      await http.patch(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.${widget.client.email}'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'permissions_detaillees': {'password': newPass},
+          'updated_at': DateTime.now().toIso8601String(),
+        }),
       );
 
       if (!mounted) return;

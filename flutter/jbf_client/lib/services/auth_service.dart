@@ -247,6 +247,14 @@ class AuthService {
     }
   }
 
+  Future<void> updateCurrentUser(ClientUser updated) async {
+    _currentUser = updated;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_sessionKey, jsonEncode(updated.toJson()));
+    } catch (_) {}
+  }
+
   Future<void> logout() async {
     _currentUser = null;
     final prefs = await SharedPreferences.getInstance();

@@ -4,9 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
+import '../models/client_models.dart';
 
 class SupportScreen extends StatefulWidget {
-  const SupportScreen({super.key});
+  final ClientUser? client;
+  const SupportScreen({super.key, this.client});
 
   @override
   State<SupportScreen> createState() => _SupportScreenState();
@@ -17,21 +19,14 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  List<Map<String, dynamic>> _messages = [
-    {
-      'id': 'm-1',
-      'sender': 'Direction Opérationnelle JBF',
-      'text': 'Bonjour et bienvenue sur le support dédié JBF Service ! En quoi pouvons-nous vous assister sur votre exploitation ?',
-      'time': '09:00',
-      'isClient': false,
-    },
-  ];
+  List<Map<String, dynamic>> _messages = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadLocalChat();
+    _loadChat();
   }
 
   @override
@@ -40,6 +35,64 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     _msgController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadChat() async {
+    final clientId = widget.client?.id ?? '';
+    final clientEmail = widget.client?.email ?? '';
+
+    if (clientId.isNotEmpty || clientEmail.isNotEmpty) {
+      setState(() => _isLoading = true);
+      try {
+        final queryParams = clientId.isNotEmpty && clientEmail.isNotEmpty
+            ? 'canal_type=in.(client_$clientId,client_$clientEmail)'
+            : (clientId.isNotEmpty ? 'canal_type=eq.client_$clientId' : 'canal_type=eq.client_$clientEmail');
+
+        final res = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?$queryParams&order=created_at.asc'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 6));
+
+        if (res.statusCode == 200) {
+          final List<dynamic> list = jsonDecode(res.body);
+          if (mounted) {
+            setState(() {
+              _messages = list.map((json) {
+                final expId = json['expediteur_id']?.toString() ?? '';
+                final isClient = expId == clientId ||
+                    json['expediteur_nom'] == (widget.client?.companyName ?? '') ||
+                    json['expediteur_avatar'] == 'CLI';
+                final createdAt = json['created_at']?.toString() ?? '';
+                String timeStr = '';
+                if (createdAt.isNotEmpty) {
+                  try {
+                    final dt = DateTime.parse(createdAt).toLocal();
+                    timeStr = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                  } catch (_) {}
+                }
+                return {
+                  'id': json['id']?.toString() ?? '',
+                  'sender': json['expediteur_nom'] ?? (isClient ? 'Vous' : 'Direction JBF'),
+                  'text': json['message'] ?? '',
+                  'time': timeStr.isNotEmpty ? timeStr : 'Maintenant',
+                  'isClient': isClient,
+                  'raw': json,
+                };
+              }).toList();
+              _isLoading = false;
+            });
+            _saveLocalChat();
+            _scrollToBottom();
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    _loadLocalChat();
   }
 
   Future<void> _loadLocalChat() async {
@@ -51,10 +104,12 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         if (list.isNotEmpty && mounted) {
           setState(() {
             _messages = list.map((e) => Map<String, dynamic>.from(e)).toList();
+            _isLoading = false;
           });
         }
       }
     } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _saveLocalChat() async {
@@ -64,44 +119,68 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     } catch (_) {}
   }
 
-  void _sendMessage([String? quickText]) {
+  Future<void> _sendMessage([String? quickText]) async {
     final text = (quickText ?? _msgController.text).trim();
     if (text.isEmpty) return;
 
+    final clientId = widget.client?.id ?? 'client-local';
+    final clientName = widget.client?.companyName ?? widget.client?.fullName ?? 'Client Partenaire';
     final now = DateTime.now();
     final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
+    final tempId = 'msg-${DateTime.now().millisecondsSinceEpoch}';
+    final newMsg = {
+      'id': tempId,
+      'sender': 'Vous',
+      'text': text,
+      'time': timeStr,
+      'isClient': true,
+    };
+
     setState(() {
-      _messages.add({
-        'id': 'msg-${DateTime.now().millisecondsSinceEpoch}',
-        'sender': 'Vous',
-        'text': text,
-        'time': timeStr,
-        'isClient': true,
-      });
+      _messages.add(newMsg);
       if (quickText == null) _msgController.clear();
     });
 
     _saveLocalChat();
     _scrollToBottom();
 
-    // Réponse automatique de prise en charge avec horodatage
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (!mounted) return;
-      final respNow = DateTime.now();
-      final respTimeStr = '${respNow.hour.toString().padLeft(2, '0')}:${respNow.minute.toString().padLeft(2, '0')}';
-      setState(() {
-        _messages.add({
-          'id': 'msg-${DateTime.now().millisecondsSinceEpoch}',
-          'sender': 'Direction Opérationnelle JBF',
-          'text': 'Votre message a bien été transmis au chef de projet dédié. Nous analysons votre requête.',
-          'time': respTimeStr,
-          'isClient': false,
-        });
-      });
-      _saveLocalChat();
-      _scrollToBottom();
-    });
+    // Insertion réelle dans Supabase
+    try {
+      final res = await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: jsonEncode({
+          'expediteur_id': clientId,
+          'expediteur_nom': clientName,
+          'expediteur_avatar': 'CLI',
+          'canal_type': 'client_$clientId',
+          'message': text,
+          'created_at': now.toIso8601String(),
+        }),
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final List<dynamic> inserted = jsonDecode(res.body);
+        if (inserted.isNotEmpty && mounted) {
+          final realId = inserted.first['id']?.toString();
+          if (realId != null) {
+            setState(() {
+              final idx = _messages.indexWhere((m) => m['id'] == tempId);
+              if (idx != -1) {
+                _messages[idx]['id'] = realId;
+              }
+            });
+            _saveLocalChat();
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   void _scrollToBottom() {
@@ -114,6 +193,60 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         );
       }
     });
+  }
+
+  Future<void> _editMessage(int index) async {
+    if (index < 0 || index >= _messages.length) return;
+    final msg = _messages[index];
+    final editCtrl = TextEditingController(text: msg['text'] ?? '');
+
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Modifier mon message'),
+        content: TextField(
+          controller: editCtrl,
+          maxLines: 3,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Votre message...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(editCtrl.text.trim()),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (newText != null && newText.isNotEmpty && newText != msg['text']) {
+      setState(() {
+        _messages[index]['text'] = newText;
+      });
+      _saveLocalChat();
+
+      final msgId = msg['id']?.toString() ?? '';
+      if (msgId.isNotEmpty && !msgId.startsWith('msg-')) {
+        try {
+          await http.patch(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$msgId'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal',
+            },
+            body: jsonEncode({
+              'message': newText,
+            }),
+          ).timeout(const Duration(seconds: 6));
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> _deleteMessage(int index) async {
@@ -134,10 +267,24 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     );
 
     if (confirm == true) {
+      final msg = _messages[index];
+      final msgId = msg['id']?.toString() ?? '';
       setState(() {
         _messages.removeAt(index);
       });
       _saveLocalChat();
+
+      if (msgId.isNotEmpty && !msgId.startsWith('msg-')) {
+        try {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$msgId'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          ).timeout(const Duration(seconds: 6));
+        } catch (_) {}
+      }
     }
   }
 
@@ -322,50 +469,78 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
 
             // Message list
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(18),
-                itemCount: _messages.length,
-                itemBuilder: (context, i) {
-                  final m = _messages[i];
-                  final isClient = m['isClient'] == true;
-
-                  return Align(
-                    alignment: isClient ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isClient ? AppConfig.brandPink : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(14),
-                          topRight: const Radius.circular(14),
-                          bottomLeft: Radius.circular(isClient ? 14 : 2),
-                          bottomRight: Radius.circular(isClient ? 2 : 14),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: isClient ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppConfig.brandPink))
+                  : _messages.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey.shade300),
+                              const SizedBox(height: 12),
                               Text(
-                                m['sender'] ?? '',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                  color: isClient ? Colors.white70 : AppConfig.brandPinkDark,
-                                ),
+                                'Aucun message pour le moment.',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                               ),
-                              const SizedBox(width: 6),
-                              InkWell(
-                                onTap: () => _deleteMessage(i),
-                                child: Icon(Icons.close, size: 13, color: isClient ? Colors.white60 : Colors.grey.shade500),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Écrivez directement à la direction commerciale et technique JBF.',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
                               ),
                             ],
                           ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(18),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, i) {
+                            final m = _messages[i];
+                            final isClient = m['isClient'] == true;
+
+                            return Align(
+                              alignment: isClient ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                constraints: const BoxConstraints(maxWidth: 520),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: isClient ? AppConfig.brandPink : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(14),
+                                    topRight: const Radius.circular(14),
+                                    bottomLeft: Radius.circular(isClient ? 14 : 2),
+                                    bottomRight: Radius.circular(isClient ? 2 : 14),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: isClient ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          m['sender'] ?? '',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                            color: isClient ? Colors.white70 : AppConfig.brandPinkDark,
+                                          ),
+                                        ),
+                                        if (isClient) ...[
+                                          const SizedBox(width: 8),
+                                          InkWell(
+                                            onTap: () => _editMessage(i),
+                                            child: const Icon(Icons.edit, size: 13, color: Colors.white70),
+                                          ),
+                                        ],
+                                        const SizedBox(width: 6),
+                                        InkWell(
+                                          onTap: () => _deleteMessage(i),
+                                          child: Icon(Icons.close, size: 13, color: isClient ? Colors.white60 : Colors.grey.shade500),
+                                        ),
+                                      ],
+                                    ),
                           const SizedBox(height: 4),
                           Text(
                             m['text'] ?? '',

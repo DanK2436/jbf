@@ -54,7 +54,7 @@ class _ClientMainScreenState extends State<ClientMainScreen> {
       case 4:
         return AvisScreen(client: client);
       case 5:
-        return const SupportScreen();
+        return SupportScreen(client: client);
       case 6:
         return ProfilScreen(client: client, authService: widget.authService);
       default:

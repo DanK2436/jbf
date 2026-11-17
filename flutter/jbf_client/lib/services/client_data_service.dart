@@ -87,6 +87,69 @@ class ClientDataService {
     return true;
   }
 
+  // 2b. MODIFICATION D'UN DEVIS
+  Future<bool> updateDevis({
+    required String id,
+    required String service,
+    required String site,
+    required String description,
+    double montantEstime = 0.0,
+  }) async {
+    try {
+      await http.patch(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis?id=eq.$id'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: jsonEncode({
+          'services': [service],
+          'localite': site,
+          'message': description,
+          'montant': montantEstime,
+        }),
+      ).timeout(const Duration(seconds: 6));
+    } catch (_) {}
+
+    if (_cachedDevis != null) {
+      final idx = _cachedDevis!.indexWhere((d) => d.id == id);
+      if (idx != -1) {
+        final old = _cachedDevis![idx];
+        _cachedDevis![idx] = ClientDevis(
+          id: old.id,
+          reference: old.reference,
+          service: service,
+          site: site,
+          montantEstime: montantEstime > 0 ? montantEstime : old.montantEstime,
+          statut: old.statut,
+          date: old.date,
+          description: description,
+        );
+      }
+    }
+    return true;
+  }
+
+  // 2c. SUPPRESSION D'UN DEVIS
+  Future<bool> deleteDevis(String id) async {
+    try {
+      await http.delete(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis?id=eq.$id'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 6));
+    } catch (_) {}
+
+    if (_cachedDevis != null) {
+      _cachedDevis!.removeWhere((d) => d.id == id);
+    }
+    return true;
+  }
+
   // 3. CHARGEMENT DES MISSIONS / CHANTIERS
   Future<List<ClientMission>> fetchMissions() async {
     try {

@@ -154,6 +154,138 @@ class _DevisScreenState extends State<DevisScreen> {
     );
   }
 
+  void _openEditDevisDialog(ClientDevis devis) {
+    String selectedService = _servicesJBF.contains(devis.service) ? devis.service : _servicesJBF.first;
+    final siteCtrl = TextEditingController(text: devis.site);
+    final descCtrl = TextEditingController(text: devis.description);
+    final montantCtrl = TextEditingController(text: devis.montantEstime > 0 ? devis.montantEstime.toStringAsFixed(0) : '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.edit_note, color: AppConfig.brandPink),
+              SizedBox(width: 10),
+              Text('Modifier ma Demande de Devis'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 500,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Pôle Métier / Prestation Demandée :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: selectedService,
+                    isExpanded: true,
+                    decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+                    items: _servicesJBF
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setDialogState(() => selectedService = val);
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Site Minier / Localité d\'Intervention :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: siteCtrl,
+                    decoration: const InputDecoration(hintText: 'ex: Usine hydrométallurgique Kolwezi, Site Kamoa-Kakula...'),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Détails du Cahier des Charges & Volumes :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: descCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(hintText: 'Spécifiez effectifs, contraintes techniques, dates requises...'),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Budget Estimatif Envisagé (Optionnel USD) :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: montantCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(prefixText: '\$ ', suffixText: 'USD', hintText: 'ex: 45000'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton(
+              onPressed: () async {
+                final site = siteCtrl.text.trim();
+                final desc = descCtrl.text.trim();
+                final mnt = double.tryParse(montantCtrl.text.trim()) ?? 0.0;
+                if (site.isEmpty || desc.isEmpty) return;
+
+                Navigator.of(ctx).pop();
+                setState(() => _isLoading = true);
+
+                await _dataService.updateDevis(
+                  id: devis.id,
+                  service: selectedService,
+                  site: site,
+                  description: desc,
+                  montantEstime: mnt,
+                );
+
+                await _loadDevis();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Demande ${devis.reference} mise à jour avec succès.'),
+                    backgroundColor: AppConfig.successGreen,
+                  ),
+                );
+              },
+              child: const Text('Enregistrer les Modifications'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteDevis(ClientDevis devis) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer cette demande'),
+        content: Text('Voulez-vous supprimer définitivement la demande de devis ${devis.reference} ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      await _dataService.deleteDevis(devis.id);
+      await _loadDevis();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Demande de devis ${devis.reference} supprimée.'),
+          backgroundColor: AppConfig.dangerRed,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredList = _allDevis.where((d) {
@@ -320,14 +452,28 @@ class _DevisScreenState extends State<DevisScreen> {
                                         'Chiffrage en cours par les ingénieurs JBF',
                                         style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey, fontSize: 12),
                                       ),
-                                    OutlinedButton.icon(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Dossier ${d.reference} suivi par le pôle commercial JBF Services.')),
-                                        );
-                                      },
-                                      icon: const Icon(Icons.info_outline, size: 16),
-                                      label: const Text('Détails'),
+                                    Row(
+                                      children: [
+                                        OutlinedButton.icon(
+                                          onPressed: () => _openEditDevisDialog(d),
+                                          icon: const Icon(Icons.edit, size: 15, color: Color(0xFF0284C7)),
+                                          label: const Text('Modifier', style: TextStyle(color: Color(0xFF0284C7), fontSize: 12)),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            side: const BorderSide(color: Color(0xFFBAE6FD)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton.icon(
+                                          onPressed: () => _confirmDeleteDevis(d),
+                                          icon: const Icon(Icons.delete_outline, size: 15, color: AppConfig.dangerRed),
+                                          label: const Text('Supprimer', style: TextStyle(color: AppConfig.dangerRed, fontSize: 12)),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            side: BorderSide(color: Colors.red.shade200),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
