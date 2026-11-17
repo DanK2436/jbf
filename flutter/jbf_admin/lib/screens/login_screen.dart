@@ -4,7 +4,6 @@ import '../services/auth_service.dart';
 import '../services/otp_service.dart';
 import 'admin_main_screen.dart';
 import 'otp_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
@@ -209,23 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                      );
-                    },
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: const Text(
-                      'Mot de passe oublié ? (OTP Brevo)',
-                      style: TextStyle(color: AppConfig.brandPink, fontSize: 12.5, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
 
                 // Submit Button
                 ElevatedButton(
