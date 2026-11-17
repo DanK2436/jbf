@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/membre_models.dart';
 import '../services/materiaux_local_service.dart';
+import '../services/supabase_service.dart';
 
 class DevisLigne {
   String designation;

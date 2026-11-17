@@ -280,17 +280,6 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
       }
     }
   }
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Conversation entièrement effacée.')),
-              );
-            },
-            child: const Text('Effacer Tout'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _loadLiveChatMessages() async {
     try {
