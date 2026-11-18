@@ -451,11 +451,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildKpiCard({
     required String title,

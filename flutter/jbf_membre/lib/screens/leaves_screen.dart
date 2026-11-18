@@ -584,9 +584,6 @@ class _LeavesScreenState extends State<LeavesScreen> {
           ],
         ),
       ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -396,7 +396,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
                           ],
                         ),
                       ],
-                      ),
                       const SizedBox(height: 14),
                       TextField(
                         controller: _sectorCtrl,
