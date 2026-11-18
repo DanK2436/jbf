@@ -586,6 +586,7 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
         _isPublishingArticle = false;
       });
     }
+  }
 
   Future<void> _sendBroadcastNotification() async {
     if (_newsTitleCtrl.text.isEmpty || _newsMsgCtrl.text.isEmpty) {
