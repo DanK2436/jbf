@@ -8,7 +8,9 @@ import '../widgets/stat_badge.dart';
 import 'client_chat_admin_screen.dart';
 
 class DevisScreen extends StatefulWidget {
-  const DevisScreen({super.key});
+  final Function(String id, String name, String email, String company)? onNavigateToChat;
+
+  const DevisScreen({super.key, this.onNavigateToChat});
 
   @override
   State<DevisScreen> createState() => _DevisScreenState();
@@ -337,36 +339,89 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
     );
 
     // 3. Ouvrir directement la conversation dans ClientChatAdminScreen
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ClientChatAdminScreen(
-          preselectedClientId: d.id,
-          preselectedClientName: d.nom,
-          preselectedClientEmail: d.email,
-          preselectedCompany: d.societe,
+    if (widget.onNavigateToChat != null) {
+      widget.onNavigateToChat!(d.id, d.nom, d.email, d.societe);
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text('Chat avec ${d.societe.isNotEmpty ? d.societe : d.nom}')),
+            body: ClientChatAdminScreen(
+              preselectedClientId: d.id,
+              preselectedClientName: d.nom,
+              preselectedClientEmail: d.email,
+              preselectedCompany: d.societe,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
-  Future<void> _refuserDevisClient(DevisItem d) async {
+  Future<void> _supprimerDevisClient(DevisItem d) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Refuser cette Demande de Devis'),
-        content: Text('Voulez-vous marquer comme refusée la demande de ${d.nom} (${d.societe}) ?'),
+        title: const Text('Supprimer définitivement ce devis'),
+        content: Text('Voulez-vous supprimer définitivement la demande de devis de ${d.nom} (${d.societe}) ?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Refuser le Devis'),
+            child: const Text('Supprimer'),
           ),
         ],
       ),
     );
 
     if (confirm != true) return;
+
+    setState(() => _devisClients.removeWhere((item) => item.id == d.id));
+    try {
+      await http.delete(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/demandes_devis?id=eq.${d.id}'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      );
+    } catch (_) {}
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Demande de devis supprimée définitivement.')),
+    );
+  }
+
+  Future<void> _refuserDevisClient(DevisItem d) async {
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Refuser ou Supprimer cette Demande de Devis'),
+        content: Text('Que souhaitez-vous faire pour la demande de ${d.nom} (${d.societe}) ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop('cancel'), child: const Text('Annuler')),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(foregroundColor: AppConfig.dangerRed),
+            onPressed: () => Navigator.of(ctx).pop('delete'),
+            child: const Text('Supprimer définitivement'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
+            onPressed: () => Navigator.of(ctx).pop('refuse'),
+            child: const Text('Refuser'),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == null || choice == 'cancel') return;
+
+    if (choice == 'delete') {
+      await _supprimerDevisClient(d);
+      return;
+    }
 
     try {
       await http.patch(
@@ -454,23 +509,23 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
                             label: const Text('Refuser'),
                             onPressed: () => _refuserDevisClient(d),
                           ),
+                        ] else if (isRefuse) ...[
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppConfig.dangerRed,
+                              side: const BorderSide(color: AppConfig.dangerRed),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.delete_forever, size: 14),
+                            label: const Text('Supprimer ce devis'),
+                            onPressed: () => _supprimerDevisClient(d),
+                          ),
                         ] else if (isAccepte) ...[
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
                             icon: const Icon(Icons.chat, size: 14),
                             label: const Text('Ouvrir Chat & Partager Devis'),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ClientChatAdminScreen(
-                                    preselectedClientId: d.id,
-                                    preselectedClientName: d.nom,
-                                    preselectedClientEmail: d.email,
-                                    preselectedCompany: d.societe,
-                                  ),
-                                ),
-                              );
-                            },
+                            onPressed: () => _accepterDevisClient(d),
                           ),
                         ],
                       ],

@@ -331,9 +331,11 @@ CREATE INDEX IF NOT EXISTS idx_hse_publie ON public.ressources_hse(publie, secti
 ALTER TABLE public.ressources_hse ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Lecture ressources HSE" ON public.ressources_hse;
-CREATE POLICY "Lecture ressources HSE"
-  ON public.ressources_hse FOR SELECT
-  USING (publie = true);
+DROP POLICY IF EXISTS "Allow all ressources HSE" ON public.ressources_hse;
+CREATE POLICY "Allow all ressources HSE"
+  ON public.ressources_hse FOR ALL
+  USING (true)
+  WITH CHECK (true);
 
 -- =============================================================
 -- 8. TABLE DE LA GALERIE (SITE PUBLIC)

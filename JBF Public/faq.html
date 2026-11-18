@@ -249,9 +249,9 @@
     <ul class="nav-menu" id="navMenu">
       <li><a href="index.html"    class="nav-link">Accueil</a></li>
       <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="blog.html"     class="nav-link">Blog &amp; Actualités</a></li>
       <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
       <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
-      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
       <li><a href="recrutement.html" class="nav-link">Carrières</a></li>
       <li><a href="faq.html"      class="nav-link active">FAQ</a></li>
       <li><a href="about.html"    class="nav-link">À Propos</a></li>
@@ -497,7 +497,7 @@
           <li><a href="services.html">Nos 15 Prestations</a></li>
           <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
           <li><a href="avis.html">Avis Clients</a></li>
-          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="blog.html">Blog Officiel &amp; Actualités</a></li>
           <li><a href="recrutement.html">Recrutement &amp; Carrières</a></li>
           <li><a href="faq.html">Foire Aux Questions</a></li>
           <li><a href="about.html">À Propos</a></li>
@@ -552,6 +552,103 @@
 </footer>
 
 <script>
+const JBF_FAQ_CATEGORIES = {
+  'devis': 'Devis & Tarification',
+  'terrain': 'Déploiement & 26 Provinces',
+  'hse': 'Loi ARSP & Normes QHSE',
+  'organisation': 'Organisation & Encadrement',
+  'general': 'Général & Sous-traitance'
+};
+
+let JBF_FAQ_DATA = [
+  {
+    id: 'faq_1',
+    category: 'devis',
+    order: 1,
+    question: "Quel est le délai de transmission d'un devis commercial chiffré ?",
+    answer: "<p>Toute demande de cotation soumise via notre site web ou par courriel officiel fait l'objet d'un accusé de réception immédiat.</p><p>Nos ingénieurs d'affaires et métreurs vous transmettent une proposition technique et financière détaillée sous un <strong>délai garanti de 24 heures ouvrables</strong> pour les demandes courantes (gardiennage, catering, mise à disposition de main-d'œuvre) et <strong>sous 48 heures</strong> pour les chantiers complexes de génie civil ou de maintenance d'usine nécessitant une étude d'ingénierie préliminaire.</p>"
+  },
+  {
+    id: 'faq_2',
+    category: 'devis',
+    order: 2,
+    question: "Quelles sont vos modalités de facturation et devises acceptées ?",
+    answer: "<p>Nos conditions de règlement sont parfaitement adaptées aux standards industriels et miniers :</p><ul><li><strong>Contrats récurrents (catering, gardiennage, maintenance) :</strong> Facturation mensuelle à terme échu sur la base des états de présence ou situations de travaux validées.</li><li><strong>Missions ponctuelles (BTP, arrêts d'usines, convoyage) :</strong> Acompte de mobilisation (30% à 50%) puis solde à réception définitive des livrables.</li></ul><p>Les paiements sont acceptés par virement bancaire sécurisé en <strong>USD</strong> ou en <strong>Francs Congolais (CDF)</strong> sur nos comptes bancaires d'entreprise domiciliés en RDC.</p>"
+  },
+  {
+    id: 'faq_3',
+    category: 'devis',
+    order: 3,
+    question: "Proposez-vous des contrats-cadres pluriannuels avec des remises de volume ?",
+    answer: "<p>Oui. Pour les grands donneurs d'ordres industriels et miniers engageant des volumes réguliers ou combinant plusieurs de nos 15 prestations (ex: Gestion globale de camp de vie + Gardiennage + Catering), nous mettons en place des <strong>contrats-cadres de sous-traitance pluriannuels</strong>.</p><p>Ces accords confèrent des tarifs préférentiels dégressifs, des engagements de niveau de service (SLA chiffrés) et la désignation d'un Directeur de Compte dédié joignable 24h/24.</p>"
+  },
+  {
+    id: 'faq_4',
+    category: 'terrain',
+    order: 4,
+    question: "Dans quelles provinces de la RDC vos équipes peuvent-elles intervenir ?",
+    answer: "<p>JBF Service possède une capacité de projection opérationnelle sur l'ensemble des <strong>26 provinces de la République Démocratique du Congo</strong>.</p><p>Grâce à nos bases et hubs logistiques établis à <strong>Lubumbashi (Haut-Katanga)</strong>, <strong>Kolwezi (Lualaba)</strong> et <strong>Kinshasa</strong>, nous approvisionnons et déployons nos brigades techniques jusque dans les sites miniers les plus enclavés (Kibali, Tenke, Kamoa, Doko, Matadi, etc.).</p>"
+  },
+  {
+    id: 'faq_5',
+    category: 'terrain',
+    order: 5,
+    question: "Quel est le délai moyen de mobilisation d'équipes sur site ?",
+    answer: "<p>Nos délais de déploiement sont parmi les plus compétitifs du marché congolais :</p><ul><li><strong>Interventions d'urgence (soudure, maintenance, renfort de sécurité) :</strong> Mobilisation sous <strong>12 à 24 heures</strong>.</li><li><strong>Déploiements complets de brigades (catering de 500 repas/jour, régie BTP, gardiennage) :</strong> Mobilisation complète sous <strong>48 à 72 heures</strong> incluant visites médicales d'aptitude, badges et inductions de sécurité.</li></ul>"
+  },
+  {
+    id: 'faq_6',
+    category: 'terrain',
+    order: 6,
+    question: "Prenez-vous en charge l'intendance et la logistique complète d'acheminement ?",
+    answer: "<p>Absolument. JBF Service fonctionne en autonomie complète selon les termes convenus au cahier des charges :</p><p>Nous assurons l'acheminement de notre personnel qualifié, le transport de notre outillage lourd, l'approvisionnement en denrées certifiées et consommables industriels, ainsi que l'hébergement de nos équipes de relève. Le donneur d'ordre peut ainsi se concentrer sur son cœur de métier.</p>"
+  },
+  {
+    id: 'faq_7',
+    category: 'hse',
+    order: 7,
+    question: "JBF Service est-elle officiellement enregistrée et certifiée ARSP ?",
+    answer: "<p><strong>Oui, sans réserve.</strong> JBF Service est une société de droit congolais en règle intégrale avec les dispositions de la <strong>Loi n° 17/001 du 8 février 2017</strong> régissant la sous-traitance dans le secteur privé en RDC.</p><p>Nous détenons notre certificat d'enregistrement auprès de l'<strong>ARSP</strong> et fournissons à chaque appel d'offres notre dossier complet de régularité fiscale (DGI) et sociale (CNSS).</p>"
+  },
+  {
+    id: 'faq_8',
+    category: 'hse',
+    order: 8,
+    question: "Quels sont vos protocoles de sécurité industrielle et d'hygiène HACCP ?",
+    answer: "<p>La sécurité et la conformité sont nos priorités absolues :</p><ul><li><strong>QHSE Minier &amp; Industriel :</strong> Alignement rigoureux sur les normes <strong>ISO 45001</strong> et <strong>ISO 9001</strong> avec causeries sécurité matinales (« Tool Box Talks ») et analyse quotidienne des risques (JSA).</li><li><strong>Restauration &amp; Catering :</strong> Application stricte de la méthode <strong>HACCP</strong>, contrôle microbiologique des denrées et respect sans faille de la chaîne du froid.</li><li><strong>Soudure Industrielle :</strong> Soudeurs qualifiés et certifiés selon les normes <strong>ASME IX</strong> et <strong>ISO 9606</strong>.</li></ul>"
+  },
+  {
+    id: 'faq_9',
+    category: 'hse',
+    order: 9,
+    question: "Fournissez-vous les Équipements de Protection Individuelle (EPI) à vos équipes ?",
+    answer: "<p>Oui. Tous nos agents déployés sur site sont intégralement dotés d'EPI certifiés CE et conformes aux exigences spécifiques de chaque mine ou usine :</p><p>Casques avec jugulaire, lunettes de protection balistiques, gants anticoupure adaptés aux tâches, chaussures de sécurité coquées S3, gilets haute visibilité floqués JBF Service et harnais anti-chute vérifiés pour le travail en hauteur.</p>"
+  },
+  {
+    id: 'faq_10',
+    category: 'organisation',
+    order: 10,
+    question: "Comment est encadrée et supervisée chaque mission sur le terrain ?",
+    answer: "<p>Chaque détachement opérationnel est structuré hiérarchiquement :</p><p>Un <strong>Superviseur de Site</strong> ou Chef de Brigade assure le commandement direct et la coordination opérationnelle quotidienne avec vos chefs d'équipe, tandis qu'un <strong>Officier QHSE</strong> veille à la conformité réglementaire et à la prévention des incidents.</p>"
+  },
+  {
+    id: 'faq_11',
+    category: 'organisation',
+    order: 11,
+    question: "Quels rapports de suivi d'activité transmettez-vous aux clients ?",
+    answer: "<p>Nous assurons une traçabilité totale à travers :</p><ul><li>Des feuilles de pointage et de présence quotidiennes émargées.</li><li>Des rapports hebdomadaires d'avancement technique et d'avancement des travaux.</li><li>Des revues mensuelles de performance (KPI) portant sur la qualité de service, le respect des délais et les statistiques QHSE (taux de fréquence et de gravité zéro accident).</li></ul>"
+  },
+  {
+    id: 'faq_12',
+    category: 'organisation',
+    order: 12,
+    question: "Comment planifier une visite technique préalable sur notre site ?",
+    answer: "<p>Nos ingénieurs d'affaires se déplacent gratuitement sur vos sites d'exploitation pour auditer les installations et évaluer les besoins réels avant cotation.</p><p>Vous pouvez nous contacter directement par téléphone au <strong>+243 822 357 053</strong> ou via notre formulaire de contact en ligne pour convenir d'une date d'audit technique.</p>"
+  }
+];
+
+let currentFaqCat = 'all';
+
 function toggleNav() {
   const menu = document.getElementById('navMenu');
   const btn = document.getElementById('hamburger');
@@ -581,7 +678,59 @@ function toggleItem(headerEl) {
   }
 }
 
+function renderFAQ() {
+  const filtersContainer = document.getElementById('faqFilters');
+  const listContainer = document.getElementById('faqList');
+  if (!filtersContainer || !listContainer) return;
+
+  const activeItems = JBF_FAQ_DATA.filter(it => it.est_actif !== false);
+
+  // Group counts by category
+  const counts = { all: activeItems.length };
+  activeItems.forEach(it => {
+    const c = it.category || 'general';
+    counts[c] = (counts[c] || 0) + 1;
+  });
+
+  // Render filters
+  const availableCats = ['all', ...Object.keys(JBF_FAQ_CATEGORIES)];
+  Object.keys(counts).forEach(c => {
+    if (c !== 'all' && !availableCats.includes(c)) availableCats.push(c);
+  });
+
+  filtersContainer.innerHTML = availableCats
+    .filter(c => c === 'all' || counts[c] > 0)
+    .map(c => {
+      const label = c === 'all' ? 'Toutes les questions' : (JBF_FAQ_CATEGORIES[c] || c);
+      const cnt = counts[c] || 0;
+      const isAct = currentFaqCat === c ? 'active' : '';
+      return `<button class="faq-tab-btn ${isAct}" onclick="filterFAQ('${c}', this)">${label} (${cnt})</button>`;
+    }).join('');
+
+  // Render items
+  listContainer.innerHTML = activeItems.map((it, idx) => {
+    const cat = it.category || 'general';
+    const isOpen = idx === 0 ? 'open' : '';
+    let ansHtml = it.answer;
+    if (!ansHtml.includes('<p>') && !ansHtml.includes('<ul>')) {
+      ansHtml = ansHtml.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    }
+    return `
+      <div class="faq-item ${isOpen}" data-cat="${cat}">
+        <div class="faq-question" onclick="toggleItem(this)">
+          <span class="faq-q-title">${it.question}</span>
+          <div class="faq-icon-badge">+</div>
+        </div>
+        <div class="faq-answer">
+          ${ansHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function filterFAQ(cat, btn) {
+  currentFaqCat = cat;
   document.querySelectorAll('#faqFilters .faq-tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
@@ -613,6 +762,73 @@ function searchFAQ() {
     }
   });
 }
+
+async function syncFaqFromSupabase() {
+  const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+  let dbFaq = null;
+
+  // 1. Essai direct table faq_items
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/faq_items?select=*&order=ordre_affichage.asc,created_at.asc`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        dbFaq = rows;
+      }
+    }
+  } catch (_) {}
+
+  // 2. Repli via config_cles_api (cms_faq_items_json)
+  if (!dbFaq) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/config_cles_api?cle_nom=eq.cms_faq_items_json&select=cle_valeur`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (rows && rows.length > 0 && rows[0].cle_valeur) {
+          const parsed = JSON.parse(rows[0].cle_valeur);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            dbFaq = parsed;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Application dynamique en mémoire
+  if (Array.isArray(dbFaq) && dbFaq.length > 0) {
+    JBF_FAQ_DATA = dbFaq.map(item => ({
+      id: item.id || `faq_${item.ordre_affichage || 1}`,
+      category: item.categorie || 'general',
+      order: item.ordre_affichage || 1,
+      question: item.question || '',
+      answer: item.reponse || '',
+      est_actif: item.est_actif !== false
+    }));
+    window.JBF_FAQ_DATA = JBF_FAQ_DATA;
+    renderFAQ();
+  }
+}
+
+window.JBF_FAQ_DATA = JBF_FAQ_DATA;
+window.renderFAQ = renderFAQ;
+window.syncFaqFromSupabase = syncFaqFromSupabase;
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderFAQ();
+  syncFaqFromSupabase();
+});
 
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 60));

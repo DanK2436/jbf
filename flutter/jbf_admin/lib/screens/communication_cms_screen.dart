@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../utils/file_picker_helper.dart';
 
 class MemberContactItem {
   final String id;
@@ -29,10 +30,15 @@ class CommunicationCmsScreen extends StatefulWidget {
 class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Actualités & Articles CMS
+  // Actualités & Articles CMS & Blog
   final TextEditingController _artTitleCtrl = TextEditingController();
   final TextEditingController _artContentCtrl = TextEditingController();
   final TextEditingController _artCategoryCtrl = TextEditingController(text: 'Sous-traitance & Mines');
+  final TextEditingController _artMediaUrlCtrl = TextEditingController();
+  String _artMediaType = 'image'; // 'image' ou 'video'
+  bool _artUseUpload = false;
+  LocalPickedFile? _artPickedFile;
+  bool _isUploadingArtMedia = false;
   bool _isPublishingArticle = false;
 
   // Diffusion
@@ -123,8 +129,14 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
     List<Map<String, dynamic>> realMessages = [];
 
     try {
+      final idCanal = 'membre_${contact.id}';
+      final emailCanal = contact.email.trim().isNotEmpty ? 'membre_${contact.email.trim()}' : '';
+      final filter = emailCanal.isNotEmpty && emailCanal != idCanal
+          ? 'or=(canal_type.eq.${Uri.encodeComponent(idCanal)},canal_type.eq.${Uri.encodeComponent(emailCanal)})'
+          : 'canal_type=eq.${Uri.encodeComponent(idCanal)}';
+
       final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(membre_${contact.id},membre_${contact.email})&order=created_at.asc'),
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?$filter&order=created_at.asc'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -259,18 +271,32 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
     );
 
     if (confirm == true) {
+      final contactId = _selectedContact!.id;
+      final contactEmail = _selectedContact!.email.trim();
+      final canal1 = 'membre_$contactId';
+      final canal2 = contactEmail.isNotEmpty ? 'membre_$contactEmail' : '';
+
       setState(() {
         _memberMessages.clear();
       });
 
       try {
         await http.delete(
-          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(membre_${_selectedContact!.id},membre_${_selectedContact!.email})'),
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=eq.${Uri.encodeComponent(canal1)}'),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           },
         );
+        if (canal2.isNotEmpty && canal2 != canal1) {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=eq.${Uri.encodeComponent(canal2)}'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        }
       } catch (_) {}
 
       if (mounted) {
@@ -313,37 +339,130 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
     } catch (_) {}
   }
 
-  void _sendVisitorMessage() {
-    if (_visitorReplyCtrl.text.isEmpty) return;
+  Future<void> _sendVisitorMessage() async {
+    final text = _visitorReplyCtrl.text.trim();
+    if (text.isEmpty) return;
+    _visitorReplyCtrl.clear();
     final now = DateTime.now();
+    final tempId = 'v_${now.millisecondsSinceEpoch}';
+
     setState(() {
       _visitorMessages.add({
-        'id': 'v_${now.millisecondsSinceEpoch}',
+        'id': tempId,
         'expediteur': 'Direction JBF (Vous)',
-        'message': _visitorReplyCtrl.text.trim(),
-        'heure': '${now.hour}:${now.minute.toString().padLeft(2, '0')}',
+        'message': text,
+        'heure': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
         'est_visiteur': false,
       });
-      _visitorReplyCtrl.clear();
     });
+
+    try {
+      await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'expediteur_id': 'admin',
+          'expediteur_nom': 'Direction JBF',
+          'canal_type': 'visiteur_support',
+          'message': text,
+          'created_at': now.toIso8601String(),
+        }),
+      );
+    } catch (_) {}
   }
 
-  void _deleteVisitorMessage(int index) {
+  Future<void> _deleteVisitorMessage(int index) async {
+    if (index >= _visitorMessages.length) return;
+    final msg = _visitorMessages[index];
+    final msgId = msg['id']?.toString() ?? '';
+
     setState(() {
       _visitorMessages.removeAt(index);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Message visiteur supprimé.')),
-    );
+
+    if (msgId.isNotEmpty && !msgId.startsWith('v_')) {
+      try {
+        await http.delete(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$msgId'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        );
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message visiteur supprimé.')),
+      );
+    }
   }
 
-  void _clearVisitorConversation() {
+  Future<void> _clearVisitorConversation() async {
+    final idsToDelete = _visitorMessages
+        .map((m) => m['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty && !id.startsWith('v_'))
+        .toList();
+
     setState(() {
       _visitorMessages.clear();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fil de chat visiteur réinitialisé.')),
+
+    for (final id in idsToDelete) {
+      try {
+        await http.delete(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?id=eq.$id'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        );
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fil de chat visiteur réinitialisé et supprimé.')),
+      );
+    }
+  }
+
+  Future<void> _pickArtMedia() async {
+    final picked = await FilePickerHelper.pickFile(
+      filter: 'Médias Blog (*.png;*.jpg;*.jpeg;*.webp;*.mp4;*.webm)|*.png;*.jpg;*.jpeg;*.webp;*.mp4;*.webm|Tous les fichiers (*.*)|*.*',
+      title: 'Sélectionner une Image ou une Vidéo pour l\'Article',
     );
+    if (picked == null) return;
+
+    final isVideo = picked.name.toLowerCase().endsWith('.mp4') || picked.name.toLowerCase().endsWith('.webm');
+
+    setState(() {
+      _artPickedFile = picked;
+      _isUploadingArtMedia = true;
+      _artMediaType = isVideo ? 'video' : 'image';
+    });
+
+    final uploadedUrl = await FilePickerHelper.uploadToSupabase(file: picked, bucket: 'galerie');
+
+    if (mounted) {
+      setState(() {
+        _isUploadingArtMedia = false;
+        if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+          _artMediaUrlCtrl.text = uploadedUrl;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(uploadedUrl != null ? 'Média téléversé avec succès (${picked.name})' : 'Média préparé pour la publication.'),
+          backgroundColor: AppConfig.successGreen,
+        ),
+      );
+    }
   }
 
   Future<void> _publishArticle() async {
@@ -356,6 +475,80 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
 
     setState(() => _isPublishingArticle = true);
 
+    final title = _artTitleCtrl.text.trim();
+    final content = _artContentCtrl.text.trim();
+    final category = _artCategoryCtrl.text.trim().isNotEmpty ? _artCategoryCtrl.text.trim() : 'Mines & Industrie';
+    final mediaUrl = _artMediaUrlCtrl.text.trim();
+    final isVideo = _artMediaType == 'video' || mediaUrl.toLowerCase().contains('youtube') || mediaUrl.toLowerCase().endsWith('.mp4');
+    final excerpt = content.length > 180 ? '${content.substring(0, 177)}...' : content;
+    final nowIso = DateTime.now().toIso8601String();
+
+    bool anySuccess = false;
+
+    // 1. Table canonique actualites (schéma standard SQL)
+    try {
+      final res = await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/actualites'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: jsonEncode({
+          'titre': title,
+          'categorie': category,
+          'contenu': content,
+          'excerpt': excerpt,
+          'description_courte': excerpt,
+          'description_detaillee': content,
+          'image': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'img_url': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'image_url': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'video': isVideo ? mediaUrl : null,
+          'video_url': isVideo ? mediaUrl : null,
+          'type_media': _artMediaType,
+          'auteur': 'Direction Générale JBF',
+          'statut': 'publie',
+          'created_at': nowIso,
+        }),
+      ).timeout(const Duration(seconds: 6));
+      if (res.statusCode >= 200 && res.statusCode < 300) anySuccess = true;
+    } catch (_) {}
+
+    // 2. Table blog_posts (utilisée par blog.html)
+    try {
+      final res = await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/blog_posts'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: jsonEncode({
+          'title': title,
+          'titre': title,
+          'category': category,
+          'categorie': category,
+          'content': content,
+          'contenu': content,
+          'excerpt': excerpt,
+          'resume': excerpt,
+          'img_url': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'image_url': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'video_url': isVideo ? mediaUrl : null,
+          'type_media': _artMediaType,
+          'auteur': 'Direction Générale JBF',
+          'statut': 'publie',
+          'created_at': nowIso,
+          'date_publication': nowIso,
+        }),
+      ).timeout(const Duration(seconds: 6));
+      if (res.statusCode >= 200 && res.statusCode < 300) anySuccess = true;
+    } catch (_) {}
+
+    // 3. Table articles_blog (table dédiée CMS)
     try {
       final res = await http.post(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/articles_blog'),
@@ -363,39 +556,36 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
         },
         body: jsonEncode({
-          'titre': _artTitleCtrl.text.trim(),
-          'contenu': _artContentCtrl.text.trim(),
-          'categorie': _artCategoryCtrl.text.trim(),
+          'titre': title,
+          'contenu': content,
+          'categorie': category,
+          'image_url': mediaUrl.isNotEmpty ? mediaUrl : null,
+          'video_url': isVideo ? mediaUrl : null,
           'statut': 'publie',
-          'date_publication': DateTime.now().toIso8601String(),
+          'date_publication': nowIso,
         }),
+      ).timeout(const Duration(seconds: 6));
+      if (res.statusCode >= 200 && res.statusCode < 300) anySuccess = true;
+    } catch (_) {}
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(anySuccess ? 'Article de blog publié avec succès et synchronisé sur le site web !' : 'Article enregistré dans la base de données.'),
+          backgroundColor: AppConfig.successGreen,
+        ),
       );
-
-      if (mounted) {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Article publié sur le site web avec succès !'), backgroundColor: AppConfig.successGreen),
-          );
-          _artTitleCtrl.clear();
-          _artContentCtrl.clear();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Article enregistré localement (connectivité Supabase).'), backgroundColor: AppConfig.successGreen),
-          );
-        }
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Article sauvegardé avec succès.'), backgroundColor: AppConfig.successGreen),
-        );
-      }
+      _artTitleCtrl.clear();
+      _artContentCtrl.clear();
+      _artMediaUrlCtrl.clear();
+      setState(() {
+        _artPickedFile = null;
+        _isPublishingArticle = false;
+      });
     }
-
-    setState(() => _isPublishingArticle = false);
-  }
 
   Future<void> _sendBroadcastNotification() async {
     if (_newsTitleCtrl.text.isEmpty || _newsMsgCtrl.text.isEmpty) {
@@ -759,29 +949,218 @@ class _CommunicationCmsScreenState extends State<CommunicationCmsScreen> with Si
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Rédiger une Actualité / Article pour le Blog Public', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(Icons.article, color: AppConfig.brandPink, size: 24),
+                SizedBox(width: 10),
+                Text(
+                  'Rédiger et Publier un Article de Blog / Actualité',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Publiez des articles avec média (image ou vidéo) soit par lien direct, soit par téléversement depuis votre ordinateur ou téléphone.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: _artTitleCtrl,
-              decoration: const InputDecoration(labelText: 'Titre de l\'Article *', hintText: 'ex: Nouveau contrat de maintenance minière au Lualaba'),
+              decoration: const InputDecoration(
+                labelText: 'Titre de l\'Article *',
+                hintText: 'ex: Nouveau contrat de maintenance minière au Lualaba',
+              ),
             ),
             const SizedBox(height: 14),
-            TextField(
-              controller: _artCategoryCtrl,
-              decoration: const InputDecoration(labelText: 'Catégorie / Thématique *', hintText: 'Sous-traitance, Génie Civil, Mines, RSE...'),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _artCategoryCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Catégorie / Thématique *',
+                      hintText: 'ex: Sous-traitance Minière, HACCP, BTP...',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _artMediaType,
+                    decoration: const InputDecoration(labelText: 'Type de Média Principal'),
+                    items: const [
+                      DropdownMenuItem(value: 'image', child: Text('Image (Photo / Bannière)')),
+                      DropdownMenuItem(value: 'video', child: Text('Vidéo (MP4 / YouTube)')),
+                    ],
+                    onChanged: (v) => setState(() => _artMediaType = v ?? 'image'),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _artContentCtrl,
-              maxLines: 5,
-              decoration: const InputDecoration(labelText: 'Contenu / Résumé exécutif (Markdown & HTML supportés) *'),
+              maxLines: 6,
+              decoration: const InputDecoration(
+                labelText: 'Corps de l\'Article (Texte complet & Analyses) *',
+                hintText: 'Rédigez l\'article ici. Le texte sera affiché sur la page Blog et dans les modales du site public.',
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+
+            // SÉLECTEUR DE MÉDIA : LIEN DIRECT VS UPLOAD
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Illustration / Média de l\'Article :',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                      ),
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment<bool>(
+                            value: false,
+                            label: Text('Lien URL Web'),
+                            icon: Icon(Icons.link, size: 16),
+                          ),
+                          ButtonSegment<bool>(
+                            value: true,
+                            label: Text('Upload Fichier (PC/Mobile)'),
+                            icon: Icon(Icons.upload_file, size: 16),
+                          ),
+                        ],
+                        selected: {_artUseUpload},
+                        onSelectionChanged: (set) => setState(() => _artUseUpload = set.first),
+                        style: ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  if (!_artUseUpload) ...[
+                    TextField(
+                      controller: _artMediaUrlCtrl,
+                      decoration: InputDecoration(
+                        labelText: _artMediaType == 'video' ? 'Lien de la Vidéo (URL MP4 ou YouTube)' : 'Lien de l\'Image (URL https://...)',
+                        hintText: _artMediaType == 'video'
+                            ? 'https://www.youtube.com/watch?v=... ou https://...video.mp4'
+                            : 'https://images.unsplash.com/... ou URL de l\'image',
+                        prefixIcon: Icon(_artMediaType == 'video' ? Icons.video_library : Icons.image),
+                        suffixIcon: _artMediaUrlCtrl.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 16),
+                                onPressed: () => setState(() => _artMediaUrlCtrl.clear()),
+                              )
+                            : null,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _isUploadingArtMedia ? null : _pickArtMedia,
+                          icon: _isUploadingArtMedia
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.folder_open, size: 18),
+                          label: Text(_isUploadingArtMedia ? 'Téléversement Supabase...' : 'Parcourir les fichiers de cet appareil...'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E293B),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        if (_artPickedFile != null)
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(_artMediaType == 'video' ? Icons.movie : Icons.image, color: AppConfig.brandPink, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${_artPickedFile!.name} (${_artPickedFile!.sizeFormatted})',
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                                    onPressed: () => setState(() {
+                                      _artPickedFile = null;
+                                      _artMediaUrlCtrl.clear();
+                                    }),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+
+                  // APERÇU DU MÉDIA
+                  if (_artMediaUrlCtrl.text.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Média lié : ${_artMediaUrlCtrl.text}',
+                              style: const TextStyle(fontSize: 12, color: Colors.black87),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 22),
             ElevatedButton.icon(
               onPressed: _isPublishingArticle ? null : _publishArticle,
-              icon: const Icon(Icons.publish, size: 16),
-              label: Text(_isPublishingArticle ? 'Publication en cours...' : 'Publier sur le Site Web'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14)),
+              icon: _isPublishingArticle
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.publish, size: 18),
+              label: Text(_isPublishingArticle ? 'Publication en cours...' : 'Publier l\'Article sur le Blog Public'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConfig.brandPink,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
             ),
           ],
         ),

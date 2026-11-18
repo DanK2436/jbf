@@ -358,9 +358,9 @@
     <ul class="nav-menu" id="navMenu">
       <li><a href="index.html"    class="nav-link">Accueil</a></li>
       <li><a href="services.html" class="nav-link active">Services</a></li>
+      <li><a href="blog.html"     class="nav-link">Blog &amp; Actualités</a></li>
       <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
       <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
-      <li><a href="blog.html"     class="nav-link">Actualités</a></li>
       <li><a href="recrutement.html" class="nav-link">Carrières</a></li>
       <li><a href="faq.html"      class="nav-link">FAQ</a></li>
       <li><a href="about.html"    class="nav-link">À Propos</a></li>
@@ -482,7 +482,7 @@
           <li><a href="services.html">Nos 15 Prestations</a></li>
           <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
           <li><a href="avis.html">Avis Clients</a></li>
-          <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+          <li><a href="blog.html">Blog Officiel &amp; Actualités</a></li>
           <li><a href="recrutement.html">Recrutement &amp; Carrières</a></li>
           <li><a href="faq.html">Foire Aux Questions</a></li>
           <li><a href="about.html">À Propos</a></li>
@@ -908,33 +908,109 @@ document.addEventListener('keydown', e => {
 });
 
 async function syncActiveServicesFromSupabase() {
+  const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+  let dbServices = null;
+
+  // 1. Essai de chargement direct depuis la table services_catalogue
   try {
-    const res = await fetch('https://dvzwqxcaiagczyonrhsg.supabase.co/rest/v1/services_catalogue?select=code_service,titre,est_actif', {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/services_catalogue?select=*&order=ordre_affichage.asc`, {
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
       }
     });
     if (res.ok) {
-      const dbServices = await res.json();
-      if (Array.isArray(dbServices) && dbServices.length > 0) {
-        dbServices.forEach(dbS => {
-          if (dbS.est_actif === false) {
-            const found = JBF_SERVICES_DATA.find(s => 
-              s.code === dbS.code_service || 
-              (dbS.code_service && s.code && s.code.replace('SRV-', '') === dbS.code_service.replace('SRV-', '')) ||
-              s.title.toLowerCase().trim() === (dbS.titre || '').toLowerCase().trim()
-            );
-            if (found) found._disabled = true;
-          }
-        });
-        renderServices();
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        dbServices = data;
       }
     }
   } catch (e) {
-    console.warn('Sync services error:', e);
+    console.warn('[Services Sync] Erreur fetch catalogue:', e);
+  }
+
+  // 2. Repli si vide ou erreur via config_cles_api (cms_services_catalogue_json)
+  if (!dbServices) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/config_cles_api?cle_nom=eq.cms_services_catalogue_json&select=cle_valeur`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (rows && rows.length > 0 && rows[0].cle_valeur) {
+          const parsed = JSON.parse(rows[0].cle_valeur);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            dbServices = parsed;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Application dynamique complète en mémoire
+  if (Array.isArray(dbServices) && dbServices.length > 0) {
+    dbServices.forEach(dbS => {
+      const cleanDbCode = (dbS.code_service || '').replace(/[^0-9]/g, '');
+      const dbTitleNorm = (dbS.titre || '').toLowerCase().trim();
+
+      let target = JBF_SERVICES_DATA.find(s => {
+        const cleanCode = (s.code || '').replace(/[^0-9]/g, '');
+        return (cleanDbCode && cleanCode && cleanDbCode === cleanCode) ||
+               (s.code === dbS.code_service) ||
+               (s.title.toLowerCase().trim() === dbTitleNorm);
+      });
+
+      if (!target && dbS.titre) {
+        // Nouveau service créé depuis l'Admin
+        const newId = JBF_SERVICES_DATA.length + 1;
+        target = {
+          id: newId,
+          code: dbS.code_service || `${newId}`,
+          title: dbS.titre,
+          category: dbS.categorie || 'Services Généraux',
+          summary: dbS.description_courte || '',
+          description: dbS.description_complete || dbS.description_courte || '',
+          features: [],
+          cert: dbS.certifications || 'Standards ARSP & QHSE',
+          delay: dbS.delai_mobilisation || 'Mobilisation sous 24 à 48 heures',
+        };
+        JBF_SERVICES_DATA.push(target);
+      }
+
+      if (target) {
+        if (dbS.titre) target.title = dbS.titre;
+        if (dbS.categorie) target.category = dbS.categorie;
+        if (dbS.description_courte) target.summary = dbS.description_courte;
+        if (dbS.description_complete) target.description = dbS.description_complete;
+        if (dbS.certifications) target.cert = dbS.certifications;
+        if (dbS.delai_mobilisation) target.delay = dbS.delai_mobilisation;
+        if (dbS.image_url) target.image = dbS.image_url;
+
+        if (dbS.points_forts) {
+          if (Array.isArray(dbS.points_forts)) {
+            target.features = dbS.points_forts;
+          } else if (typeof dbS.points_forts === 'string') {
+            const lines = dbS.points_forts.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length > 0) target.features = lines;
+          }
+        }
+
+        target._disabled = (dbS.est_actif === false);
+      }
+    });
+
+    renderServices();
   }
 }
+
+window.JBF_SERVICES_DATA = JBF_SERVICES_DATA;
+window.renderServices = renderServices;
+window.syncActiveServicesFromSupabase = syncActiveServicesFromSupabase;
 
 document.addEventListener('DOMContentLoaded', () => {
   renderServices();

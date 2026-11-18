@@ -408,33 +408,48 @@
     e.preventDefault();
     const service = document.getElementById('reviewService').value;
     const site = document.getElementById('reviewSite').value.trim() || 'Chantier RDC';
-    const rating = document.getElementById('reviewRating').value;
+    const rating = parseInt(document.getElementById('reviewRating').value, 10) || 5;
     const text = document.getElementById('reviewText').value.trim();
 
     let session = window.clientCore?.getClientSession() || {};
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session?.id || '');
 
     const newRev = {
-      client_id: (session?.id && session.id.length > 20) ? session.id : null,
+      client_id: isUuid ? session.id : null,
       nom: session?.companyName || session?.name || 'Client Partenaire',
-      entreprise: session?.companyName || session?.name || 'Mon Entreprise',
+      entreprise: session?.companyName || session?.name || 'Entreprise Partenaire',
       service: service,
       site: site,
-      note: Number(rating),
-      stars: Number(rating),
+      ville: site,
+      note: rating,
       commentaire: text,
       approuve: false,
       created_at: new Date().toISOString()
     };
 
-    // 1. Supabase insert
+    // 1. Supabase insert avec secours automatique
     const sb = getSb();
     if (sb) {
       try {
         const { data, error } = await sb.from('avis_clients').insert([newRev]).select();
-        if (data && data[0] && data[0].id) {
+        if (!error && data && data[0] && data[0].id) {
           newRev.id = data[0].id;
         } else {
-          newRev.id = 'rev-' + Date.now();
+          // Repli garanti : colonnes minimales standard
+          const minPayload = {
+            nom: newRev.nom,
+            entreprise: newRev.entreprise,
+            service: newRev.service,
+            note: rating,
+            commentaire: text,
+            approuve: false
+          };
+          const retry = await sb.from('avis_clients').insert([minPayload]).select();
+          if (!retry.error && retry.data && retry.data[0]) {
+            newRev.id = retry.data[0].id;
+          } else {
+            newRev.id = 'rev-' + Date.now();
+          }
         }
       } catch (err) {
         console.warn('[Sync Supabase avis]', err);

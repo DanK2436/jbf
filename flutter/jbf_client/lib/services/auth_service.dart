@@ -156,7 +156,7 @@ class AuthService {
       // Fallback : Si Supabase Auth a échoué (par exemple mot de passe réinitialisé via OTP Brevo ou mot de passe maître)
       try {
         final fallbackRes = await http.get(
-          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=*'),
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=ilike.$cleanEmail&select=*'),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -168,10 +168,12 @@ class AuthService {
           if (list.isNotEmpty) {
             final profile = list.first;
             final dynamic perms = profile['permissions_detaillees'];
-            final String? savedPass = (perms is Map) ? perms['password']?.toString() : null;
+            final String? savedPass = (perms is Map)
+                ? perms['password']?.toString()
+                : (profile['password']?.toString() ?? profile['password_hash']?.toString());
             final isMaster = cleanPass == 'Services+243JBF' || cleanPass.toLowerCase() == 'services+243jbf';
 
-            if (isMaster || (savedPass != null && savedPass == cleanPass)) {
+            if (isMaster || (savedPass != null && savedPass.trim() == cleanPass)) {
               profile['token'] = 'token-client-${DateTime.now().millisecondsSinceEpoch}';
               _currentUser = ClientUser.fromJson(profile);
               await completeLogin();
@@ -235,6 +237,39 @@ class AuthService {
           }
         }),
       ).timeout(const Duration(seconds: 8));
+
+      // Créer/mettre à jour également le profil Supabase pour garantie d'accès immédiat
+      try {
+        await http.post(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: jsonEncode({
+            'email': cleanEmail,
+            'full_name': contactName.trim(),
+            'nom_complet': contactName.trim(),
+            'company': companyName.trim(),
+            'entreprise': companyName.trim(),
+            'phone': phone.trim(),
+            'telephone': phone.trim(),
+            'secteur': sector,
+            'role': 'client',
+            'statut_compte': 'actif',
+            'statut': 'actif',
+            'is_disabled': false,
+            'permissions_detaillees': {
+              'password': cleanPass,
+              'all': false,
+            },
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          }),
+        );
+      } catch (_) {}
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         return await login(cleanEmail, cleanPass);

@@ -81,6 +81,7 @@ class SupabaseService {
         'code_mission': codeMission,
         'client': m.client,
         'client_nom': m.client,
+        'societe': m.client,
         'site_intervention': m.siteIntervention,
         'site_lieu': m.siteIntervention,
         'prestation': m.serviceNom,
@@ -91,6 +92,8 @@ class SupabaseService {
         'agents_assignes': [m.assignedTo],
         'progression_pct': 0,
         'observations': 'Budget: ${m.budgetUsd.toStringAsFixed(0)} USD • Effectif: ${m.effectif} agent(s)',
+        'budget_alloue': m.budgetUsd,
+        'devise': 'USD',
         'created_at': DateTime.now().toIso8601String(),
       };
 
@@ -98,15 +101,41 @@ class SupabaseService {
       if (m.dateFin != null) {
         body['date_fin'] = m.dateFin!.toIso8601String();
       }
-      if (m.assignedToId != null && m.assignedToId!.length > 20 && !m.assignedToId!.startsWith('usr-')) {
-        body['assigned_to'] = m.assignedToId;
+      if (m.assignedToId != null && m.assignedToId!.length > 30) {
+        body['valide_par_membre_id'] = m.assignedToId;
       }
 
-      final res = await http.post(
+      var res = await http.post(
         Uri.parse('$_baseUrl/missions'),
-        headers: _headers,
+        headers: {
+          ..._headers,
+          'Prefer': 'return=representation',
+        },
         body: jsonEncode(body),
       );
+
+      // Si rejeté, repli robuste avec colonnes minimales garanties
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        final minimalBody = {
+          'titre': m.titre,
+          'code_mission': codeMission,
+          'client': m.client,
+          'client_nom': m.client,
+          'site_intervention': m.siteIntervention,
+          'service': m.serviceNom,
+          'statut': m.statut.isNotEmpty ? m.statut : 'en_cours',
+          'responsable_jbf': m.assignedTo,
+          'progression_pct': 0,
+          'description': m.description,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+        res = await http.post(
+          Uri.parse('$_baseUrl/missions'),
+          headers: _headers,
+          body: jsonEncode(minimalBody),
+        );
+      }
+
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
       print('Erreur createMission: $e');
@@ -305,23 +334,84 @@ class SupabaseService {
     return [];
   }
 
-  Future<bool> createMembre(MembreItem m) async {
+  Future<bool> createMembre(MembreItem m, {String? password}) async {
+    final cleanPass = (password ?? m.password ?? 'JBF2026!').trim();
+    final cleanEmail = m.email.trim().toLowerCase();
+    final cleanNom = m.nom.trim();
+
+    // 1. Supabase Auth signup silencieux
+    try {
+      await http.post(
+        Uri.parse('$AppConfig.supabaseUrl/auth/v1/signup'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': cleanEmail,
+          'password': cleanPass,
+          'data': {'full_name': cleanNom, 'role': 'membre'}
+        }),
+      ).timeout(const Duration(seconds: 4));
+    } catch (_) {}
+
+    // 2. Profil dans table profiles
     try {
       final res = await http.post(
         Uri.parse('$_baseUrl/profiles'),
-        headers: _headers,
+        headers: {
+          ..._headers,
+          'Prefer': 'resolution=merge-duplicates',
+        },
         body: jsonEncode({
-          'email': m.email,
-          'full_name': m.nom,
-          'phone': m.phone,
-          'matricule': m.matricule,
-          'poste': m.poste,
-          'section_nom': m.sectionNom,
-          'province': m.province,
+          'email': cleanEmail,
+          'full_name': cleanNom,
+          'nom_complet': cleanNom,
+          'nom': cleanNom.split(' ').first,
+          'phone': m.phone.trim(),
+          'telephone': m.phone.trim(),
+          'matricule': m.matricule.trim(),
+          'poste': m.poste.trim(),
+          'fonction': m.poste.trim(),
+          'section_nom': m.sectionNom.trim(),
+          'province': m.province.trim(),
           'solde_conges': m.soldeConges,
           'role': 'membre',
+          'company': 'JBF Service SARL',
+          'entreprise': 'JBF Service SARL',
+          'statut': 'actif',
+          'statut_compte': 'actif',
+          'is_disabled': false,
+          'password': cleanPass,
+          'permissions_detaillees': {
+            'password': cleanPass,
+            'role_service': m.poste.trim(),
+            'service_assigne': m.sectionNom.trim(),
+            'all': false,
+          },
+          'updated_at': DateTime.now().toIso8601String(),
         }),
       );
+
+      // 3. Fiche dans rh_collaborateurs
+      try {
+        await http.post(
+          Uri.parse('$_baseUrl/rh_collaborateurs'),
+          headers: {
+            ..._headers,
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: jsonEncode({
+            'matricule': m.matricule.trim(),
+            'type_contrat': 'CDI',
+            'poste': m.poste.trim(),
+            'service': m.sectionNom.trim(),
+            'statut': 'actif',
+            'created_at': DateTime.now().toIso8601String(),
+          }),
+        ).timeout(const Duration(seconds: 4));
+      } catch (_) {}
+
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
       print('Erreur createMembre: $e');
@@ -329,22 +419,58 @@ class SupabaseService {
     }
   }
 
-  Future<bool> updateMembre(MembreItem m) async {
+  Future<bool> updateMembre(MembreItem m, {String? password}) async {
+    final cleanPass = (password ?? m.password)?.trim();
     try {
+      final body = <String, dynamic>{
+        'email': m.email.trim().toLowerCase(),
+        'full_name': m.nom.trim(),
+        'nom_complet': m.nom.trim(),
+        'nom': m.nom.trim().split(' ').first,
+        'phone': m.phone.trim(),
+        'telephone': m.phone.trim(),
+        'matricule': m.matricule.trim(),
+        'poste': m.poste.trim(),
+        'fonction': m.poste.trim(),
+        'section_nom': m.sectionNom.trim(),
+        'province': m.province.trim(),
+        'solde_conges': m.soldeConges,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      if (cleanPass != null && cleanPass.isNotEmpty) {
+        body['password'] = cleanPass;
+        body['permissions_detaillees'] = {
+          'password': cleanPass,
+          'role_service': m.poste.trim(),
+          'service_assigne': m.sectionNom.trim(),
+          'all': false,
+        };
+      }
+
+      final targetUrl = m.id.isNotEmpty
+          ? '$_baseUrl/profiles?id=eq.${m.id}'
+          : '$_baseUrl/profiles?email=eq.${m.email.trim().toLowerCase()}';
+
       final res = await http.patch(
-        Uri.parse('$_baseUrl/profiles?id=eq.${m.id}'),
+        Uri.parse(targetUrl),
         headers: _headers,
-        body: jsonEncode({
-          'email': m.email,
-          'full_name': m.nom,
-          'phone': m.phone,
-          'matricule': m.matricule,
-          'poste': m.poste,
-          'section_nom': m.sectionNom,
-          'province': m.province,
-          'solde_conges': m.soldeConges,
-        }),
+        body: jsonEncode(body),
       );
+
+      // Mettre à jour dans rh_collaborateurs
+      if (m.matricule.isNotEmpty) {
+        try {
+          await http.patch(
+            Uri.parse('$_baseUrl/rh_collaborateurs?matricule=eq.${m.matricule.trim()}'),
+            headers: _headers,
+            body: jsonEncode({
+              'poste': m.poste.trim(),
+              'service': m.sectionNom.trim(),
+            }),
+          );
+        } catch (_) {}
+      }
+
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
       print('Erreur updateMembre: $e');
@@ -383,7 +509,27 @@ class SupabaseService {
     return [];
   }
 
-  Future<bool> createSousAdmin(SousAdminItem sa) async {
+  Future<bool> createSousAdmin(SousAdminItem sa, {String? password}) async {
+    final cleanPass = (password ?? sa.password ?? 'Services+243JBF').trim();
+    final cleanEmail = sa.email.trim().toLowerCase();
+    final cleanNom = sa.fullName.trim();
+
+    // 1. Supabase Auth signup silencieux
+    try {
+      await http.post(
+        Uri.parse('$AppConfig.supabaseUrl/auth/v1/signup'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': cleanEmail,
+          'password': cleanPass,
+          'data': {'full_name': cleanNom, 'role': 'sous_admin'}
+        }),
+      ).timeout(const Duration(seconds: 4));
+    } catch (_) {}
+
     try {
       final res = await http.post(
         Uri.parse('$_baseUrl/admin_accounts'),
@@ -392,11 +538,14 @@ class SupabaseService {
           'Prefer': 'resolution=merge-duplicates',
         },
         body: jsonEncode({
-          'full_name': sa.fullName,
-          'email': sa.email,
+          'full_name': cleanNom,
+          'email': cleanEmail,
           'role': 'sous_admin',
           'permissions': sa.permissions,
+          'password': cleanPass,
           'is_active': true,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
         }),
       );
 
@@ -409,18 +558,26 @@ class SupabaseService {
             'Prefer': 'resolution=merge-duplicates',
           },
           body: jsonEncode({
-            'full_name': sa.fullName,
-            'nom_complet': sa.fullName,
-            'email': sa.email,
+            'full_name': cleanNom,
+            'nom_complet': cleanNom,
+            'nom': cleanNom.split(' ').first,
+            'email': cleanEmail,
             'role': 'sous_admin',
-            'poste': 'Sous-Administrateur',
+            'poste': 'Sous-Administrateur Gestionnaire',
+            'fonction': 'Sous-Administrateur',
             'company': 'Direction JBF Services',
+            'entreprise': 'Direction JBF Services',
             'statut_compte': 'actif',
+            'statut': 'actif',
             'is_disabled': false,
+            'password': cleanPass,
             'permissions_detaillees': {
               'permissions': sa.permissions,
-              'password': 'Services+243JBF',
+              'password': cleanPass,
+              'all': false,
             },
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
           }),
         );
       } catch (_) {}
@@ -442,6 +599,65 @@ class SupabaseService {
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (e) {
       print('Erreur toggleSousAdmin: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateSousAdmin(SousAdminItem sa, {String? password}) async {
+    final cleanPass = (password ?? sa.password)?.trim();
+    final cleanEmail = sa.email.trim().toLowerCase();
+    try {
+      final adminAccountBody = <String, dynamic>{
+        'full_name': sa.fullName.trim(),
+        'email': cleanEmail,
+        'permissions': sa.permissions,
+        'is_active': sa.isActive,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      if (cleanPass != null && cleanPass.isNotEmpty) {
+        adminAccountBody['password'] = cleanPass;
+      }
+
+      final targetUrl = sa.id.isNotEmpty
+          ? '$_baseUrl/admin_accounts?id=eq.${sa.id}'
+          : '$_baseUrl/admin_accounts?email=eq.$cleanEmail';
+
+      final res = await http.patch(
+        Uri.parse(targetUrl),
+        headers: _headers,
+        body: jsonEncode(adminAccountBody),
+      );
+
+      // Également dans profiles
+      try {
+        final profileBody = <String, dynamic>{
+          'full_name': sa.fullName.trim(),
+          'nom_complet': sa.fullName.trim(),
+          'nom': sa.fullName.trim().split(' ').first,
+          'email': cleanEmail,
+          'is_disabled': !sa.isActive,
+          'statut_compte': sa.isActive ? 'actif' : 'desactive',
+          'statut': sa.isActive ? 'actif' : 'desactive',
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+        if (cleanPass != null && cleanPass.isNotEmpty) {
+          profileBody['password'] = cleanPass;
+          profileBody['permissions_detaillees'] = {
+            'password': cleanPass,
+            'permissions': sa.permissions,
+            'all': false,
+          };
+        }
+        await http.patch(
+          Uri.parse('$_baseUrl/profiles?email=eq.$cleanEmail'),
+          headers: _headers,
+          body: jsonEncode(profileBody),
+        );
+      } catch (_) {}
+
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (e) {
+      print('Erreur updateSousAdmin: $e');
       return false;
     }
   }

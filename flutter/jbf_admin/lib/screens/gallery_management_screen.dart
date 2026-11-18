@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../utils/file_picker_helper.dart';
 
 class GalleryItemModel {
   final String id;
@@ -251,73 +252,100 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                   ] else ...[
                     const Text('Sélectionner le fichier sur votre appareil *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: localPathCtrl,
-                            decoration: const InputDecoration(
-                              hintText: 'Chemin du fichier (ex: C:\\Photos\\chantier.jpg ou /sdcard/...)',
-                              prefixIcon: Icon(Icons.folder_open),
-                            ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.pink.shade50.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppConfig.brandPink.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                                onPressed: isUploading
+                                    ? null
+                                    : () async {
+                                        setDlgState(() => isUploading = true);
+                                        final picked = await FilePickerHelper.pickFile(
+                                          title: 'Choisir une image ou vidéo pour la galerie',
+                                          filter: 'Images & Vidéos (*.png;*.jpg;*.jpeg;*.webp;*.mp4)|*.png;*.jpg;*.jpeg;*.webp;*.mp4|Tous les fichiers (*.*)|*.*',
+                                        );
+                                        if (picked != null) {
+                                          localPathCtrl.text = picked.path;
+                                          if (titreCtrl.text.isEmpty) {
+                                            titreCtrl.text = picked.name.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '');
+                                          }
+                                          final mime = FilePickerHelper.getMimeType(picked.name);
+                                          if (mime.startsWith('video/')) {
+                                            selectedType = 'video';
+                                          } else {
+                                            selectedType = 'image';
+                                          }
+
+                                          final uploaded = await FilePickerHelper.uploadToSupabase(
+                                            file: picked,
+                                            bucket: 'galerie',
+                                          );
+                                          if (uploaded != null) {
+                                            urlCtrl.text = uploaded;
+                                          } else {
+                                            urlCtrl.text = picked.path;
+                                          }
+                                        }
+                                        setDlgState(() => isUploading = false);
+                                      },
+                                icon: isUploading
+                                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                    : const Icon(Icons.folder_open, size: 16),
+                                label: Text(isUploading ? 'Téléversement...' : 'Parcourir mon PC / Téléphone...'),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  localPathCtrl.text.isNotEmpty
+                                      ? localPathCtrl.text.split(Platform.isWindows ? '\\' : '/').last
+                                      : 'Aucun fichier sélectionné',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: localPathCtrl.text.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                                    color: localPathCtrl.text.isNotEmpty ? AppConfig.blackText : Colors.grey,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton.icon(
-                          onPressed: isUploading
-                              ? null
-                              : () async {
-                                  if (localPathCtrl.text.trim().isEmpty) return;
-                                  setDlgState(() => isUploading = true);
-                                  final uploadedUrl = await _uploadFileToSupabaseStorage(localPathCtrl.text.trim());
-                                  setDlgState(() {
-                                    isUploading = false;
-                                    if (uploadedUrl != null) {
-                                      urlCtrl.text = uploadedUrl;
-                                    }
-                                  });
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(uploadedUrl != null
-                                          ? 'Fichier chargé et préparé avec succès !'
-                                          : 'Fichier introuvable au chemin indiqué.'),
-                                      backgroundColor: uploadedUrl != null ? AppConfig.successGreen : AppConfig.dangerRed,
+                          if (urlCtrl.text.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: const Color(0xFFBBF7D0)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle, size: 14, color: AppConfig.successGreen),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Média prêt pour publication : ${urlCtrl.text.startsWith('data:') ? 'Données image HD encodées' : urlCtrl.text}',
+                                      style: const TextStyle(fontSize: 11, color: Color(0xFF166534)),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  );
-                                },
-                          icon: isUploading
-                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : const Icon(Icons.cloud_upload, size: 16),
-                          label: const Text('Charger'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
-                        ),
-                      ],
-                    ),
-                    if (urlCtrl.text.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFBBF7D0)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle, size: 16, color: AppConfig.successGreen),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                'Fichier prêt pour publication : ${urlCtrl.text.startsWith('data:') ? 'Image convertie en données HD' : urlCtrl.text}',
-                                style: const TextStyle(fontSize: 11, color: Color(0xFF166534)),
-                                overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                   const SizedBox(height: 14),
 
@@ -359,18 +387,26 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                 Navigator.of(ctx).pop();
                 setState(() => _isLoading = true);
 
-                final payload = {
+                // Payload spécifique pour public.galerie_items
+                final galerieItemsPayload = {
                   'titre': titreCtrl.text.trim(),
                   'categorie': selectedCat,
                   'type': selectedType == 'video' ? 'video' : 'photo',
-                  'type_media': selectedType,
                   'url': effectiveUrl,
-                  'media_url': effectiveUrl,
-                  'img_url': effectiveUrl,
                   'video_url': selectedType == 'video' ? effectiveUrl : null,
                   'description': descCtrl.text.trim(),
+                  'localite': 'RDC',
                   'publie': isPublie,
-                  'est_publie': isPublie,
+                };
+
+                // Payload spécifique pour public.gallery_images
+                final galleryImagesPayload = {
+                  'titre': titreCtrl.text.trim(),
+                  'categorie': selectedCat,
+                  'localite': 'RDC',
+                  'img_url': effectiveUrl,
+                  'description': descCtrl.text.trim(),
+                  'publie': isPublie,
                 };
 
                 try {
@@ -382,7 +418,7 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
                       },
-                      body: jsonEncode(payload),
+                      body: jsonEncode(galerieItemsPayload),
                     );
                     try {
                       await http.patch(
@@ -392,11 +428,14 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                           'Content-Type': 'application/json',
                         },
-                        body: jsonEncode(payload),
+                        body: jsonEncode(galleryImagesPayload),
                       );
                     } catch (_) {}
                   } else {
-                    payload['created_at'] = DateTime.now().toIso8601String();
+                    final nowIso = DateTime.now().toIso8601String();
+                    galerieItemsPayload['created_at'] = nowIso;
+                    galleryImagesPayload['created_at'] = nowIso;
+
                     await http.post(
                       Uri.parse('${AppConfig.supabaseUrl}/rest/v1/galerie_items'),
                       headers: {
@@ -404,7 +443,7 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
                       },
-                      body: jsonEncode(payload),
+                      body: jsonEncode(galerieItemsPayload),
                     );
                     try {
                       await http.post(
@@ -414,7 +453,7 @@ class _GalleryManagementScreenState extends State<GalleryManagementScreen> {
                           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                           'Content-Type': 'application/json',
                         },
-                        body: jsonEncode(payload),
+                        body: jsonEncode(galleryImagesPayload),
                       );
                     } catch (_) {}
                   }

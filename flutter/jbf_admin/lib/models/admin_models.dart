@@ -25,17 +25,41 @@ class AdminUser {
   }
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
+    final rawRole = (json['role'] ?? '').toString();
+    final email = (json['email'] ?? '').toString().toLowerCase();
+    final isSuper = rawRole.toLowerCase().contains('super') ||
+        email == 'services@admin.jbf' ||
+        email == 'direction@jbf-services.cd' ||
+        email == 'dankande22@gmail.com' ||
+        email == 'ingenieurkande@gmail.com';
+
+    final roleTitle = isSuper
+        ? 'Super Administrateur'
+        : (rawRole.toLowerCase().contains('sous') || rawRole == 'sous_admin'
+            ? 'Sous-Administrateur'
+            : (rawRole.isNotEmpty ? rawRole : 'Sous-Administrateur'));
+
+    List<String> perms = [];
+    if (json['permissions'] is List) {
+      perms = (json['permissions'] as List).map((e) => e.toString()).toList();
+    } else if (json['permissions_detaillees'] is Map &&
+        json['permissions_detaillees']['permissions'] is List) {
+      perms = (json['permissions_detaillees']['permissions'] as List)
+          .map((e) => e.toString())
+          .toList();
+    }
+    if (perms.isEmpty) {
+      perms = isSuper ? ['*'] : ['dashboard', 'missions', 'devis'];
+    }
+
     return AdminUser(
       id: json['id']?.toString() ?? 'admin-1',
-      fullName: json['name'] ?? json['full_name'] ?? 'Direction Générale JBF',
+      fullName: json['name'] ?? json['full_name'] ?? (isSuper ? 'Direction Générale JBF' : 'Sous-Administrateur JBF'),
       email: json['email'] ?? 'services@admin.jbf',
-      role: json['role'] ?? 'Super Administrateur',
+      role: roleTitle,
       site: json['site'] ?? 'Lubumbashi (Siège)',
-      avatar: json['avatar'] ?? 'DG',
-      permissions: (json['permissions'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          ['*'],
+      avatar: json['avatar'] ?? (isSuper ? 'DG' : 'SA'),
+      permissions: isSuper ? ['*'] : perms,
       token: json['token'] ?? 'token-admin',
     );
   }
@@ -266,6 +290,7 @@ class MembreItem {
   int soldeConges;
   String role;
   bool isActive;
+  String? password;
 
   MembreItem({
     required this.id,
@@ -279,6 +304,7 @@ class MembreItem {
     this.soldeConges = 18,
     this.role = 'membre',
     this.isActive = true,
+    this.password,
   });
 }
 
@@ -288,6 +314,7 @@ class SousAdminItem {
   String email;
   List<String> permissions;
   bool isActive;
+  String? password;
 
   SousAdminItem({
     required this.id,
@@ -295,6 +322,7 @@ class SousAdminItem {
     required this.email,
     required this.permissions,
     this.isActive = true,
+    this.password,
   });
 }
 

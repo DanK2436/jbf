@@ -151,8 +151,14 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
     List<Map<String, dynamic>> realMessages = [];
 
     try {
+      final idCanal = 'client_${client.id}';
+      final emailCanal = client.clientEmail.isNotEmpty ? 'client_${client.clientEmail}' : '';
+      final filter = emailCanal.isNotEmpty && emailCanal != idCanal
+          ? 'or=(canal_type.eq.${Uri.encodeComponent(idCanal)},canal_type.eq.${Uri.encodeComponent(emailCanal)})'
+          : 'canal_type=eq.${Uri.encodeComponent(idCanal)}';
+
       final res = await http.get(
-        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(client_${client.id},client_${client.clientEmail})&order=created_at.asc'),
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?$filter&order=created_at.asc'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
@@ -287,16 +293,30 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
     );
 
     if (confirm == true) {
+      final clientId = _selectedClient!.id;
+      final clientEmail = _selectedClient!.clientEmail.trim();
+      final canal1 = 'client_$clientId';
+      final canal2 = clientEmail.isNotEmpty ? 'client_$clientEmail' : '';
+
       setState(() => _messages.clear());
 
       try {
         await http.delete(
-          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=in.(client_${_selectedClient!.id},client_${_selectedClient!.clientEmail})'),
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=eq.${Uri.encodeComponent(canal1)}'),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           },
         );
+        if (canal2.isNotEmpty && canal2 != canal1) {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?canal_type=eq.${Uri.encodeComponent(canal2)}'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        }
       } catch (_) {}
 
       if (mounted) {

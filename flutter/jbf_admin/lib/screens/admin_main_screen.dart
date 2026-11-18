@@ -30,6 +30,10 @@ class AdminMainScreen extends StatefulWidget {
 
 class _AdminMainScreenState extends State<AdminMainScreen> {
   int _selectedIndex = 0;
+  String? _chatClientId;
+  String? _chatClientName;
+  String? _chatClientEmail;
+  String? _chatCompany;
 
   final List<String> _titles = [
     'Super Dashboard Exécutif',
@@ -50,7 +54,57 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     'Sécurité OTP Admin Principal',
   ];
 
+  bool _canAccess(int index) {
+    final user = widget.authService.currentUser;
+    if (user == null) return false;
+    final isSuper = user.role.toLowerCase().contains('super') || user.permissions.contains('*');
+    if (isSuper) return true;
+
+    // Index 15 (Sécurité OTP Direction) strictement réservé au Super Administrateur
+    if (index == 15) return false;
+
+    final Map<int, List<String>> permMap = {
+      0: ['dashboard'],
+      1: ['utilisateurs', 'membres', 'users'],
+      2: ['projets'],
+      3: ['missions'],
+      4: ['devis'],
+      5: ['services'],
+      6: ['ressources', 'rh'],
+      7: ['recrutement'],
+      8: ['finances'],
+      9: ['communication', 'chat_membres'],
+      10: ['chat_clients', 'communication'],
+      11: ['galerie', 'communication'],
+      12: ['cms_dynamic', 'communication'],
+      13: ['evaluations', 'avis'],
+      14: ['audit'],
+    };
+
+    final required = permMap[index] ?? [];
+    return required.any((p) => user.hasPermission(p));
+  }
+
   Widget _buildBody() {
+    if (!_canAccess(_selectedIndex)) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
+            const SizedBox(height: 12),
+            const Text('Accès Restreint', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text(
+              'Votre compte ${widget.authService.currentUser?.role ?? "Sous-Administrateur"} ne dispose pas des droits nécessaires pour accéder à ce module.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
     switch (_selectedIndex) {
       case 0:
         return DashboardScreen(onNavigate: (index) => setState(() => _selectedIndex = index));
@@ -61,7 +115,17 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 3:
         return const MissionsScreen();
       case 4:
-        return const DevisScreen();
+        return DevisScreen(
+          onNavigateToChat: (id, name, email, company) {
+            setState(() {
+              _chatClientId = id;
+              _chatClientName = name;
+              _chatClientEmail = email;
+              _chatCompany = company;
+              _selectedIndex = 10;
+            });
+          },
+        );
       case 5:
         return const ServicesScreen();
       case 6:
@@ -73,7 +137,12 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       case 9:
         return const CommunicationCmsScreen();
       case 10:
-        return const ClientChatAdminScreen();
+        return ClientChatAdminScreen(
+          preselectedClientId: _chatClientId,
+          preselectedClientName: _chatClientName,
+          preselectedClientEmail: _chatClientEmail,
+          preselectedCompany: _chatCompany,
+        );
       case 11:
         return const GalleryManagementScreen();
       case 12:
@@ -192,12 +261,14 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       ),
                     ],
                   ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(Icons.shield_outlined, color: Colors.white),
-                  tooltip: 'Sécurité OTP Admin',
-                  onPressed: () => setState(() => _selectedIndex = 15),
-                ),
+                if (_canAccess(15)) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.shield_outlined, color: Colors.white),
+                    tooltip: 'Sécurité OTP Admin',
+                    onPressed: () => setState(() => _selectedIndex = 15),
+                  ),
+                ],
                 const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.logout, color: Colors.white),
@@ -292,6 +363,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   }
 
   Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
+    if (!_canAccess(index)) return const SizedBox.shrink();
     final isSelected = _selectedIndex == index;
 
     return Padding(
@@ -331,6 +403,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   }
 
   Widget _buildDrawerItem(int index, IconData icon, String label) {
+    if (!_canAccess(index)) return const SizedBox.shrink();
     final isSelected = _selectedIndex == index;
 
     return ListTile(

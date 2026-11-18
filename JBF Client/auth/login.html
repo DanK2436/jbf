@@ -681,12 +681,12 @@
           window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
         );
         if (client) {
-          const { data: prof } = await client.from('profiles').select('*').eq('email', email).maybeSingle();
+          const { data: prof } = await client.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
           if (prof) {
-            const savedPass = prof.permissions_detaillees?.password;
+            const savedPass = prof.permissions_detaillees?.password || prof.password || prof.password_hash;
             const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
 
-            if (isMaster || (savedPass && savedPass === pass)) {
+            if (isMaster || (savedPass && String(savedPass).trim() === pass.trim())) {
               const fullUser = {
                 id: prof.id || 'usr-local',
                 email: prof.email,
@@ -718,11 +718,11 @@
           window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
         );
         if (client) {
-          const { data: prof } = await client.from('profiles').select('*').eq('email', email).maybeSingle();
+          const { data: prof } = await client.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
           if (prof) {
-            const savedPass = prof.permissions_detaillees?.password;
+            const savedPass = prof.permissions_detaillees?.password || prof.password || prof.password_hash;
             const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
-            if (isMaster || (savedPass && savedPass === pass)) {
+            if (isMaster || (savedPass && String(savedPass).trim() === pass.trim())) {
               persistSession({ id: prof.id, email: prof.email, name: prof.full_name, role: 'client' });
               window.location.href = '../dashboard.html';
               return;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Actualités &amp; Études Sectorielles — JBF Service</title>
+  <title>Blog Officiel &amp; Actualités Métiers — JBF Service</title>
   <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
@@ -338,7 +338,7 @@
       <li><a href="services.html" class="nav-link">Services</a></li>
       <li><a href="gallery.html"  class="nav-link">Galerie</a></li>
       <li><a href="avis.html"     class="nav-link">Avis Clients</a></li>
-      <li><a href="blog.html"     class="nav-link active">Actualités</a></li>
+      <li><a href="blog.html"     class="nav-link active">Blog &amp; Actualités</a></li>
       <li><a href="recrutement.html" class="nav-link">Carrières</a></li>
       <li><a href="faq.html"      class="nav-link">FAQ</a></li>
       <li><a href="about.html"    class="nav-link">À Propos</a></li>
@@ -356,7 +356,7 @@
 <!-- BLOG HERO -->
 <section class="blog-hero">
   <div class="container">
-    <h1 class="blog-hero-title">Actualités &amp; Études Sectorielles</h1>
+    <h1 class="blog-hero-title">Blog Officiel &amp; Actualités Métiers</h1>
     <p class="blog-hero-sub">
       Analyses opérationnelles, décryptages réglementaires de la sous-traitance ARSP et guides pratiques pour les donneurs d'ordres industriels et miniers en RDC.
     </p>
@@ -396,6 +396,7 @@
       <h2 class="article-modal-title" id="artModalTitle">Titre de l'Article</h2>
       <div class="article-modal-meta" id="artModalMeta">Publié par JBF Service &bull; 6 min de lecture</div>
     </div>
+    <div id="artModalMedia" style="padding: 0 24px; margin-top: 14px;"></div>
     <div class="article-modal-body" id="artModalBody">
       <!-- Content injected -->
     </div>
@@ -546,11 +547,13 @@ function renderBlog() {
   if (featContainer) {
     if (activeBlogCat === 'all' && BLOG_ARTICLES.length > 0) {
       const feat = BLOG_ARTICLES[0];
+      const isVid = feat.isVideo || feat.type_media === 'video' || (feat.video_url && feat.video_url.length > 3);
       featContainer.innerHTML = `
-        <div class="blog-featured reveal visible" onclick="openArticleModal(${feat.id})">
-          <div class="bf-img-wrap">
+        <div class="blog-featured reveal visible" onclick="openArticleModal('${escapeHtml(String(feat.id))}')">
+          <div class="bf-img-wrap" style="position:relative;">
             <img src="${escapeHtml(feat.img || 'assets/gallery_mining.jpg')}" alt="${escapeHtml(feat.title)}" class="bf-img"
                  onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
+            ${isVid ? '<span style="position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,0.8);color:#fff;padding:5px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Vidéo Reportage</span>' : ''}
           </div>
           <div class="bf-body">
             <div class="bf-meta">
@@ -573,11 +576,14 @@ function renderBlog() {
   // Articles in grid (skip 1st if featured and cat is all)
   const listToRender = (activeBlogCat === 'all' && filtered.length > 1) ? filtered.slice(1) : filtered;
 
-  grid.innerHTML = listToRender.map(a => `
-    <div class="b-card reveal visible" onclick="openArticleModal(${a.id})">
-      <div class="b-img-wrap">
+  grid.innerHTML = listToRender.map(a => {
+    const isVid = a.isVideo || a.type_media === 'video' || (a.video_url && a.video_url.length > 3);
+    return `
+    <div class="b-card reveal visible" onclick="openArticleModal('${escapeHtml(String(a.id))}')">
+      <div class="b-img-wrap" style="position:relative;">
         <img src="${escapeHtml(a.img || 'assets/gallery_mining.jpg')}" alt="${escapeHtml(a.title)}" class="b-img" loading="lazy"
              onerror="this.parentElement.style.background='linear-gradient(135deg,#FFF0F7,#E8E8EC)';">
+        ${isVid ? '<span style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.8);color:#fff;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,0.3);"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Vidéo</span>' : ''}
       </div>
       <div class="b-body">
         <div>
@@ -589,11 +595,12 @@ function renderBlog() {
         </div>
         <div class="b-footer">
           <span>${escapeHtml(a.readTime)}</span>
-          <span style="display:inline-flex; align-items:center; gap:4px;">Lire l'analyse →</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; font-weight:700; color:var(--pink);">Lire l'article →</span>
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function filterBlog(cat) {
@@ -605,12 +612,34 @@ function filterBlog(cat) {
 }
 
 function openArticleModal(id) {
-  const article = BLOG_ARTICLES.find(a => a.id === id);
+  const article = BLOG_ARTICLES.find(a => String(a.id) === String(id));
   if (!article) return;
 
-  document.getElementById('artModalTag').textContent = article.catName;
-  document.getElementById('artModalTitle').textContent = article.title;
-  document.getElementById('artModalMeta').textContent = `Publié le ${article.date} &bull; ${article.readTime} &bull; JBF Service Documentation`;
+  document.getElementById('artModalTag').textContent = article.catName || 'Actualité & Blog';
+  document.getElementById('artModalTitle').textContent = article.title || 'Article JBF Service';
+  document.getElementById('artModalMeta').textContent = `Publié le ${article.date || 'Récemment'} • ${article.readTime || '4 min'} • Direction JBF Service SARL`;
+
+  const mediaContainer = document.getElementById('artModalMedia');
+  if (mediaContainer) {
+    const isVideo = article.isVideo || article.type_media === 'video' || (article.video_url && article.video_url.length > 3);
+    const mediaUrl = article.video_url || article.img;
+
+    if (isVideo && mediaUrl) {
+      if (mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be')) {
+        let ytId = '';
+        if (mediaUrl.includes('v=')) ytId = mediaUrl.split('v=')[1].split('&')[0];
+        else if (mediaUrl.includes('youtu.be/')) ytId = mediaUrl.split('youtu.be/')[1].split('?')[0];
+        mediaContainer.innerHTML = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.15);"><iframe src="https://www.youtube.com/embed/${ytId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>`;
+      } else {
+        mediaContainer.innerHTML = `<video controls autoplay muted playsinline style="width:100%;max-height:420px;border-radius:10px;background:#000;box-shadow:0 4px 15px rgba(0,0,0,0.15);"><source src="${escapeHtml(mediaUrl)}" type="video/mp4">Votre navigateur ne supporte pas la lecture vidéo.</video>`;
+      }
+    } else if (article.img && !article.img.includes('gallery_mining.jpg')) {
+      mediaContainer.innerHTML = `<img src="${escapeHtml(article.img)}" alt="${escapeHtml(article.title)}" style="width:100%;max-height:420px;object-fit:cover;border-radius:10px;margin-bottom:12px;box-shadow:0 4px 15px rgba(0,0,0,0.08);">`;
+    } else {
+      mediaContainer.innerHTML = '';
+    }
+  }
+
   document.getElementById('artModalBody').innerHTML = sanitizeArticleHtml(article.content);
 
   document.getElementById('articleModalOverlay').classList.add('open');
@@ -628,62 +657,89 @@ document.addEventListener('keydown', e => {
 
 async function loadBlogFromDB() {
   const grid = document.getElementById('blogGrid');
-  grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des actualités…</div>`;
+  grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-light);">Chargement des articles du blog et actualités…</div>`;
 
   BLOG_ARTICLES = [];
+  const fetched = [];
 
-  // 1. Table canonique blog_posts (schéma Supabase)
+  // 1. Table actualites (standard SQL)
+  try {
+    const { data, error } = await supabaseClient
+      .from('actualites')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+      fetched.push(...data);
+    }
+  } catch (err) {
+    console.warn('Blog (actualites) :', err.message);
+  }
+
+  // 2. Table blog_posts
   try {
     const { data, error } = await supabaseClient
       .from('blog_posts')
       .select('*')
-      .eq('publie', true)
       .order('created_at', { ascending: false });
-
-    if (!error && data && data.length > 0) {
-      BLOG_ARTICLES = data.map(row => ({
-        id: row.id,
-        catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
-        catName: row.categorie || 'Actualité',
-        title: row.titre || row.title,
-        date: row.date_publication ? new Date(row.date_publication).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-        readTime: row.temps_lecture || row.read_time || '5 min de lecture',
-        img: row.img_url || row.image_url || 'assets/gallery_mining.jpg',
-        excerpt: row.resume || row.excerpt || '',
-        content: row.contenu || row.content || '',
-        ...row
-      }));
+    if (!error && Array.isArray(data)) {
+      fetched.push(...data);
     }
   } catch (err) {
     console.warn('Blog (blog_posts) :', err.message);
   }
 
-  // 2. Alias legacy actualites
-  if (BLOG_ARTICLES.length === 0) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('actualites')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        BLOG_ARTICLES = data.map(row => ({
-          id: row.id,
-          catId: (row.categorie || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
-          catName: row.categorie || 'Actualité',
-          title: row.titre || row.title,
-          date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'Récent',
-          readTime: row.temps_lecture || '4 min de lecture',
-          img: row.image || row.img_url || row.image_url || 'assets/gallery_mining.jpg',
-          excerpt: row.excerpt || row.description_courte || row.resume || '',
-          content: row.contenu || row.description_detaillee || row.content || '',
-          ...row
-        }));
-      }
-    } catch (err) {
-      console.warn('Blog (actualites) :', err.message);
+  // 3. Table articles_blog
+  try {
+    const { data, error } = await supabaseClient
+      .from('articles_blog')
+      .select('*')
+      .order('date_publication', { ascending: false });
+    if (!error && Array.isArray(data)) {
+      fetched.push(...data);
     }
+  } catch (err) {
+    console.warn('Blog (articles_blog) :', err.message);
   }
+
+  // Déduplication par id ou titre normalisé
+  const seenKeys = new Set();
+  const cleanList = [];
+
+  for (const row of fetched) {
+    const title = (row.titre || row.title || '').trim();
+    if (!title) continue;
+    const normKey = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (seenKeys.has(normKey)) continue;
+    seenKeys.add(normKey);
+
+    const isVideo = (row.type_media === 'video') || Boolean(row.video || row.video_url);
+    const mediaImg = row.image || row.img_url || row.image_url || 'assets/gallery_mining.jpg';
+    const mediaVideo = row.video || row.video_url || null;
+    const cat = row.categorie || row.category || 'Actualité';
+    const rawDate = row.date_publication || row.created_at || new Date().toISOString();
+    const dateFormatted = new Date(rawDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const excerpt = row.excerpt || row.description_courte || row.resume || (row.contenu || row.content || '').substring(0, 160) + '...';
+    const content = row.contenu || row.content || row.description_detaillee || '';
+
+    cleanList.push({
+      id: row.id || `art-${Date.now()}-${Math.random().toString(36).substring(4, 8)}`,
+      catId: cat.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, '') || 'general',
+      catName: cat,
+      title: title,
+      date: dateFormatted,
+      readTime: row.temps_lecture || row.read_time || '4 min de lecture',
+      img: mediaImg,
+      video_url: mediaVideo,
+      isVideo: isVideo,
+      type_media: isVideo ? 'video' : 'image',
+      excerpt: excerpt,
+      content: content,
+      created_at: rawDate
+    });
+  }
+
+  cleanList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  BLOG_ARTICLES = cleanList;
 
   renderBlog();
 }

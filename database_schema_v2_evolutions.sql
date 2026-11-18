@@ -295,4 +295,119 @@ BEGIN
 
   DROP POLICY IF EXISTS "Allow operational access notifications" ON public.notifications_diffusees;
   CREATE POLICY "Allow operational access notifications" ON public.notifications_diffusees FOR ALL USING (true);
+
+  -- PROFILES (PERMETTRE LA SUPPRESSION D'UTILISATEURS PAR L'ADMIN)
+  DROP POLICY IF EXISTS "Allow public on profiles" ON public.profiles;
+  CREATE POLICY "Allow public on profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+
+  -- CONFIG CLES API (SYNCHRONISATION CMS ET TEXTES)
+  DROP POLICY IF EXISTS "Allow public on config_cles_api" ON public.config_cles_api;
+  CREATE POLICY "Allow public on config_cles_api" ON public.config_cles_api FOR ALL USING (true) WITH CHECK (true);
+
+  -- RESSOURCES HSE (SUPPRESSION DEFINITIVE ET PARTAGE)
+  DROP POLICY IF EXISTS "Allow public on ressources_hse" ON public.ressources_hse;
+  CREATE POLICY "Allow public on ressources_hse" ON public.ressources_hse FOR ALL USING (true) WITH CHECK (true);
+
+  -- AVIS CLIENTS (RECEPTION COMPATIBLE CLIENT WEB)
+  DROP POLICY IF EXISTS "Allow public on avis" ON public.avis_clients;
+  CREATE POLICY "Allow public on avis" ON public.avis_clients FOR ALL USING (true) WITH CHECK (true);
 END $$;
+
+-- COLONNES SUPPLEMENTAIRES SECURITE & COMPATIBILITE
+ALTER TABLE public.avis_clients ADD COLUMN IF NOT EXISTS site TEXT;
+ALTER TABLE public.avis_clients ADD COLUMN IF NOT EXISTS client_id TEXT;
+ALTER TABLE public.missions ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE public.galerie_items ADD COLUMN IF NOT EXISTS img_url TEXT;
+ALTER TABLE public.galerie_items ADD COLUMN IF NOT EXISTS type_media TEXT;
+ALTER TABLE public.gallery_images ADD COLUMN IF NOT EXISTS url TEXT;
+ALTER TABLE public.gallery_images ADD COLUMN IF NOT EXISTS media_url TEXT;
+ALTER TABLE public.gallery_images ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'photo';
+
+-- COLONNES CANDIDATURES (POUR TOUTES LES VARIANTES DE SCHÉMA RESIDENCE/PROVINCE)
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS province_residence TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS province TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS domaine_expertise TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS poste_cible TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS service_cible TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS annees_experience INTEGER DEFAULT 0;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS cv_url TEXT;
+ALTER TABLE public.candidatures ADD COLUMN IF NOT EXISTS statut TEXT DEFAULT 'en_attente';
+
+-- ==============================================================================
+-- TABLES & COLONNES BLOG, ARTICLES & MOTS DE PASSE
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.actualites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  titre TEXT NOT NULL,
+  categorie TEXT NOT NULL,
+  excerpt TEXT,
+  description_courte TEXT,
+  contenu TEXT NOT NULL,
+  description_detaillee TEXT,
+  image TEXT,
+  img_url TEXT,
+  image_url TEXT,
+  video TEXT,
+  video_url TEXT,
+  type_media TEXT DEFAULT 'image',
+  auteur TEXT DEFAULT 'Direction Générale JBF',
+  statut TEXT DEFAULT 'publie',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.actualites ADD COLUMN IF NOT EXISTS img_url TEXT;
+ALTER TABLE public.actualites ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.actualites ADD COLUMN IF NOT EXISTS video_url TEXT;
+ALTER TABLE public.actualites ADD COLUMN IF NOT EXISTS type_media TEXT DEFAULT 'image';
+
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT,
+  titre TEXT,
+  category TEXT,
+  categorie TEXT,
+  excerpt TEXT,
+  resume TEXT,
+  content TEXT,
+  contenu TEXT,
+  img_url TEXT,
+  image_url TEXT,
+  video_url TEXT,
+  type_media TEXT DEFAULT 'image',
+  auteur TEXT DEFAULT 'Direction Générale JBF',
+  temps_lecture TEXT DEFAULT '4 min de lecture',
+  publie BOOLEAN DEFAULT TRUE,
+  statut TEXT DEFAULT 'publie',
+  date_publication TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.articles_blog (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  titre TEXT NOT NULL,
+  categorie TEXT,
+  contenu TEXT NOT NULL,
+  image_url TEXT,
+  video_url TEXT,
+  statut TEXT DEFAULT 'publie',
+  date_publication TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.actualites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.articles_blog ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public on actualites" ON public.actualites;
+CREATE POLICY "Allow public on actualites" ON public.actualites FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public on blog_posts" ON public.blog_posts;
+CREATE POLICY "Allow public on blog_posts" ON public.blog_posts FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public on articles_blog" ON public.articles_blog;
+CREATE POLICY "Allow public on articles_blog" ON public.articles_blog FOR ALL USING (true) WITH CHECK (true);
+
+-- MOTS DE PASSE COMPATIBILITE DIRECTE DANS PROFILES & ADMIN_ACCOUNTS
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS password TEXT;
+
+

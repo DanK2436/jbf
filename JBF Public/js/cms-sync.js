@@ -108,6 +108,9 @@
       const cleanWa = configMap['contact_whatsapp'].replace(/[^0-9]/g, '');
       document.querySelectorAll('a[href*="wa.me"]').forEach((a) => {
         a.href = `https://wa.me/${cleanWa}?text=${encodeURIComponent('Bonjour JBF Service SARL')}`;
+        if (a.textContent.includes('WhatsApp')) {
+          a.textContent = `WhatsApp : ${configMap['contact_whatsapp']}`;
+        }
       });
       document.querySelectorAll('.cms-contact-whatsapp').forEach((el) => {
         el.textContent = configMap['contact_whatsapp'];
@@ -118,6 +121,9 @@
       const cleanTel = configMap['contact_appels'].replace(/[^0-9+]/g, '');
       document.querySelectorAll('a[href^="tel:"]').forEach((a) => {
         a.href = `tel:${cleanTel}`;
+        if (a.textContent.includes('Appels') || a.textContent.includes('+243')) {
+          a.textContent = `Appels : ${configMap['contact_appels']}`;
+        }
       });
       document.querySelectorAll('.cms-contact-appels').forEach((el) => {
         el.textContent = configMap['contact_appels'];
@@ -156,7 +162,62 @@
       }
     }
 
-    // 4. ÉLÉMENTS PERSONNALISÉS CMS (TEXTE, IMAGES, BACKGROUNDS, SECTIONS, FORMULAIRES)
+    // 5. SYNCHRONISATION FAQ & SERVICES VIA CMS CONFIG
+    if (configMap['cms_faq_items_json'] && typeof window.syncFaqFromSupabase === 'function') {
+      try {
+        const parsedFaq = JSON.parse(configMap['cms_faq_items_json']);
+        if (Array.isArray(parsedFaq) && parsedFaq.length > 0 && typeof window.renderFAQ === 'function') {
+          window.JBF_FAQ_DATA = parsedFaq.map(item => ({
+            id: item.id || `faq_${item.ordre_affichage || 1}`,
+            category: item.categorie || 'general',
+            order: item.ordre_affichage || 1,
+            question: item.question || '',
+            answer: item.reponse || '',
+            est_actif: item.est_actif !== false
+          }));
+          window.renderFAQ();
+        }
+      } catch (_) {}
+    }
+
+    if (configMap['cms_services_catalogue_json'] && typeof window.renderServices === 'function' && Array.isArray(window.JBF_SERVICES_DATA)) {
+      try {
+        const parsedServices = JSON.parse(configMap['cms_services_catalogue_json']);
+        if (Array.isArray(parsedServices) && parsedServices.length > 0) {
+          parsedServices.forEach(dbS => {
+            const cleanDbCode = (dbS.code_service || '').replace(/[^0-9]/g, '');
+            const dbTitleNorm = (dbS.titre || '').toLowerCase().trim();
+
+            let target = window.JBF_SERVICES_DATA.find(s => {
+              const cleanCode = (s.code || '').replace(/[^0-9]/g, '');
+              return (cleanDbCode && cleanCode && cleanDbCode === cleanCode) ||
+                     (s.code === dbS.code_service) ||
+                     (s.title.toLowerCase().trim() === dbTitleNorm);
+            });
+
+            if (target) {
+              if (dbS.titre) target.title = dbS.titre;
+              if (dbS.categorie) target.category = dbS.categorie;
+              if (dbS.description_courte) target.summary = dbS.description_courte;
+              if (dbS.description_complete) target.description = dbS.description_complete;
+              if (dbS.certifications) target.cert = dbS.certifications;
+              if (dbS.delai_mobilisation) target.delay = dbS.delai_mobilisation;
+              if (dbS.image_url) target.image = dbS.image_url;
+              if (dbS.points_forts) {
+                if (typeof dbS.points_forts === 'string') {
+                  target.features = dbS.points_forts.split('\n').map(l => l.trim()).filter(Boolean);
+                } else if (Array.isArray(dbS.points_forts)) {
+                  target.features = dbS.points_forts;
+                }
+              }
+              target._disabled = (dbS.est_actif === false);
+            }
+          });
+          window.renderServices();
+        }
+      } catch (_) {}
+    }
+  }
     if (configMap['cms_custom_elements_json']) {
       try {
         const customElements = JSON.parse(configMap['cms_custom_elements_json']);

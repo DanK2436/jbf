@@ -101,16 +101,29 @@ class AuthService {
           final p = list.first;
           final dynamic perms = p['permissions_detaillees'];
           final String? savedPass = (perms is Map) ? perms['password']?.toString() : null;
+          final rawRole = (p['role'] ?? '').toString();
+          final isSuper = isAdminOfficial || rawRole.toLowerCase().contains('super');
+          final roleTitle = isSuper ? 'Super Administrateur' : 'Sous-Administrateur';
+
+          List<String> permsList = [];
+          if (p['permissions'] is List) {
+            permsList = (p['permissions'] as List).map((e) => e.toString()).toList();
+          } else if (perms is Map && perms['permissions'] is List) {
+            permsList = (perms['permissions'] as List).map((e) => e.toString()).toList();
+          }
+          if (permsList.isEmpty) {
+            permsList = isSuper ? ['*'] : ['dashboard', 'missions', 'devis'];
+          }
 
           if (isMasterPass || (savedPass != null && savedPass == cleanPass)) {
             _currentUser = AdminUser(
               id: p['id']?.toString() ?? 'admin-otp',
-              fullName: p['full_name'] ?? 'Administrateur JBF',
+              fullName: p['full_name'] ?? (isSuper ? 'Direction Générale JBF' : 'Sous-Administrateur JBF'),
               email: cleanEmail,
-              role: 'Super Administrateur',
+              role: roleTitle,
               site: p['province'] ?? 'Lubumbashi',
-              avatar: 'DG',
-              permissions: ['*'],
+              avatar: isSuper ? 'DG' : 'SA',
+              permissions: isSuper ? ['*'] : permsList,
               token: 'token-admin-${DateTime.now().millisecondsSinceEpoch}',
             );
             await completeLogin();
@@ -140,14 +153,46 @@ class AuthService {
         final accessToken = authData['access_token'];
         final userId = authData['user']?['id'];
 
+        // Vérifier si compte dans admin_accounts ou profiles pour rôle et permissions réels
+        String userRole = isAdminOfficial ? 'Super Administrateur' : 'Sous-Administrateur';
+        String userName = 'Administrateur JBF';
+        List<String> userPerms = isAdminOfficial ? ['*'] : ['dashboard', 'missions', 'devis'];
+
+        try {
+          final accRes = await http.get(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts?email=eq.$cleanEmail&select=*'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+          if (accRes.statusCode == 200) {
+            final List list = jsonDecode(accRes.body);
+            if (list.isNotEmpty) {
+              final a = list.first;
+              userName = a['full_name'] ?? userName;
+              final r = (a['role'] ?? '').toString();
+              if (r.contains('super')) {
+                userRole = 'Super Administrateur';
+                userPerms = ['*'];
+              } else {
+                userRole = 'Sous-Administrateur';
+                if (a['permissions'] is List) {
+                  userPerms = (a['permissions'] as List).map((e) => e.toString()).toList();
+                }
+              }
+            }
+          }
+        } catch (_) {}
+
         _currentUser = AdminUser(
           id: userId?.toString() ?? 'admin-auth',
-          fullName: 'Direction Administrateur',
+          fullName: userName,
           email: cleanEmail,
-          role: 'Super Administrateur',
+          role: userRole,
           site: 'Lubumbashi',
-          avatar: 'DG',
-          permissions: ['*'],
+          avatar: userRole.contains('Super') ? 'DG' : 'SA',
+          permissions: userPerms,
           token: accessToken,
         );
         await completeLogin();

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../utils/file_picker_helper.dart';
 
 class ResourceItemModel {
   final String id;
@@ -122,10 +123,14 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
     final descCtrl = TextEditingController(text: item?.description ?? '');
     final urlCtrl = TextEditingController(text: item?.fichierUrl ?? '');
     final tailleCtrl = TextEditingController(text: item?.taille ?? '2.5 MB');
+    final localPathCtrl = TextEditingController();
     String selectedCat = (item != null && _categories.contains(item.categorie))
         ? item.categorie
         : 'HSE & Sécurité';
     String selectedType = item?.typeFichier ?? 'PDF';
+    String sourceMode = 'lien'; // 'lien' ou 'upload'
+    bool isUploading = false;
+    String? selectedFileName;
 
     showDialog(
       context: context,
@@ -135,22 +140,22 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
             children: [
               Icon(isEditing ? Icons.edit : Icons.post_add, color: AppConfig.brandPink),
               const SizedBox(width: 8),
-              Text(isEditing ? 'Modifier la Ressource Membre' : 'Ajouter une Ressource pour les Membres'),
+              Text(isEditing ? 'Modifier la Ressource Membre' : 'Partager une Ressource pour les Membres'),
             ],
           ),
           content: SizedBox(
-            width: 520,
+            width: 540,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Les membres retrouveront ce document directement dans leur application.',
+                  const Text('Les membres retrouveront ce document ou ce lien directement dans leur application.',
                       style: TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 14),
                   TextField(
                     controller: titreCtrl,
-                    decoration: const InputDecoration(labelText: 'Titre du document *', hintText: 'ex: Manuel HSE Concession Tenke'),
+                    decoration: const InputDecoration(labelText: 'Titre du document / de la ressource *', hintText: 'ex: Manuel HSE Concession Tenke'),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -169,11 +174,12 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: selectedType,
-                          decoration: const InputDecoration(labelText: 'Type de fichier'),
+                          decoration: const InputDecoration(labelText: 'Type de ressource'),
                           items: const [
                             DropdownMenuItem(value: 'PDF', child: Text('PDF Document')),
                             DropdownMenuItem(value: 'Word / DOCX', child: Text('Word / DOCX')),
                             DropdownMenuItem(value: 'Excel / XLSX', child: Text('Excel / XLSX')),
+                            DropdownMenuItem(value: 'Lien Web', child: Text('Lien Web / Portail')),
                             DropdownMenuItem(value: 'JBF Sécurisé', child: Text('Conteneur .JBF')),
                             DropdownMenuItem(value: 'Image / Schéma', child: Text('Image PNG/JPG')),
                             DropdownMenuItem(value: 'Autre', child: Text('Autre')),
@@ -183,25 +189,145 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          controller: urlCtrl,
-                          decoration: const InputDecoration(labelText: 'URL ou Chemin de téléchargement *', hintText: 'https://... ou fichier local'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: tailleCtrl,
-                          decoration: const InputDecoration(labelText: 'Taille estimée', hintText: 'ex: 3.2 MB'),
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+
+                  // Point 8 : Choix partage de connaissances (Lien Web vs Upload Fichier)
+                  const Text('Mode de partage de la connaissance * :', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'lien', label: Text('Partage par Lien (URL)'), icon: Icon(Icons.link, size: 16)),
+                      ButtonSegment(value: 'upload', label: Text('Partage par Upload Fichier'), icon: Icon(Icons.upload_file, size: 16)),
                     ],
+                    selected: {sourceMode},
+                    onSelectionChanged: (v) => setDlgState(() => sourceMode = v.first),
                   ),
+                  const SizedBox(height: 14),
+
+                  if (sourceMode == 'lien') ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: urlCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'URL de la ressource ou lien partagé *',
+                              hintText: 'https://jbf-service.com/docs/... ou intranet',
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: tailleCtrl,
+                            decoration: const InputDecoration(labelText: 'Taille estimée', hintText: 'ex: 3.2 MB'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.pink.shade50.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppConfig.brandPink.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(backgroundColor: AppConfig.brandPink),
+                                onPressed: isUploading
+                                    ? null
+                                    : () async {
+                                        setDlgState(() => isUploading = true);
+                                        final picked = await FilePickerHelper.pickFile(
+                                          title: 'Choisir une ressource à partager',
+                                          filter: 'Documents techniques (*.pdf;*.docx;*.xlsx;*.png;*.jpg)|*.pdf;*.docx;*.xlsx;*.png;*.jpg|Tous les fichiers (*.*)|*.*',
+                                        );
+                                        if (picked != null) {
+                                          selectedFileName = picked.name;
+                                          localPathCtrl.text = picked.path;
+                                          tailleCtrl.text = picked.sizeFormatted;
+                                          if (titreCtrl.text.isEmpty) {
+                                            titreCtrl.text = picked.name.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '');
+                                          }
+                                          final mime = FilePickerHelper.getMimeType(picked.name);
+                                          if (mime.contains('pdf')) {
+                                            selectedType = 'PDF';
+                                          } else if (mime.contains('word')) {
+                                            selectedType = 'Word / DOCX';
+                                          } else if (mime.contains('excel')) {
+                                            selectedType = 'Excel / XLSX';
+                                          } else if (mime.startsWith('image/')) {
+                                            selectedType = 'Image / Schéma';
+                                          }
+
+                                          final uploaded = await FilePickerHelper.uploadToSupabase(
+                                            file: picked,
+                                            bucket: 'documents',
+                                          );
+                                          if (uploaded != null) {
+                                            urlCtrl.text = uploaded;
+                                          } else {
+                                            urlCtrl.text = picked.path;
+                                          }
+                                        }
+                                        setDlgState(() => isUploading = false);
+                                      },
+                                icon: isUploading
+                                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                    : const Icon(Icons.folder_open, size: 16),
+                                label: Text(isUploading ? 'Téléversement...' : 'Parcourir mon PC / Téléphone...'),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  selectedFileName ?? 'Aucun fichier sélectionné',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: selectedFileName != null ? FontWeight.bold : FontWeight.normal,
+                                    color: selectedFileName != null ? AppConfig.blackText : Colors.grey,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (urlCtrl.text.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: const Color(0xFFBBF7D0)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle, size: 14, color: AppConfig.successGreen),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Fichier prêt : ${urlCtrl.text}',
+                                      style: const TextStyle(fontSize: 11, color: Color(0xFF166534)),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 12),
                   TextField(
                     controller: descCtrl,
@@ -219,7 +345,7 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
               onPressed: () async {
                 if (titreCtrl.text.isEmpty || urlCtrl.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Veuillez renseigner le titre et l\'URL du document.')),
+                    const SnackBar(content: Text('Veuillez renseigner le titre et le lien ou fichier de la ressource.')),
                   );
                   return;
                 }
@@ -289,14 +415,14 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer cette ressource'),
-        content: Text('Voulez-vous supprimer définitivement "${item.titre}" ? Les membres n\'y auront plus accès.'),
+        title: const Text('Supprimer définitivement'),
+        content: Text('Voulez-vous supprimer définitivement "${item.titre}" de la base de données ? Les membres n\'y auront plus accès.'),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppConfig.dangerRed),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Supprimer'),
+            child: const Text('Supprimer définitivement'),
           ),
         ],
       ),
@@ -305,19 +431,33 @@ class _ResourcesAdminScreenState extends State<ResourcesAdminScreen> {
     if (confirm == true) {
       setState(() => _resources.removeWhere((r) => r.id == item.id));
       try {
-        await http.delete(
+        final res = await http.delete(
           Uri.parse('${AppConfig.supabaseUrl}/rest/v1/ressources_hse?id=eq.${item.id}'),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           },
         );
-      } catch (_) {}
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ressource supprimée.')),
-      );
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ressource définitivement supprimée de la BDD.'), backgroundColor: AppConfig.successGreen),
+          );
+        } else {
+          await _loadResources();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur suppression BDD (${res.statusCode})'), backgroundColor: AppConfig.dangerRed),
+          );
+        }
+      } catch (e) {
+        await _loadResources();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur réseau: $e'), backgroundColor: AppConfig.dangerRed),
+        );
+      }
     }
   }
 

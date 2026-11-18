@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 
@@ -34,20 +35,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
   Future<void> _loadUsers() async {
     setState(() => _isLoading = true);
     try {
-      final url = '${AppConfig.apiBaseUrl}/admin/users';
-      final fallbackUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?select=*&order=created_at.desc';
+      final supabaseDirectUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?select=*&order=created_at.desc';
+      final apiUrl = '${AppConfig.apiBaseUrl}/admin/users';
 
       http.Response res;
       try {
-        res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
-      } catch (_) {
         res = await http.get(
-          Uri.parse(fallbackUrl),
+          Uri.parse(supabaseDirectUrl),
           headers: {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           },
         ).timeout(const Duration(seconds: 6));
+      } catch (_) {
+        res = await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 3));
       }
 
       if (res.statusCode == 200) {
@@ -209,27 +210,768 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
 
     if (confirm != true) return;
 
+    final userEmail = (user['email'] ?? '').toString().trim().toLowerCase();
+    bool deleted = false;
+
+    // 1. Essai backend Node.js
     try {
       final url = '${AppConfig.apiBaseUrl}/admin/users/$userId';
-      await http.delete(Uri.parse(url)).timeout(const Duration(seconds: 4));
-    } catch (_) {
+      final res = await http.delete(Uri.parse(url)).timeout(const Duration(seconds: 3));
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        deleted = true;
+      }
+    } catch (_) {}
+
+    // 2. Suppression directe Supabase (profiles, admin_accounts, rh_collaborateurs)
+    try {
+      if (userEmail.isNotEmpty) {
+        try {
+          await http.delete(
+            Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts?email=eq.$userEmail'),
+            headers: {
+              'apikey': AppConfig.supabaseAnonKey,
+              'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            },
+          );
+        } catch (_) {}
+      }
+
       final sbUrl = '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId';
-      await http.delete(
+      final sbRes = await http.delete(
         Uri.parse(sbUrl),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
         },
       );
-    }
+      if (sbRes.statusCode >= 200 && sbRes.statusCode < 300) {
+        deleted = true;
+      }
+
+      // Si suppression par ID échoue ou id format local, supprimer par email
+      if (userEmail.isNotEmpty) {
+        await http.delete(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$userEmail'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        );
+        deleted = true;
+      }
+    } catch (_) {}
 
     setState(() {
-      _users.removeWhere((u) => u['id'] == userId);
+      _users.removeWhere((u) => u['id'] == userId || (userEmail.isNotEmpty && u['email'] == userEmail));
     });
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Utilisateur supprimé avec succès.')),
+      SnackBar(
+        content: Text(deleted ? 'Utilisateur supprimé définitivement.' : 'Utilisateur supprimé de la liste.'),
+        backgroundColor: AppConfig.brandPink,
+      ),
+    );
+  }
+
+  void _showUserDetailsDialog(Map<String, dynamic> u) {
+    final name = (u['full_name'] ?? u['nom_complet'] ?? 'Sans Nom').toString();
+    final roleRaw = (u['role'] ?? 'client').toString().toLowerCase();
+    final role = roleRaw.toUpperCase();
+    final isClient = roleRaw.contains('client');
+    final isMembre = roleRaw.contains('membre');
+    final isSousAdmin = roleRaw.contains('admin') || roleRaw.contains('sous_admin');
+    final email = (u['email'] ?? 'Non renseigné').toString();
+    final phone = (u['phone'] ?? u['telephone'] ?? 'Non renseigné').toString();
+    final matricule = (u['matricule'] ?? (isMembre ? 'JBF-M-NON-DEFINI' : 'N/A')).toString();
+    final section = (u['section_nom'] ?? u['section'] ?? (isMembre ? 'Non assigné' : 'Direction Exécutive')).toString();
+    final poste = (u['poste'] ?? u['fonction'] ?? (isMembre ? 'Agent de Terrain' : 'Gestionnaire')).toString();
+    final province = (u['province'] ?? 'Haut-Katanga').toString();
+    final company = (u['company'] ?? u['entreprise'] ?? (isClient ? 'Société Partenaire' : 'JBF Service SARL')).toString();
+    final isDisabled = u['is_disabled'] == true || u['statut_compte'] == 'desactive';
+
+    dynamic permsRaw = u['permissions_detaillees'];
+    Map<String, dynamic> permsMap = {};
+    if (permsRaw is Map) {
+      permsMap = Map<String, dynamic>.from(permsRaw);
+    } else if (permsRaw is String && permsRaw.trim().startsWith('{')) {
+      try {
+        permsMap = jsonDecode(permsRaw);
+      } catch (_) {}
+    }
+
+    final password = u['password']?.toString() ??
+        permsMap['password']?.toString() ??
+        u['password_hash']?.toString() ??
+        'Services+243JBF';
+
+    List<String> permissionsList = [];
+    if (u['permissions'] is List) {
+      permissionsList = (u['permissions'] as List).map((e) => e.toString()).toList();
+    } else if (permsMap['permissions'] is List) {
+      permissionsList = (permsMap['permissions'] as List).map((e) => e.toString()).toList();
+    }
+
+    bool showPassword = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: isSousAdmin
+                    ? AppConfig.brandPink
+                    : (isMembre ? Colors.blue.shade700 : Colors.teal.shade700),
+                child: Text(
+                  name.isNotEmpty ? name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase() : 'U',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isSousAdmin
+                                ? AppConfig.brandPinkTint
+                                : (isMembre ? Colors.blue.shade50 : Colors.teal.shade50),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            role,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: isSousAdmin
+                                  ? AppConfig.brandPink
+                                  : (isMembre ? Colors.blue.shade800 : Colors.teal.shade800),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDisabled ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isDisabled ? 'COMPTE DÉSACTIVÉ' : 'COMPTE ACTIF',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDisabled ? AppConfig.dangerRed : AppConfig.successGreen,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(),
+                  const SizedBox(height: 8),
+
+                  // MATRICULE & PROVINCE
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDetailField(
+                          label: 'Matricule Collaborateur',
+                          value: matricule,
+                          icon: Icons.badge_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDetailField(
+                          label: 'Province / Siège',
+                          value: province,
+                          icon: Icons.location_on_outlined,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // PÔLE / SECTION & FONCTION
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDetailField(
+                          label: isClient ? 'Entreprise Partenaire' : 'Pôle de Service / Département',
+                          value: isClient ? company : section,
+                          icon: Icons.business_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDetailField(
+                          label: 'Fonction & Qualification',
+                          value: poste,
+                          icon: Icons.work_outline,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // EMAIL & TÉLÉPHONE
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDetailField(
+                          label: 'Email de Connexion',
+                          value: email,
+                          icon: Icons.email_outlined,
+                          canCopy: true,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDetailField(
+                          label: 'Téléphone WhatsApp',
+                          value: phone,
+                          icon: Icons.phone_android_outlined,
+                          canCopy: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // MOT DE PASSE ACTUEL (AVEC AFFICHAGE / MASQUAGE & COPIER)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_outline, color: AppConfig.brandPink, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Mot de Passe de Connexion :',
+                                  style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(
+                                showPassword ? password : '••••••••••••',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, letterSpacing: 0.8),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility, size: 18),
+                          tooltip: showPassword ? 'Masquer' : 'Afficher',
+                          onPressed: () => setDlgState(() => showPassword = !showPassword),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy, size: 18),
+                          tooltip: 'Copier le mot de passe',
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: password));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Mot de passe copié dans le presse-papiers !')),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // PERMISSIONS MODULES POUR SOUS-ADMIN
+                  if (permissionsList.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    const Text('Pages & Modules Autorisés :',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: permissionsList
+                          .map((p) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  p.toUpperCase(),
+                                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Fermer')),
+            if (!isClient)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppConfig.brandPink,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Modifier cette fiche'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _showEditUserDialog(u);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailField({
+    required String label,
+    required String value,
+    required IconData icon,
+    bool canCopy = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF64748B)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 10.5, color: Colors.grey, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (canCopy)
+            InkWell(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: value));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$label copié !')),
+                );
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(4.0),
+                child: Icon(Icons.copy, size: 14, color: Colors.grey),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditUserDialog(Map<String, dynamic> u) {
+    final roleRaw = (u['role'] ?? 'membre').toString().toLowerCase();
+    final isClient = roleRaw.contains('client');
+    final isSousAdmin = roleRaw.contains('admin') || roleRaw.contains('sous_admin');
+
+    if (isClient) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Les comptes clients B2B se gèrent depuis l\'espace client dédié.')),
+      );
+      return;
+    }
+
+    final nameCtrl = TextEditingController(text: u['full_name'] ?? u['nom_complet'] ?? '');
+    final emailCtrl = TextEditingController(text: u['email'] ?? '');
+    final phoneCtrl = TextEditingController(text: u['phone'] ?? u['telephone'] ?? '');
+    final matriculeCtrl = TextEditingController(text: u['matricule'] ?? '');
+    final posteCtrl = TextEditingController(text: u['poste'] ?? u['fonction'] ?? '');
+
+    dynamic permsRaw = u['permissions_detaillees'];
+    Map<String, dynamic> permsMap = {};
+    if (permsRaw is Map) {
+      permsMap = Map<String, dynamic>.from(permsRaw);
+    } else if (permsRaw is String && permsRaw.trim().startsWith('{')) {
+      try {
+        permsMap = jsonDecode(permsRaw);
+      } catch (_) {}
+    }
+
+    final currentPass = u['password']?.toString() ??
+        permsMap['password']?.toString() ??
+        u['password_hash']?.toString() ??
+        'Services+243JBF';
+
+    final passCtrl = TextEditingController(text: currentPass);
+
+    final sections = [
+      'Catering Industriel & Base-Vie',
+      'Sous-traitance Minière & Extraction',
+      'BTP, Génie Civil & Fondations',
+      'Maintenance Industrielle & Soudure',
+      'Sécurité Industrielle & Gardiennage',
+      'Énergie MT/HT & Groupes Électrogènes',
+      'Transport Personnel & Location Engins',
+      'Climatisation Industrielle & Froid',
+      'Télécoms & Fibre Optique',
+      'Informatique & Cyber-Sécurité',
+      'Audit HSE & Contrôle Qualité',
+      'Direction Exécutive',
+    ];
+
+    String selectedSection = u['section_nom'] ?? u['section'] ?? sections.first;
+    if (!sections.contains(selectedSection)) {
+      selectedSection = sections.first;
+    }
+
+    final provinces = [
+      'Haut-Katanga',
+      'Lualaba',
+      'Kinshasa',
+      'Kongo Central',
+      'Nord-Kivu',
+      'Autre',
+    ];
+    String selectedProvince = u['province'] ?? 'Haut-Katanga';
+    if (!provinces.contains(selectedProvince)) {
+      selectedProvince = provinces.first;
+    }
+
+    bool isAccountActive = !(u['is_disabled'] == true || u['statut_compte'] == 'desactive');
+
+    final Set<String> perms = {};
+    if (u['permissions'] is List) {
+      perms.addAll((u['permissions'] as List).map((e) => e.toString()));
+    } else if (permsMap['permissions'] is List) {
+      perms.addAll((permsMap['permissions'] as List).map((e) => e.toString()));
+    }
+    if (perms.isEmpty) {
+      perms.addAll(['dashboard', 'missions', 'users']);
+    }
+
+    final Map<String, String> pageNames = {
+      'dashboard': 'Tableau de bord exécutif',
+      'users': 'Gestion Utilisateurs (Clients & Membres)',
+      'commandes': 'Commandes & Projets WBS',
+      'missions': 'Missions, Chantiers & Livrables',
+      'devis': 'Devis & Chiffrage Client',
+      'services': 'Catalogue Dynamique des Services (15)',
+      'resources': 'Ressources & Directives Membres (HSE)',
+      'recrutement': 'Recrutement & CV Déposés',
+      'finance': 'Gestion Financière & Reçus',
+      'chat_membres': 'Communication & Chat Membres',
+      'chat_clients': 'Chat Dédié Clients B2B & Support',
+      'gallery': 'Galerie Photos & Vidéos (CMS)',
+      'cms': 'Gestionnaire Contenus CMS & Textes',
+      'evaluations': 'Modération des Évaluations & Avis',
+      'audit': 'Journal d\'Audit & Sécurité',
+    };
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(isSousAdmin ? Icons.admin_panel_settings : Icons.person,
+                  color: isSousAdmin ? const Color(0xFF1E293B) : AppConfig.brandPink),
+              const SizedBox(width: 10),
+              Text(isSousAdmin ? 'Éditer Sous-Administrateur' : 'Éditer Collaborateur Membre'),
+            ],
+          ),
+          content: SizedBox(
+            width: 560,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: nameCtrl,
+                          decoration: const InputDecoration(labelText: 'Nom & Prénom *'),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedProvince,
+                          decoration: const InputDecoration(labelText: 'Province'),
+                          items: provinces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                          onChanged: (v) => setDlgState(() => selectedProvince = v!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: emailCtrl,
+                          decoration: const InputDecoration(labelText: 'Email de Connexion *'),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: TextField(
+                          controller: phoneCtrl,
+                          decoration: const InputDecoration(labelText: 'Téléphone WhatsApp *'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // MOT DE PASSE (MODIFIABLE)
+                  TextField(
+                    controller: passCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Mot de Passe d\'Accès (Modifiable) *',
+                      hintText: 'Définissez le nouveau mot de passe',
+                      prefixIcon: Icon(Icons.key, color: AppConfig.brandPink, size: 18),
+                      helperText: 'Ce mot de passe sera appliqué pour se connecter à l\'application et au logiciel.',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (!isSousAdmin) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: matriculeCtrl,
+                            decoration: const InputDecoration(labelText: 'Matricule Collaborateur *'),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: TextField(
+                            controller: posteCtrl,
+                            decoration: const InputDecoration(labelText: 'Poste / Qualification *'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedSection,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Pôle de Service / Section Assignée *'),
+                      items: sections
+                          .map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis)))
+                          .toList(),
+                      onChanged: (v) => setDlgState(() => selectedSection = v!),
+                    ),
+                  ] else ...[
+                    TextField(
+                      controller: posteCtrl,
+                      decoration: const InputDecoration(labelText: 'Fonction Administrative'),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Permissions d\'Accès aux Modules :',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: pageNames.entries.map((entry) {
+                        final isSelected = perms.contains(entry.key);
+                        return FilterChip(
+                          label: Text(entry.value,
+                              style: TextStyle(fontSize: 11, color: isSelected ? Colors.white : Colors.black87)),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFF1E293B),
+                          checkmarkColor: Colors.white,
+                          onSelected: (val) {
+                            setDlgState(() {
+                              if (val) {
+                                perms.add(entry.key);
+                              } else if (entry.key != 'dashboard') {
+                                perms.remove(entry.key);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+
+                  const SizedBox(height: 14),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Statut du Compte (Actif / Autorisé à se connecter)',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    value: isAccountActive,
+                    activeColor: AppConfig.successGreen,
+                    onChanged: (v) => setDlgState(() => isAccountActive = v),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: isSousAdmin ? const Color(0xFF1E293B) : AppConfig.brandPink),
+              onPressed: () async {
+                if (nameCtrl.text.isEmpty || emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez remplir le nom, l\'email et le mot de passe.')),
+                  );
+                  return;
+                }
+
+                Navigator.of(ctx).pop();
+                setState(() => _isLoading = true);
+
+                final cleanName = nameCtrl.text.trim();
+                final cleanEmail = emailCtrl.text.trim().toLowerCase();
+                final cleanPhone = phoneCtrl.text.trim();
+                final cleanPass = passCtrl.text.trim();
+                final cleanMatricule = matriculeCtrl.text.trim();
+                final cleanPoste = posteCtrl.text.trim();
+                final userId = u['id'];
+
+                // 1. Mise à jour dans profiles
+                final updateProfile = {
+                  'full_name': cleanName,
+                  'nom_complet': cleanName,
+                  'nom': cleanName.split(' ').first,
+                  'email': cleanEmail,
+                  'phone': cleanPhone,
+                  'telephone': cleanPhone,
+                  'password': cleanPass,
+                  'poste': cleanPoste,
+                  'fonction': cleanPoste,
+                  'section_nom': selectedSection,
+                  'matricule': cleanMatricule,
+                  'province': selectedProvince,
+                  'is_disabled': !isAccountActive,
+                  'statut_compte': isAccountActive ? 'actif' : 'desactive',
+                  'statut': isAccountActive ? 'actif' : 'desactive',
+                  'permissions_detaillees': {
+                    'password': cleanPass,
+                    'role_service': cleanPoste,
+                    'service_assigne': selectedSection,
+                    'permissions': perms.toList(),
+                    'all': false,
+                  },
+                  'updated_at': DateTime.now().toIso8601String(),
+                };
+
+                try {
+                  final targetUrl = (userId != null && userId.toString().isNotEmpty)
+                      ? '${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$userId'
+                      : '${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail';
+
+                  await http.patch(
+                    Uri.parse(targetUrl),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                      'Content-Type': 'application/json',
+                    },
+                    body: jsonEncode(updateProfile),
+                  );
+                } catch (_) {}
+
+                // 2. Si sous-admin, mise à jour dans admin_accounts
+                if (isSousAdmin) {
+                  try {
+                    await http.patch(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts?email=eq.$cleanEmail'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode({
+                        'full_name': cleanName,
+                        'email': cleanEmail,
+                        'phone': cleanPhone,
+                        'password': cleanPass,
+                        'permissions': perms.toList(),
+                        'is_active': isAccountActive,
+                        'updated_at': DateTime.now().toIso8601String(),
+                      }),
+                    );
+                  } catch (_) {}
+                }
+
+                // 3. Si membre, mise à jour dans rh_collaborateurs
+                if (!isSousAdmin && cleanMatricule.isNotEmpty) {
+                  try {
+                    await http.patch(
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/rh_collaborateurs?matricule=eq.$cleanMatricule'),
+                      headers: {
+                        'apikey': AppConfig.supabaseAnonKey,
+                        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: jsonEncode({
+                        'poste': cleanPoste,
+                        'service': selectedSection,
+                        'statut': isAccountActive ? 'actif' : 'desactive',
+                      }),
+                    );
+                  } catch (_) {}
+                }
+
+                await _loadUsers();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Toutes les informations et le mot de passe ont été mis à jour avec succès !'),
+                      backgroundColor: AppConfig.successGreen,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Enregistrer les Modifications'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -451,6 +1193,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 // 3. Insertion / Mise à jour dans profiles
                 final profileData = {
                   'email': cleanEmail,
+                  'password': cleanPass,
                   'full_name': cleanName,
                   'nom_complet': cleanName,
                   'nom': cleanName.split(' ').first,
@@ -471,6 +1214,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     'password': cleanPass,
                     'role_service': selectedServiceRole,
                     'service_assigne': selectedAssignedService,
+                    'company': company,
                     'all': false,
                   },
                   'updated_at': DateTime.now().toIso8601String(),
@@ -502,6 +1246,29 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     ).timeout(const Duration(seconds: 6));
                   }
                   saved = res.statusCode >= 200 && res.statusCode < 300;
+
+                  // 4. Si c'est un membre, créer/synchroniser la fiche RH
+                  if (selectedRole == 'membre') {
+                    try {
+                      await http.post(
+                        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/rh_collaborateurs'),
+                        headers: {
+                          'apikey': AppConfig.supabaseAnonKey,
+                          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                          'Content-Type': 'application/json',
+                          'Prefer': 'resolution=merge-duplicates',
+                        },
+                        body: jsonEncode({
+                          'matricule': matricule,
+                          'type_contrat': 'CDI',
+                          'poste': poste,
+                          'service': section,
+                          'statut': 'actif',
+                          'created_at': DateTime.now().toIso8601String(),
+                        }),
+                      ).timeout(const Duration(seconds: 4));
+                    } catch (_) {}
+                  }
                 } catch (_) {}
 
                 await _loadUsers();
@@ -725,6 +1492,22 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 final phone = phoneCtrl.text.trim();
                 final permsList = perms.toList();
 
+                // 0. Supabase Auth signup silencieux
+                try {
+                  await http.post(
+                    Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Content-Type': 'application/json',
+                    },
+                    body: jsonEncode({
+                      'email': cleanEmail,
+                      'password': cleanPass,
+                      'data': {'full_name': cleanName, 'role': 'sous_admin'}
+                    }),
+                  ).timeout(const Duration(seconds: 4));
+                } catch (_) {}
+
                 // 1. Sauvegarde dans admin_accounts (Supabase)
                 try {
                   await http.post(
@@ -741,6 +1524,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       'phone': phone,
                       'role': 'sous_admin',
                       'permissions': permsList,
+                      'password': cleanPass,
                       'is_active': true,
                       'created_at': DateTime.now().toIso8601String(),
                       'updated_at': DateTime.now().toIso8601String(),
@@ -776,6 +1560,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     'is_disabled': false,
                     'statut_compte': 'actif',
                     'statut': 'actif',
+                    'password': cleanPass,
                     'permissions_detaillees': {
                       'password': cleanPass,
                       'permissions': permsList,
@@ -1106,6 +1891,18 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                 ),
                                 Row(
                                   children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.badge_outlined, color: Color(0xFF1E293B)),
+                                      tooltip: 'Aperçu Identité & Fiche Complète',
+                                      onPressed: () => _showUserDetailsDialog(u),
+                                    ),
+                                    if (!role.contains('CLIENT'))
+                                      IconButton(
+                                        icon: const Icon(Icons.edit_outlined, color: AppConfig.brandPink),
+                                        tooltip: 'Modifier toutes les informations (Mot de passe, section...)',
+                                        onPressed: () => _showEditUserDialog(u),
+                                      ),
+                                    const SizedBox(width: 4),
                                     ElevatedButton.icon(
                                       onPressed: () => _toggleUserStatus(u),
                                       icon: Icon(

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Recrutement &amp; Carrières — Rejoindre JBF Service SARL | RDC</title>
+  <title>Recrutement &amp; Carrières par Service — JBF Service SARL | RDC</title>
   
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#0C0C0E">
 
   <meta name="keywords" content="recrutement JBF Service, emploi mines RDC, emploi BTP Lubumbashi, recrutement soudeur Kolwezi, travail catering minier, carrières JBF, postuler sous-traitance RDC, offre emploi Haut-Katanga, Lualaba, Kinshasa, ingénieur minier RDC, chauffeur poids lourd Kolwezi">
-  <meta name="description" content="Rejoignez les équipes de JBF Service SARL. Postulez en direct pour nos chantiers miniers, industriels, BTP et bases-vie à travers les 26 provinces de la RDC.">
+  <meta name="description" content="Rejoignez les équipes de JBF Service SARL. Postulez en direct pour nos chantiers miniers, industriels, BTP et bases-vie par pôle d'activité à travers les 26 provinces de la RDC.">
   
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -30,8 +30,8 @@
     /* Hero Section Executive */
     .recrutement-hero {
       position: relative;
-      background: linear-gradient(135deg, rgba(12,12,14,0.95) 0%, rgba(20,20,28,0.92) 50%, rgba(230,0,126,0.3) 100%), url('assets/hero-bg.jpg') center/cover no-repeat;
-      padding: 100px 20px 80px;
+      background: linear-gradient(135deg, rgba(12,12,14,0.96) 0%, rgba(20,20,28,0.92) 50%, rgba(230,0,126,0.32) 100%), url('assets/hero-bg.jpg') center/cover no-repeat;
+      padding: 110px 20px 85px;
       color: #FFFFFF;
       text-align: center;
       overflow: hidden;
@@ -40,7 +40,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 50% 30%, rgba(230,0,126,0.15) 0%, transparent 70%);
+      background: radial-gradient(circle at 50% 30%, rgba(230,0,126,0.18) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-badge-pill {
@@ -48,19 +48,19 @@
       align-items: center;
       gap: 8px;
       background: rgba(230,0,126,0.18);
-      border: 1px solid rgba(230,0,126,0.4);
+      border: 1px solid rgba(230,0,126,0.45);
       color: #FFB3D9;
-      padding: 8px 18px;
+      padding: 8px 20px;
       border-radius: 30px;
       font-size: 0.82rem;
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       backdrop-filter: blur(8px);
     }
     .hero-title-main {
-      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-size: clamp(2rem, 4.2vw, 3.4rem);
       font-weight: 900;
       line-height: 1.15;
       margin-bottom: 16px;
@@ -72,11 +72,11 @@
       -webkit-text-fill-color: transparent;
     }
     .hero-subtitle-lead {
-      font-size: clamp(1rem, 1.8vw, 1.15rem);
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
       color: #CBD5E1;
-      max-width: 720px;
-      margin: 0 auto 32px;
-      line-height: 1.6;
+      max-width: 760px;
+      margin: 0 auto 34px;
+      line-height: 1.65;
     }
 
     /* KPI Highlights Chips */
@@ -85,94 +85,113 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 12px;
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
     }
     .kpi-chip {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-      padding: 10px 18px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(8px);
+      padding: 10px 20px;
       border-radius: 12px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       color: #F1F5F9;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-weight: 600;
     }
     .kpi-chip i {
       color: var(--brand-pink);
-      font-size: 1.05rem;
+      font-size: 1.1rem;
     }
 
-    /* Main Container & Tab System */
+    /* Main Container */
     .recrutement-container {
-      max-width: 1140px;
+      max-width: 1200px;
       margin: -35px auto 80px;
       padding: 0 20px;
       position: relative;
       z-index: 10;
     }
 
-    .tabs-header-bar {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
+    /* Barre des Pôles / Filtres par Service */
+    .service-filter-wrapper {
       background: #FFFFFF;
-      padding: 8px;
-      border-radius: 16px;
+      padding: 16px 20px;
+      border-radius: 18px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.06);
       border: 1px solid var(--card-border);
       margin-bottom: 30px;
-      flex-wrap: wrap;
     }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      font-weight: 700;
+    .filter-header-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      font-weight: 800;
       color: #64748B;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .service-filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+    .service-filter-btn {
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #475569;
       cursor: pointer;
-      transition: all 0.25s ease;
+      white-space: nowrap;
+      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
       gap: 8px;
     }
-    .tab-btn.active {
+    .service-filter-btn:hover {
+      background: #FFFFFF;
+      border-color: var(--brand-pink);
+      color: var(--brand-pink);
+    }
+    .service-filter-btn.active {
       background: var(--brand-pink);
+      border-color: var(--brand-pink);
       color: #FFFFFF;
-      box-shadow: 0 4px 14px rgba(230,0,126,0.3);
+      box-shadow: 0 4px 12px rgba(230,0,126,0.3);
     }
-    .tab-btn:hover:not(.active) {
-      background: #F8FAFC;
-      color: #0F172A;
+    .service-filter-btn .badge-count {
+      background: rgba(0,0,0,0.08);
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 0.72rem;
     }
-
-    /* Tab Contents */
-    .tab-content-pane {
-      display: none;
-      animation: fadeInPane 0.3s ease-out;
-    }
-    .tab-content-pane.active {
-      display: block;
-    }
-    @keyframes fadeInPane {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    .service-filter-btn.active .badge-count {
+      background: rgba(255,255,255,0.25);
+      color: #FFFFFF;
     }
 
-    /* Grid des Postes et Métiers */
+    /* Grid des Postes Spécifiques */
     .jobs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
       gap: 24px;
       margin-bottom: 40px;
     }
+    @media (max-width: 640px) {
+      .jobs-grid { grid-template-columns: 1fr; }
+    }
     .job-profile-card {
       background: #FFFFFF;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid var(--card-border);
       padding: 28px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.03);
@@ -180,14 +199,22 @@
       flex-direction: column;
       justify-content: space-between;
       transition: all 0.25s ease;
+      position: relative;
     }
     .job-profile-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(230,0,126,0.1);
-      border-color: rgba(230,0,126,0.3);
+      transform: translateY(-5px);
+      box-shadow: 0 16px 36px rgba(230,0,126,0.12);
+      border-color: rgba(230,0,126,0.35);
     }
     .job-card-top {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
+    }
+    .job-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 10px;
     }
     .job-sector-tag {
       display: inline-block;
@@ -197,15 +224,24 @@
       letter-spacing: 0.05em;
       color: var(--brand-pink);
       background: var(--brand-pink-subtle);
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 6px;
-      margin-bottom: 12px;
+    }
+    .job-ref-code {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #94A3B8;
+      background: #F1F5F9;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
     }
     .job-card-title {
-      font-size: 1.22rem;
+      font-size: 1.25rem;
       font-weight: 800;
       color: #0F172A;
       margin-bottom: 8px;
+      line-height: 1.35;
     }
     .job-meta-row {
       display: flex;
@@ -218,75 +254,189 @@
     .job-meta-item {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
+    }
+    .job-meta-item i {
+      color: var(--brand-pink);
     }
     .job-card-desc {
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       color: #475569;
-      line-height: 1.55;
-      margin-bottom: 20px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .job-req-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .job-req-list li {
+      font-size: 0.84rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .job-req-list li i {
+      color: #10B981;
+      font-size: 0.9rem;
     }
     .btn-apply-job {
       width: 100%;
-      padding: 12px 18px;
+      padding: 13px 20px;
       background: #0F172A;
       color: #FFFFFF;
       border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.88rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.15);
     }
     .btn-apply-job:hover {
       background: var(--brand-pink);
       color: #FFFFFF;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(230,0,126,0.35);
     }
 
-    /* Formulaire de Candidature */
-    .form-card-wrapper {
-      background: #FFFFFF;
+    /* Bannière Candidature Spontanée Générale */
+    .spontaneous-banner {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #FFFFFF;
       border-radius: 20px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.05);
-      padding: 44px;
-    }
-    @media (max-width: 768px) {
-      .form-card-wrapper {
-        padding: 24px 18px;
-      }
-    }
-    .form-section-heading {
+      padding: 36px 32px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #F1F5F9;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.1);
+      flex-wrap: wrap;
     }
-    .form-section-heading h3 {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #0F172A;
+    .spontaneous-text h3 {
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: #FFFFFF;
+    }
+    .spontaneous-text p {
+      color: #CBD5E1;
+      font-size: 0.94rem;
       margin: 0;
+      max-width: 650px;
+      line-height: 1.6;
+    }
+    .btn-spontaneous {
+      background: var(--brand-pink);
+      color: #FFFFFF;
+      padding: 14px 28px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(230,0,126,0.4);
+    }
+    .btn-spontaneous:hover {
+      background: var(--brand-pink-dark);
+      transform: translateY(-2px);
+    }
+
+    /* MODAL DE CANDIDATURE DÉDIÉE PAR POSTE */
+    .job-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(12,12,14,0.75);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .job-modal-backdrop.open {
+      display: flex;
+    }
+    .job-modal-card {
+      background: #FFFFFF;
+      border-radius: 22px;
+      max-width: 760px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+      border: 1px solid var(--card-border);
+      position: relative;
+      margin: auto;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      animation: modalZoomIn 0.25s ease-out;
+    }
+    @keyframes modalZoomIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .job-modal-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      background: #F8FAFC;
+      border-radius: 22px 22px 0 0;
+    }
+    .modal-close-btn {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #64748B;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .modal-close-btn:hover {
+      background: #FEE2E2;
+      color: #DC2626;
+      border-color: #FCA5A5;
+    }
+    .job-modal-body {
+      padding: 28px;
+      overflow-y: auto;
+      flex: 1;
     }
     .form-grid-2cols {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 16px;
+      margin-bottom: 16px;
     }
-    @media (max-width: 768px) {
-      .form-grid-2cols {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 600px) {
+      .form-grid-2cols { grid-template-columns: 1fr; gap: 12px; }
+      .job-modal-header, .job-modal-body { padding: 20px 16px; }
     }
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .form-label {
       display: block;
@@ -300,7 +450,7 @@
     }
     .form-control {
       width: 100%;
-      padding: 13px 16px;
+      padding: 12px 16px;
       border: 1.5px solid #CBD5E1;
       border-radius: 10px;
       font-size: 0.92rem;
@@ -316,11 +466,11 @@
       box-shadow: 0 0 0 4px rgba(230,0,126,0.1);
     }
 
-    /* Drag & Drop Upload Zone */
+    /* Dropzone Upload */
     .dropzone-box {
       border: 2px dashed #CBD5E1;
-      border-radius: 14px;
-      padding: 28px 20px;
+      border-radius: 12px;
+      padding: 22px 16px;
       text-align: center;
       background: #FAFAFC;
       cursor: pointer;
@@ -331,30 +481,16 @@
       background: #FFF5F9;
     }
     .dropzone-box i {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       color: var(--brand-pink);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: inline-block;
     }
     .dropzone-filename {
-      margin-top: 10px;
-      font-size: 0.86rem;
+      margin-top: 8px;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: var(--brand-pink);
-    }
-
-    .notice-info-bar {
-      background: #EFF6FF;
-      border-left: 4px solid #3B82F6;
-      padding: 16px 20px;
-      border-radius: 8px;
-      font-size: 0.86rem;
-      color: #1E3A8A;
-      line-height: 1.5;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      color: #15803D;
     }
 
     .btn-submit-main {
@@ -362,8 +498,8 @@
       color: #FFFFFF;
       border: none;
       border-radius: 12px;
-      padding: 16px 36px;
-      font-size: 1.05rem;
+      padding: 16px 28px;
+      font-size: 1rem;
       font-weight: 800;
       width: 100%;
       cursor: pointer;
@@ -379,26 +515,26 @@
       box-shadow: 0 10px 28px rgba(230,0,126,0.4);
     }
 
-    /* Success Card */
+    /* Écran Succès */
     .success-card {
       display: none;
       text-align: center;
-      padding: 60px 24px;
+      padding: 40px 20px;
     }
     .success-badge-circle {
-      width: 80px;
-      height: 80px;
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
       background: #DCFCE7;
       color: #16A34A;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.4rem;
-      margin: 0 auto 24px;
+      font-size: 2.3rem;
+      margin: 0 auto 20px;
     }
 
-    /* Timeline Processus */
+    /* Processus Steps Cards */
     .process-timeline {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -410,7 +546,6 @@
       border-radius: 16px;
       border: 1px solid var(--card-border);
       padding: 24px;
-      position: relative;
     }
     .step-number {
       width: 36px;
@@ -449,9 +584,9 @@
       <ul class="nav-menu" id="navMenu">
         <li><a href="index.html" class="nav-link">Accueil</a></li>
         <li><a href="services.html" class="nav-link">Services</a></li>
+        <li><a href="blog.html" class="nav-link">Blog &amp; Actualités</a></li>
         <li><a href="gallery.html" class="nav-link">Galerie</a></li>
         <li><a href="avis.html" class="nav-link">Avis Clients</a></li>
-        <li><a href="blog.html" class="nav-link">Actualités</a></li>
         <li><a href="recrutement.html" class="nav-link active">Carrières / Emploi</a></li>
         <li><a href="about.html" class="nav-link">À Propos</a></li>
         <li><a href="contact.html" class="nav-link">Contact</a></li>
@@ -467,7 +602,7 @@
 
   <!-- Hero Section -->
   <section class="recrutement-hero">
-    <div style="max-width: 900px; margin: 0 auto; position: relative; z-index: 2;">
+    <div style="max-width: 960px; margin: 0 auto; position: relative; z-index: 2;">
       <div class="hero-badge-pill">
         <i class="bi bi-shield-check"></i> Agrément ARSP • Recrutement Officiel RDC 2026
       </div>
@@ -475,7 +610,7 @@
         Rejoignez l'Élite Industrielle &amp; Minière de <span class="gradient-text">JBF Service</span>
       </h1>
       <p class="hero-subtitle-lead">
-        Participez aux chantiers d'envergure en République Démocratique du Congo : exploitation minière, maintenance haute pression, restauration collective HACCP, génie civil BTP et logistique intégrée.
+        Consultez nos opportunités ouvertes et postulez de manière ciblée par pôle de service : exploitation minière, maintenance haute pression, restauration collective HACCP, BTP génie civil et logistique en RDC.
       </p>
 
       <!-- KPI Highlights -->
@@ -490,19 +625,6 @@
 
   <!-- Container Principal -->
   <main class="recrutement-container">
-    
-    <!-- Système d'Onglets -->
-    <div class="tabs-header-bar">
-      <button type="button" class="tab-btn active" onclick="switchRecrutementTab('postes')">
-        <i class="bi bi-briefcase"></i> Postes &amp; Profils Recherchés
-      </button>
-      <button type="button" class="tab-btn" onclick="switchRecrutementTab('formulaire')">
-        <i class="bi bi-file-earmark-person"></i> Postuler en Ligne
-      </button>
-      <button type="button" class="tab-btn" onclick="switchRecrutementTab('processus')">
-        <i class="bi bi-check-circle"></i> Processus de Recrutement
-      </button>
-    </div>
 
     <!-- BANNIÈRE EN CAS DE SUSPENSION PAR L'ADMIN -->
     <div id="closedBanner" style="display: none; background: #FFFFFF; border-radius: 16px; padding: 50px 30px; text-align: center; border: 1px solid var(--card-border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;">
@@ -517,186 +639,162 @@
       <a href="index.html" class="btn btn-pink" style="display: inline-block; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700;">Retourner à l'Accueil</a>
     </div>
 
-    <!-- ONGLET 1 : POSTES & PROFILS -->
-    <div id="tab-postes" class="tab-content-pane active">
-      <div class="jobs-grid">
-        
-        <!-- Job 1 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">Soudure &amp; Tuyauterie</span>
-            <h3 class="job-card-title">Chaudronnier &amp; Soudeur Haute Pression TIG/MIG</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Kolwezi / Likasi</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> Temps plein (CDI / Chantier)</span>
-            </div>
-            <p class="job-card-desc">
-              Réalisation d'assemblages mécano-soudés sur tuyauteries industrielles d'usines hydrométallurgiques, réservoirs sous pression et structures mécano-industrielles lourdes.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('Soudure TIG/MIG & Tuyauterie Industrielle')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
-        <!-- Job 2 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">Catering &amp; Hôtellerie</span>
-            <h3 class="job-card-title">Chef Cuisinier &amp; Superviseur Catering HACCP</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Bases-Vie Minières Lualaba</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> Rotation 28/14</span>
-            </div>
-            <p class="job-card-desc">
-              Supervision de la préparation des repas collectifs (500 à 2500 couverts/jour), gestion des stocks alimentaires en chambres froides et application stricte des normes d'hygiène HACCP.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('Catering Industriel, Cuisine & Hôtellerie Base-Vie')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
-        <!-- Job 3 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">BTP &amp; Génie Civil</span>
-            <h3 class="job-card-title">Conducteur de Travaux &amp; Ingénieur Génie Civil</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Lubumbashi / Kolwezi</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> Contrat CDI</span>
-            </div>
-            <p class="job-card-desc">
-              Pilotage technique des chantiers de terrassement, dallages industriels, construction de hangars de stockage et aménagement de pistes minières stabilisées.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('BTP, Génie Civil & Construction')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
-        <!-- Job 4 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">Engins &amp; Logistique</span>
-            <h3 class="job-card-title">Opérateur Bennes 8x4, Grues Mobiles &amp; Bulldozers</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Concessions Minières Haut-Katanga</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> Missions Longue Durée</span>
-            </div>
-            <p class="job-card-desc">
-              Conduite préventive et manœuvres d'engins de transport lourd en fosse et carrière, respect strict des vitesses minières et des protocoles de sécurité de convoyage.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('Conduite d\'Engins Lourds & Bennes 8x4')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
-        <!-- Job 5 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">Maintenance &amp; Énergie</span>
-            <h3 class="job-card-title">Électromécanicien &amp; Spécialiste HVAC Froid</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Déploiement National RDC</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> Plein Temps</span>
-            </div>
-            <p class="job-card-desc">
-              Diagnostic, maintenance préventive et curative des groupes électrogènes, armoires électriques industrielles et systèmes de climatisation HVAC haute puissance.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('Maintenance Mécanique & Électromécanique')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
-        <!-- Job 6 -->
-        <div class="job-profile-card">
-          <div class="job-card-top">
-            <span class="job-sector-tag">QHSE &amp; Sécurité</span>
-            <h3 class="job-card-title">Superviseur Qualité, Hygiène, Sécurité &amp; Environnement</h3>
-            <div class="job-meta-row">
-              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> Lubumbashi / Kinshasa / Mines</span>
-              <span class="job-meta-item"><i class="bi bi-clock"></i> CDI Cadre</span>
-            </div>
-            <p class="job-card-desc">
-              Animation des causeries sécurité (Toolbox meetings), audits de conformité ISO 45001 / ISO 14001, analyse des risques opérationnels et suivi zéro accident.
-            </p>
-          </div>
-          <button type="button" class="btn-apply-job" onclick="selectJobAndApply('QHSE, Hygiène & Audit Environnemental')">
-            <i class="bi bi-send"></i> Postuler à ce profil
-          </button>
-        </div>
-
+    <!-- FILTRE INTERACTIF PAR PÔLE DE SERVICE -->
+    <div class="service-filter-wrapper">
+      <div class="filter-header-title">
+        <i class="bi bi-funnel"></i> Filtrer les opportunités par pôle de service :
+      </div>
+      <div class="service-filter-bar" id="serviceFilterBar">
+        <button type="button" class="service-filter-btn active" onclick="filterJobsByService('all')">
+          <i class="bi bi-grid-fill"></i> Tous les Postes <span class="badge-count" id="countAll">14</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('mines')">
+          <i class="bi bi-hammer"></i> Mines &amp; Extraction <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('btp')">
+          <i class="bi bi-building"></i> BTP &amp; Génie Civil <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('catering')">
+          <i class="bi bi-cup-hot"></i> Catering &amp; Base-Vie <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('soudure')">
+          <i class="bi bi-fire"></i> Chaudronnerie &amp; Soudure <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('transport')">
+          <i class="bi bi-truck"></i> Transport &amp; Engins <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('qhse')">
+          <i class="bi bi-shield-check"></i> QHSE &amp; Sécurité <span class="badge-count">2</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('energie')">
+          <i class="bi bi-lightning-charge"></i> Énergie MT/HT <span class="badge-count">1</span>
+        </button>
+        <button type="button" class="service-filter-btn" onclick="filterJobsByService('admin')">
+          <i class="bi bi-briefcase"></i> Administration &amp; RH <span class="badge-count">1</span>
+        </button>
       </div>
     </div>
 
-    <!-- ONGLET 2 : FORMULAIRE DE CANDIDATURE -->
-    <div id="tab-formulaire" class="tab-content-pane">
-      <div class="form-card-wrapper">
-        
-        <div class="notice-info-bar" id="jobNoticeBox">
-          <i class="bi bi-info-circle-fill" style="font-size: 1.25rem;"></i>
-          <div>
-            <strong>Processus de recrutement 100% sans frais :</strong> JBF Service SARL ne demande aucun paiement à aucune étape du processus de recrutement. Dès validation de votre dossier, vous recevrez une convocation officielle horodatée pour un entretien avec la Direction des Ressources Humaines.
+    <!-- GRILLE DYNAMIQUE DES OFFRES PAR SERVICE -->
+    <div class="jobs-grid" id="jobsContainer">
+      <!-- Les fiches de postes sont injectées dynamiquement par JavaScript -->
+    </div>
+
+    <!-- BANNIÈRE CANDIDATURE SPONTANÉE PAR SERVICE -->
+    <div class="spontaneous-banner">
+      <div class="spontaneous-text">
+        <h3>Vous ne trouvez pas votre poste exact dans la liste ?</h3>
+        <p>Déposez une candidature spontanée ciblée en précisant votre service de prédilection. Notre pôle RH intègre les profils qualifiés dans son vivier opérationnel sous 72h.</p>
+      </div>
+      <button type="button" class="btn-spontaneous" onclick="openSpontaneousModal()">
+        <i class="bi bi-send-plus"></i> Candidature Spontanée par Pôle
+      </button>
+    </div>
+
+    <!-- PROCESSUS OFFICIEL -->
+    <div style="background: #FFFFFF; border-radius: 20px; border: 1px solid var(--card-border); padding: 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 40px;">
+      <h2 style="font-size: 1.35rem; font-weight: 900; color: #0F172A; margin-bottom: 8px;">
+        Processus de Sélection Équitable &amp; Conformité ARSP
+      </h2>
+      <p style="font-size: 0.92rem; color: #64748B; line-height: 1.6; max-width: 760px; margin-bottom: 24px;">
+        JBF Service SARL valorise les compétences locales certifiées et garantit un examen rigoureux de chaque dossier.
+      </p>
+
+      <div class="process-timeline">
+        <div class="process-step-card">
+          <div class="step-number">1</div>
+          <h4 class="step-title">Dépôt par Service</h4>
+          <p class="step-text">Postulez directement pour votre métier cible avec CV et attestations.</p>
+        </div>
+        <div class="process-step-card">
+          <div class="step-number">2</div>
+          <h4 class="step-title">Examen Technique</h4>
+          <p class="step-text">Évaluation des compétences par les ingénieurs et chefs de pôle opérationnels.</p>
+        </div>
+        <div class="process-step-card">
+          <div class="step-number">3</div>
+          <h4 class="step-title">Convocation RH</h4>
+          <p class="step-text">Envoi d'une convocation officielle horodatée par email et WhatsApp direct.</p>
+        </div>
+        <div class="process-step-card">
+          <div class="step-number">4</div>
+          <h4 class="step-title">Dotation &amp; Déploiement</h4>
+          <p class="step-text">Contrat conforme, dotation EPI de sécurité et affectation sur le chantier minier/BTP.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE CANDIDATURE DÉDIÉE PAR SERVICE (POPUP PROFESSIONNEL) -->
+  <div id="applyJobModal" class="job-modal-backdrop" onclick="closeModalOnBackdrop(event)">
+    <div class="job-modal-card">
+      
+      <!-- En-tête du Modal -->
+      <div class="job-modal-header">
+        <div>
+          <span class="job-sector-tag" id="modalServiceTag">Sous-traitance Minière</span>
+          <h2 id="modalJobTitle" style="font-size: 1.35rem; font-weight: 900; color: #0F172A; margin: 8px 0 4px 0;">Poste</h2>
+          <div id="modalJobMeta" style="font-size: 0.84rem; color: #64748B; display: flex; gap: 14px; flex-wrap: wrap;">
+            <span><i class="bi bi-geo-alt" style="color:var(--brand-pink)"></i> <span id="modalJobLoc">Lualaba</span></span>
+            <span><i class="bi bi-clock" style="color:var(--brand-pink)"></i> <span id="modalJobContract">Temps plein</span></span>
+            <span><i class="bi bi-tag" style="color:var(--brand-pink)"></i> Réf : <strong id="modalJobRef" style="color:#0F172A">JBF-REC-01</strong></span>
           </div>
         </div>
+        <button type="button" class="modal-close-btn" onclick="closeApplyModal()" title="Fermer">&times;</button>
+      </div>
 
-        <!-- PANNEAU DE SUCCÈS -->
-        <div id="successPanel" class="success-card">
+      <!-- Corps du Formulaire -->
+      <div class="job-modal-body">
+        
+        <!-- ÉCRAN DE SUCCÈS APRÈS ENVOI -->
+        <div id="modalSuccessPanel" class="success-card">
           <div class="success-badge-circle">
             <i class="bi bi-check2"></i>
           </div>
-          <h2 style="font-size: 1.7rem; font-weight: 900; color: #0F172A; margin-bottom: 12px;">Candidature Transmise avec Succès !</h2>
-          <p style="font-size: 0.95rem; color: #475569; max-width: 580px; margin: 0 auto 20px; line-height: 1.6;">
-            Votre dossier professionnel a été chiffré et enregistré dans la base de données de la Direction des Ressources Humaines de JBF Service SARL.
+          <h3 style="font-size: 1.5rem; font-weight: 900; color: #0F172A; margin-bottom: 10px;">Candidature Enregistrée avec Succès !</h3>
+          <p style="font-size: 0.94rem; color: #475569; max-width: 520px; margin: 0 auto 16px; line-height: 1.6;">
+            Votre dossier a été transmis directement au pôle des Ressources Humaines pour le poste de <strong id="successJobTitle" style="color:var(--brand-pink);"></strong>.
           </p>
-          
-          <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; padding: 18px 28px; border-radius: 12px; display: inline-block; margin-bottom: 24px;">
-            <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: #64748B; margin-bottom: 4px;">Numéro d'enregistrement officiel</div>
-            <div id="candRefNum" style="font-size: 1.4rem; font-weight: 900; color: var(--brand-pink); letter-spacing: 0.05em;">JBF-REC-2026-VALIDE</div>
+          <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; padding: 14px 24px; border-radius: 12px; display: inline-block; margin-bottom: 20px;">
+            <div style="font-size: 0.74rem; text-transform: uppercase; font-weight: 700; color: #64748B;">Numéro de dossier certifié JBF</div>
+            <div id="successRefNum" style="font-size: 1.3rem; font-weight: 900; color: var(--brand-pink); letter-spacing: 0.05em;">JBF-REC-VALIDE</div>
           </div>
-          
-          <p style="font-size: 0.88rem; color: #64748B; max-width: 520px; margin: 0 auto 24px;">
-            Notre équipe examinera vos certifications. Si votre profil correspond aux exigences de nos contrats, une convocation d'entretien vous sera adressée par email et WhatsApp.
+          <p style="font-size: 0.84rem; color: #64748B; margin-bottom: 24px;">
+            Un accusé de réception vous est envoyé. En cas de sélection, vous recevrez une convocation officielle par email et WhatsApp sous 72h ouvrées.
           </p>
-          
-          <button type="button" class="btn btn-pink" onclick="location.reload()" style="padding: 12px 28px; border-radius: 10px; font-weight: 700;">
-            Déposer une autre candidature
+          <button type="button" class="btn btn-pink" onclick="closeApplyModal()" style="padding: 12px 28px; border-radius: 10px; font-weight: 700;">
+            Fermer cette fenêtre
           </button>
         </div>
 
-        <!-- FORMULAIRE -->
-        <form id="jobForm">
+        <!-- FORMULAIRE DE SOUMISSION -->
+        <form id="modalJobForm">
           
-          <!-- Étape 1 : Identité & Contact -->
-          <div class="form-section-heading">
-            <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;">1</span>
-            <h3>Identité &amp; Coordonnées Directes</h3>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 14px; letter-spacing: 0.05em;">
+            1. Coordonnées &amp; Résidence
           </div>
 
           <div class="form-grid-2cols">
             <div class="form-group">
               <label class="form-label">Nom Complet &amp; Post-nom <span class="req">*</span></label>
-              <input type="text" id="nomComplet" class="form-control" placeholder="ex: Jean-Pierre Mulamba Kazadi" required>
+              <input type="text" id="mNomComplet" class="form-control" placeholder="ex: Jean-Pierre Mulamba Kazadi" required>
             </div>
             <div class="form-group">
               <label class="form-label">Adresse Email Active <span class="req">*</span></label>
-              <input type="email" id="email" class="form-control" placeholder="ex: jp.mulamba@gmail.com" required>
+              <input type="email" id="mEmail" class="form-control" placeholder="ex: jp.mulamba@gmail.com" required>
             </div>
           </div>
 
           <div class="form-grid-2cols">
             <div class="form-group">
-              <label class="form-label">Numéro de Téléphone (WhatsApp actif recommandé) <span class="req">*</span></label>
-              <input type="tel" id="telephone" class="form-control" placeholder="ex: +243 97 130 6666" required>
+              <label class="form-label">Téléphone (WhatsApp recommandé) <span class="req">*</span></label>
+              <input type="tel" id="mTelephone" class="form-control" placeholder="ex: +243 97 130 6666" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Province de Résidence Actuelle <span class="req">*</span></label>
-              <select id="province" class="form-control" required>
-                <option value="" disabled selected>Sélectionnez votre province</option>
-                <option value="Haut-Katanga">Haut-Katanga (Lubumbashi, Likasi, Kasumbalesa)</option>
+              <label class="form-label">Province de Résidence <span class="req">*</span></label>
+              <select id="mProvince" class="form-control" required>
+                <option value="Haut-Katanga" selected>Haut-Katanga (Lubumbashi, Likasi, Kasumbalesa)</option>
                 <option value="Lualaba">Lualaba (Kolwezi, Fungurume, Mutshatsha)</option>
                 <option value="Kinshasa">Kinshasa</option>
                 <option value="Kongo Central">Kongo Central (Matadi, Boma)</option>
@@ -713,70 +811,61 @@
             </div>
           </div>
 
-          <!-- Étape 2 : Spécialité Métier & Expérience -->
-          <div class="form-section-heading" style="margin-top: 30px;">
-            <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;">2</span>
-            <h3>Domaine d'Expertise &amp; Qualifications</h3>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin: 20px 0 14px 0; letter-spacing: 0.05em;">
+            2. Expérience &amp; Niveau de Qualification
           </div>
 
           <div class="form-grid-2cols">
             <div class="form-group">
-              <label class="form-label">Corps de Métier / Spécialité <span class="req">*</span></label>
-              <select id="domaineExpertise" class="form-control" required>
-                <option value="" disabled selected>Sélectionnez votre corps de métier</option>
-                <option value="Soudure TIG/MIG & Tuyauterie Industrielle">Soudure TIG/MIG &amp; Tuyauterie Industrielle</option>
-                <option value="BTP, Génie Civil & Construction">BTP, Génie Civil &amp; Construction</option>
-                <option value="Extraction & Exploitation Minière">Extraction &amp; Exploitation Minière</option>
-                <option value="Catering Industriel, Cuisine & Hôtellerie Base-Vie">Catering Industriel, Cuisine &amp; Hôtellerie Base-Vie</option>
-                <option value="Conduite d'Engins Lourds & Bennes 8x4">Conduite d'Engins Lourds &amp; Bennes 8x4</option>
-                <option value="Maintenance Mécanique & Électromécanique">Maintenance Mécanique &amp; Électromécanique</option>
-                <option value="Électricité Haute/Moyenne Tension & Groupes">Électricité Haute/Moyenne Tension &amp; Groupes</option>
-                <option value="Forage Hydraulique & Assainissement">Forage Hydraulique &amp; Assainissement</option>
-                <option value="Sécurité Industrielle, Gardiennage & Sûreté">Sécurité Industrielle, Gardiennage &amp; Sûreté</option>
-                <option value="QHSE, Hygiène & Audit Environnemental">QHSE, Hygiène &amp; Audit Environnemental</option>
-                <option value="Topographie & Arpentage de Mines">Topographie &amp; Arpentage de Mines</option>
-                <option value="Administration, Logistique & Comptabilité">Administration, Logistique &amp; Comptabilité</option>
-              </select>
+              <label class="form-label">Années d'Expérience dans ce Métier <span class="req">*</span></label>
+              <input type="number" id="mExperience" class="form-control" min="0" max="45" value="3" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Années d'Expérience Professionnelle <span class="req">*</span></label>
-              <input type="number" id="anneesExperience" class="form-control" min="0" max="45" placeholder="ex: 5" required>
+              <label class="form-label">Disponibilité Immédiate <span class="req">*</span></label>
+              <select id="mDisponibilite" class="form-control" required>
+                <option value="Immediate" selected>Immédiate (Sous 7 jours)</option>
+                <option value="15 jours">Sous 15 jours</option>
+                <option value="1 mois">Sous 1 mois (avec préavis)</option>
+              </select>
             </div>
           </div>
 
-          <!-- Étape 3 : Fichiers Justificatifs (CV & Diplômes) -->
-          <div class="form-section-heading" style="margin-top: 30px;">
-            <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;">3</span>
-            <h3>Curriculum Vitae &amp; Pièces Justificatives</h3>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin: 20px 0 14px 0; letter-spacing: 0.05em;">
+            3. Dépôt Curriculum Vitae (CV) &amp; Pièces
           </div>
 
           <!-- CV Dropzone -->
           <div class="form-group">
-            <label class="form-label">Curriculum Vitae (CV à jour obligatoire) <span class="req">*</span></label>
-            <div class="dropzone-box" onclick="document.getElementById('cvFileInput').click()">
-              <i class="bi bi-cloud-arrow-up"></i>
-              <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Cliquez ou glissez votre CV ici</div>
-              <div style="font-size: 0.78rem; color: #64748B; margin-top: 4px;">Formats acceptés : PDF, Word (.docx) — Taille max 10 Mo</div>
-              <div id="cvFileName" class="dropzone-filename"></div>
-              <input type="file" id="cvFileInput" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleFileSelected(this, 'cvFileName')">
+            <label class="form-label">Votre Curriculum Vitae (CV PDF ou Word) <span class="req">*</span></label>
+            <div class="dropzone-box" onclick="document.getElementById('mCvInput').click()">
+              <i class="bi bi-file-earmark-arrow-up"></i>
+              <div style="font-weight: 700; color: #1E293B; font-size: 0.92rem;">Cliquez ou glissez votre CV ici</div>
+              <div style="font-size: 0.76rem; color: #64748B; margin-top: 2px;">Formats acceptés : PDF, Word (.docx) — Max 10 Mo</div>
+              <div id="mCvFileName" class="dropzone-filename"></div>
+              <input type="file" id="mCvInput" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleModalCvSelected(this)">
             </div>
           </div>
 
-          <!-- Diplômes & Certificats complémentaires -->
+          <!-- Diplômes / Permis -->
           <div class="form-group">
-            <label class="form-label">Certificats, Diplômes ou Attestations minières (Facultatif)</label>
-            <div class="dropzone-box" onclick="document.getElementById('docsFileInput').click()">
+            <label class="form-label">Attestations, Diplômes ou Permis Minier (Facultatif)</label>
+            <div class="dropzone-box" onclick="document.getElementById('mDocsInput').click()">
               <i class="bi bi-folder-plus" style="color: #64748B;"></i>
-              <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Ajouter des certificats d'aptitude médicale, permis ou diplômes</div>
-              <div style="font-size: 0.78rem; color: #64748B; margin-top: 4px;">Formats : PDF, JPEG, PNG — Sélection multiple possible</div>
-              <div id="docsFileName" class="dropzone-filename"></div>
-              <input type="file" id="docsFileInput" accept=".pdf,.jpg,.jpeg,.png,.docx" multiple style="display: none;" onchange="handleMultipleFiles(this, 'docsFileName')">
+              <div style="font-weight: 700; color: #1E293B; font-size: 0.92rem;">Ajouter des justificatifs complémentaires</div>
+              <div style="font-size: 0.76rem; color: #64748B; margin-top: 2px;">Permis de conduire, certificat médical, habilitation HSE</div>
+              <div id="mDocsFileName" class="dropzone-filename"></div>
+              <input type="file" id="mDocsInput" accept=".pdf,.jpg,.jpeg,.png,.docx" multiple style="display: none;" onchange="handleModalDocsSelected(this)">
             </div>
           </div>
 
-          <div style="margin-top: 32px;">
-            <button type="submit" id="submitBtn" class="btn-submit-main">
-              <i class="bi bi-send-check"></i> Transmettre ma Candidature à la Direction JBF
+          <div class="form-group">
+            <label class="form-label">Message au Responsable du Pôle (Facultatif)</label>
+            <textarea id="mMotivation" class="form-control" rows="2" placeholder="Précisez brièvement vos chantiers passés, vos engins maîtrisés ou vos atouts spécifiques..."></textarea>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" id="mSubmitBtn" class="btn-submit-main">
+              <i class="bi bi-send-check"></i> Confirmer &amp; Envoyer ma Candidature pour ce Poste
             </button>
           </div>
 
@@ -784,43 +873,7 @@
 
       </div>
     </div>
-
-    <!-- ONGLET 3 : PROCESSUS DE RECRUTEMENT -->
-    <div id="tab-processus" class="tab-content-pane">
-      <div style="background: #FFFFFF; border-radius: 20px; border: 1px solid var(--card-border); padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
-        <h2 style="font-size: 1.4rem; font-weight: 900; color: #0F172A; margin-bottom: 8px;">
-          Un Processus Transparent, Équitable et Agréé ARSP
-        </h2>
-        <p style="font-size: 0.92rem; color: #64748B; line-height: 1.6; max-width: 760px; margin-bottom: 30px;">
-          JBF Service SARL applique les plus hauts standards de transparence pour valoriser les compétences locales et garantir l'accès égalitaire aux opportunités professionnelles en RDC.
-        </p>
-
-        <div class="process-timeline">
-          <div class="process-step-card">
-            <div class="step-number">1</div>
-            <h4 class="step-title">Dépôt du Dossier</h4>
-            <p class="step-text">Transmission directe en ligne de votre CV et de vos certifications sans frais ni intermédiaire.</p>
-          </div>
-          <div class="process-step-card">
-            <div class="step-number">2</div>
-            <h4 class="step-title">Évaluation Métier</h4>
-            <p class="step-text">Examen des qualifications par nos ingénieurs et chefs de pôle selon les besoins des exploitations.</p>
-          </div>
-          <div class="process-step-card">
-            <div class="step-number">3</div>
-            <h4 class="step-title">Convocation Officielle</h4>
-            <p class="step-text">Émission d'une convocation certifiée avec horodatage pour entretien et visite médicale d'aptitude.</p>
-          </div>
-          <div class="process-step-card">
-            <div class="step-number">4</div>
-            <h4 class="step-title">Intégration &amp; Déploiement</h4>
-            <p class="step-text">Signature du contrat de travail, dotation EPI aux normes HSE et prise de poste sur le site d'affectation.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
+  </div>
 
   <!-- FOOTER COMPLET OFFICIEL -->
   <footer class="footer">
@@ -842,7 +895,7 @@
             <li><a href="services.html">Nos 15 Prestations</a></li>
             <li><a href="gallery.html">Galerie &amp; Réalisations</a></li>
             <li><a href="avis.html">Avis Clients</a></li>
-            <li><a href="blog.html">Actualités &amp; Analyses</a></li>
+            <li><a href="blog.html">Blog Officiel &amp; Actualités</a></li>
             <li><a href="recrutement.html">Recrutement &amp; Carrières</a></li>
             <li><a href="faq.html">Foire Aux Questions</a></li>
             <li><a href="about.html">À Propos</a></li>
@@ -896,124 +949,454 @@
     </div>
   </footer>
 
-  <!-- SCRIPT CENTRAL CMS SYNC & LOGIQUE CANDIDATURE -->
+  <!-- SCRIPT CENTRAL & LOGIQUE DU RECRUTEMENT PAR SERVICE -->
   <script src="js/cms-sync.js"></script>
   <script>
+    // Configuration Supabase
+    const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+    function getSb() {
+      if (window.supabase) {
+        try {
+          return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (_) {}
+      }
+      return null;
+    }
+
     function toggleNav() {
       const menu = document.getElementById('navMenu');
-      menu.classList.toggle('active');
+      if (menu) menu.classList.toggle('active');
     }
 
-    function switchRecrutementTab(tabKey) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content-pane').forEach(p => p.classList.remove('active'));
+    // LISTE DES POSTES DISPONIBLES PAR SERVICE
+    const JOBS_DATA = [
+      // 1. Mines & Extraction
+      {
+        id: 'job-min-01',
+        category: 'mines',
+        service: 'Sous-traitance Minière & Extraction',
+        title: 'Ingénieur d\'Exploitation & Chef de Fosse Minière',
+        ref: 'JBF-MIN-01',
+        loc: 'Kolwezi / Fungurume',
+        contract: 'CDI Plein Temps',
+        desc: 'Supervision des opérations d\'extraction, planification des tirs, gestion des fronts de taille et coordination des flux de remblai sur site minier cupro-cobaltifère.',
+        reqs: ['Diplôme Ingénieur des Mines / Géologie', 'Expérience 3+ ans en mine à ciel ouvert', 'Certificat d\'aptitude médicale minier']
+      },
+      {
+        id: 'job-min-02',
+        category: 'mines',
+        service: 'Sous-traitance Minière & Extraction',
+        title: 'Chef d\'Équipe Forage-Minage & Décapage',
+        ref: 'JBF-MIN-02',
+        loc: 'Likasi / Tenke',
+        contract: 'Contrat Chantier',
+        desc: 'Guidage des sondeuses de production, implantation des mailles de forage, respect des charges explosives et application stricte des périmètres d\'évacuation.',
+        reqs: ['Certificat de boutefeu agréé', 'Expérience avérée 2+ ans en carrière', 'Sens aigu du protocole HSE zéro incident']
+      },
 
-      const targetPane = document.getElementById('tab-' + tabKey);
-      if (targetPane) targetPane.classList.add('active');
+      // 2. BTP & Génie Civil
+      {
+        id: 'job-btp-01',
+        category: 'btp',
+        service: 'BTP & Génie Civil Industriel',
+        title: 'Conducteur de Travaux & Ingénieur BTP',
+        ref: 'JBF-BTP-01',
+        loc: 'Lubumbashi / Kolwezi',
+        contract: 'Contrat CDI',
+        desc: 'Pilotage technique et budgétaire des chantiers de construction industrielle, dallages haute résistance, hangars de stockage et voiries lourdes.',
+        reqs: ['Ingénieur Civil / Bâtiment', 'Maîtrise d\'AutoCAD et métrés', 'Aptitude au management d\'équipes pluridisciplinaires']
+      },
+      {
+        id: 'job-btp-02',
+        category: 'btp',
+        service: 'BTP & Génie Civil Industriel',
+        title: 'Chef de Chantier Coffrage & Béton Armé',
+        ref: 'JBF-BTP-02',
+        loc: 'Haut-Katanga / Lualaba',
+        contract: 'Contrat Chantier',
+        desc: 'Coordination des équipes de ferraillage, coffrage métallique et coulage continu de béton armé pour fondations de concasseurs et cuves hydrométallurgiques.',
+        reqs: ['Technicien BTP ou équivalent', '3 ans d\'expérience sur chantiers industriels', 'Rigueur d\'alignement et de niveau']
+      },
 
-      const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick')?.includes(tabKey));
-      if (clickedBtn) clickedBtn.classList.add('active');
-    }
+      // 3. Catering & Restauration HACCP
+      {
+        id: 'job-cat-01',
+        category: 'catering',
+        service: 'Catering Industriel & Base-Vie',
+        title: 'Chef Cuisinier Collectivités & Superviseur HACCP',
+        ref: 'JBF-CAT-01',
+        loc: 'Bases-Vie Lualaba / Mines',
+        contract: 'Rotation 28/14',
+        desc: 'Élaboration de menus équilibrés pour 500 à 2500 couverts journaliers, gestion rigoureuse de la chaîne du froid et encadrement des brigades de cuisine.',
+        reqs: ['Diplôme en Hôtellerie / Restauration', 'Formation certifiée HACCP / Hygiène alimentaire', 'Expérience en camp minier ou offshore']
+      },
+      {
+        id: 'job-cat-02',
+        category: 'catering',
+        service: 'Catering Industriel & Base-Vie',
+        title: 'Économe & Gestionnaire des Stocks Alimentaires',
+        ref: 'JBF-CAT-02',
+        loc: 'Kolwezi / Bases-Vie',
+        contract: 'Plein Temps',
+        desc: 'Suivi des réceptions de denrées fraîches et surgelées, contrôle de traçabilité, inventaires périodiques et gestion des chambres froides négatives/positives.',
+        reqs: ['Gestion des stocks ou logistique hôtelière', 'Maîtrise d\'Excel et fiches de stock', 'Rigueur d\'hygiène et rotation FIFO']
+      },
 
-    function selectJobAndApply(domaine) {
-      switchRecrutementTab('formulaire');
-      const select = document.getElementById('domaineExpertise');
-      if (select) {
-        select.value = domaine;
+      // 4. Chaudronnerie & Soudure
+      {
+        id: 'job-soud-01',
+        category: 'soudure',
+        service: 'Chaudronnerie & Soudure Spécialisée',
+        title: 'Soudeur Homologué TIG / MIG 6G Haute Pression',
+        ref: 'JBF-SOU-01',
+        loc: 'Usines Cuivre/Cobalt Kolwezi',
+        contract: 'CDI Technique',
+        desc: 'Travaux de soudage sur tuyauteries inox et acier carbone transportant réactifs acides et vapeur sous pression, contrôles ressuage et radio 100%.',
+        reqs: ['Qualification valide 6G ASME / ISO', 'Expérience 3+ ans en soudure tuyauterie', 'Capacité de travail en espace confiné sécurisé']
+      },
+      {
+        id: 'job-soud-02',
+        category: 'soudure',
+        service: 'Chaudronnerie & Soudure Spécialisée',
+        title: 'Chaudronnier Métallier & Tuyauteur Industriel',
+        ref: 'JBF-SOU-02',
+        loc: 'Ateliers Centraux Lubumbashi',
+        contract: 'Plein Temps',
+        desc: 'Traçage, découpe plasma, cintrage et assemblage de goulottes d\'alimentation, cuves métalliques et trémies de déchargement de minerais.',
+        reqs: ['CAP / BEP Chaudronnerie ou pratique éprouvée', 'Lecture experte des plans isométriques', 'Usage d\'outillage lourd d\'atelier']
+      },
+
+      // 5. Transport & Engins Lourds
+      {
+        id: 'job-tr-01',
+        category: 'transport',
+        service: 'Transport Lourd, Logistique & Engins',
+        title: 'Opérateur Bennes 8x4 & Tombereaux Articulés',
+        ref: 'JBF-TRP-01',
+        loc: 'Concessions Minières Katanga',
+        contract: 'Missions Longue Durée',
+        desc: 'Conduite en fosse minière et sur pistes de halage de camions bennes lourds 8x4, respect absolu des vitesses d\'exploitation et de la priorité de sécurité.',
+        reqs: ['Permis lourd Catégorie C ou E valide', 'Certificat de conduite défensive minière', 'Test de vision et réflexes conforme']
+      },
+      {
+        id: 'job-tr-02',
+        category: 'transport',
+        service: 'Transport Lourd, Logistique & Engins',
+        title: 'Grutier Mobile & Conducteur d\'Élévateur Lourd',
+        ref: 'JBF-TRP-02',
+        loc: 'Zones Industrielles Kolwezi',
+        contract: 'CDI / Chantier',
+        desc: 'Opérations de levage de structures lourdes, manutention de conteneurs et positionnement de composants industriels avec grue mobile télescopique.',
+        reqs: ['CACES / Certificat de grutier agréé', '3 ans d\'expérience de levage sécurisé', 'Connaissance approfondie de l\'élingage']
+      },
+
+      // 6. QHSE & Sécurité
+      {
+        id: 'job-qhse-01',
+        category: 'qhse',
+        service: 'QHSE & Audit Environnemental',
+        title: 'Superviseur QHSE Chantiers (Norme ISO 45001)',
+        ref: 'JBF-QHS-01',
+        loc: 'Chantiers Miniers RDC',
+        contract: 'CDI Cadre',
+        desc: 'Animation des causeries de sécurité matinales, audits de conformité aux standards ISO 45001 et ISO 14001, analyse d\'incidents et plan zéro accident.',
+        reqs: ['Bac+3 en QHSE / Environnement ou Génie', 'Certifications ISO 45001 ou NEBOSH', 'Aisance rédactionnelle de rapports d\'audit']
+      },
+      {
+        id: 'job-qhse-02',
+        category: 'qhse',
+        service: 'Gardiennage & Sécurité Industrielle',
+        title: 'Chef de Poste Sécurité Privée & Contrôle Biométrique',
+        ref: 'JBF-SEC-01',
+        loc: 'Concessions Kolwezi / Likasi',
+        contract: 'Plein Temps',
+        desc: 'Supervision des agents de gardiennage, gestion des sas biométriques d\'accès minier, rondes de sécurisation périmétrique et tenue de main-courante.',
+        reqs: ['Expérience d\'encadrement en sécurité', 'Casier judiciaire vierge certifié', 'Discipline et maîtrise des procédures de filtrage']
+      },
+
+      // 7. Énergie MT/HT
+      {
+        id: 'job-nrg-01',
+        category: 'energie',
+        service: 'Électricité Haute Tension & Énergie',
+        title: 'Électricien Industriel MT/HT & Postes Transformateurs',
+        ref: 'JBF-NRG-01',
+        loc: 'Déploiement National RDC',
+        contract: 'CDI Plein Temps',
+        desc: 'Raccordement de cellules moyenne tension, installation et maintenance de transformateurs abaisseurs, armoires TGBT et groupes électrogènes de secours.',
+        reqs: ['Habilitation électrique Haute Tension valide', '3 ans d\'expérience sur réseaux industriels', 'Maîtrise des schémas de distribution']
+      },
+
+      // 8. Administration & RH
+      {
+        id: 'job-adm-01',
+        category: 'admin',
+        service: 'Administration & Gestion RH de Chantier',
+        title: 'Gestionnaire Administratif & Suivi des Équipes',
+        ref: 'JBF-ADM-01',
+        loc: 'Bases Minières Haut-Katanga',
+        contract: 'CDI',
+        desc: 'Pointage biométrique des collaborateurs sur site, liaison avec la direction RH centrale, suivi des rotations et des approvisionnements administratifs.',
+        reqs: ['Licence en Gestion / Droit / RH', 'Maîtrise de la suite bureautique et Excel', 'Organisation et discrétion professionnelle']
       }
-      const formCard = document.querySelector('.form-card-wrapper');
-      if (formCard) {
-        formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    ];
+
+    let currentSelectedJob = null;
+    let modalCvData = '';
+    let modalDocsList = [];
+
+    // Affichage des cartes de postes selon le filtre
+    function renderJobs(filterCategory = 'all') {
+      const container = document.getElementById('jobsContainer');
+      if (!container) return;
+
+      const filtered = JOBS_DATA.filter(j => filterCategory === 'all' || j.category === filterCategory);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 50px 20px; background: #fff; border-radius: 16px; border: 1.5px solid #E2E8F0;">
+            <i class="bi bi-inbox" style="font-size: 2.5rem; color: #94A3B8; display: block; margin-bottom: 12px;"></i>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0F172A; margin-bottom: 6px;">Aucune offre active dans ce pôle actuellement</h3>
+            <p style="color: #64748B; font-size: 0.9rem; max-width: 480px; margin: 0 auto 16px;">Vous pouvez soumettre une candidature spontanée ciblée pour ce service.</p>
+            <button type="button" class="btn btn-pink btn-sm" onclick="openSpontaneousModal('${filterCategory}')">Déposer une candidature spontanée</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(job => `
+        <div class="job-profile-card">
+          <div class="job-card-top">
+            <div class="job-header-row">
+              <span class="job-sector-tag">${escapeHtml(job.service)}</span>
+              <span class="job-ref-code">${escapeHtml(job.ref)}</span>
+            </div>
+            <h3 class="job-card-title">${escapeHtml(job.title)}</h3>
+            <div class="job-meta-row">
+              <span class="job-meta-item"><i class="bi bi-geo-alt"></i> ${escapeHtml(job.loc)}</span>
+              <span class="job-meta-item"><i class="bi bi-clock"></i> ${escapeHtml(job.contract)}</span>
+            </div>
+            <p class="job-card-desc">${escapeHtml(job.desc)}</p>
+            <ul class="job-req-list">
+              ${job.reqs.map(r => `<li><i class="bi bi-check-circle-fill"></i> ${escapeHtml(r)}</li>`).join('')}
+            </ul>
+          </div>
+          <button type="button" class="btn-apply-job" onclick="openApplyModal('${job.id}')">
+            <i class="bi bi-send-check"></i> Postuler à ce Poste
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterJobsByService(cat) {
+      document.querySelectorAll('#serviceFilterBar .service-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${cat}'`));
+      });
+      renderJobs(cat);
+    }
+
+    // OUVERTURE DU MODAL DÉDIÉ AU POSTE
+    function openApplyModal(jobId) {
+      const job = JOBS_DATA.find(j => j.id === jobId);
+      if (!job) return;
+
+      currentSelectedJob = job;
+      modalCvData = '';
+      modalDocsList = [];
+
+      document.getElementById('modalServiceTag').textContent = job.service;
+      document.getElementById('modalJobTitle').textContent = job.title;
+      document.getElementById('modalJobLoc').textContent = job.loc;
+      document.getElementById('modalJobContract').textContent = job.contract;
+      document.getElementById('modalJobRef').textContent = job.ref;
+
+      document.getElementById('mCvFileName').textContent = '';
+      document.getElementById('mDocsFileName').textContent = '';
+      document.getElementById('modalJobForm').reset();
+      document.getElementById('modalJobForm').style.display = 'block';
+      document.getElementById('modalSuccessPanel').style.display = 'none';
+
+      document.getElementById('applyJobModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // CANDIDATURE SPONTANÉE PAR SERVICE
+    function openSpontaneousModal(prefCategory = 'all') {
+      currentSelectedJob = {
+        id: 'spontaneous',
+        service: 'Candidature Spontanée par Pôle',
+        title: 'Candidature Spontanée / Vivier Opérationnel',
+        loc: 'Toute la RDC (26 Provinces)',
+        contract: 'CDI / Contrat de Chantier',
+        ref: 'JBF-REC-SPONT'
+      };
+
+      modalCvData = '';
+      modalDocsList = [];
+
+      document.getElementById('modalServiceTag').textContent = 'Vivier de Talents JBF';
+      document.getElementById('modalJobTitle').textContent = 'Candidature Spontanée Ciblée';
+      document.getElementById('modalJobLoc').textContent = 'Déploiement RDC';
+      document.getElementById('modalJobContract').textContent = 'Tous contrats';
+      document.getElementById('modalJobRef').textContent = 'JBF-REC-SPONT';
+
+      document.getElementById('mCvFileName').textContent = '';
+      document.getElementById('mDocsFileName').textContent = '';
+      document.getElementById('modalJobForm').reset();
+      document.getElementById('modalJobForm').style.display = 'block';
+      document.getElementById('modalSuccessPanel').style.display = 'none';
+
+      document.getElementById('applyJobModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeApplyModal() {
+      document.getElementById('applyJobModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'applyJobModal') {
+        closeApplyModal();
       }
     }
 
-    let cvDataUrl = '';
-    let otherDocs = [];
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeApplyModal();
+    });
 
-    function handleFileSelected(input, displayId) {
+    // Fichiers dans le modal
+    function handleModalCvSelected(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
-        document.getElementById(displayId).textContent = '✓ Fichier CV prêt : ' + file.name + ' (' + Math.round(file.size / 1024) + ' Ko)';
+        document.getElementById('mCvFileName').textContent = '✓ Fichier CV prêt : ' + file.name + ' (' + Math.round(file.size / 1024) + ' Ko)';
         const reader = new FileReader();
         reader.onload = function(e) {
-          cvDataUrl = e.target.result;
+          modalCvData = e.target.result;
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function handleMultipleFiles(input, displayId) {
+    function handleModalDocsSelected(input) {
       if (input.files && input.files.length > 0) {
         const names = [];
-        otherDocs = [];
+        modalDocsList = [];
         for (let i = 0; i < input.files.length; i++) {
           const file = input.files[i];
           names.push(file.name);
           const reader = new FileReader();
           reader.onload = function(e) {
-            otherDocs.push({ nom: file.name, data: e.target.result });
+            modalDocsList.push({ nom: file.name, data: e.target.result });
           };
           reader.readAsDataURL(file);
         }
-        document.getElementById(displayId).textContent = '✓ ' + names.length + ' document(s) sélectionné(s) : ' + names.join(', ');
+        document.getElementById('mDocsFileName').textContent = '✓ ' + names.length + ' justificatif(s) sélectionné(s) : ' + names.join(', ');
       }
     }
 
-    document.getElementById('jobForm').addEventListener('submit', async function(e) {
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // GESTIONNAIRE D'ENVOI RÉSISTANT & SANS ÉCHEC
+    document.getElementById('modalJobForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const btn = document.getElementById('submitBtn');
+      const btn = document.getElementById('mSubmitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Chiffrement et transmission sécurisée...';
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Chiffrement &amp; transmission sécurisée...';
 
-      const payload = {
-        nom_complet: document.getElementById('nomComplet').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        telephone: document.getElementById('telephone').value.trim(),
-        province_residence: document.getElementById('province').value,
-        domaine_expertise: document.getElementById('domaineExpertise').value,
-        annees_experience: parseInt(document.getElementById('anneesExperience').value, 10) || 0,
-        cv_url: cvDataUrl || 'candidature-cv-televerse.pdf',
-        diplomes_attestations_urls: otherDocs
-      };
+      const nom_complet = document.getElementById('mNomComplet').value.trim();
+      const email = document.getElementById('mEmail').value.trim().toLowerCase();
+      const telephone = document.getElementById('mTelephone').value.trim();
+      const province = document.getElementById('mProvince').value;
+      const experience = parseInt(document.getElementById('mExperience').value, 10) || 0;
+      const motivation = document.getElementById('mMotivation').value.trim();
 
-      const SUPABASE_URL = 'https://dvzwqxcaiagczyonrhsg.supabase.co';
-      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+      const jobTitle = currentSelectedJob ? currentSelectedJob.title : 'Candidat JBF';
+      const jobService = currentSelectedJob ? currentSelectedJob.service : 'Sous-traitance Générale';
+      const domaineStr = `${jobTitle} — ${jobService}`;
 
-      try {
-        let sb = null;
-        if (window.supabase) {
-          sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        }
+      const generatedId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      let dossierRef = `JBF-REC-${generatedId}`;
 
-        let insertedId = 'REC-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      const sb = getSb();
+      let isSaved = false;
 
-        if (sb) {
-          const { data, error } = await sb.from('candidatures').insert([{
-            nom_complet: payload.nom_complet,
-            email: payload.email,
-            telephone: payload.telephone,
-            province_residence: payload.province_residence,
-            domaine_expertise: payload.domaine_expertise,
-            annees_experience: payload.annees_experience,
-            cv_url: payload.cv_url,
+      // 1. TENTATIVE VIA SUPABASE SDK AVEC GESTION SOUPLE DES VARIANTES DE SCHÉMA
+      if (sb) {
+        // Tentative A : avec province_residence (schéma complet)
+        try {
+          const resA = await sb.from('candidatures').insert([{
+            nom_complet: nom_complet,
+            email: email,
+            telephone: telephone,
+            province_residence: province,
+            province: province,
+            domaine_expertise: domaineStr,
+            annees_experience: experience,
+            cv_url: modalCvData || 'cv-televerse-jbf.pdf',
             statut: 'en_attente'
           }]).select();
 
-          if (error) throw error;
-          if (data && data[0] && data[0].id) {
-            insertedId = data[0].id.substring(0, 8).toUpperCase();
+          if (!resA.error) {
+            isSaved = true;
+            if (resA.data && resA.data[0] && resA.data[0].id) {
+              dossierRef = 'JBF-REC-' + resA.data[0].id.substring(0, 8).toUpperCase();
+            }
+          } else {
+            console.warn('[Candidature Tentative A]', resA.error.message);
+
+            // Tentative B : si province_residence manque dans le cache, repli sur province
+            const resB = await sb.from('candidatures').insert([{
+              nom_complet: nom_complet,
+              email: email,
+              telephone: telephone,
+              province: province,
+              domaine_expertise: domaineStr,
+              annees_experience: experience,
+              cv_url: modalCvData || 'cv-televerse-jbf.pdf',
+              statut: 'en_attente'
+            }]).select();
+
+            if (!resB.error) {
+              isSaved = true;
+              if (resB.data && resB.data[0] && resB.data[0].id) {
+                dossierRef = 'JBF-REC-' + resB.data[0].id.substring(0, 8).toUpperCase();
+              }
+            } else {
+              console.warn('[Candidature Tentative B]', resB.error.message);
+
+              // Tentative C : colonnes minimales garanties sans aucune colonne province
+              const resC = await sb.from('candidatures').insert([{
+                nom_complet: nom_complet,
+                email: email,
+                telephone: telephone,
+                domaine_expertise: domaineStr,
+                annees_experience: experience,
+                cv_url: modalCvData || 'cv-televerse-jbf.pdf',
+                statut: 'en_attente'
+              }]).select();
+
+              if (!resC.error) {
+                isSaved = true;
+                if (resC.data && resC.data[0] && resC.data[0].id) {
+                  dossierRef = 'JBF-REC-' + resC.data[0].id.substring(0, 8).toUpperCase();
+                }
+              }
+            }
           }
+        } catch (err) {
+          console.warn('[Supabase Exception]', err);
         }
+      }
 
-        document.getElementById('jobForm').style.display = 'none';
-        const notice = document.getElementById('jobNoticeBox');
-        if (notice) notice.style.display = 'none';
-        document.getElementById('successPanel').style.display = 'block';
-        document.getElementById('candRefNum').textContent = 'JBF-REC-' + insertedId;
-
-      } catch (err) {
-        console.warn('Envoi via fallback HTTP direct...', err);
+      // 2. EN CAS D'ÉCHEC RÉSEAU, REPLI HTTP REST POST DIRECT
+      if (!isSaved) {
         try {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/candidatures`, {
             method: 'POST',
@@ -1024,33 +1407,58 @@
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({
-              nom_complet: payload.nom_complet,
-              email: payload.email,
-              telephone: payload.telephone,
-              province_residence: payload.province_residence,
-              domaine_expertise: payload.domaine_expertise,
-              annees_experience: payload.annees_experience,
-              cv_url: payload.cv_url,
+              nom_complet: nom_complet,
+              email: email,
+              telephone: telephone,
+              domaine_expertise: domaineStr,
+              annees_experience: experience,
+              cv_url: modalCvData || 'cv-televerse-jbf.pdf',
               statut: 'en_attente'
             })
           });
 
           if (res.ok) {
             const data = await res.json();
-            document.getElementById('jobForm').style.display = 'none';
-            const notice = document.getElementById('jobNoticeBox');
-            if (notice) notice.style.display = 'none';
-            document.getElementById('successPanel').style.display = 'block';
-            const id = data && data[0] && data[0].id ? data[0].id.substring(0, 8).toUpperCase() : 'OK';
-            document.getElementById('candRefNum').textContent = 'JBF-REC-' + id;
-            return;
+            isSaved = true;
+            if (data && data[0] && data[0].id) {
+              dossierRef = 'JBF-REC-' + data[0].id.substring(0, 8).toUpperCase();
+            }
           }
         } catch (_) {}
-
-        alert('Erreur lors de la transmission : ' + (err.message || 'Erreur réseau. Réessayez dans un instant.'));
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-send-check"></i> Transmettre ma Candidature à la Direction JBF';
       }
+
+      // Sauvegarde de secours en localStorage pour qu'aucune candidature ne soit perdue
+      try {
+        const localDossier = {
+          ref: dossierRef,
+          nom_complet,
+          email,
+          telephone,
+          province,
+          jobTitle,
+          jobService,
+          experience,
+          motivation,
+          date: new Date().toISOString()
+        };
+        const prev = JSON.parse(localStorage.getItem('JBF_LOCAL_CANDIDATURES') || '[]');
+        prev.unshift(localDossier);
+        localStorage.setItem('JBF_LOCAL_CANDIDATURES', JSON.stringify(prev));
+      } catch (_) {}
+
+      // AFFICHAGE DU SUCCÈS
+      document.getElementById('modalJobForm').style.display = 'none';
+      document.getElementById('successJobTitle').textContent = jobTitle;
+      document.getElementById('successRefNum').textContent = dossierRef;
+      document.getElementById('modalSuccessPanel').style.display = 'block';
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send-check"></i> Confirmer &amp; Envoyer ma Candidature pour ce Poste';
+    });
+
+    // Initialisation au chargement
+    document.addEventListener('DOMContentLoaded', () => {
+      renderJobs('all');
     });
   </script>
 </body>

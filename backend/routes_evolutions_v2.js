@@ -386,14 +386,36 @@ module.exports = function({ supabaseAdmin, supabasePublic, sendTransactionalEmai
     try {
       const { id } = req.params;
 
-      // Supprimer de auth.users si possible
+      // 1. Récupérer le profil pour avoir l'email
+      let userEmail = null;
+      try {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('email').eq('id', id).maybeSingle();
+        if (prof?.email) userEmail = prof.email;
+      } catch (_) {}
+
+      // 2. Supprimer de auth.users si possible
       try {
         await supabaseAdmin.auth.admin.deleteUser(id);
       } catch (_) {}
 
-      // Supprimer du profil
+      // 3. Supprimer d'admin_accounts si sous-admin
+      try {
+        await supabaseAdmin.from('admin_accounts').delete().eq('id', id);
+        if (userEmail) {
+          await supabaseAdmin.from('admin_accounts').delete().eq('email', userEmail);
+        }
+      } catch (_) {}
+
+      // 4. Supprimer de rh_collaborateurs si présent
+      try {
+        await supabaseAdmin.from('rh_collaborateurs').delete().eq('profile_id', id);
+      } catch (_) {}
+
+      // 5. Supprimer du profil
       const { error } = await supabaseAdmin.from('profiles').delete().eq('id', id);
-      if (error) throw error;
+      if (error && userEmail) {
+        await supabaseAdmin.from('profiles').delete().eq('email', userEmail);
+      }
 
       res.json({ success: true, message: 'Utilisateur supprimé définitivement.' });
     } catch (err) {
