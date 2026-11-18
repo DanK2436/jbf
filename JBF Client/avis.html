@@ -414,52 +414,104 @@
     let session = window.clientCore?.getClientSession() || {};
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session?.id || '');
 
+    const clientNom = session?.companyName || session?.name || session?.contactName || 'Client Partenaire';
+    const clientEntreprise = session?.companyName || session?.name || 'Entreprise Partenaire';
+    const clientEmail = (session?.email || '').trim().toLowerCase();
+
     const newRev = {
-      client_id: isUuid ? session.id : null,
-      nom: session?.companyName || session?.name || 'Client Partenaire',
-      entreprise: session?.companyName || session?.name || 'Entreprise Partenaire',
+      nom: clientNom,
+      prenom: session?.contactName || '',
+      entreprise: clientEntreprise,
       service: service,
+      categorie: service,
       site: site,
       ville: site,
+      province: site,
       note: rating,
+      stars: rating,
       commentaire: text,
       approuve: false,
+      date_avis: new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString()
     };
+    if (isUuid) newRev.client_id = session.id;
 
-    // 1. Supabase insert avec secours automatique
-    const sb = getSb();
-    if (sb) {
+    const sbUrl = window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+    const sbKey = window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+    let inserted = false;
+
+    // 1. Enregistrement direct via REST API Supabase (Prefer: return=minimal pour éviter tout blocage RLS SELECT)
+    try {
+      const restRes = await fetch(`${sbUrl}/rest/v1/avis_clients`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(newRev)
+      });
+      if (restRes.ok || restRes.status === 201) {
+        inserted = true;
+      }
+    } catch (_) {}
+
+    // 2. Repli Supabase JS Client
+    if (!inserted) {
+      const sb = getSb();
+      if (sb) {
+        try {
+          const { error } = await sb.from('avis_clients').insert([newRev]);
+          if (!error) inserted = true;
+        } catch (_) {}
+      }
+    }
+
+    // 3. Repli Backend Express API (/api/avis avec supabaseAdmin service-role)
+    if (!inserted) {
       try {
-        const { data, error } = await sb.from('avis_clients').insert([newRev]).select();
-        if (!error && data && data[0] && data[0].id) {
-          newRev.id = data[0].id;
-        } else {
-          // Repli garanti : colonnes minimales standard
-          const minPayload = {
+        const apiRes = await fetch('/api/avis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             nom: newRev.nom,
             entreprise: newRev.entreprise,
             service: newRev.service,
             note: rating,
-            commentaire: text,
-            approuve: false
-          };
-          const retry = await sb.from('avis_clients').insert([minPayload]).select();
-          if (!retry.error && retry.data && retry.data[0]) {
-            newRev.id = retry.data[0].id;
-          } else {
-            newRev.id = 'rev-' + Date.now();
-          }
-        }
-      } catch (err) {
-        console.warn('[Sync Supabase avis]', err);
-        newRev.id = 'rev-' + Date.now();
-      }
-    } else {
-      newRev.id = 'rev-' + Date.now();
+            commentaire: text
+          })
+        });
+        if (apiRes.ok) inserted = true;
+      } catch (_) {}
     }
 
-    // 2. Local cache
+    // 4. Notification instantanée à l'admin dans le flux de messages
+    try {
+      const notifCanal = clientEmail ? ('client_' + clientEmail) : 'general';
+      await fetch(`${sbUrl}/rest/v1/messages_chat`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          canal_type: notifCanal,
+          expediteur_id: session?.id || 'client-avis',
+          expediteur_nom: clientNom,
+          expediteur_avatar: '⭐',
+          section_nom: 'Évaluations & Retours',
+          message: `⭐ [NOUVELLE ÉVALUATION CLIENT]\nPrestation : ${service} (${site})\nNote : ${rating}/5\nCommentaire : "${text}"\nTransmis pour modération et parution.`,
+          created_at: new Date().toISOString()
+        })
+      });
+    } catch (_) {}
+
+    // 5. Cache local pour affichage réactif immédiat
+    newRev.id = 'rev-' + Date.now();
     clientReviewsList.unshift(newRev);
     try {
       localStorage.setItem('JBF_REVIEWS_LOCAL', JSON.stringify(clientReviewsList));
@@ -470,7 +522,7 @@
     document.getElementById('reviewSite').value = '';
     updateReviewKPIs();
     renderReviewsTable();
-    window.clientCore.showToast('Merci ! Votre avis a été transmis et sera publié sur le site après modération.', 'success');
+    window.clientCore.showToast('Merci ! Votre avis a été transmis à l\'administration JBF et sera publié après modération.', 'success');
   }
 
   window.handleCreateReview = handleCreateReview;

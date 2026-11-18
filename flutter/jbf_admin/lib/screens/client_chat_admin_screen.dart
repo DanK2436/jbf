@@ -62,7 +62,12 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
 
   Future<void> _loadClients() async {
     setState(() => _isLoading = true);
+    final List<ClientChatItem> mapped = [];
+    final Set<String> seenIds = {};
+    final Set<String> seenEmails = {};
+
     try {
+      // 1. Charger depuis profiles (role=client)
       final res = await http.get(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?role=eq.client&select=*'),
         headers: {
@@ -73,74 +78,106 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
 
       if (res.statusCode == 200) {
         final List<dynamic> list = jsonDecode(res.body);
-        final mapped = list.map((c) => ClientChatItem(
-              id: c['id']?.toString() ?? '',
-              clientName: c['full_name'] ?? c['nom_complet'] ?? 'Partenaire Client',
-              clientEmail: c['email'] ?? '',
-              company: c['company'] ?? c['entreprise'] ?? 'Société B2B',
-              lastMessage: 'Demande d\'assistance ou devis en cours',
-              lastDate: DateTime.now().subtract(const Duration(minutes: 30)),
-              unreadCount: 1,
-            )).toList();
+        for (var c in list) {
+          final id = c['id']?.toString() ?? '';
+          final email = (c['email'] ?? '').toString().trim().toLowerCase();
+          if (id.isNotEmpty) seenIds.add(id);
+          if (email.isNotEmpty) seenEmails.add(email);
 
-        // Si un client spécifique a été demandé (ex: suite à l'acceptation d'un devis)
-        if (widget.preselectedClientId != null && widget.preselectedClientId!.isNotEmpty) {
-          final alreadyThere = mapped.any((c) => c.id == widget.preselectedClientId || c.clientEmail == widget.preselectedClientEmail);
-          if (!alreadyThere) {
-            mapped.insert(
-              0,
-              ClientChatItem(
-                id: widget.preselectedClientId!,
-                clientName: widget.preselectedClientName ?? 'Client Partenaire',
-                clientEmail: widget.preselectedClientEmail ?? '',
-                company: widget.preselectedCompany ?? 'Demandeur de Devis',
-                lastMessage: 'Devis accepté — Début des échanges',
-                lastDate: DateTime.now(),
-                unreadCount: 0,
-              ),
-            );
-          }
-        }
-
-        if (mounted) {
-          setState(() {
-            _clients = mapped;
-            if (_clients.isNotEmpty) {
-              if (widget.preselectedClientId != null) {
-                _selectedClient = _clients.firstWhere(
-                  (c) => c.id == widget.preselectedClientId || c.clientEmail == widget.preselectedClientEmail,
-                  orElse: () => _clients.first,
-                );
-              } else {
-                _selectedClient = _clients.first;
-              }
-              _loadClientMessages(_selectedClient!);
-            }
-            _isLoading = false;
-          });
-          return;
+          mapped.add(ClientChatItem(
+            id: id,
+            clientName: c['full_name'] ?? c['nom_complet'] ?? c['nom'] ?? 'Partenaire Client',
+            clientEmail: email,
+            company: c['company'] ?? c['entreprise'] ?? 'Société Partenaire',
+            lastMessage: 'Client inscrit sur le portail',
+            lastDate: DateTime.tryParse(c['created_at'] ?? '') ?? DateTime.now(),
+            unreadCount: 0,
+          ));
         }
       }
     } catch (_) {}
 
+    // 2. Découverte automatique des clients ayant envoyé des messages dans messages_chat
+    try {
+      final msgRes = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat?select=id,expediteur_id,expediteur_nom,canal_type,section_nom,message,created_at&canal_type=like.client_*&order=created_at.desc&limit=100'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 4));
+
+      if (msgRes.statusCode == 200) {
+        final List<dynamic> rows = jsonDecode(msgRes.body);
+        for (var row in rows) {
+          final canal = (row['canal_type'] ?? '').toString();
+          final rawTarget = canal.startsWith('client_') ? canal.substring(7).trim() : '';
+          if (rawTarget.isEmpty) continue;
+
+          final isEmail = rawTarget.contains('@');
+          final targetEmail = isEmail ? rawTarget.toLowerCase() : '';
+          final targetId = !isEmail ? rawTarget : (row['expediteur_id'] ?? '');
+
+          // Vérifier si ce client existe déjà
+          final exists = mapped.any((c) =>
+              (targetId.isNotEmpty && c.id == targetId) ||
+              (targetEmail.isNotEmpty && c.clientEmail == targetEmail));
+
+          if (!exists) {
+            final senderName = (row['expediteur_nom'] ?? '').toString().trim();
+            final compName = (row['section_nom'] ?? senderName).toString().trim();
+            final dt = DateTime.tryParse(row['created_at'] ?? '') ?? DateTime.now();
+
+            mapped.add(ClientChatItem(
+              id: targetId.isNotEmpty ? targetId : targetEmail,
+              clientName: senderName.isNotEmpty ? senderName : (isEmail ? targetEmail : 'Client Web'),
+              clientEmail: targetEmail,
+              company: compName.isNotEmpty ? compName : 'Client Direct',
+              lastMessage: (row['message'] ?? '').toString(),
+              lastDate: dt,
+              unreadCount: 1,
+            ));
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Si un client spécifique a été demandé (ex: suite à l'acceptation d'un devis)
+    if (widget.preselectedClientId != null && widget.preselectedClientId!.isNotEmpty) {
+      final alreadyThere = mapped.any((c) =>
+          c.id == widget.preselectedClientId ||
+          (widget.preselectedClientEmail != null && c.clientEmail == widget.preselectedClientEmail));
+      if (!alreadyThere) {
+        mapped.insert(
+          0,
+          ClientChatItem(
+            id: widget.preselectedClientId!,
+            clientName: widget.preselectedClientName ?? 'Client Partenaire',
+            clientEmail: widget.preselectedClientEmail ?? '',
+            company: widget.preselectedCompany ?? 'Demandeur de Devis',
+            lastMessage: 'Devis accepté — Début des échanges',
+            lastDate: DateTime.now(),
+            unreadCount: 0,
+          ),
+        );
+      }
+    }
+
     if (mounted) {
       setState(() {
-        if (widget.preselectedClientId != null && widget.preselectedClientId!.isNotEmpty) {
-          _clients = [
-            ClientChatItem(
-              id: widget.preselectedClientId!,
-              clientName: widget.preselectedClientName ?? 'Client Partenaire',
-              clientEmail: widget.preselectedClientEmail ?? '',
-              company: widget.preselectedCompany ?? 'Demandeur de Devis',
-              lastMessage: 'Devis accepté — Début des échanges',
-              lastDate: DateTime.now(),
-              unreadCount: 0,
-            ),
-          ];
-          _selectedClient = _clients.first;
+        _clients = mapped;
+        if (_clients.isNotEmpty) {
+          if (widget.preselectedClientId != null) {
+            _selectedClient = _clients.firstWhere(
+              (c) =>
+                  c.id == widget.preselectedClientId ||
+                  (widget.preselectedClientEmail != null && c.clientEmail == widget.preselectedClientEmail),
+              orElse: () => _clients.first,
+            );
+          } else {
+            _selectedClient = _clients.first;
+          }
           _loadClientMessages(_selectedClient!);
-        } else {
-          _clients = [];
         }
         _isLoading = false;
       });
@@ -210,6 +247,12 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
     });
 
     try {
+      final emailCanal = _selectedClient!.clientEmail.trim().isNotEmpty
+          ? 'client_${_selectedClient!.clientEmail.trim().toLowerCase()}'
+          : '';
+      final idCanal = 'client_${_selectedClient!.id}';
+      final primaryCanal = emailCanal.isNotEmpty ? emailCanal : idCanal;
+
       await http.post(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
         headers: {
@@ -221,12 +264,33 @@ class _ClientChatAdminScreenState extends State<ClientChatAdminScreen> {
           'expediteur_id': 'admin',
           'expediteur_nom': 'Direction Générale JBF',
           'expediteur_avatar': 'DG',
-          'canal_type': 'client_${_selectedClient!.id}',
+          'canal_type': primaryCanal,
           'section_nom': _selectedClient!.company,
           'message': text,
           'created_at': now.toIso8601String(),
         }),
       );
+
+      // Si le canal ID est distinct du canal email, on poste un miroir pour assurer la réception
+      if (emailCanal.isNotEmpty && emailCanal != idCanal) {
+        await http.post(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'expediteur_id': 'admin',
+            'expediteur_nom': 'Direction Générale JBF',
+            'expediteur_avatar': 'DG',
+            'canal_type': idCanal,
+            'section_nom': _selectedClient!.company,
+            'message': text,
+            'created_at': now.toIso8601String(),
+          }),
+        );
+      }
     } catch (_) {}
   }
 

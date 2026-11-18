@@ -70,6 +70,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
               const Icon(Icons.hub, color: AppConfig.brandPink),
@@ -78,8 +79,9 @@ class _MissionsScreenState extends State<MissionsScreen> {
             ],
           ),
           content: SingleChildScrollView(
-            child: SizedBox(
-              width: 500,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -171,10 +173,12 @@ class _MissionsScreenState extends State<MissionsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text('Rapport d\'Intervention Terrain (BDD) — ${m.titre}'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Rapport Terrain — ${m.titre}'),
           content: SingleChildScrollView(
-            child: SizedBox(
-              width: 500,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -238,37 +242,45 @@ class _MissionsScreenState extends State<MissionsScreen> {
       onRefresh: _loadMissions,
       color: AppConfig.brandPink,
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 10,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Mes Ordres de Mission & Chantiers (BDD)',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text(
-                      widget.user != null
-                          ? 'Agent connecté : ${widget.user!.fullName} (${widget.user!.matricule}) • ${_missions.length} mission(s) au total'
-                          : 'Données réelles de la table missions Supabase',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                  ],
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 450),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Mes Ordres de Mission & Chantiers',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.user != null
+                            ? 'Agent : ${widget.user!.fullName} (${widget.user!.matricule}) • ${_missions.length} mission(s)'
+                            : 'Données réelles de la table missions Supabase',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+                      ),
+                    ],
+                  ),
                 ),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     SegmentedButton<String>(
                       segments: const [
-                        ButtonSegment(value: 'toutes', label: Text('Toutes les Missions')),
+                        ButtonSegment(value: 'toutes', label: Text('Toutes')),
                         ButtonSegment(value: 'mes_missions', label: Text('Mes Affectations')),
                       ],
                       selected: {_filterMode},
                       onSelectionChanged: (val) => setState(() => _filterMode = val.first),
                     ),
-                    const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: AppConfig.brandPink),
                       tooltip: 'Actualiser',
@@ -278,7 +290,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
             Expanded(
               child: missions.isEmpty
@@ -315,9 +327,14 @@ class _MissionsScreenState extends State<MissionsScreen> {
                       itemBuilder: (context, index) {
                         final m = missions[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 14),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
                           child: Padding(
-                            padding: const EdgeInsets.all(18.0),
+                            padding: const EdgeInsets.all(14.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -325,62 +342,73 @@ class _MissionsScreenState extends State<MissionsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     CircleAvatar(
-                                      radius: 22,
+                                      radius: 20,
                                       backgroundColor: AppConfig.brandPinkTint,
-                                      child: const Icon(Icons.assignment, color: AppConfig.brandPink),
+                                      child: const Icon(Icons.assignment, color: AppConfig.brandPink, size: 20),
                                     ),
-                                    const SizedBox(width: 14),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Row(
+                                          Wrap(
+                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                            spacing: 8,
+                                            runSpacing: 4,
                                             children: [
-                                              Text(m.titre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                              const SizedBox(width: 10),
+                                              Text(m.titre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                                               StatBadge(label: m.statut.toUpperCase(), status: m.statut),
                                             ],
                                           ),
                                           const SizedBox(height: 4),
                                           Text('Client : ${m.client} • Site : ${m.siteIntervention} • Domaine : ${m.serviceNom}',
-                                              style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-                                          const SizedBox(height: 4),
+                                              style: TextStyle(color: Colors.grey.shade700, fontSize: 12)),
+                                          const SizedBox(height: 2),
                                           Text('Date début : ${m.dateDebut.day}/${m.dateDebut.month}/${m.dateDebut.year} • Équipe : ${m.effectif} agent(s)',
-                                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
                                         ],
                                       ),
                                     ),
-                                    Row(
-                                      children: [
-                                        ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B)),
-                                          icon: const Icon(Icons.group_add, size: 16),
-                                          label: const Text('Déléguer'),
-                                          onPressed: () => _showDelegationDialog(m),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.edit_note, size: 16),
-                                          label: const Text('Rapport Terrain'),
-                                          onPressed: () => _showReportDialog(m),
-                                        ),
-                                      ],
+                                  ],
+                                ),
+                                const Divider(height: 18),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF1E293B),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      ),
+                                      icon: const Icon(Icons.group_add, size: 15),
+                                      label: const Text('Déléguer', style: TextStyle(fontSize: 12)),
+                                      onPressed: () => _showDelegationDialog(m),
+                                    ),
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppConfig.brandPink,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      ),
+                                      icon: const Icon(Icons.edit_note, size: 15),
+                                      label: const Text('Rapport Terrain', style: TextStyle(fontSize: 12)),
+                                      onPressed: () => _showReportDialog(m),
                                     ),
                                   ],
                                 ),
                                 if (m.description.isNotEmpty) ...[
-                                  const Divider(height: 20),
+                                  const SizedBox(height: 10),
                                   Text(
                                     'Cahier des charges :',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey.shade800),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: Colors.grey.shade800),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(m.description, style: TextStyle(fontSize: 13, color: Colors.grey.shade900)),
+                                  const SizedBox(height: 2),
+                                  Text(m.description, style: TextStyle(fontSize: 12, color: Colors.grey.shade900)),
                                 ],
                                 if (m.rapport.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 10),
                                   Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF0FDF4),
                                       borderRadius: BorderRadius.circular(8),
@@ -389,12 +417,12 @@ class _MissionsScreenState extends State<MissionsScreen> {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Icon(Icons.check_circle, color: AppConfig.successGreen, size: 18),
+                                        const Icon(Icons.check_circle, color: AppConfig.successGreen, size: 16),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             'Dernier Rapport Transmis : ${m.rapport}',
-                                            style: const TextStyle(color: Color(0xFF166534), fontSize: 12),
+                                            style: const TextStyle(color: Color(0xFF166534), fontSize: 11.5),
                                           ),
                                         ),
                                       ],

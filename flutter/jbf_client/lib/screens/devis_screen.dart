@@ -71,8 +71,9 @@ class _DevisScreenState extends State<DevisScreen> {
             ],
           ),
           content: SingleChildScrollView(
-            child: SizedBox(
-              width: 500,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,8 +173,9 @@ class _DevisScreenState extends State<DevisScreen> {
             ],
           ),
           content: SingleChildScrollView(
-            child: SizedBox(
-              width: 500,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,27 +304,35 @@ class _DevisScreenState extends State<DevisScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Action Bar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Top Action Bar (Responsive Mobile)
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 12,
+                    runSpacing: 10,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
                             'Gestion des Devis & Commandes',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppConfig.blackText),
                           ),
                           Text(
-                            '${filteredList.length} demande(s) enregistrée(s) pour ${widget.client.companyName}',
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                            '${filteredList.length} demande(s) pour ${widget.client.companyName}',
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
                           ),
                         ],
                       ),
                       ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConfig.brandPink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        ),
                         onPressed: _openCreateDevisDialog,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Initier un Devis'),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Initier un Devis', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -439,8 +449,11 @@ class _DevisScreenState extends State<DevisScreen> {
                                   style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
                                 ),
                                 const SizedBox(height: 12),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 8,
                                   children: [
                                     if (d.montantEstime > 0)
                                       Text(
@@ -452,7 +465,9 @@ class _DevisScreenState extends State<DevisScreen> {
                                         'Chiffrage en cours par les ingénieurs JBF',
                                         style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey, fontSize: 12),
                                       ),
-                                    Row(
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
                                       children: [
                                         OutlinedButton.icon(
                                           onPressed: () => _openEditDevisDialog(d),
@@ -463,7 +478,6 @@ class _DevisScreenState extends State<DevisScreen> {
                                             side: const BorderSide(color: Color(0xFFBAE6FD)),
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
                                         OutlinedButton.icon(
                                           onPressed: () => _confirmDeleteDevis(d),
                                           icon: const Icon(Icons.delete_outline, size: 15, color: AppConfig.dangerRed),

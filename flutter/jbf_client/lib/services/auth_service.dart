@@ -1,8 +1,24 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../models/client_models.dart';
+import 'otp_service.dart';
+
+String _generateUuidV4() {
+  final random = Random.secure();
+  final values = List<int>.generate(16, (i) => random.nextInt(256));
+  values[6] = (values[6] & 0x0f) | 0x40; // Version 4
+  values[8] = (values[8] & 0x3f) | 0x80; // Variant RFC4122
+  return [
+    values.sublist(0, 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(4, 6).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(6, 8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(8, 10).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(10, 16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+  ].join('-');
+}
 
 class AuthService {
   static const String _sessionKey = 'jbf_client_session_data';
@@ -195,6 +211,96 @@ class AuthService {
     }
   }
 
+  /// Envoi d'un code OTP à 6 chiffres pour connexion client sans mot de passe
+  Future<Map<String, dynamic>> sendLoginOtp(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      return {'success': false, 'error': 'Veuillez saisir une adresse email valide.'};
+    }
+    return await OtpService().sendOtpEmail(cleanEmail);
+  }
+
+  /// Validation du code OTP et connexion directe de l'Espace Client
+  Future<Map<String, dynamic>> verifyOtpAndLogin(String email, String code) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanCode = code.trim();
+
+    if (cleanCode.length != 6) {
+      return {'success': false, 'error': 'Veuillez renseigner les 6 chiffres du code OTP.'};
+    }
+
+    final isValid = OtpService().verifyOtp(cleanCode);
+    if (!isValid) {
+      return {'success': false, 'error': 'Code OTP invalide ou expiré. Veuillez redemander un nouveau code.'};
+    }
+
+    try {
+      // 1. Récupérer le profil réel dans Supabase
+      final res = await http.get(
+        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=ilike.$cleanEmail&select=*'),
+        headers: {
+          'apikey': AppConfig.supabaseAnonKey,
+          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+        },
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(res.body);
+        if (list.isNotEmpty) {
+          final profile = Map<String, dynamic>.from(list.first);
+          if (profile['is_disabled'] == true || profile['statut_compte'] == 'desactive') {
+            return {'success': false, 'error': 'Votre compte client a été désactivé par l\'administration JBF.'};
+          }
+
+          profile['token'] = 'token-otp-${DateTime.now().millisecondsSinceEpoch}';
+          _currentUser = ClientUser.fromJson(profile);
+          await completeLogin();
+          return {'success': true};
+        }
+      }
+
+      // 2. Si le compte n'a pas encore de fiche profil, création active immédiate
+      final newId = _generateUuidV4();
+      final newProfile = {
+        'id': newId,
+        'user_id': newId,
+        'email': cleanEmail,
+        'full_name': cleanEmail.split('@')[0],
+        'nom_complet': cleanEmail.split('@')[0],
+        'company': 'Société Partenaire',
+        'entreprise': 'Société Partenaire',
+        'role': 'client',
+        'statut_compte': 'actif',
+        'statut': 'actif',
+        'is_disabled': false,
+        'is_verified': true,
+        'token': 'token-otp-${DateTime.now().millisecondsSinceEpoch}',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      try {
+        await http.post(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
+          },
+          body: jsonEncode(newProfile),
+        );
+      } catch (_) {}
+
+      _currentUser = ClientUser.fromJson(newProfile);
+      await completeLogin();
+      return {'success': true};
+
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur lors de la connexion OTP : ${e.toString()}'};
+    }
+  }
+
   Future<void> completeLogin() async {
     if (_currentUser == null) return;
     final prefs = await SharedPreferences.getInstance();
@@ -238,7 +344,18 @@ class AuthService {
         }),
       ).timeout(const Duration(seconds: 8));
 
-      // Créer/mettre à jour également le profil Supabase pour garantie d'accès immédiat
+      String clientUserId = _generateUuidV4();
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        try {
+          final authJson = jsonDecode(res.body);
+          final String? returnedId = authJson['user']?['id'] ?? authJson['id'];
+          if (returnedId != null && returnedId.isNotEmpty) {
+            clientUserId = returnedId;
+          }
+        } catch (_) {}
+      }
+
+      // Créer/mettre à jour également le profil Supabase pour garantie d'accès immédiat sans attente
       try {
         await http.post(
           Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles'),
@@ -246,9 +363,11 @@ class AuthService {
             'apikey': AppConfig.supabaseAnonKey,
             'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
             'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates',
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
           },
           body: jsonEncode({
+            'id': clientUserId,
+            'user_id': clientUserId,
             'email': cleanEmail,
             'full_name': contactName.trim(),
             'nom_complet': contactName.trim(),
@@ -261,9 +380,11 @@ class AuthService {
             'statut_compte': 'actif',
             'statut': 'actif',
             'is_disabled': false,
+            'is_verified': true,
+            'password': cleanPass,
             'permissions_detaillees': {
               'password': cleanPass,
-              'all': false,
+              'all': true,
             },
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),

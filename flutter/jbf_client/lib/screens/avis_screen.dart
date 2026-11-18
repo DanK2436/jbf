@@ -41,40 +41,49 @@ class _AvisScreenState extends State<AvisScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('Laisser une Évaluation Partenaire'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Entreprise : ${widget.client.companyName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 12),
-              const Text('Votre note globale :', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  final starNum = index + 1;
-                  return IconButton(
-                    icon: Icon(
-                      starNum <= selectedRating ? Icons.star : Icons.star_border,
-                      color: const Color(0xFFEAB308),
-                      size: 32,
+          content: Container(
+            constraints: const BoxConstraints(maxWidth: 460),
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Entreprise : ${widget.client.companyName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 12),
+                  const Text('Votre note globale :', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        final starNum = index + 1;
+                        return IconButton(
+                          icon: Icon(
+                            starNum <= selectedRating ? Icons.star : Icons.star_border,
+                            color: const Color(0xFFEAB308),
+                            size: 32,
+                          ),
+                          onPressed: () => setDialogState(() => selectedRating = starNum),
+                        );
+                      }),
                     ),
-                    onPressed: () => setDialogState(() => selectedRating = starNum),
-                  );
-                }),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Votre Témoignage / Commentaire :', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: commentCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: 'Qualité des prestations, respect des délais, réactivité HSE...',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              const Text('Votre Témoignage / Commentaire :', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: commentCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Qualité des prestations, respect des délais, réactivité HSE...',
-                ),
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
@@ -120,25 +129,32 @@ class _AvisScreenState extends State<AvisScreen> {
               color: AppConfig.brandPink,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 10,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Évaluations & Satisfaction Partenaires',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
-                            ),
-                            Text(
-                              'Retours d\'expérience des donneurs d\'ordres miniers en RDC',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                            ),
-                          ],
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 450),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Évaluations & Satisfaction',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Retours d\'expérience des donneurs d\'ordres miniers en RDC',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
                         ),
                         ElevatedButton.icon(
                           onPressed: _openAddAvisDialog,
@@ -147,55 +163,102 @@ class _AvisScreenState extends State<AvisScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Rating Summary Card
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: Row(
-                        children: [
-                          Column(
-                            children: const [
-                              Text(
-                                '4.9',
-                                style: TextStyle(fontSize: 38, fontWeight: FontWeight.w900, color: AppConfig.brandPink),
-                              ),
-                              Row(
-                                children: [
-                                  Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
-                                  Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
-                                  Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
-                                  Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
-                                  Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
-                                ],
-                              ),
-                              SizedBox(height: 4),
-                              Text('Excellence 98%', style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 440;
+                          if (isNarrow) {
+                            return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Standards Qualité Éprouvés',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      '4.9',
+                                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppConfig.brandPink),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: const [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                            Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                            Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                            Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                            Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text('Excellence 98% de satisfaction', style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 4),
-                                Text(
+                                const Divider(height: 20),
+                                const Text(
+                                  'Standards Qualité Éprouvés',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
                                   '• Hygiène alimentaire et conformité HACCP validée en zone minière.\n• Chantiers BTP livrés sans accident avec arrêt de travail (Zéro LTI).\n• Réactivité 24/7 sur l\'ensemble des 26 provinces de la RDC.',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
+                                  style: TextStyle(fontSize: 11.5, color: Colors.grey, height: 1.4),
                                 ),
                               ],
-                            ),
-                          ),
-                        ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Column(
+                                children: const [
+                                  Text(
+                                    '4.9',
+                                    style: TextStyle(fontSize: 38, fontWeight: FontWeight.w900, color: AppConfig.brandPink),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
+                                      Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
+                                      Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
+                                      Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
+                                      Icon(Icons.star, color: Color(0xFFEAB308), size: 18),
+                                    ],
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text('Excellence 98%', style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              const SizedBox(width: 24),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Standards Qualité Éprouvés',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      '• Hygiène alimentaire et conformité HACCP validée en zone minière.\n• Chantiers BTP livrés sans accident avec arrêt de travail (Zéro LTI).\n• Réactivité 24/7 sur l\'ensemble des 26 provinces de la RDC.',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
 
@@ -209,15 +272,24 @@ class _AvisScreenState extends State<AvisScreen> {
                         final a = _avisList[idx];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(14.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 6,
                                   children: [
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         CircleAvatar(
                                           radius: 16,
@@ -238,10 +310,11 @@ class _AvisScreenState extends State<AvisScreen> {
                                       ],
                                     ),
                                     Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         ...List.generate(
                                           a.note,
-                                          (_) => const Icon(Icons.star, color: Color(0xFFEAB308), size: 16),
+                                          (_) => const Icon(Icons.star, color: Color(0xFFEAB308), size: 15),
                                         ),
                                         const SizedBox(width: 6),
                                         Text(a.date, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),

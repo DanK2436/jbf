@@ -1,8 +1,23 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+
+String _generateUuidV4() {
+  final random = Random.secure();
+  final values = List<int>.generate(16, (i) => random.nextInt(256));
+  values[6] = (values[6] & 0x0f) | 0x40; // Version 4
+  values[8] = (values[8] & 0x3f) | 0x80; // Variant RFC4122
+  return [
+    values.sublist(0, 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(4, 6).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(6, 8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(8, 10).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(10, 16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+  ].join('-');
+}
 
 class UsersManagementScreen extends StatefulWidget {
   const UsersManagementScreen({super.key});
@@ -88,14 +103,16 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
       final email = (u['email'] ?? '').toString().toLowerCase();
       final company = (u['company'] ?? u['entreprise'] ?? '').toString().toLowerCase();
       final phone = (u['phone'] ?? u['telephone'] ?? '').toString();
-      final isDisabled = u['is_disabled'] == true || u['statut_compte'] == 'desactive';
+      final isPending = u['statut_compte'] == 'en_attente' || u['statut'] == 'en_attente';
+      final isDisabled = !isPending && (u['is_disabled'] == true || u['statut_compte'] == 'desactive');
 
       // Filtre rôle onglet
       if (currentTabRole != 'tous' && !role.contains(currentTabRole)) return false;
 
       // Filtre statut
-      if (_selectedStatutFilter == 'actif' && isDisabled) return false;
+      if (_selectedStatutFilter == 'actif' && (isDisabled || isPending)) return false;
       if (_selectedStatutFilter == 'desactive' && !isDisabled) return false;
+      if (_selectedStatutFilter == 'en_attente' && !isPending) return false;
 
       // Filtre recherche
       if (_searchQuery.isNotEmpty) {
@@ -108,27 +125,34 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
   }
 
   Future<void> _toggleUserStatus(Map<String, dynamic> user) async {
+    final bool isPending = user['statut_compte'] == 'en_attente' || user['statut'] == 'en_attente';
     final bool currentDisabled = user['is_disabled'] == true || user['statut_compte'] == 'desactive';
-    final bool targetDisable = !currentDisabled;
+    final bool targetDisable = isPending ? false : !currentDisabled;
     final userId = user['id'];
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(targetDisable ? 'Désactiver le compte' : 'Réactiver le compte'),
+        title: Text(isPending
+            ? 'Confirmer et activer le compte'
+            : (targetDisable ? 'Désactiver le compte' : 'Réactiver le compte')),
         content: Text(
-          targetDisable
-              ? 'Voulez-vous suspendre l\'accès de cet utilisateur ? Toutes ses sessions actives seront instantanément révoquées.'
-              : 'Voulez-vous autoriser à nouveau cet utilisateur à se connecter ?',
+          isPending
+              ? 'Voulez-vous valider et confirmer l\'accès de cet utilisateur ? Il pourra désormais se connecter avec ses identifiants.'
+              : (targetDisable
+                  ? 'Voulez-vous suspendre l\'accès de cet utilisateur ? Toutes ses sessions actives seront instantanément révoquées.'
+                  : 'Voulez-vous autoriser à nouveau cet utilisateur à se connecter ?'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: targetDisable ? AppConfig.dangerRed : AppConfig.successGreen,
+              backgroundColor: (isPending || !targetDisable) ? AppConfig.successGreen : AppConfig.dangerRed,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(targetDisable ? 'Confirmer la désactivation' : 'Réactiver'),
+            child: Text(isPending
+                ? 'Confirmer & Activer'
+                : (targetDisable ? 'Confirmer la désactivation' : 'Réactiver')),
           ),
         ],
       ),
@@ -149,13 +173,16 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
       setState(() {
         user['is_disabled'] = targetDisable;
         user['statut_compte'] = targetDisable ? 'desactive' : 'actif';
+        user['statut'] = targetDisable ? 'desactive' : 'actif';
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(targetDisable ? 'Compte désactivé et sessions fermées.' : 'Compte réactivé avec succès.'),
-          backgroundColor: targetDisable ? AppConfig.dangerRed : AppConfig.successGreen,
+          content: Text(isPending
+              ? 'Compte utilisateur confirmé et activé avec succès.'
+              : (targetDisable ? 'Compte désactivé et sessions fermées.' : 'Compte réactivé avec succès.')),
+          backgroundColor: (isPending || !targetDisable) ? AppConfig.successGreen : AppConfig.dangerRed,
         ),
       );
     } catch (_) {
@@ -172,13 +199,24 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
           body: jsonEncode({
             'is_disabled': targetDisable,
             'statut_compte': targetDisable ? 'desactive' : 'actif',
+            'statut': targetDisable ? 'desactive' : 'actif',
             'token_invalidation_ts': DateTime.now().toIso8601String(),
           }),
         );
         setState(() {
           user['is_disabled'] = targetDisable;
           user['statut_compte'] = targetDisable ? 'desactive' : 'actif';
+          user['statut'] = targetDisable ? 'desactive' : 'actif';
         });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isPending
+                ? 'Compte utilisateur confirmé et activé avec succès.'
+                : (targetDisable ? 'Compte désactivé.' : 'Compte réactivé.')),
+            backgroundColor: (isPending || !targetDisable) ? AppConfig.successGreen : AppConfig.dangerRed,
+          ),
+        );
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1158,9 +1196,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 final poste = selectedRole == 'membre' ? selectedServiceRole : posteCtrl.text.trim();
                 final section = selectedRole == 'membre' ? selectedAssignedService : 'Général';
 
-                // 1. Inscription Auth silencieuse si possible
+                // 1. Inscription Supabase Auth avec récupération d'UUID réel
+                String userId = _generateUuidV4();
                 try {
-                  await http.post(
+                  final authRes = await http.post(
                     Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
                     headers: {
                       'apikey': AppConfig.supabaseAnonKey,
@@ -1169,13 +1208,26 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     body: jsonEncode({
                       'email': cleanEmail,
                       'password': cleanPass,
-                      'data': {'full_name': cleanName, 'role': selectedRole}
+                      'data': {
+                        'full_name': cleanName,
+                        'role': selectedRole,
+                        'company': company,
+                        'phone': phone,
+                      }
                     }),
-                  ).timeout(const Duration(seconds: 4));
+                  ).timeout(const Duration(seconds: 5));
+
+                  if (authRes.statusCode == 200 || authRes.statusCode == 201) {
+                    final authJson = jsonDecode(authRes.body);
+                    final returnedId = authJson['user']?['id'] ?? authJson['id'];
+                    if (returnedId != null && returnedId.toString().isNotEmpty) {
+                      userId = returnedId.toString();
+                    }
+                  }
                 } catch (_) {}
 
                 // 2. Vérifier si le profil existe déjà
-                bool exists = false;
+                String? existingId;
                 try {
                   final checkRes = await http.get(
                     Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=id'),
@@ -1186,12 +1238,18 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                   ).timeout(const Duration(seconds: 4));
                   if (checkRes.statusCode == 200) {
                     final list = jsonDecode(checkRes.body) as List;
-                    exists = list.isNotEmpty;
+                    if (list.isNotEmpty) {
+                      existingId = list.first['id']?.toString();
+                    }
                   }
                 } catch (_) {}
 
+                final effectiveId = existingId ?? userId;
+
                 // 3. Insertion / Mise à jour dans profiles
                 final profileData = {
+                  'id': effectiveId,
+                  'user_id': effectiveId,
                   'email': cleanEmail,
                   'password': cleanPass,
                   'full_name': cleanName,
@@ -1210,12 +1268,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                   'statut_compte': 'actif',
                   'statut': 'actif',
                   'is_disabled': false,
+                  'is_verified': true,
                   'permissions_detaillees': {
                     'password': cleanPass,
                     'role_service': selectedServiceRole,
                     'service_assigne': selectedAssignedService,
                     'company': company,
-                    'all': false,
+                    'all': selectedRole == 'admin' || selectedRole == 'sous_admin',
                   },
                   'updated_at': DateTime.now().toIso8601String(),
                 };
@@ -1223,13 +1282,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 bool saved = false;
                 try {
                   http.Response res;
-                  if (exists) {
+                  if (existingId != null) {
                     res = await http.patch(
-                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail'),
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$existingId'),
                       headers: {
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal',
                       },
                       body: jsonEncode(profileData),
                     ).timeout(const Duration(seconds: 6));
@@ -1241,6 +1301,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates,return=minimal',
                       },
                       body: jsonEncode(profileData),
                     ).timeout(const Duration(seconds: 6));
@@ -1256,7 +1317,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                           'apikey': AppConfig.supabaseAnonKey,
                           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                           'Content-Type': 'application/json',
-                          'Prefer': 'resolution=merge-duplicates',
+                          'Prefer': 'resolution=merge-duplicates,return=minimal',
                         },
                         body: jsonEncode({
                           'matricule': matricule,
@@ -1269,7 +1330,36 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       ).timeout(const Duration(seconds: 4));
                     } catch (_) {}
                   }
-                } catch (_) {}
+
+                  // 5. Si c'est un sous-admin, synchroniser également dans admin_accounts
+                  if (selectedRole == 'sous_admin') {
+                    try {
+                      await http.post(
+                        Uri.parse('${AppConfig.supabaseUrl}/rest/v1/admin_accounts'),
+                        headers: {
+                          'apikey': AppConfig.supabaseAnonKey,
+                          'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                          'Content-Type': 'application/json',
+                          'Prefer': 'resolution=merge-duplicates,return=minimal',
+                        },
+                        body: jsonEncode({
+                          'id': effectiveId,
+                          'full_name': cleanName,
+                          'email': cleanEmail,
+                          'phone': phone,
+                          'role': 'sous_admin',
+                          'permissions': ['*'],
+                          'password': cleanPass,
+                          'is_active': true,
+                          'created_at': DateTime.now().toIso8601String(),
+                          'updated_at': DateTime.now().toIso8601String(),
+                        }),
+                      ).timeout(const Duration(seconds: 4));
+                    } catch (_) {}
+                  }
+                } catch (err) {
+                  debugPrint('Erreur création utilisateur: $err');
+                }
 
                 await _loadUsers();
                 if (mounted) {
@@ -1492,9 +1582,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                 final phone = phoneCtrl.text.trim();
                 final permsList = perms.toList();
 
-                // 0. Supabase Auth signup silencieux
+                // 0. Supabase Auth signup avec récupération d'UUID réel
+                String userId = _generateUuidV4();
                 try {
-                  await http.post(
+                  final authRes = await http.post(
                     Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
                     headers: {
                       'apikey': AppConfig.supabaseAnonKey,
@@ -1505,8 +1596,36 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       'password': cleanPass,
                       'data': {'full_name': cleanName, 'role': 'sous_admin'}
                     }),
-                  ).timeout(const Duration(seconds: 4));
+                  ).timeout(const Duration(seconds: 5));
+
+                  if (authRes.statusCode == 200 || authRes.statusCode == 201) {
+                    final authJson = jsonDecode(authRes.body);
+                    final returnedId = authJson['user']?['id'] ?? authJson['id'];
+                    if (returnedId != null && returnedId.toString().isNotEmpty) {
+                      userId = returnedId.toString();
+                    }
+                  }
                 } catch (_) {}
+
+                // Vérifier si existant
+                String? existingId;
+                try {
+                  final profCheck = await http.get(
+                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=id'),
+                    headers: {
+                      'apikey': AppConfig.supabaseAnonKey,
+                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+                    },
+                  );
+                  if (profCheck.statusCode == 200) {
+                    final list = jsonDecode(profCheck.body) as List;
+                    if (list.isNotEmpty) {
+                      existingId = list.first['id']?.toString();
+                    }
+                  }
+                } catch (_) {}
+
+                final effectiveId = existingId ?? userId;
 
                 // 1. Sauvegarde dans admin_accounts (Supabase)
                 try {
@@ -1516,9 +1635,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                       'apikey': AppConfig.supabaseAnonKey,
                       'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                       'Content-Type': 'application/json',
-                      'Prefer': 'resolution=merge-duplicates',
+                      'Prefer': 'resolution=merge-duplicates,return=minimal',
                     },
                     body: jsonEncode({
+                      'id': effectiveId,
                       'full_name': cleanName,
                       'email': cleanEmail,
                       'phone': phone,
@@ -1534,16 +1654,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
 
                 // 2. Sauvegarde dans profiles pour authentification et annuaire
                 try {
-                  final profCheck = await http.get(
-                    Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail&select=id'),
-                    headers: {
-                      'apikey': AppConfig.supabaseAnonKey,
-                      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-                    },
-                  );
-                  final isEx = profCheck.statusCode == 200 && (jsonDecode(profCheck.body) as List).isNotEmpty;
-
                   final profData = {
+                    'id': effectiveId,
+                    'user_id': effectiveId,
                     'full_name': cleanName,
                     'nom_complet': cleanName,
                     'nom': cleanName.split(' ').first,
@@ -1558,6 +1671,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     'section_nom': 'Direction Exécutive',
                     'province': selectedProvince,
                     'is_disabled': false,
+                    'is_verified': true,
                     'statut_compte': 'actif',
                     'statut': 'actif',
                     'password': cleanPass,
@@ -1569,13 +1683,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                     'updated_at': DateTime.now().toIso8601String(),
                   };
 
-                  if (isEx) {
+                  if (existingId != null) {
                     await http.patch(
-                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?email=eq.$cleanEmail'),
+                      Uri.parse('${AppConfig.supabaseUrl}/rest/v1/profiles?id=eq.$existingId'),
                       headers: {
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal',
                       },
                       body: jsonEncode(profData),
                     );
@@ -1587,26 +1702,11 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                         'apikey': AppConfig.supabaseAnonKey,
                         'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
                         'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates,return=minimal',
                       },
                       body: jsonEncode(profData),
                     );
                   }
-                } catch (_) {}
-
-                // 3. Supabase Auth signup silencieux
-                try {
-                  await http.post(
-                    Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
-                    headers: {
-                      'apikey': AppConfig.supabaseAnonKey,
-                      'Content-Type': 'application/json',
-                    },
-                    body: jsonEncode({
-                      'email': cleanEmail,
-                      'password': cleanPass,
-                      'data': {'full_name': cleanName, 'role': 'sous_admin'}
-                    }),
-                  );
                 } catch (_) {}
 
                 await _loadUsers();
@@ -1740,6 +1840,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                         items: const [
                           DropdownMenuItem(value: 'tous', child: Text('Tous les Statuts')),
                           DropdownMenuItem(value: 'actif', child: Text('Uniquement Actifs')),
+                          DropdownMenuItem(value: 'en_attente', child: Text('En Attente de Confirmation')),
                           DropdownMenuItem(value: 'desactive', child: Text('Uniquement Désactivés')),
                         ],
                         onChanged: (v) => setState(() => _selectedStatutFilter = v!),
@@ -1780,7 +1881,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                         itemBuilder: (context, index) {
                           final u = filtered[index];
                           final role = (u['role'] ?? 'client').toString().toUpperCase();
-                          final isDisabled = u['is_disabled'] == true || u['statut_compte'] == 'desactive';
+                          final isPending = u['statut_compte'] == 'en_attente' || u['statut'] == 'en_attente';
+                          final isDisabled = !isPending && (u['is_disabled'] == true || u['statut_compte'] == 'desactive');
                           final name = u['full_name'] ?? u['nom_complet'] ?? 'Utilisateur Sans Nom';
                           final email = u['email'] ?? 'Sans email';
                           final company = u['company'] ?? u['entreprise'] ?? 'Partenaire JBF';
@@ -1792,8 +1894,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isDisabled ? const Color(0xFFFCA5A5) : Colors.grey.shade200,
-                                width: isDisabled ? 1.5 : 1,
+                                color: isPending
+                                    ? Colors.amber.shade400
+                                    : (isDisabled ? const Color(0xFFFCA5A5) : Colors.grey.shade200),
+                                width: (isPending || isDisabled) ? 1.5 : 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -1807,11 +1911,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                               children: [
                                 CircleAvatar(
                                   radius: 22,
-                                  backgroundColor: isDisabled
-                                      ? Colors.grey.shade300
-                                      : (role.contains('ADMIN')
-                                          ? AppConfig.brandPink
-                                          : (role.contains('MEMBRE') ? Colors.blue.shade700 : Colors.teal.shade700)),
+                                  backgroundColor: isPending
+                                      ? Colors.amber.shade700
+                                      : (isDisabled
+                                          ? Colors.grey.shade300
+                                          : (role.contains('ADMIN')
+                                              ? AppConfig.brandPink
+                                              : (role.contains('MEMBRE') ? Colors.blue.shade700 : Colors.teal.shade700))),
                                   child: Text(
                                     name.toString().substring(0, name.toString().length >= 2 ? 2 : 1).toUpperCase(),
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
@@ -1856,15 +1962,21 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
-                                              color: isDisabled ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7),
+                                              color: isPending
+                                                  ? const Color(0xFFFEF3C7)
+                                                  : (isDisabled ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7)),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(
-                                              isDisabled ? 'DÉSACTIVÉ' : 'ACTIF',
+                                              isPending
+                                                  ? 'EN ATTENTE CONFIRMATION'
+                                                  : (isDisabled ? 'DÉSACTIVÉ' : 'ACTIF'),
                                               style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
-                                                color: isDisabled ? AppConfig.dangerRed : AppConfig.successGreen,
+                                                color: isPending
+                                                    ? Colors.amber.shade900
+                                                    : (isDisabled ? AppConfig.dangerRed : AppConfig.successGreen),
                                               ),
                                             ),
                                           ),
@@ -1906,12 +2018,18 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> with Sing
                                     ElevatedButton.icon(
                                       onPressed: () => _toggleUserStatus(u),
                                       icon: Icon(
-                                        isDisabled ? Icons.check_circle_outline : Icons.block,
+                                        isPending
+                                            ? Icons.check_circle
+                                            : (isDisabled ? Icons.check_circle_outline : Icons.block),
                                         size: 15,
                                       ),
-                                      label: Text(isDisabled ? 'Réactiver' : 'Désactiver'),
+                                      label: Text(isPending
+                                          ? 'Confirmer le compte'
+                                          : (isDisabled ? 'Réactiver' : 'Désactiver')),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isDisabled ? AppConfig.successGreen : Colors.orange.shade800,
+                                        backgroundColor: (isPending || isDisabled)
+                                            ? AppConfig.successGreen
+                                            : Colors.orange.shade800,
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                         textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                       ),

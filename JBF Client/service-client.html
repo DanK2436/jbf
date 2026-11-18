@@ -4,106 +4,197 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Service Client & Support Direct — JBF Service</title>
-  <!-- Favicon Navigateur JBF Service (Onglet Haute Résolution) -->
+  <!-- Favicon Navigateur JBF Service -->
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
   <link rel="shortcut icon" href="../assets/favicon.ico">
   <meta name="theme-color" content="#0C0C0E">
 
-  <!-- Mots Réservés SEO & Indexation Moteurs de Recherche (>16000 Mots Réservés RDC & International) -->
-  <meta name="keywords" content="JBF Service, JBF Client, sous-traitance miniere RDC, sous traitance Katanga, agrement ARSP, ARSP RDC, catering minier HACCP, base vie RDC, BTP minier, genie civil Kolwezi, maintenance industrielle Lubumbashi, soudure haute pression, chaudronnerie lourde, gardiennage minier, securite privee Lualaba, transport personnel minier, location engins miniers, bennes 8x4, bulldozers, climatisation industrielle HVAC, chambres froides, fibre optique mines, VSAT satellite RDC, cybersecurite SCADA, audit HSE minier, ISO 45001, ISO 9001, Kamoa-Kakula, Tenke Fungurume, Mutanda Mining, KCC, Metalkol, Boss Mining, DRC mining subcontractor, copperbelt contractor, mining catering Congo, heavy machinery rental DRC, appels d offres miniers RDC, devis sous-traitance miniere, prestataire agree ARSP">
-  <meta name="description" content="JBF Service SARL — Espace Partenaire et portail officiel de sous-traitance minière, catering industriel HACCP, BTP, maintenance et logistique agréé ARSP en RDC.">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-  <meta property="og:title" content="JBF Service — Leader Sous-Traitance Minière, Catering & BTP Agréé ARSP RDC">
-  <meta property="og:description" content="Plateforme officielle JBF Service : sous-traitance minière, catering HACCP, maintenance industrielle, sécurité et logistique en RDC.">
+  <!-- SEO & Metadonnées RDC -->
+  <meta name="keywords" content="JBF Service, JBF Client, service client sous-traitance miniere RDC, support chantiers Kolwezi, assistance Lubumbashi, WhatsApp support minier, hotline ARSP, maintenance industrielle 24/7">
+  <meta name="description" content="Espace Service Client & Support Opérationnel Dédié JBF Service SARL — Permanence technique 24/7 pour vos concessions minières et chantiers en RDC.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Service Client & Support Direct — JBF Service">
+  <meta property="og:description" content="Assistance opérationnelle et technique dédiée aux partenaires industriels et miniers en RDC.">
   <meta property="og:image" content="https://jbf-service.com/assets/favicon.png">
   <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Schema.org Données Structurées Moteurs de Recherche (Google, Bing) -->
+  <!-- Schema.org Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Corporation",
-    "name": "JBF Service SARL",
-    "alternateName": ["JBF Client", "JBF Espace Partenaire RDC", "JBF Subcontracting Mining DRC"],
-    "url": "https://jbf-service.com",
-    "logo": "https://jbf-service.com/assets/logo.png",
-    "contactPoint": [
-      {
-        "@type": "ContactPoint",
-        "telephone": "+243970349724",
-        "contactType": "customer service",
-        "contactOption": "WhatsApp",
-        "areaServed": "CD",
-        "availableLanguage": ["French", "English", "Swahili", "Lingala"]
-      },
-      {
-        "@type": "ContactPoint",
-        "telephone": "+243822357053",
-        "contactType": "technical support",
-        "areaServed": "CD"
+    "@type": "ContactPage",
+    "name": "Service Client & Support Direct JBF Service",
+    "description": "Portail d'assistance technique et commerciale JBF Service RDC",
+    "url": "https://jbf-service.com/jbf%20client/service-client",
+    "mainEntity": {
+      "@type": "Corporation",
+      "name": "JBF Service SARL",
+      "telephone": "+243970349724",
+      "email": "bintijudith104@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Lubumbashi",
+        "addressRegion": "Haut-Katanga",
+        "addressCountry": "CD"
       }
-    ],
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Lubumbashi",
-      "addressRegion": "Haut-Katanga",
-      "addressCountry": "CD"
     }
   }
   </script>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/client.css">
+
   <style>
-    .support-grid {
-      display: block;
+    .support-workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.25fr) minmax(320px, 1fr);
+      gap: 24px;
       margin-bottom: 24px;
+      align-items: start;
     }
-    .contact-channels-card {
-      background: linear-gradient(135deg, #FFFFFF 0%, #FFF5FA 100%);
-      border: 1px solid var(--brand-pink-border);
+
+    @media (max-width: 992px) {
+      .support-workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chat-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
       border-radius: var(--r-lg);
-      padding: 20px;
-      margin-bottom: 20px;
+      box-shadow: var(--sh-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    .channel-item {
+
+    .chat-header {
+      background: linear-gradient(135deg, #0C0C0E 0%, #1A1A22 100%);
+      color: #FFFFFF;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .chat-messages-box {
+      height: 420px;
+      overflow-y: auto;
+      background: #F8FAFC;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-quick-actions {
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .chat-quick-btn {
+      background: #F1F5F9;
+      color: var(--text-primary);
+      font-size: 0.76rem;
+      font-weight: 600;
+      border-radius: 20px;
+      white-space: nowrap;
+      border: 1px solid #CBD5E1;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all var(--t-instant);
+    }
+
+    .chat-quick-btn:hover {
+      background: var(--brand-pink-subtle);
+      border-color: var(--brand-pink);
+      color: var(--brand-pink);
+    }
+
+    .chat-input-bar {
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-subtle);
+      padding: 14px 18px;
+    }
+
+    .chat-bubble-client {
+      background: var(--brand-pink);
+      color: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: 14px 14px 2px 14px;
+      box-shadow: 0 2px 6px rgba(230,0,126,0.2);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      max-width: 78%;
+    }
+
+    .chat-bubble-admin {
+      background: #FFFFFF;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 14px 14px 14px 2px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      max-width: 78%;
+    }
+
+    .channel-box {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 12px;
-      background: var(--white);
+      padding: 14px 16px;
+      background: #FFFFFF;
       border: 1px solid var(--border-subtle);
       border-radius: var(--r-md);
+      text-decoration: none;
+      transition: all var(--t-smooth);
       margin-top: 10px;
-      transition: all var(--t-instant);
     }
-    .channel-item:hover {
-      border-color: var(--brand-pink);
+
+    .channel-box:hover {
+      transform: translateY(-2px);
       box-shadow: var(--sh-hover);
+      border-color: var(--brand-pink);
     }
-    .channel-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
+
+    .channel-box.whatsapp-active {
+      background: var(--whatsapp-subtle);
+      border-color: #A7F3D0;
+    }
+
+    .channel-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       flex-shrink: 0;
     }
-    .channel-icon.wa { background: var(--whatsapp-subtle); color: #128C7E; }
-    .channel-icon.phone { background: var(--info-bg); color: var(--info); }
-    .channel-icon.email { background: var(--brand-pink-subtle); color: var(--brand-pink); }
   </style>
 </head>
 <body>
 
 <div class="client-layout">
+  <!-- SIDEBAR NAVIGATION OFFICIELLE -->
   <aside class="client-sidebar">
     <div class="sidebar-header">
-      <div class="logo-box"><img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;"></div>
+      <div class="logo-box">
+        <img src="../assets/logo.png" alt="JBF Service" class="client-brand-logo" style="max-height: 38px; width: auto; object-fit: contain;">
+      </div>
       <div class="brand-text">
         <h2>JBF CLIENT</h2>
         <span>Espace Partenaire RDC</span>
@@ -132,7 +223,7 @@
       <a href="service-client.html" class="nav-item active">
         <i class="bi bi-headset"></i>
         <span>Service Client & Support</span>
-        <span class="badge" style="background: var(--whatsapp-subtle); color: #075E54;">WhatsApp</span>
+        <span class="badge" style="background: var(--whatsapp-subtle); color: #075E54; font-weight: 700;">Direct</span>
       </a>
       <a href="avis.html" class="nav-item">
         <i class="bi bi-star-fill"></i>
@@ -146,24 +237,28 @@
     </nav>
     <div class="sidebar-footer">
       <div class="client-user-pill">
-        <div class="user-avatar client-user-avatar">CL</div>
+        <div class="user-avatar client-user-avatar" id="clientUserAvatar">CL</div>
         <div class="user-info">
-          <div class="name client-company-name">Mon Entreprise</div>
-          <div class="role client-user-name">Responsable Client</div>
+          <div class="name client-company-name" id="clientCompanyName">Mon Entreprise</div>
+          <div class="role client-user-name" id="clientUserName">Responsable Client</div>
         </div>
       </div>
-      <button class="btn-logout" onclick="window.clientCore.logoutClient()"><i class="bi bi-box-arrow-right"></i></button>
+      <button class="btn-logout" onclick="window.clientCore.logoutClient()" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
     </div>
   </aside>
 
+  <!-- CONTENU PRINCIPAL -->
   <div class="client-main">
+    <!-- TOPBAR -->
     <header class="client-topbar">
       <div class="topbar-left">
         <button class="btn-menu-toggle" id="btnMenuToggle"><i class="bi bi-list"></i></button>
-        <div class="page-title"><h1>Service Client JBF — Assistance, Tickets & WhatsApp</h1></div>
+        <div class="page-title"><h1>Centre d'Assistance & Support Client Dédié</h1></div>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Assistance Service Client JBF')">
+        <button class="btn btn-whatsapp-direct" onclick="window.clientCore.openWhatsAppDirect('Assistance Service Client JBF — Partenaire RDC')">
           <i class="bi bi-whatsapp"></i> <span>Assistance WhatsApp Directe</span>
         </button>
       </div>
@@ -171,216 +266,294 @@
 
     <main class="client-content">
 
-      <!-- CANAUX D'ASSISTANCE RAPIDE -->
-      <div class="contact-channels-card" style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--r-lg); padding: 22px 26px; margin-bottom: 24px; box-shadow: var(--sh-card);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
-          <div>
-            <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0;">
-              <i class="bi bi-headset" style="color: var(--brand-pink);"></i> Centre d'Assistance & Support Client Dédié
-            </h2>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 3px 0 0 0;">
-              Contactez nos directeurs techniques et superviseurs opérationnels pour vos sites et chantiers en RDC.
-            </p>
+      <!-- HERO MOTION BANNER OFFICIEL JBF -->
+      <section class="client-hero-motion-card" id="clientHeroMotionCard">
+        <div class="client-hero-motion-content">
+          <span class="client-hero-tag"><i class="bi bi-shield-check"></i> Espace Partenaire Certifié RDC</span>
+          <h1 class="client-hero-title">Service Client & Support Direct — JBF Service</h1>
+          <p class="client-hero-desc">
+            Assistance opérationnelle et technique dédiée à vos sites miniers, concessions et chantiers BTP en RDC. Permanence 24/7 mobilisée par nos coordinateurs à Lubumbashi, Kolwezi et Kinshasa.
+          </p>
+          <div class="client-hero-contact-bar">
+            <a href="https://wa.me/243970349724" target="_blank" rel="noopener noreferrer" class="hero-contact-pill whatsapp">
+              <i class="bi bi-whatsapp"></i> WhatsApp : +243 970 349 724
+            </a>
+            <a href="tel:+243822357053" class="hero-contact-pill phone">
+              <i class="bi bi-telephone-fill"></i> Appels : +243 822 357 053
+            </a>
+            <a href="mailto:bintijudith104@gmail.com" class="hero-contact-pill email">
+              <i class="bi bi-envelope-fill"></i> bintijudith104@gmail.com
+            </a>
           </div>
-          <span class="badge-status valide"><i class="bi bi-clock-history"></i> Réactivité &lt; 15 min</span>
+        </div>
+      </section>
+
+      <!-- KPI STATS CARDS OFFICIELLES (STYLE DASHBOARD & DEVIS) -->
+      <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card">
+          <div class="kpi-icon primary">
+            <i class="bi bi-headset"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Disponibilité Support</h3>
+            <div class="kpi-value">24h / 7j</div>
+            <div class="kpi-sub">Lubumbashi • Kolwezi</div>
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
-          <a href="https://wa.me/243970349724" target="_blank" rel="noopener noreferrer" class="channel-item" style="text-decoration: none; cursor: pointer; border: 1px solid #A7F3D0; background: var(--whatsapp-subtle); padding: 14px 18px; border-radius: var(--r-md); display: flex; align-items: center; gap: 14px; transition: var(--t-smooth);">
-            <div class="channel-icon wa" style="width: 44px; height: 44px; border-radius: 10px; background: #25D366; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-              <i class="bi bi-whatsapp"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.88rem; font-weight: 800; color: #075E54;">WhatsApp Support Officiel</div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: #065F46;">+243 970 349 724</div>
-              <div style="font-size: 0.72rem; color: #047857;">Messagerie temps réel 7j/7</div>
-            </div>
-          </a>
+        <div class="kpi-card">
+          <div class="kpi-icon warning">
+            <i class="bi bi-lightning-charge-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Temps de Réponse</h3>
+            <div class="kpi-value">&lt; 15 min</div>
+            <div class="kpi-sub">Équipe de permanence</div>
+          </div>
+        </div>
 
-          <a href="tel:+243822357053" class="channel-item" style="text-decoration: none; cursor: pointer; border: 1px solid var(--border-subtle); background: #FFFFFF; padding: 14px 18px; border-radius: var(--r-md); display: flex; align-items: center; gap: 14px; transition: var(--t-smooth);">
-            <div class="channel-icon phone" style="width: 44px; height: 44px; border-radius: 10px; background: #0C0C0E; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-              <i class="bi bi-telephone-fill"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-primary);">Appels Normaux Directs</div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">+243 822 357 053</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">Permanence 24h/24 RDC</div>
-            </div>
-          </a>
+        <div class="kpi-card">
+          <div class="kpi-icon success">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Garantie SLA RDC</h3>
+            <div class="kpi-value">100% Conforme</div>
+            <div class="kpi-sub">Prise en charge certifiée</div>
+          </div>
+        </div>
 
-          <a href="mailto:bintijudith104@gmail.com" class="channel-item" style="text-decoration: none; cursor: pointer; border: 1px solid var(--border-pink); background: var(--brand-pink-subtle); padding: 14px 18px; border-radius: var(--r-md); display: flex; align-items: center; gap: 14px; transition: var(--t-smooth);">
-            <div class="channel-icon email" style="width: 44px; height: 44px; border-radius: 10px; background: var(--brand-pink); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-              <i class="bi bi-envelope-fill"></i>
-            </div>
-            <div>
-              <div style="font-size: 0.88rem; font-weight: 800; color: var(--brand-pink);">Email Support Entreprise</div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">bintijudith104@gmail.com</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">Devis, pièces & factures</div>
-            </div>
-          </a>
+        <div class="kpi-card">
+          <div class="kpi-icon info">
+            <i class="bi bi-ticket-detailed-fill"></i>
+          </div>
+          <div class="kpi-details">
+            <h3>Vos Tickets Actifs</h3>
+            <div class="kpi-value" id="kpiActiveTickets">0</div>
+            <div class="kpi-sub" id="kpiTicketsSub">Aucun dossier en cours</div>
+          </div>
         </div>
       </div>
 
-      <!-- MESSAGERIE INSTANTANÉE EN DIRECT (CHAT SERVICE CLIENT JBF) -->
-      <div class="card spatial-3d-card" style="margin-bottom: 24px; overflow: hidden; border: 1.5px solid var(--border-subtle);">
-        <div class="card-header" style="background: linear-gradient(135deg, #0C0C0E 0%, #1E1E24 100%); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 0 12px rgba(230,0,126,0.5);">
-              DG
-            </div>
-            <div>
-              <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">Chef de Projet &amp; Direction Technique JBF</div>
-              <div style="font-size: 0.76rem; color: #10B981; display: flex; align-items: center; gap: 5px;">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
-                En ligne • Permanence RDC 24/7 (Lubumbashi, Kolwezi, Kinshasa)
-              </div>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-whatsapp" onclick="window.clientCore.openWhatsAppDirect('Échange en direct depuis le chat client JBF')" style="padding: 6px 12px; font-size: 0.78rem;">
-            <i class="bi bi-whatsapp"></i> Continuer sur WhatsApp
-          </button>
-        </div>
-
-        <!-- Zone des messages de chat -->
-        <div id="liveChatMessagesContainer" style="height: 320px; overflow-y: auto; background: #F8FAFC; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
-          <!-- Messages générés dynamiquement -->
-        </div>
-
-        <!-- Pilules de questions rapides -->
-        <div style="background: #FFFFFF; border-top: 1px solid var(--border-subtle); padding: 8px 16px; display: flex; gap: 8px; overflow-x: auto;">
-          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Demande de point sur l\'avancement de mon devis.')">
-            📋 Statut Devis
-          </button>
-          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Besoin d\'un compte-rendu de progression chantier/mission.')">
-            🏗 Avancement Chantier
-          </button>
-          <button type="button" class="btn btn-sm" style="background: #F1F5F9; color: var(--text-primary); font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #CBD5E1;" onclick="sendQuickChatMessage('Question concernant le règlement ou la facture proforma.')">
-            💳 Facturation
-          </button>
-          <button type="button" class="btn btn-sm" style="background: #FFF1F2; color: #E11D48; font-size: 0.76rem; border-radius: 20px; white-space: nowrap; border: 1px solid #FECDD3;" onclick="sendQuickChatMessage('Urgence opérationnelle sur notre site minier.')">
-            🚨 Urgence Concession
-          </button>
-        </div>
-
-        <!-- Barre de saisie de message -->
-        <div style="background: #FFFFFF; border-top: 1px solid var(--border-subtle); padding: 12px 16px;">
-          <form onsubmit="handleSendChatMessage(event)" style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="liveChatMessageInput" class="form-control" placeholder="Écrivez votre message à la direction opérationnelle JBF..." style="flex: 1; padding: 10px 14px; font-size: 0.88rem; border-radius: 24px;" required autocomplete="off">
-            <button type="submit" class="btn btn-primary btn-3d" id="btnSendChatMessage" style="padding: 10px 18px; border-radius: 24px; font-weight: 700;">
-              <i class="bi bi-send-fill"></i> <span>Envoyer</span>
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- FORMULAIRE OUVERTURE TICKET TECHNIQUE -->
-      <div class="support-grid">
+      <!-- WORKSPACE PRINCIPAL : CHAT DIRECT + OUVERTURE TICKET & HOTLINES -->
+      <div class="support-workspace-grid">
         
-        <div class="card spatial-3d-card">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h2><i class="bi bi-shield-plus" style="color: var(--brand-pink);"></i> Ouvrir un Ticket Technique</h2>
-            <span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;">Garantie SLA &lt; 24h</span>
+        <!-- SECTION GAUCHE : MESSAGERIE INSTANTANÉE SYNCHRONISÉE AVEC L'ADMIN -->
+        <div class="chat-card spatial-3d-card">
+          <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--brand-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 0 14px rgba(230,0,126,0.6);">
+                JBF
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">Direction Opérationnelle &amp; Technique JBF</div>
+                <div style="font-size: 0.74rem; color: #10B981; display: flex; align-items: center; gap: 5px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+                  En direct • Lubumbashi, Kolwezi &amp; Chantiers RDC
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="loadChatMessages()" title="Actualiser le chat" style="padding: 6px 10px; font-size: 0.76rem;">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-whatsapp" onclick="window.clientCore.openWhatsAppDirect('Échange en direct depuis le portail client JBF')" style="padding: 6px 12px; font-size: 0.76rem;">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+              </button>
+            </div>
           </div>
-          <div class="card-body">
-            <form onsubmit="handleCreateTicket(event)">
-              <div class="form-grid-2col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label>
-                    <span>Objet précis de votre demande</span>
-                    <span class="label-req">*</span>
-                  </label>
-                  <div class="input-icon-wrap">
-                    <i class="bi bi-tag input-icon"></i>
-                    <input type="text" id="ticketSubject" class="form-control" placeholder="Ex: Ajustement effectifs équipe soudure — Site Kolwezi" required>
-                  </div>
-                </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label>
-                    <span>Pôle / Prestation Concernée</span>
-                    <span class="label-req">*</span>
-                  </label>
-                  <div class="input-icon-wrap">
-                    <i class="bi bi-gear input-icon"></i>
-                    <select id="ticketService" class="form-control" required>
-                      <option value="Sous-Traitance Minière">Sous-Traitance Minière & Extraction</option>
-                      <option value="Catering & Alimentation">Fourniture Alimentaire & Catering HACCP</option>
-                      <option value="BTP & Génie Civil">BTP, Génie Civil & Construction</option>
-                      <option value="Maintenance Industrielle">Maintenance Industrielle & Soudure</option>
-                      <option value="Sécurité & Gardiennage">Gardiennage & Sécurité Physique</option>
-                      <option value="Nettoyage & Housekeeping">Nettoyage Industriel & Housekeeping</option>
-                      <option value="Transport & Engins">Transport du Personnel & Location Engins</option>
-                      <option value="Climatisation & Froid">Climatisation Industrielle & Froid</option>
-                      <option value="Télécoms & Réseaux">Télécoms & Fibre Optique</option>
-                      <option value="Informatique & Cybersécurité">Informatique & Cybersécurité</option>
-                      <option value="Gestion des Déchets">Gestion des Déchets & Assainissement</option>
-                      <option value="Audit HSE & Qualité">Audit HSE & Contrôle Qualité</option>
-                      <option value="Facturation & Règlements">Facturation, Devis & Règlements</option>
-                      <option value="Direction Générale">Service Général / Direction Opérationnelle</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+          <!-- Zone scrollable des messages -->
+          <div id="liveChatMessagesContainer" class="chat-messages-box">
+            <div style="margin: auto; text-align: center; color: var(--text-muted); padding: 40px 20px;">
+              <i class="bi bi-hourglass-split" style="font-size: 2rem; opacity: 0.5;"></i>
+              <div style="margin-top: 8px; font-weight: 600;">Chargement des messages...</div>
+            </div>
+          </div>
 
-              <div class="form-grid-2col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label>
-                    <span>Niveau de Priorité Opérationnelle</span>
-                    <span class="label-tag">Échelonnage</span>
-                  </label>
-                  <div class="input-icon-wrap">
-                    <i class="bi bi-activity input-icon"></i>
-                    <select id="ticketPriority" class="form-control">
-                      <option value="normal">⚪ Normal — Traitement standard (sous 24h)</option>
-                      <option value="urgent">🟠 Urgent — Chantier / Équipe en cours</option>
-                      <option value="critique">🔴 Critique — Arrêt ou interruption d'activité</option>
-                    </select>
-                  </div>
-                </div>
+          <!-- Pilules de questions rapides -->
+          <div class="chat-quick-actions">
+            <button type="button" class="chat-quick-btn" onclick="sendQuickChatMessage('Demande de point sur l\'avancement de mon devis.')">
+              📋 Statut Devis
+            </button>
+            <button type="button" class="chat-quick-btn" onclick="sendQuickChatMessage('Besoin d\'un compte-rendu de progression chantier/mission.')">
+              🏗 Avancement Chantier
+            </button>
+            <button type="button" class="chat-quick-btn" onclick="sendQuickChatMessage('Question concernant le règlement ou la facture proforma.')">
+              💳 Facturation
+            </button>
+            <button type="button" class="chat-quick-btn" onclick="sendQuickChatMessage('Besoin d\'un avenant ou modification sur nos prestations.')">
+              📝 Avenant Contrat
+            </button>
+            <button type="button" class="chat-quick-btn" style="background: #FFF1F2; color: #E11D48; border-color: #FECDD3;" onclick="sendQuickChatMessage('🚨 Urgence opérationnelle sur notre site minier.')">
+              🚨 Urgence Site
+            </button>
+          </div>
 
-                <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-                  <i class="bi bi-patch-check-fill" style="font-size: 1.5rem; color: #059669; flex-shrink: 0;"></i>
-                  <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">
-                    <strong style="color: var(--text-primary); display: block;">Prise en charge certifiée JBF Service</strong>
-                    Chaque ticket est affecté directement au responsable technique dédié à votre exploitation en RDC.
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>
-                  <span>Description Détaillée du Problème ou Besoin</span>
-                  <span class="label-req">*</span>
-                </label>
-                <textarea id="ticketMessage" class="form-control" rows="4" placeholder="Indiquez le contexte, les contraintes horaires, les effectifs impactés et toute information utile..." required></textarea>
-                <div class="form-hint"><i class="bi bi-info-circle"></i> Un numéro de dossier unique est attribué dès réception et synchronisé en base de données.</div>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-3d" id="btnSubmitTicket" style="width: 100%; padding: 14px; font-weight: 800;">
-                <i class="bi bi-send-check-fill"></i> Transmettre le Ticket au Pôle Technique
+          <!-- Formulaire de saisie -->
+          <div class="chat-input-bar">
+            <form onsubmit="handleSendChatMessage(event)" style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="liveChatMessageInput" class="form-control" placeholder="Écrivez votre message à l'administration JBF..." style="flex: 1; padding: 11px 16px; font-size: 0.88rem; border-radius: 24px;" required autocomplete="off">
+              <button type="submit" class="btn btn-primary btn-3d" id="btnSendChatMessage" style="padding: 10px 20px; border-radius: 24px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-send-fill"></i> <span>Envoyer</span>
               </button>
             </form>
           </div>
         </div>
 
+        <!-- SECTION DROITE : FORMULAIRE TICKET & LIGNES DIRECTES -->
+        <div>
+          <!-- FORMULAIRE OUVERTURE TICKET TECHNIQUE -->
+          <div class="card spatial-3d-card" style="margin-bottom: 20px;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h2><i class="bi bi-shield-plus" style="color: var(--brand-pink);"></i> Ouvrir un Ticket Technique</h2>
+              <span class="badge" style="background: var(--brand-pink-subtle); color: var(--brand-pink); font-weight: 700;">Garantie SLA &lt; 24h</span>
+            </div>
+            <div class="card-body">
+              <form onsubmit="handleCreateTicket(event)">
+                <div class="form-group">
+                  <label>
+                    <span>Objet précis de la demande</span>
+                    <span class="label-req">*</span>
+                  </label>
+                  <div class="input-icon-wrap">
+                    <i class="bi bi-tag input-icon"></i>
+                    <input type="text" id="ticketSubject" class="form-control" placeholder="Ex: Ajustement effectif équipe soudure — Site Kolwezi" required>
+                  </div>
+                </div>
+
+                <div class="form-grid-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>
+                      <span>Pôle d'Intervention</span>
+                      <span class="label-req">*</span>
+                    </label>
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-gear input-icon"></i>
+                      <select id="ticketService" class="form-control" required>
+                        <option value="Fourniture Alimentaire & Catering">1. Fourniture Alimentaire & Catering</option>
+                        <option value="Sous-Traitance Minière & Extraction">2. Sous-Traitance Minière & Extraction</option>
+                        <option value="BTP, Génie Civil & Construction">3. BTP, Génie Civil & Construction</option>
+                        <option value="Maintenance Industrielle & Soudure">4. Maintenance Industrielle & Soudure</option>
+                        <option value="Gardiennage & Sécurité Physique">5. Gardiennage & Sécurité Physique</option>
+                        <option value="Nettoyage Industriel & Housekeeping">6. Nettoyage Industriel & Housekeeping</option>
+                        <option value="Transport Personnel & Location Engins">7. Transport Personnel & Location Engins</option>
+                        <option value="Climatisation Industrielle & Froid">8. Climatisation Industrielle & Froid</option>
+                        <option value="Télécoms & Fibre Optique">9. Télécoms & Fibre Optique</option>
+                        <option value="Informatique & Cyber-Sécurité">10. Informatique & Cyber-Sécurité</option>
+                        <option value="Facturation & Règlements">11. Facturation, Devis & Règlements</option>
+                        <option value="Direction Générale">12. Direction Opérationnelle Générale</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>
+                      <span>Niveau de Priorité</span>
+                      <span class="label-tag">Urgence</span>
+                    </label>
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-activity input-icon"></i>
+                      <select id="ticketPriority" class="form-control">
+                        <option value="normal">⚪ Normal — Traitement sous 24h</option>
+                        <option value="urgent">🟠 Urgent — Chantier en cours</option>
+                        <option value="critique">🔴 Critique — Arrêt d'activité</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>
+                    <span>Description Détaillée du Problème ou Besoin</span>
+                    <span class="label-req">*</span>
+                  </label>
+                  <textarea id="ticketMessage" class="form-control" rows="3" placeholder="Indiquez le contexte chantier, site d'exploitation, contraintes horaires..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-3d" id="btnSubmitTicket" style="width: 100%; padding: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="bi bi-send-check-fill"></i> Transmettre le Dossier au Support JBF
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- CANAUX D'ASSISTANCE RAPIDE -->
+          <div class="card spatial-3d-card" style="padding: 18px 22px;">
+            <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+              <i class="bi bi-telephone-inbound" style="color: var(--brand-pink);"></i> Lignes Directes &amp; Hotlines
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px 0;">
+              Liaison immédiate avec nos directeurs d'exploitation et coordinateurs provinciaux.
+            </p>
+
+            <a href="https://wa.me/243970349724" target="_blank" rel="noopener noreferrer" class="channel-box whatsapp-active">
+              <div class="channel-icon-circle" style="background: #25D366; color: #FFFFFF;">
+                <i class="bi bi-whatsapp"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 0.86rem; font-weight: 800; color: #065F46;">WhatsApp Support Officiel</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: #047857;">+243 970 349 724</div>
+                <div style="font-size: 0.70rem; color: #059669;">Messagerie instantanée &amp; partage pièces</div>
+              </div>
+              <i class="bi bi-chevron-right" style="color: #059669;"></i>
+            </a>
+
+            <a href="tel:+243822357053" class="channel-box">
+              <div class="channel-icon-circle" style="background: #0C0C0E; color: #FFFFFF;">
+                <i class="bi bi-telephone-fill"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 0.86rem; font-weight: 800; color: var(--text-primary);">Permanence Téléphonique 24/7</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">+243 822 357 053</div>
+                <div style="font-size: 0.70rem; color: var(--text-muted);">Urgences techniques chantiers RDC</div>
+              </div>
+              <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+            </a>
+
+            <a href="mailto:bintijudith104@gmail.com" class="channel-box" style="background: var(--brand-pink-subtle); border-color: var(--brand-pink-border);">
+              <div class="channel-icon-circle" style="background: var(--brand-pink); color: #FFFFFF;">
+                <i class="bi bi-envelope-fill"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 0.86rem; font-weight: 800; color: var(--brand-pink);">Email Direction Commerciale</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">bintijudith104@gmail.com</div>
+                <div style="font-size: 0.70rem; color: var(--text-muted);">Transmission devis &amp; dossiers d'appels d'offres</div>
+              </div>
+              <i class="bi bi-chevron-right" style="color: var(--brand-pink);"></i>
+            </a>
+          </div>
+        </div>
+
       </div>
 
-      <!-- TABLEAU DES TICKETS CLIENTS -->
-      <div class="card" style="margin-top: 24px;">
-        <div class="card-header">
-          <h2><i class="bi bi-list-task"></i> Vos Tickets d'Assistance</h2>
+      <!-- TABLEAU DES TICKETS ET HISTORIQUE -->
+      <div class="card spatial-3d-card" style="margin-top: 10px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2><i class="bi bi-list-task"></i> Historique de vos Demandes &amp; Tickets Support</h2>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="ticketsStatusFilter" class="filter-select" onchange="filterTickets()" style="padding: 6px 12px; font-size: 0.82rem;">
+              <option value="all">Tous les tickets</option>
+              <option value="ouvert">Ouverts</option>
+              <option value="en_cours">En Traitement</option>
+              <option value="resolu">Résolus</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="loadClientTickets()" title="Actualiser la liste">
+              <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+          </div>
         </div>
         <div class="card-body">
           <div class="table-responsive">
             <table class="client-table table-support-client">
               <thead>
                 <tr>
-                  <th>N° Ticket</th>
+                  <th>N° Dossier</th>
                   <th>Objet de la Demande</th>
                   <th>Pôle Concerné</th>
-                  <th>Date de Création</th>
+                  <th>Date d'Émission</th>
                   <th>Priorité</th>
-                  <th>Statut du Ticket</th>
+                  <th>Statut</th>
                   <th style="text-align: right;">Action</th>
                 </tr>
               </thead>
@@ -406,48 +579,84 @@
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
   let supabase = null;
+  const SUPABASE_URL = window.JBF_CLIENT_CONFIG?.SUPABASE_URL || '';
+  const SUPABASE_KEY = window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || '';
+
   try {
-    if (window.JBF_CLIENT_CONFIG?.SUPABASE_URL && window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY) {
-      supabase = createClient(
-        window.JBF_CLIENT_CONFIG.SUPABASE_URL,
-        window.JBF_CLIENT_CONFIG.SUPABASE_ANON_KEY
-      );
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     }
   } catch (err) {
     console.warn('[Supabase Tickets Init]', err);
   }
 
-  // Expose pour handleCreateTicket
   window._sbClient = supabase;
+
+  const CHAT_STORAGE_KEY = 'JBF_LIVE_CHAT_MSGS';
+  let chatMessages = [];
+  let allTickets = [];
+  let chatPollingTimer = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     loadClientTickets();
     loadChatMessages();
+
+    // Auto-refresh chat messages every 6 seconds
+    if (chatPollingTimer) clearInterval(chatPollingTimer);
+    chatPollingTimer = setInterval(() => {
+      loadChatMessages(true);
+    }, 6000);
   });
 
+  // --- CHARGEMENT DES TICKETS SUPPORT ---
   async function loadClientTickets() {
     const tableBody = document.getElementById('ticketsTableBody');
     let tickets = [];
+    const session = window.clientCore?.getClientSession() || {};
+    const clientId = session?.id || '';
+    const clientEmail = (session?.email || '').toLowerCase().trim();
 
-    // Récupérer la session client
-    let session = window.clientCore?.getClientSession() || {};
-
-    // 1. Supabase si disponible
-    if (supabase) {
+    // 1. Supabase REST API Direct
+    if (SUPABASE_URL && SUPABASE_KEY && (clientId || clientEmail)) {
       try {
-        let query = supabase.from('tickets_support').select('*').order('created_at', { ascending: false });
-        if (session?.id) query = query.eq('client_id', session.id);
-        const { data, error } = await query;
-        if (!error && data && data.length > 0) {
-          tickets = data;
-          try { localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(tickets)); } catch(e) {}
+        const filter = clientId && clientEmail
+          ? `or=(client_id.eq.${encodeURIComponent(clientId)},client_email.eq.${encodeURIComponent(clientEmail)})`
+          : (clientId ? `client_id=eq.${encodeURIComponent(clientId)}` : `client_email=eq.${encodeURIComponent(clientEmail)}`);
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tickets_support?${filter}&order=created_at.desc`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            tickets = data;
+          }
         }
-      } catch (e) {
-        console.warn('Supabase tickets error:', e);
+      } catch (err) {
+        console.warn('[Supabase REST tickets error]', err);
       }
     }
 
-    // 2. Local fallback
+    // 2. Supabase JS Client fallback
+    if (tickets.length === 0 && supabase) {
+      try {
+        let query = supabase.from('tickets_support').select('*').order('created_at', { ascending: false });
+        if (clientId) query = query.eq('client_id', clientId);
+        else if (clientEmail) query = query.eq('client_email', clientEmail);
+        const { data, error } = await query;
+        if (!error && data && data.length > 0) {
+          tickets = data;
+        }
+      } catch (e) {
+        console.warn('Supabase JS tickets error:', e);
+      }
+    }
+
+    // 3. Local fallback
     if (tickets.length === 0) {
       try {
         const stored = localStorage.getItem('JBF_TICKETS_LOCAL');
@@ -455,34 +664,68 @@
       } catch (e) {}
     }
 
-    // Suppression des faux tickets hardcodés
+    allTickets = tickets;
+    try { localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(tickets)); } catch(e) {}
     renderTicketsTable(tickets);
+    updateActiveTicketsKpi(tickets);
+  }
+
+  function updateActiveTicketsKpi(list) {
+    const kpiEl = document.getElementById('kpiActiveTickets');
+    const subEl = document.getElementById('kpiTicketsSub');
+    if (!kpiEl) return;
+
+    const activeList = (list || []).filter(t => t.statut !== 'resolu');
+    kpiEl.textContent = activeList.length;
+    if (subEl) {
+      subEl.textContent = activeList.length > 0 ? `${activeList.length} dossier(s) en cours de traitement` : 'Aucun dossier en cours';
+    }
+  }
+
+  function filterTickets() {
+    const val = document.getElementById('ticketsStatusFilter')?.value || 'all';
+    if (val === 'all') {
+      renderTicketsTable(allTickets);
+    } else {
+      const filtered = allTickets.filter(t => {
+        if (val === 'ouvert') return t.statut === 'ouvert' || !t.statut;
+        if (val === 'en_cours') return t.statut === 'en_cours';
+        if (val === 'resolu') return t.statut === 'resolu';
+        return true;
+      });
+      renderTicketsTable(filtered);
+    }
   }
 
   function renderTicketsTable(list) {
     const tableBody = document.getElementById('ticketsTableBody');
+    if (!tableBody) return;
+
     if (!list || list.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Aucun ticket enregistré. Vous pouvez soumettre une demande ci-dessus.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted);">Aucun ticket enregistré. Vous pouvez soumettre une demande ci-dessus.</td></tr>';
       return;
     }
 
     tableBody.innerHTML = list.map(t => {
       const dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Récemment';
-      const priorite = t.priorite || 'normal';
+      const priorite = (t.priorite || 'normal').toLowerCase();
       const statutClass = t.statut === 'resolu' ? 'termine' : (t.statut === 'en_cours' ? 'en_cours' : 'nouveau');
       const statutLabel = t.statut === 'resolu' ? 'Résolu' : (t.statut === 'en_cours' ? 'En Traitement' : 'Ouvert');
 
+      const rawId = (t.id || '').toString();
+      const displayId = rawId.startsWith('tck-') ? rawId.slice(-6).toUpperCase() : rawId.slice(-4).toUpperCase();
+
       return `
         <tr>
-          <td><strong>#TCK-${(t.id || '').toString().slice(-4).toUpperCase()}</strong></td>
-          <td>${escapeHtml(t.sujet || 'Assistance')}</td>
-          <td>${escapeHtml(t.client_nom || 'Prestation')}</td>
-          <td>${dateStr}</td>
+          <td><strong style="color: var(--brand-pink);">#TCK-${displayId}</strong></td>
+          <td><div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(t.sujet || 'Assistance')}</div></td>
+          <td><span class="badge" style="background: #F1F5F9; color: var(--text-secondary); font-size: 0.74rem;">${escapeHtml(t.client_nom || 'Opérations')}</span></td>
+          <td><span style="font-size: 0.82rem; color: var(--text-muted);">${dateStr}</span></td>
           <td><span class="badge-priority ${priorite}">${priorite.toUpperCase()}</span></td>
           <td><span class="badge-status ${statutClass}">${statutLabel}</span></td>
           <td style="text-align: right;">
-            <button class="btn btn-secondary btn-sm" onclick="window.clientCore.showToast('Ticket en cours de traitement par le Support JBF.', 'info')">
-              <i class="bi bi-chat-text"></i> Suivi
+            <button class="btn btn-secondary btn-sm" onclick="handleTicketFollowUp('${escapeHtml(t.sujet || '')}', '#TCK-${displayId}')" title="Échanger sur ce ticket">
+              <i class="bi bi-chat-text"></i> Suivi Direct
             </button>
           </td>
         </tr>
@@ -490,28 +733,43 @@
     }).join('');
   }
 
+  function handleTicketFollowUp(subject, ref) {
+    const promptText = `Point de situation sur le ticket ${ref} : ${subject}`;
+    postChatMessage(promptText);
+    const container = document.getElementById('liveChatMessagesContainer');
+    if (container) container.scrollTop = container.scrollHeight;
+    window.clientCore?.showToast(`Message de suivi envoyé pour le ${ref}.`, 'info');
+  }
+
+  // --- SOUMISSION D'UN TICKET SUPPORT ---
   async function handleCreateTicket(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const subject = document.getElementById('ticketSubject').value.trim();
     const service = document.getElementById('ticketService').value;
     const priority = document.getElementById('ticketPriority').value;
     const message = document.getElementById('ticketMessage').value.trim();
 
-    let session = null;
-    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
-    const clientNom = session?.companyName || session?.nom || 'Client Partenaire';
+    if (!subject || !message) {
+      window.clientCore?.showToast('Veuillez remplir tous les champs obligatoires.', 'warning');
+      return;
+    }
+
+    const session = window.clientCore?.getClientSession() || {};
+    const clientNom = session?.companyName || session?.nom_complet || session?.nom || 'Client Partenaire';
     const clientTel = session?.phone || session?.telephone || '';
-    const clientEmail = session?.email || '';
+    const clientEmail = (session?.email || '').toLowerCase().trim();
     const clientId = session?.id || null;
 
     const ticketId = 'tck-' + Date.now();
+    const fullSubject = `[${service}] ${subject}`;
+
     const newTicket = {
       id: ticketId,
       client_id: clientId,
       client_nom: clientNom,
       client_telephone: clientTel,
       client_email: clientEmail,
-      sujet: `[${service}] ${subject}`,
+      sujet: fullSubject,
       message: message,
       canal: 'web',
       statut: 'ouvert',
@@ -519,52 +777,108 @@
       created_at: new Date().toISOString()
     };
 
-    let localTickets = [];
-    try {
-      const stored = localStorage.getItem('JBF_TICKETS_LOCAL');
-      if (stored) localTickets = JSON.parse(stored);
-    } catch (err) {}
-    localTickets.unshift(newTicket);
-    localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(localTickets));
+    allTickets.unshift(newTicket);
+    try { localStorage.setItem('JBF_TICKETS_LOCAL', JSON.stringify(allTickets)); } catch (err) {}
+    renderTicketsTable(allTickets);
+    updateActiveTicketsKpi(allTickets);
 
-    try {
-      await supabase.from('tickets_support').insert([{
-        client_id: clientId,
-        client_nom: newTicket.client_nom,
-        client_telephone: newTicket.client_telephone,
-        client_email: newTicket.client_email,
-        sujet: newTicket.sujet,
-        message: newTicket.message,
-        canal: 'web',
-        statut: 'ouvert',
-        priorite: newTicket.priorite
-      }]);
-    } catch (err) {
-      console.warn('[JBF Client] Sync Supabase ticket:', err);
+    // 1. Sauvegarde Supabase REST API
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/tickets_support`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_nom: clientNom,
+            client_telephone: clientTel,
+            client_email: clientEmail,
+            sujet: fullSubject,
+            message: message,
+            canal: 'web',
+            statut: 'ouvert',
+            priorite: priority
+          })
+        });
+      } catch (err) {
+        console.warn('[JBF Client] REST ticket save:', err);
+      }
     }
 
-    renderTicketsTable(localTickets);
+    // 2. Supabase JS Fallback
+    if (supabase) {
+      try {
+        await supabase.from('tickets_support').insert([{
+          client_id: clientId,
+          client_nom: clientNom,
+          client_telephone: clientTel,
+          client_email: clientEmail,
+          sujet: fullSubject,
+          message: message,
+          canal: 'web',
+          statut: 'ouvert',
+          priorite: priority
+        }]);
+      } catch (err) {
+        console.warn('[JBF Client] Supabase JS ticket save:', err);
+      }
+    }
+
+    // 3. Notification instantanée dans messages_chat pour que l'Admin reçoive l'alerte direct en chat !
+    const chatNotification = `[TICKET SUPPORT #${ticketId.slice(-6).toUpperCase()}] ${fullSubject} (Priorité: ${priority.toUpperCase()})\n${message}`;
+    await postChatMessage(chatNotification, true);
+
     document.getElementById('ticketSubject').value = '';
     document.getElementById('ticketMessage').value = '';
-    window.clientCore.showToast('Votre ticket a été transmis avec succès au Service Client JBF.', 'success');
+    window.clientCore?.showToast('Votre ticket technique a été transmis avec succès au Pôle Opérationnel JBF.', 'success');
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  // --- CHAT SERVICE CLIENT EN DIRECT (SUPABASE DIRECT & MODIFIABLE) ---
-  const CHAT_STORAGE_KEY = 'JBF_LIVE_CHAT_MSGS';
-  let chatMessages = [];
-
-  async function loadChatMessages() {
-    let session = null;
-    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
+  // --- CHAT SERVICE CLIENT EN DIRECT (SUPABASE DIRECT SYNCHRONISÉ FLUTTER ADMIN) ---
+  async function loadChatMessages(isSilent = false) {
+    const session = window.clientCore?.getClientSession() || {};
     const clientId = session?.id || '';
-    const clientEmail = (session?.email || '').toLowerCase();
+    const clientEmail = (session?.email || '').toLowerCase().trim();
 
-    // 1. Tenter depuis Supabase
+    // 1. Supabase REST API Direct
+    if (SUPABASE_URL && SUPABASE_KEY && (clientId || clientEmail)) {
+      try {
+        const idCanal = clientId ? `client_${clientId}` : '';
+        const emailCanal = clientEmail ? `client_${clientEmail}` : '';
+        
+        let filter = '';
+        if (idCanal && emailCanal && idCanal !== emailCanal) {
+          filter = `or=(canal_type.eq.${encodeURIComponent(idCanal)},canal_type.eq.${encodeURIComponent(emailCanal)})`;
+        } else if (emailCanal) {
+          filter = `canal_type=eq.${encodeURIComponent(emailCanal)}`;
+        } else if (idCanal) {
+          filter = `canal_type=eq.${encodeURIComponent(idCanal)}`;
+        }
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/messages_chat?${filter}&order=created_at.asc`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            processIncomingMessages(data, session);
+            return;
+          }
+        }
+      } catch (err) {
+        if (!isSilent) console.warn('[Supabase REST Chat Messages]', err);
+      }
+    }
+
+    // 2. Supabase JS Client fallback
     if (supabase && (clientId || clientEmail)) {
       try {
         const canalFilter = clientId && clientEmail 
@@ -578,34 +892,48 @@
           .order('created_at', { ascending: true });
 
         if (!error && Array.isArray(data)) {
-          chatMessages = data.map(m => {
-            const isClient = m.expediteur_id === clientId || 
-                             m.expediteur_avatar === 'CLI' || 
-                             (session?.companyName && m.expediteur_nom === session.companyName);
-            const dt = m.created_at ? new Date(m.created_at) : new Date();
-            const timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
-            return {
-              id: m.id,
-              sender: m.expediteur_nom || (isClient ? 'Vous' : 'Direction JBF'),
-              text: m.message || '',
-              time: timeStr,
-              isClient: isClient
-            };
-          });
-          try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch(_) {}
-          renderChatMessages();
+          processIncomingMessages(data, session);
           return;
         }
       } catch (err) {
-        console.warn('[Supabase Chat Messages]', err);
+        if (!isSilent) console.warn('[Supabase JS Chat Messages]', err);
       }
     }
 
-    // 2. Cache local fallback
-    try {
-      const stored = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (stored) chatMessages = JSON.parse(stored);
-    } catch (_) {}
+    // 3. Cache local fallback
+    if (!isSilent) {
+      try {
+        const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+        if (stored) chatMessages = JSON.parse(stored);
+      } catch (_) {}
+      renderChatMessages();
+    }
+  }
+
+  function processIncomingMessages(rows, session) {
+    const clientId = session?.id || '';
+    const clientEmail = (session?.email || '').toLowerCase().trim();
+    const company = session?.companyName || session?.company || '';
+
+    chatMessages = rows.map(m => {
+      const isSenderClient = (clientId && m.expediteur_id === clientId) ||
+                             (clientEmail && m.expediteur_id === clientEmail) ||
+                             m.expediteur_avatar === 'CLI' ||
+                             (company && m.expediteur_nom === company);
+      
+      const dt = m.created_at ? new Date(m.created_at) : new Date();
+      const timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+      
+      return {
+        id: m.id,
+        sender: isSenderClient ? 'Vous' : (m.expediteur_nom || 'Direction JBF'),
+        text: m.message || '',
+        time: timeStr,
+        isClient: isSenderClient
+      };
+    });
+
+    try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch(_) {}
     renderChatMessages();
   }
 
@@ -616,45 +944,51 @@
     if (chatMessages.length === 0) {
       container.innerHTML = `
         <div style="margin: auto; text-align: center; color: var(--text-muted); padding: 40px 20px;">
-          <i class="bi bi-chat-dots" style="font-size: 2.2rem; opacity: 0.4; display: block; margin-bottom: 10px;"></i>
-          <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-secondary);">Aucun échange pour le moment</div>
-          <div style="font-size: 0.8rem; margin-top: 4px;">Envoyez un message direct à notre équipe technique et commerciale JBF.</div>
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--brand-pink-subtle); color: var(--brand-pink); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 14px auto;">
+            <i class="bi bi-chat-dots-fill"></i>
+          </div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-primary);">Messagerie Directe Ouverte</div>
+          <div style="font-size: 0.82rem; margin-top: 6px; max-width: 320px; line-height: 1.45;">
+            Posez vos questions techniques, demandez un point d'avancement ou signalez une urgence. Notre équipe vous répond immédiatement.
+          </div>
         </div>
       `;
       return;
     }
+
+    const wasAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
 
     container.innerHTML = chatMessages.map(m => {
       const isClient = m.isClient;
       return `
         <div style="display: flex; justify-content: ${isClient ? 'flex-end' : 'flex-start'}; align-items: flex-end; gap: 8px;">
           ${!isClient ? `
-            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-pink); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #0C0C0E; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
               JBF
             </div>
           ` : ''}
-          <div style="max-width: 75%; background: ${isClient ? 'var(--brand-pink)' : '#FFFFFF'}; color: ${isClient ? '#FFFFFF' : 'var(--text-primary)'}; padding: 10px 14px; border-radius: ${isClient ? '14px 14px 2px 14px' : '14px 14px 14px 2px'}; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: ${isClient ? 'none' : '1px solid #E2E8F0'}; font-size: 0.88rem; line-height: 1.45;">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; opacity: 0.85; margin-bottom: 3px; font-weight: 700;">
+          <div class="${isClient ? 'chat-bubble-client' : 'chat-bubble-admin'}">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; opacity: 0.88; margin-bottom: 4px; font-weight: 700;">
               <span>${escapeHtml(m.sender)}</span>
               ${isClient ? `
                 <div style="display: flex; gap: 6px; align-items: center;">
-                  <button type="button" class="btn btn-link p-0 text-white" style="text-decoration: none; font-size: 0.72rem; opacity: 0.8;" title="Modifier le message" onclick="openEditChatMessage('${m.id}')">
+                  <button type="button" class="btn btn-link p-0 text-white" style="text-decoration: none; font-size: 0.72rem; opacity: 0.85; cursor: pointer;" title="Modifier le message" onclick="openEditChatMessage('${m.id}')">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button type="button" class="btn btn-link p-0 text-white" style="text-decoration: none; font-size: 0.72rem; opacity: 0.8;" title="Supprimer le message" onclick="confirmDeleteChatMessage('${m.id}')">
-                    <i class="bi bi-x-lg"></i>
+                  <button type="button" class="btn btn-link p-0 text-white" style="text-decoration: none; font-size: 0.72rem; opacity: 0.85; cursor: pointer;" title="Supprimer le message" onclick="confirmDeleteChatMessage('${m.id}')">
+                    <i class="bi bi-trash"></i>
                   </button>
                 </div>
               ` : ''}
             </div>
-            <div>${escapeHtml(m.text)}</div>
-            <div style="font-size: 0.68rem; opacity: 0.75; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+            <div style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(m.text)}</div>
+            <div style="font-size: 0.68rem; opacity: 0.75; text-align: right; margin-top: 5px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
               <span>${m.time}</span>
               ${isClient ? '<i class="bi bi-check2-all" style="font-size: 13px;"></i>' : ''}
             </div>
           </div>
           ${isClient ? `
-            <div style="width: 28px; height: 28px; border-radius: 50%; background: #0C0C0E; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--brand-pink); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(230,0,126,0.3);">
               VOUS
             </div>
           ` : ''}
@@ -662,7 +996,9 @@
       `;
     }).join('');
 
-    container.scrollTop = container.scrollHeight;
+    if (wasAtBottom) {
+      container.scrollTop = container.scrollHeight;
+    }
   }
 
   function handleSendChatMessage(e) {
@@ -679,15 +1015,17 @@
     postChatMessage(txt);
   }
 
-  async function postChatMessage(text) {
-    let session = null;
-    try { session = JSON.parse(localStorage.getItem(JBF_CLIENT_CONFIG.CLIENT_SESSION_KEY)); } catch(e) {}
+  async function postChatMessage(text, skipLocalOnly = false) {
+    const session = window.clientCore?.getClientSession() || {};
     const clientId = session?.id || 'client-web';
-    const clientName = session?.companyName || session?.nom || 'Client Partenaire';
+    const clientEmail = (session?.email || '').toLowerCase().trim();
+    const clientName = session?.companyName || session?.nom_complet || session?.nom || 'Client Partenaire';
+    const clientCompany = session?.companyName || session?.company || 'Client Direct';
 
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const tempId = 'm-' + Date.now();
+
     const newMsg = {
       id: tempId,
       sender: 'Vous',
@@ -700,26 +1038,64 @@
     try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch (_) {}
     renderChatMessages();
 
-    // Insertion réelle Supabase sans simulation de bot
-    if (supabase) {
-      try {
-        const { data, error } = await supabase.from('messages_chat').insert([{
-          expediteur_id: clientId,
-          expediteur_nom: clientName,
-          expediteur_avatar: 'CLI',
-          canal_type: 'client_' + clientId,
-          message: text,
-          created_at: now.toISOString()
-        }]).select();
+    // Scroll to bottom immediately
+    const container = document.getElementById('liveChatMessagesContainer');
+    if (container) container.scrollTop = container.scrollHeight;
 
-        if (!error && Array.isArray(data) && data.length > 0) {
-          const realId = data[0].id;
-          const target = chatMessages.find(m => m.id === tempId);
-          if (target) target.id = realId;
-          try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch (_) {}
+    // Définition canonique du canal_type pour que l'Admin Flutter le reçoive immédiatement
+    const primaryCanal = clientEmail ? `client_${clientEmail}` : `client_${clientId}`;
+
+    const payload = {
+      expediteur_id: clientId,
+      expediteur_nom: clientName,
+      expediteur_avatar: 'CLI',
+      section_nom: clientCompany,
+      canal_type: primaryCanal,
+      message: text,
+      created_at: now.toISOString()
+    };
+
+    // 1. Envoi REST API Supabase avec return=minimal (Bypass RLS SELECT restrictions)
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/messages_chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        // Si l'ID UUID est distinct de l'email, envoyer un miroir canal_type pour correspondre à client_${clientId}
+        if (clientId && clientId !== clientEmail && !clientId.startsWith('cli_') && clientId !== 'client-web') {
+          fetch(`${SUPABASE_URL}/rest/v1/messages_chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              ...payload,
+              canal_type: `client_${clientId}`
+            })
+          }).catch(() => {});
         }
       } catch (err) {
-        console.warn('[Sync Supabase Chat Error]', err);
+        console.warn('[REST Chat Send Error]', err);
+      }
+    }
+
+    // 2. Supabase JS Fallback
+    if (supabase) {
+      try {
+        await supabase.from('messages_chat').insert([payload]);
+      } catch (err) {
+        console.warn('[Supabase JS Chat Send Error]', err);
       }
     }
   }
@@ -734,14 +1110,22 @@
     try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch(_) {}
     renderChatMessages();
 
-    if (supabase && id && !String(id).startsWith('m-')) {
+    if (SUPABASE_URL && SUPABASE_KEY && id && !String(id).startsWith('m-')) {
       try {
-        await supabase.from('messages_chat').update({ message: newText.trim() }).eq('id', id);
+        await fetch(`${SUPABASE_URL}/rest/v1/messages_chat?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          },
+          body: JSON.stringify({ message: newText.trim() })
+        });
       } catch (err) {
         console.warn('Update chat message error:', err);
       }
     }
-    if (window.clientCore) window.clientCore.showToast('Message modifié avec succès.', 'success');
+    window.clientCore?.showToast('Message modifié avec succès.', 'success');
   }
 
   async function confirmDeleteChatMessage(id) {
@@ -750,14 +1134,25 @@
     try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages)); } catch(_) {}
     renderChatMessages();
 
-    if (supabase && id && !String(id).startsWith('m-')) {
+    if (SUPABASE_URL && SUPABASE_KEY && id && !String(id).startsWith('m-')) {
       try {
-        await supabase.from('messages_chat').delete().eq('id', id);
+        await fetch(`${SUPABASE_URL}/rest/v1/messages_chat?id=eq.${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
       } catch (err) {
         console.warn('Delete chat message error:', err);
       }
     }
-    if (window.clientCore) window.clientCore.showToast('Message supprimé.', 'info');
+    window.clientCore?.showToast('Message supprimé.', 'info');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   window.handleCreateTicket = handleCreateTicket;
@@ -765,8 +1160,11 @@
   window.sendQuickChatMessage = sendQuickChatMessage;
   window.openEditChatMessage = openEditChatMessage;
   window.confirmDeleteChatMessage = confirmDeleteChatMessage;
+  window.loadClientTickets = loadClientTickets;
+  window.loadChatMessages = loadChatMessages;
+  window.filterTickets = filterTickets;
+  window.handleTicketFollowUp = handleTicketFollowUp;
 </script>
 
 </body>
 </html>
-

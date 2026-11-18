@@ -70,25 +70,32 @@ class _MissionsScreenState extends State<MissionsScreen> {
               color: AppConfig.brandPink,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 10,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Suivi de Progression des Projets',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppConfig.blackText),
-                            ),
-                            Text(
-                              'Accès conditionnel sécurisé : réservé aux projets dont le paiement a été validé par la Direction JBF',
-                              style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
-                            ),
-                          ],
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Suivi de Progression des Projets',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppConfig.blackText),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Accès conditionnel sécurisé : réservé aux projets dont le paiement a été validé par la Direction JBF',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -98,6 +105,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
                             border: Border.all(color: const Color(0xFF86EFAC)),
                           ),
                           child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.shield_outlined, size: 16, color: AppConfig.successGreen),
                               SizedBox(width: 6),
@@ -107,7 +115,7 @@ class _MissionsScreenState extends State<MissionsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     if (_missions.isEmpty)
                       Container(
@@ -141,53 +149,66 @@ class _MissionsScreenState extends State<MissionsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Entête Projet
+                                // Entête Projet (Responsive)
                                 Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Row(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: isPaiementValide ? AppConfig.brandPinkTint : Colors.grey.shade200,
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: Icon(
-                                          Icons.engineering,
-                                          color: isPaiementValide ? AppConfig.brandPink : Colors.grey.shade600,
-                                          size: 26,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              m.titre,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppConfig.blackText),
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: isPaiementValide ? AppConfig.brandPinkTint : Colors.grey.shade200,
+                                              borderRadius: BorderRadius.circular(10),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Réf: ${m.codeMission} • Site : ${m.siteIntervention} • Chef d\'Équipe : ${m.chefEquipe}',
-                                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+                                            child: Icon(
+                                              Icons.engineering,
+                                              color: isPaiementValide ? AppConfig.brandPink : Colors.grey.shade600,
+                                              size: 24,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  m.titre,
+                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppConfig.blackText),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Réf: ${m.codeMission} • Site : ${m.siteIntervention}',
+                                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                                ),
+                                                Text(
+                                                  'Chef d\'Équipe : ${m.chefEquipe}',
+                                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: isPaiementValide ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          isPaiementValide ? 'Paiement Confirmé' : 'Paiement En Attente',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: isPaiementValide ? AppConfig.successGreen : Colors.amber.shade900,
+                                      const SizedBox(height: 10),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: isPaiementValide ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            isPaiementValide ? 'Paiement Confirmé' : 'Paiement En Attente',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: isPaiementValide ? AppConfig.successGreen : Colors.amber.shade900,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -197,42 +218,53 @@ class _MissionsScreenState extends State<MissionsScreen> {
 
                                 const Divider(height: 1),
 
-                                // Zone Conditionnelle
+                                // Zone Conditionnelle (Responsive)
                                 if (!isPaiementValide)
                                   Container(
-                                    padding: const EdgeInsets.all(24),
+                                    padding: const EdgeInsets.all(16),
                                     decoration: const BoxDecoration(
                                       color: Color(0xFFFFFBEB),
                                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
                                     ),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Icon(Icons.lock_outline, color: Color(0xFFD97706), size: 28),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Suivi Détaillé & Livrables Verrouillés',
-                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF92400E)),
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Icon(Icons.lock_outline, color: Color(0xFFD97706), size: 24),
+                                            const SizedBox(width: 12),
+                                            const Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Suivi Détaillé & Livrables Verrouillés',
+                                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF92400E)),
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Text(
+                                                    'La progression étape par étape et les PV techniques seront débloqués dès confirmation du règlement de l\'acompte par la Direction JBF.',
+                                                    style: TextStyle(fontSize: 12, color: Color(0xFFB45309)),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(height: 4),
-                                              const Text(
-                                                'La progression étape par étape et les PV techniques seront débloqués dès confirmation du règlement de l\'acompte par la Direction JBF.',
-                                                style: TextStyle(fontSize: 12.5, color: Color(0xFFB45309)),
-                                              ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        ElevatedButton(
-                                          onPressed: () => _contactSupport(m.codeMission),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFFD97706),
-                                            foregroundColor: Colors.white,
+                                        const SizedBox(height: 12),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () => _contactSupport(m.codeMission),
+                                            icon: const Icon(Icons.payment, size: 16),
+                                            label: const Text('Valider le Paiement via Support'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFFD97706),
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                            ),
                                           ),
-                                          child: const Text('Valider le Paiement'),
                                         ),
                                       ],
                                     ),

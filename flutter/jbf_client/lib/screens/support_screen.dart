@@ -393,7 +393,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
 
   Widget _buildLiveChatTab() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -610,11 +610,11 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
 
   Widget _buildHotlineTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF25D366), Color(0xFF1EBE5D)],
@@ -623,27 +623,45 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.support_agent, color: Colors.white, size: 48),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Hotline WhatsApp Officielle 24/7', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      const Text('+243 97 034 9724 • Ligne d\'astreinte immédiate chantiers miniers', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.support_agent, color: Colors.white, size: 36),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Hotline WhatsApp Officielle 24/7',
+                            style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      '+243 97 034 9724 • Ligne d\'astreinte immédiate chantiers miniers',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
                         onPressed: _openWhatsApp,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: const Color(0xFF1EBE5D)),
-                        child: const Text('Ouvrir WhatsApp Hotline'),
+                        icon: const Icon(Icons.chat, size: 18),
+                        label: const Text('Ouvrir WhatsApp Hotline'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1EBE5D),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],

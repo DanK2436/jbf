@@ -1,7 +1,22 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/admin_models.dart';
+
+String _generateUuidV4() {
+  final random = Random.secure();
+  final values = List<int>.generate(16, (i) => random.nextInt(256));
+  values[6] = (values[6] & 0x0f) | 0x40; // Version 4
+  values[8] = (values[8] & 0x3f) | 0x80; // Variant RFC4122
+  return [
+    values.sublist(0, 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(4, 6).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(6, 8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(8, 10).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+    values.sublist(10, 16).map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+  ].join('-');
+}
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -339,10 +354,11 @@ class SupabaseService {
     final cleanEmail = m.email.trim().toLowerCase();
     final cleanNom = m.nom.trim();
 
-    // 1. Supabase Auth signup silencieux
+    // 1. Supabase Auth signup silencieux avec récupération d'UUID réel
+    String userId = _generateUuidV4();
     try {
-      await http.post(
-        Uri.parse('$AppConfig.supabaseUrl/auth/v1/signup'),
+      final authRes = await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Content-Type': 'application/json',
@@ -352,7 +368,15 @@ class SupabaseService {
           'password': cleanPass,
           'data': {'full_name': cleanNom, 'role': 'membre'}
         }),
-      ).timeout(const Duration(seconds: 4));
+      ).timeout(const Duration(seconds: 5));
+
+      if (authRes.statusCode == 200 || authRes.statusCode == 201) {
+        final authJson = jsonDecode(authRes.body);
+        final returnedId = authJson['user']?['id'] ?? authJson['id'];
+        if (returnedId != null && returnedId.toString().isNotEmpty) {
+          userId = returnedId.toString();
+        }
+      }
     } catch (_) {}
 
     // 2. Profil dans table profiles
@@ -361,9 +385,11 @@ class SupabaseService {
         Uri.parse('$_baseUrl/profiles'),
         headers: {
           ..._headers,
-          'Prefer': 'resolution=merge-duplicates',
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
         },
         body: jsonEncode({
+          'id': userId,
+          'user_id': userId,
           'email': cleanEmail,
           'full_name': cleanNom,
           'nom_complet': cleanNom,
@@ -382,6 +408,7 @@ class SupabaseService {
           'statut': 'actif',
           'statut_compte': 'actif',
           'is_disabled': false,
+          'is_verified': true,
           'password': cleanPass,
           'permissions_detaillees': {
             'password': cleanPass,
@@ -389,6 +416,7 @@ class SupabaseService {
             'service_assigne': m.sectionNom.trim(),
             'all': false,
           },
+          'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         }),
       );
@@ -399,7 +427,7 @@ class SupabaseService {
           Uri.parse('$_baseUrl/rh_collaborateurs'),
           headers: {
             ..._headers,
-            'Prefer': 'resolution=merge-duplicates',
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
           },
           body: jsonEncode({
             'matricule': m.matricule.trim(),
@@ -514,10 +542,11 @@ class SupabaseService {
     final cleanEmail = sa.email.trim().toLowerCase();
     final cleanNom = sa.fullName.trim();
 
-    // 1. Supabase Auth signup silencieux
+    // 1. Supabase Auth signup silencieux avec récupération d'UUID réel
+    String userId = _generateUuidV4();
     try {
-      await http.post(
-        Uri.parse('$AppConfig.supabaseUrl/auth/v1/signup'),
+      final authRes = await http.post(
+        Uri.parse('${AppConfig.supabaseUrl}/auth/v1/signup'),
         headers: {
           'apikey': AppConfig.supabaseAnonKey,
           'Content-Type': 'application/json',
@@ -527,7 +556,15 @@ class SupabaseService {
           'password': cleanPass,
           'data': {'full_name': cleanNom, 'role': 'sous_admin'}
         }),
-      ).timeout(const Duration(seconds: 4));
+      ).timeout(const Duration(seconds: 5));
+
+      if (authRes.statusCode == 200 || authRes.statusCode == 201) {
+        final authJson = jsonDecode(authRes.body);
+        final returnedId = authJson['user']?['id'] ?? authJson['id'];
+        if (returnedId != null && returnedId.toString().isNotEmpty) {
+          userId = returnedId.toString();
+        }
+      }
     } catch (_) {}
 
     try {
@@ -535,9 +572,10 @@ class SupabaseService {
         Uri.parse('$_baseUrl/admin_accounts'),
         headers: {
           ..._headers,
-          'Prefer': 'resolution=merge-duplicates',
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
         },
         body: jsonEncode({
+          'id': userId,
           'full_name': cleanNom,
           'email': cleanEmail,
           'role': 'sous_admin',
@@ -555,9 +593,11 @@ class SupabaseService {
           Uri.parse('$_baseUrl/profiles'),
           headers: {
             ..._headers,
-            'Prefer': 'resolution=merge-duplicates',
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
           },
           body: jsonEncode({
+            'id': userId,
+            'user_id': userId,
             'full_name': cleanNom,
             'nom_complet': cleanNom,
             'nom': cleanNom.split(' ').first,
@@ -570,6 +610,7 @@ class SupabaseService {
             'statut_compte': 'actif',
             'statut': 'actif',
             'is_disabled': false,
+            'is_verified': true,
             'password': cleanPass,
             'permissions_detaillees': {
               'permissions': sa.permissions,

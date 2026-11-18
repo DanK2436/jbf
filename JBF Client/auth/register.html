@@ -1214,6 +1214,16 @@
     }
   });
 
+  function generateUuidV4() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
   // ── Validation Finale du code OTP (Brevo / Resend) & Création du Compte ──
   async function handleVerifyRegistrationOtp() {
     clearAlert();
@@ -1246,32 +1256,89 @@
         throw new Error('Code de vérification incorrect ou expiré. Veuillez vérifier votre boîte mail ou demander un nouveau code.');
       }
 
-      // 2. Code vérifié avec succès ! Création du profil client (Sans déclencher d'email Supabase)
-      let userId = 'cli_' + Date.now().toString().slice(-6);
+      // 2. Code vérifié avec succès ! Création du profil client complet avec UUID valide
+      const userId = generateUuidV4();
+      const clientEmail = (formData.email || '').trim().toLowerCase();
+      const compName = formData.company || formData.displayName || 'Société Partenaire';
+      const contactPerson = formData.contact || formData.displayName || 'Responsable Client';
 
+      const profilePayload = {
+        id: userId,
+        email: clientEmail,
+        nom: formData.displayName,
+        prenom: contactPerson,
+        full_name: formData.displayName,
+        nom_complet: formData.displayName,
+        company: compName,
+        entreprise: compName,
+        telephone: formData.fullPhone,
+        phone: formData.fullPhone,
+        role: 'client',
+        password: formData.password,
+        permissions_detaillees: {
+          password: formData.password,
+          all: true,
+          company: compName,
+          contact: contactPerson
+        },
+        statut: 'actif',
+        statut_compte: 'actif',
+        is_verified: true,
+        is_disabled: false,
+        created_at: new Date().toISOString()
+      };
+
+      // 3. Inscription dans Supabase Auth (si possible) & base profiles
       if (window.supabase) {
-        // Enregistrement direct et propre dans la table 'profiles'
-        try {
-          await window.supabase.from('profiles').upsert([{
-            id: userId,
-            email: formData.email,
-            nom: formData.displayName,
-            telephone: formData.fullPhone,
-            role: 'client',
-            created_at: new Date().toISOString()
-          }]);
-        } catch(dbErr) {
-          console.warn('[Supabase Profiles Insert]:', dbErr);
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        if (sbClient) {
+          // A. Supabase Auth standard
+          try {
+            await sbClient.auth.signUp({
+              email: clientEmail,
+              password: formData.password,
+              options: {
+                data: {
+                  full_name: formData.displayName,
+                  company: compName,
+                  phone: formData.fullPhone
+                }
+              }
+            });
+          } catch(authErr) {
+            console.warn('[Supabase Auth SignUp (Non-bloquant)]:', authErr);
+          }
+
+          // B. Enregistrement table 'profiles' (avec UUID valide et mot de passe sécurisé)
+          try {
+            const { error: profErr } = await sbClient.from('profiles').upsert([profilePayload]);
+            if (profErr) {
+              console.warn('[Supabase Profiles Upsert Error]:', profErr);
+              // Repli REST direct
+              await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                method: 'POST',
+                headers: {
+                  'apikey': SUPABASE_ANON_KEY,
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify(profilePayload)
+              });
+            }
+          } catch(dbErr) {
+            console.warn('[Supabase Profiles Insert Fallback]:', dbErr);
+          }
         }
       }
 
-      // 3. Initialisation de la session client
+      // 4. Initialisation de la session client
       const clientSession = {
         id: userId,
         name: formData.displayName,
-        companyName: formData.company || formData.displayName,
-        contactName: formData.contact || formData.displayName,
-        email: formData.email,
+        companyName: compName,
+        contactName: contactPerson,
+        email: clientEmail,
         phone: formData.fullPhone,
         role: 'client',
         accountType: formData.accountType,

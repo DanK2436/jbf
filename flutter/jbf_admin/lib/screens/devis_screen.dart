@@ -304,12 +304,16 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
           'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({'statut': 'accepte'}),
+        body: jsonEncode({'statut': 'valide'}),
       );
     } catch (_) {}
 
-    // 2. Créer le message automatique d'ouverture de conversation
+    // 2. Créer le message automatique d'ouverture de conversation pour feedback client
     try {
+      final emailCanal = d.email.trim().isNotEmpty ? 'client_${d.email.trim().toLowerCase()}' : 'client_${d.id}';
+      final serviceName = d.services.isNotEmpty ? d.services.join(", ") : 'Prestation JBF';
+
+      // Envoi sur le canal email du client
       await http.post(
         Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
         headers: {
@@ -318,14 +322,36 @@ class _DevisScreenState extends State<DevisScreen> with SingleTickerProviderStat
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'canal_type': 'client_${d.id}',
+          'canal_type': emailCanal,
+          'expediteur_id': 'admin',
           'expediteur_nom': 'Direction Générale JBF',
           'expediteur_avatar': 'DG',
-          'section_nom': d.services.isNotEmpty ? d.services.first : 'Devis',
-          'message': 'Bonjour ${d.nom}, votre demande de devis (${d.services.join(", ")}) a été acceptée par la Direction Générale JBF Services SARL. Vous pouvez échanger directement vos fichiers et devis détaillés ici.',
+          'section_nom': d.services.isNotEmpty ? d.services.first : 'Devis Validé',
+          'message': '🎉 Bonjour ${d.nom}, votre demande de devis pour "$serviceName" a été validée avec succès par la Direction Générale JBF Services SARL. Vous pouvez consulter les détails de votre cotation et poursuivre les échanges directement ici.',
           'created_at': DateTime.now().toIso8601String(),
         }),
       );
+
+      // Envoi miroir sur le canal ID devis
+      if (emailCanal != 'client_${d.id}') {
+        await http.post(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/messages_chat'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'canal_type': 'client_${d.id}',
+            'expediteur_id': 'admin',
+            'expediteur_nom': 'Direction Générale JBF',
+            'expediteur_avatar': 'DG',
+            'section_nom': d.services.isNotEmpty ? d.services.first : 'Devis Validé',
+            'message': '🎉 Votre demande de devis pour "$serviceName" a été validée par la Direction JBF.',
+            'created_at': DateTime.now().toIso8601String(),
+          }),
+        );
+      }
     } catch (_) {}
 
     _loadAllDevis();

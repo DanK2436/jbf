@@ -50,14 +50,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 450;
+
     return Scaffold(
       backgroundColor: const Color(0xFFEBEBF0),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(isSmall ? 12.0 : 24.0),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 440),
-            padding: const EdgeInsets.all(32.0),
+            padding: EdgeInsets.all(isSmall ? 18.0 : 28.0),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),

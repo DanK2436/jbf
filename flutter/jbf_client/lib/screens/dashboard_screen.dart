@@ -76,76 +76,129 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Header Card
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppConfig.brandPink, AppConfig.brandPinkDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppConfig.brandPink.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+            // Welcome Header Card (Responsive Mobile & Desktop)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmall = constraints.maxWidth < 620;
+                return Container(
+                  padding: EdgeInsets.all(isSmall ? 16 : 22),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppConfig.brandPink, AppConfig.brandPinkDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppConfig.brandPink.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  child: isSmall
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.white24,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'ESPACE CLIENT PARTENAIRE',
-                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white24,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'ESPACE CLIENT PARTENAIRE',
+                                    style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.verified, color: Colors.white, size: 16),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              widget.client.companyName,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.verified, color: Colors.white, size: 16),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Interlocuteur : ${widget.client.fullName} • ${widget.client.site}',
+                              style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppConfig.brandPink,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              onPressed: () => widget.onNavigate(1),
+                              icon: const Icon(Icons.add_circle_outline, size: 18),
+                              label: const Text('Nouveau Devis', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white24,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'ESPACE CLIENT PARTENAIRE',
+                                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.verified, color: Colors.white, size: 16),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.client.companyName,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Interlocuteur : ${widget.client.fullName} • ${widget.client.site}',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppConfig.brandPink,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              onPressed: () => widget.onNavigate(1),
+                              icon: const Icon(Icons.add_circle_outline, size: 18),
+                              label: const Text('Nouveau Devis', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.client.companyName,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Interlocuteur : ${widget.client.fullName} • ${widget.client.site}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppConfig.brandPink,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onPressed: () => widget.onNavigate(1), // Navigue vers Devis
-                    icon: const Icon(Icons.add_circle_outline, size: 18),
-                    label: const Text('Nouveau Devis', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             const SizedBox(height: 20),
@@ -219,12 +272,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Répartition des Prestations & Chantiers par Secteur',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                    children: const [
+                      Expanded(
+                        child: Text(
+                          'Répartition des Prestations & Chantiers',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                        ),
                       ),
                       Icon(Icons.pie_chart_outline, color: AppConfig.brandPink, size: 20),
                     ],
@@ -271,22 +326,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: const [
-                            Icon(Icons.precision_manufacturing, color: AppConfig.brandPink),
+                            Icon(Icons.precision_manufacturing, color: AppConfig.brandPink, size: 20),
                             SizedBox(width: 8),
                             Text(
-                              'Suivi en Temps Réel de vos Chantiers JBF',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                              'Suivi de vos Chantiers JBF',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppConfig.blackText),
                             ),
                           ],
                         ),
                         TextButton(
                           onPressed: () => widget.onNavigate(2),
-                          child: const Text('Voir tous les chantiers →'),
+                          child: const Text('Voir tous les chantiers →', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -373,22 +432,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: const [
-                            Icon(Icons.description_outlined, color: AppConfig.brandPink),
+                            Icon(Icons.description_outlined, color: AppConfig.brandPink, size: 20),
                             SizedBox(width: 8),
                             Text(
-                              'Dernières Demandes de Devis & Proformas',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                              'Dernières Demandes de Devis',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppConfig.blackText),
                             ),
                           ],
                         ),
                         TextButton(
                           onPressed: () => widget.onNavigate(1),
-                          child: const Text('Gérer mes devis →'),
+                          child: const Text('Gérer mes devis →', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -407,34 +470,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         itemBuilder: (context, idx) {
                           final d = _devisList[idx];
                           final isValide = d.statut == 'valide';
-                          return Row(
-                            children: [
-                              Text(
-                                d.reference,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppConfig.blackText),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(d.service, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                    Text('${d.site} • ${d.date}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              if (d.montantEstime > 0)
-                                Text(
-                                  '\$${d.montantEstime.toStringAsFixed(0)} USD',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                ),
-                              const SizedBox(width: 12),
-                              StatBadge(
-                                label: isValide ? 'Validé' : (d.statut == 'en_cours' ? 'En étude' : 'Nouveau'),
-                                color: isValide ? AppConfig.successGreen : AppConfig.brandPink,
-                              ),
-                            ],
+                          return LayoutBuilder(
+                            builder: (context, box) {
+                              final isNarrow = box.maxWidth < 420;
+                              return isNarrow
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              d.reference,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppConfig.blackText),
+                                            ),
+                                            StatBadge(
+                                              label: isValide ? 'Validé' : (d.statut == 'en_cours' ? 'En étude' : 'Nouveau'),
+                                              color: isValide ? AppConfig.successGreen : AppConfig.brandPink,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(d.service, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                        Text('${d.site} • ${d.date}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                        if (d.montantEstime > 0)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 4.0),
+                                            child: Text(
+                                              '\$${d.montantEstime.toStringAsFixed(0)} USD',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppConfig.brandPink),
+                                            ),
+                                          ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        Text(
+                                          d.reference,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppConfig.blackText),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(d.service, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                              Text('${d.site} • ${d.date}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        if (d.montantEstime > 0)
+                                          Text(
+                                            '\$${d.montantEstime.toStringAsFixed(0)} USD',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                          ),
+                                        const SizedBox(width: 12),
+                                        StatBadge(
+                                          label: isValide ? 'Validé' : (d.statut == 'en_cours' ? 'En étude' : 'Nouveau'),
+                                          color: isValide ? AppConfig.successGreen : AppConfig.brandPink,
+                                        ),
+                                      ],
+                                    );
+                            },
                           );
                         },
                       ),

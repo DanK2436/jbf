@@ -216,10 +216,13 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 500;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FA),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(isMobile ? 14.0 : 24.0),
         child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 780),
@@ -228,7 +231,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
               children: [
                 // Profile Banner Header
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(isMobile ? 16 : 24),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [AppConfig.blackText, Color(0xFF1E1E24)],
@@ -247,35 +250,37 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 34,
+                        radius: isMobile ? 26 : 34,
                         backgroundColor: AppConfig.brandPink,
                         child: Text(
                           _companyCtrl.text.isNotEmpty
-                              ? _companyCtrl.text.substring(0, 2).toUpperCase()
+                              ? _companyCtrl.text.substring(0, _companyCtrl.text.length >= 2 ? 2 : 1).toUpperCase()
                               : 'CL',
-                          style: const TextStyle(
-                            fontSize: 22,
+                          style: TextStyle(
+                            fontSize: isMobile ? 18 : 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Text(
                                   _companyCtrl.text.isNotEmpty ? _companyCtrl.text : 'Entreprise Partenaire',
-                                  style: const TextStyle(
-                                    fontSize: 20,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 16 : 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
@@ -289,15 +294,15 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              widget.client.email,
-                              style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                            ),
                             const SizedBox(height: 4),
                             Text(
+                              widget.client.email,
+                              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
                               'Compte Client B2B Officiel • jbf-service.com',
-                              style: TextStyle(color: AppConfig.brandPink, fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: AppConfig.brandPink, fontSize: 11, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -305,11 +310,11 @@ class _ProfilScreenState extends State<ProfilScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // Formulaire d'Édition du Profil Entreprise
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(isMobile ? 16 : 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -324,48 +329,73 @@ class _ProfilScreenState extends State<ProfilScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Informations Entreprise & Contact (Modifiables)',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                          const Expanded(
+                            child: Text(
+                              'Informations Entreprise & Contact',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppConfig.blackText),
+                            ),
                           ),
                           Icon(Icons.edit_note, color: AppConfig.brandPink, size: 24),
                         ],
                       ),
                       const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _nameCtrl,
-                              decoration: const InputDecoration(labelText: 'Nom du Responsable / Représentant *'),
+                      if (isMobile) ...[
+                        TextField(
+                          controller: _nameCtrl,
+                          decoration: const InputDecoration(labelText: 'Nom du Responsable / Représentant *'),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _companyCtrl,
+                          decoration: const InputDecoration(labelText: 'Raison Sociale / Entreprise *'),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _phoneCtrl,
+                          decoration: const InputDecoration(labelText: 'Téléphone WhatsApp Direct *'),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _siteCtrl,
+                          decoration: const InputDecoration(labelText: 'Site Minier / Ville d\'Implantation'),
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _nameCtrl,
+                                decoration: const InputDecoration(labelText: 'Nom du Responsable / Représentant *'),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: _companyCtrl,
-                              decoration: const InputDecoration(labelText: 'Raison Sociale / Entreprise *'),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextField(
+                                controller: _companyCtrl,
+                                decoration: const InputDecoration(labelText: 'Raison Sociale / Entreprise *'),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _phoneCtrl,
-                              decoration: const InputDecoration(labelText: 'Téléphone WhatsApp Direct *'),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _phoneCtrl,
+                                decoration: const InputDecoration(labelText: 'Téléphone WhatsApp Direct *'),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: _siteCtrl,
-                              decoration: const InputDecoration(labelText: 'Site Minier / Ville d\'Implantation'),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextField(
+                                controller: _siteCtrl,
+                                decoration: const InputDecoration(labelText: 'Site Minier / Ville d\'Implantation'),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ],
                       ),
                       const SizedBox(height: 14),
                       TextField(

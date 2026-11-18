@@ -183,6 +183,9 @@
         </div>
       </section>
 
+      <!-- BANNIÈRE FEEDBACK VALIDATION DEVIS CLIENT -->
+      <div id="dashboardFeedbackBanner" style="display: none; margin-bottom: 22px;"></div>
+
       <!-- KPI METRICS -->
       <div class="kpi-grid">
         <div class="kpi-card">
@@ -481,6 +484,36 @@
     if (elKpiTotal) elKpiTotal.textContent = totalDevis;
     if (elKpiSub) elKpiSub.textContent = `${validesDevis} Validé(s) • ${etudeDevis} En étude`;
 
+    // Bannière feedback devis validés
+    const feedBanner = document.getElementById('dashboardFeedbackBanner');
+    if (feedBanner) {
+      if (validesDevis > 0) {
+        feedBanner.style.display = 'block';
+        feedBanner.innerHTML = `
+          <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1.5px solid #10B981; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 4px 14px rgba(16,185,129,0.14); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: #10B981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <i class="bi bi-patch-check-fill"></i>
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 0.98rem; color: #065F46;">
+                  🎉 Vous avez ${validesDevis} demande(s) de devis validée(s) par la Direction JBF !
+                </div>
+                <div style="font-size: 0.83rem; color: #047857; margin-top: 2px;">
+                  Votre cotation officielle est prête. Consultez les fiches de chiffrage et démarrez vos prestations.
+                </div>
+              </div>
+            </div>
+            <a href="devis.html" class="btn btn-sm btn-primary btn-3d" style="white-space: nowrap; padding: 10px 18px;">
+              <i class="bi bi-file-earmark-check-fill"></i> Voir mes Devis Validés
+            </a>
+          </div>
+        `;
+      } else {
+        feedBanner.style.display = 'none';
+      }
+    }
+
     const elKpiMissions = document.getElementById('kpiMissionsActives');
     const elKpiMissionsSub = document.getElementById('kpiMissionsSub');
     const activesMissions = missionsList.filter(m => m.statut !== 'termine').length;
@@ -563,6 +596,12 @@
     const details = document.getElementById('orderDetailsInput')?.value || '';
     const session = window.clientCore.getClientSession() || {};
 
+    const clientNom = session.contactName || session.name || session.displayName || 'Client Partenaire';
+    const clientSociete = session.companyName || session.company || session.entreprise || 'Entreprise Partenaire';
+    const clientEmail = (session.email || '').trim().toLowerCase();
+    const clientPhone = session.phone || session.telephone || '';
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session?.id || '');
+
     const newDevis = {
       id: 'dev-' + Date.now(),
       service: service,
@@ -570,32 +609,115 @@
       site: site,
       localite: site,
       message: details,
-      statut: 'en_etude',
-      email: (session.email || '').toLowerCase(),
-      nom: session.contactName || session.name || 'Client',
-      societe: session.companyName || '',
+      statut: 'nouveau',
+      email: clientEmail,
+      nom: clientNom,
+      societe: clientSociete,
       date: new Date().toLocaleDateString('fr-FR'),
       created_at: new Date().toISOString()
     };
 
-    // Insertion Supabase
-    const sb = getSupabaseClient();
-    if (sb) {
-      try {
-        await sb.from('demandes_devis').insert([{
-          nom: newDevis.nom,
-          societe: newDevis.societe,
-          telephone: session.phone || '',
-          email: newDevis.email,
-          services: [service],
-          localite: site,
-          message: details,
-          statut: 'nouveau'
-        }]);
-      } catch (err) {
-        console.warn('[Supabase Insert Devis]', err);
+    const quotePayload = {
+      nom: clientNom,
+      client_nom: clientNom,
+      societe: clientSociete,
+      client_societe: clientSociete,
+      email: clientEmail,
+      client_email: clientEmail,
+      telephone: clientPhone,
+      client_telephone: clientPhone,
+      prestation: service,
+      services: [service],
+      prestations_associees: [service],
+      localite: site,
+      site_intervention: site,
+      details_besoin: details,
+      message: details,
+      statut: 'nouveau',
+      created_at: new Date().toISOString()
+    };
+    if (isUuid) quotePayload.client_id = session.id;
+
+    const sbUrl = window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+    const sbKey = window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+    let devisSaved = false;
+
+    // 1. REST direct
+    try {
+      const restRes = await fetch(`${sbUrl}/rest/v1/demandes_devis`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(quotePayload)
+      });
+      if (restRes.ok || restRes.status === 201) {
+        const savedData = await restRes.json();
+        if (savedData && savedData[0] && savedData[0].id) newDevis.id = savedData[0].id;
+        devisSaved = true;
+      }
+    } catch (_) {}
+
+    // 2. Supabase client fallback
+    if (!devisSaved) {
+      const sb = getSupabaseClient();
+      if (sb) {
+        try {
+          const { data, error } = await sb.from('demandes_devis').insert([quotePayload]).select();
+          if (!error) {
+            if (data && data[0] && data[0].id) newDevis.id = data[0].id;
+            devisSaved = true;
+          }
+        } catch (_) {}
       }
     }
+
+    // 3. Backend API fallback
+    if (!devisSaved) {
+      try {
+        const apiRes = await fetch('/api/devis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom: clientNom,
+            societe: clientSociete,
+            telephone: clientPhone,
+            email: clientEmail,
+            services: [service],
+            localite: site,
+            message: details
+          })
+        });
+        if (apiRes.ok) devisSaved = true;
+      } catch (_) {}
+    }
+
+    // 4. Notification chat admin
+    try {
+      const notifCanal = clientEmail ? ('client_' + clientEmail) : 'general';
+      await fetch(`${sbUrl}/rest/v1/messages_chat`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          canal_type: notifCanal,
+          expediteur_id: session?.id || clientEmail || 'client-quote',
+          expediteur_nom: clientNom,
+          expediteur_avatar: 'CLI',
+          section_nom: 'Devis & Commandes',
+          message: `📋 [NOUVELLE DEMANDE DE DEVIS]\nClient : ${clientNom} (${clientSociete})\nPrestation : ${service}\nSite : ${site}\nDétails : "${details}"`,
+          created_at: new Date().toISOString()
+        })
+      });
+    } catch (_) {}
 
     // Sauvegarde locale de réactivité immédiate
     let devisList = [];

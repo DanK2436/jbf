@@ -176,6 +176,9 @@
         </div>
       </div>
 
+      <!-- BANNIÈRE DE FEEDBACK VALIDATION DEVIS -->
+      <div id="validatedFeedbackZone" style="display: none; margin-bottom: 20px;"></div>
+
       <div class="card">
         <div class="card-header">
           <h2><i class="bi bi-file-earmark-text"></i> Historique & Traitement de Vos Demandes</h2>
@@ -361,6 +364,69 @@
   </div>
 </div>
 
+<!-- MODALE FEEDBACK : CONSULTATION DU DEVIS VALIDÉ PAR L'ADMIN -->
+<div class="modal-overlay" id="viewApprovedQuoteModal">
+  <div class="modal-box spatial-3d-card" style="max-width: 620px;">
+    <div class="modal-header" style="background: linear-gradient(135deg, #0C0C0E 0%, #1E1E24 100%); color: #fff; padding: 16px 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #10B981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0;" id="approvedModalTitle">Fiche de Cotation Officielle Validée</h3>
+          <span style="font-size: 0.76rem; color: #34D399;">Direction Générale JBF Service SARL — Agréé ARSP</span>
+        </div>
+      </div>
+      <button class="modal-close" style="color: #fff;" onclick="window.clientCore.closeModal('viewApprovedQuoteModal')">&times;</button>
+    </div>
+    <div class="modal-body" style="padding: 22px;">
+      <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px 18px; margin-bottom: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div>
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px;">Référence Dossier</span>
+            <div style="font-size: 1.15rem; font-weight: 900; color: var(--brand-pink);" id="approvedModalRef">#DEV-0000</div>
+          </div>
+          <span class="badge-status valide" style="font-size: 0.8rem; padding: 6px 12px;"><i class="bi bi-check-circle-fill"></i> Validé & Prêt</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.84rem; border-top: 1px dashed #CBD5E1; padding-top: 10px;">
+          <div><strong>Prestation :</strong> <span id="approvedModalService">-</span></div>
+          <div><strong>Emplacement :</strong> <span id="approvedModalSite">-</span></div>
+          <div><strong>Date Validation :</strong> <span id="approvedModalDate">-</span></div>
+          <div><strong>Chiffrage Prévisionnel :</strong> <span id="approvedModalMontant" style="color: #059669; font-weight: 800;">Sur accord contractuel</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Cahier des charges & Détails validés</label>
+        <div id="approvedModalDetails" style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; font-size: 0.88rem; line-height: 1.5; color: var(--text-primary); max-height: 140px; overflow-y: auto;">
+          Détails en cours de chargement...
+        </div>
+      </div>
+
+      <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: #92400E;">
+        <i class="bi bi-shield-fill-check" style="font-size: 1.6rem; color: #D97706; flex-shrink: 0;"></i>
+        <div>
+          <strong>Validation Certifiée JBF Service SARL</strong><br>
+          Cette cotation bénéficie de la garantie de conformité ARSP et des protocoles QHSE miniers en République Démocratique du Congo.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+        <i class="bi bi-printer"></i> Imprimer la Fiche
+      </button>
+      <div style="display: flex; gap: 8px;">
+        <a id="approvedModalChatLink" href="service-client.html" class="btn btn-primary btn-sm btn-3d">
+          <i class="bi bi-chat-dots-fill"></i> Échanger avec mon Chargé d'Affaires
+        </a>
+        <button type="button" class="btn btn-whatsapp btn-sm" id="approvedModalWaBtn" onclick="handleApprovedQuoteWhatsApp()">
+          <i class="bi bi-whatsapp"></i> Valider sur WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="../supabase/jbf-storage-cache.js"></script>
@@ -519,6 +585,36 @@
     const elMontant = document.getElementById('kpiClientMontantTotal');
     if (elMontant) elMontant.textContent = totalMontant > 0 ? `$${totalMontant.toLocaleString()} USD` : '$0 USD';
 
+    // Feedback Banner pour devis validés
+    const feedbackZone = document.getElementById('validatedFeedbackZone');
+    if (feedbackZone) {
+      if (prets > 0) {
+        feedbackZone.style.display = 'block';
+        feedbackZone.innerHTML = `
+          <div style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1.5px solid #10B981; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.12); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: #10B981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <i class="bi bi-patch-check-fill"></i>
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 0.96rem; color: #065F46;">
+                  🎉 Vous avez ${prets} demande(s) de devis validée(s) par la Direction JBF !
+                </div>
+                <div style="font-size: 0.82rem; color: #047857; margin-top: 2px;">
+                  Les prestations et cotations ont été vérifiées et approuvées. Consultez votre fiche de cotation ou échangez directement avec votre chargé d'affaires.
+                </div>
+              </div>
+            </div>
+            <a href="service-client.html" class="btn btn-sm btn-primary btn-3d" style="white-space: nowrap;">
+              <i class="bi bi-chat-dots-fill"></i> Ouvrir le Support Direct
+            </a>
+          </div>
+        `;
+      } else {
+        feedbackZone.style.display = 'none';
+      }
+    }
+
     if (!list || list.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted);"><i class="bi bi-file-earmark" style="font-size: 1.8rem; display:block; margin-bottom: 8px; color: #cbd5e1;"></i>Aucune demande de devis enregistrée. Cliquez sur "Demander une Nouvelle Prestation" pour initier un devis.</td></tr>';
       return;
@@ -542,16 +638,25 @@
           <td>${montant}</td>
           <td><span class="badge-status ${isValide ? 'valide' : 'en_etude'}">${statusLabel}</span></td>
           <td style="text-align: right;">
-            <div class="table-actions" style="display: flex; gap: 6px; justify-content: flex-end;">
-              <button class="btn btn-sm btn-secondary" title="Modifier le devis" onclick="openEditQuoteModal('${d.id}')">
-                <i class="bi bi-pencil"></i> Modifier
-              </button>
-              <button class="btn btn-sm" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; padding: 4px 8px; border-radius: 6px;" title="Supprimer le devis" onclick="confirmDeleteQuote('${d.id}')">
-                <i class="bi bi-trash"></i>
-              </button>
-              <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Discussion sur le devis #${(d.id || '').toString().slice(-4)}')">
-                <i class="bi bi-whatsapp"></i> Échanger
-              </button>
+            <div class="table-actions" style="display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;">
+              ${isValide ? `
+                <button class="btn btn-sm" style="background: #10B981; color: #fff; font-weight: 700; border: none; padding: 5px 12px; border-radius: 6px;" title="Consulter la fiche cotation" onclick="openViewApprovedQuote('${d.id}')">
+                  <i class="bi bi-file-earmark-check-fill"></i> Voir Cotation
+                </button>
+                <a href="service-client.html" class="btn btn-sm btn-secondary" style="padding: 5px 10px; border-radius: 6px;" title="Échanger avec la direction">
+                  <i class="bi bi-chat-dots-fill"></i> Échanger
+                </a>
+              ` : `
+                <button class="btn btn-sm btn-secondary" title="Modifier le devis" onclick="openEditQuoteModal('${d.id}')">
+                  <i class="bi bi-pencil"></i> Modifier
+                </button>
+                <button class="btn btn-sm" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; padding: 4px 8px; border-radius: 6px;" title="Supprimer le devis" onclick="confirmDeleteQuote('${d.id}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+                <button class="btn btn-whatsapp btn-sm" onclick="window.clientCore.openWhatsAppDirect('Discussion sur le devis #${(d.id || '').toString().slice(-4)}')">
+                  <i class="bi bi-whatsapp"></i> Échanger
+                </button>
+              `}
             </div>
           </td>
         </tr>
@@ -577,6 +682,33 @@
 
       tr.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
     });
+  }
+
+  let currentApprovedQuote = null;
+
+  function openViewApprovedQuote(quoteId) {
+    const q = allClientQuotes.find(item => String(item.id) === String(quoteId));
+    if (!q) return;
+    currentApprovedQuote = q;
+
+    const ref = (q.id || '').toString().slice(-4).toUpperCase();
+    document.getElementById('approvedModalRef').textContent = '#DEV-' + ref;
+    const serv = Array.isArray(q.services) ? q.services.join(', ') : (q.service || q.prestation || 'Prestation JBF');
+    document.getElementById('approvedModalService').textContent = serv;
+    document.getElementById('approvedModalSite').textContent = q.localite || q.site || 'République Démocratique du Congo';
+    document.getElementById('approvedModalDate').textContent = q.date || (q.created_at ? new Date(q.created_at).toLocaleDateString('fr-FR') : 'Récemment');
+    const mnt = q.montant ? `$${Number(q.montant).toLocaleString()} USD` : (q.montant_estime ? `$${Number(q.montant_estime).toLocaleString()} USD` : 'Chiffrage validé par la Direction');
+    document.getElementById('approvedModalMontant').textContent = mnt;
+    document.getElementById('approvedModalDetails').textContent = q.message || q.description || q.details_besoin || 'Cahier des charges validé conforme selon les protocoles techniques et opérationnels JBF.';
+
+    window.clientCore.openModal('viewApprovedQuoteModal');
+  }
+
+  function handleApprovedQuoteWhatsApp() {
+    if (!currentApprovedQuote) return;
+    const ref = (currentApprovedQuote.id || '').toString().slice(-4).toUpperCase();
+    const serv = Array.isArray(currentApprovedQuote.services) ? currentApprovedQuote.services.join(', ') : (currentApprovedQuote.service || currentApprovedQuote.prestation || 'Prestation');
+    window.clientCore.openWhatsAppDirect(`Bonjour Direction JBF, je souhaite finaliser la contractualisation de mon devis validé #DEV-${ref} (${serv}).`);
   }
 
   async function handleNewQuote(e) {
@@ -617,6 +749,12 @@
       ? `\n[Documents joints sécurisés:\n${uploadedDocs.map(d => `• ${d.fileName} (${(d.size/1024).toFixed(0)} Ko) : ${d.publicUrl}`).join('\n')}]`
       : (filesMeta.length > 0 ? `\n[Fichiers joints: ${filesMeta.map(f => f.name).join(', ')}]` : '');
 
+    const clientNom = session.contactName || session.name || session.displayName || 'Client Partenaire';
+    const clientSociete = session.companyName || session.company || session.entreprise || 'Entreprise Partenaire';
+    const clientEmail = (session.email || '').trim().toLowerCase();
+    const clientPhone = session.phone || session.telephone || '';
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session?.id || '');
+
     const newDevis = {
       id: 'dev-' + Date.now(),
       service: service,
@@ -626,33 +764,122 @@
       description: desc,
       message: `${desc}${docsNote}`,
       fichiers: uploadedDocs.length > 0 ? uploadedDocs : filesMeta,
-      statut: 'en_etude',
-      email: (session.email || '').toLowerCase(),
-      nom: session.contactName || session.name || 'Client',
-      societe: session.companyName || '',
+      statut: 'nouveau',
+      email: clientEmail,
+      nom: clientNom,
+      societe: clientSociete,
       date: new Date().toLocaleDateString('fr-FR'),
       created_at: new Date().toISOString()
     };
 
-    // Insertion Supabase
-    const sb = getSb();
-    if (sb) {
-      try {
-        await sb.from('demandes_devis').insert([{
-          nom: newDevis.nom,
-          societe: newDevis.societe,
-          telephone: session.phone || '',
-          email: newDevis.email,
-          services: [service],
-          localite: site,
-          message: newDevis.message,
-          statut: 'nouveau'
-        }]);
-      } catch (err) {
-        console.warn('[Supabase Insert Quote]', err);
+    const quotePayload = {
+      nom: clientNom,
+      client_nom: clientNom,
+      societe: clientSociete,
+      client_societe: clientSociete,
+      email: clientEmail,
+      client_email: clientEmail,
+      telephone: clientPhone,
+      client_telephone: clientPhone,
+      prestation: service,
+      services: [service],
+      prestations_associees: [service],
+      localite: site,
+      site_intervention: site,
+      details_besoin: newDevis.message,
+      message: newDevis.message,
+      statut: 'nouveau',
+      fichiers: uploadedDocs.length > 0 ? uploadedDocs : filesMeta,
+      created_at: new Date().toISOString()
+    };
+    if (isUuid) quotePayload.client_id = session.id;
+
+    const sbUrl = window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co';
+    const sbKey = window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o';
+
+    let devisSaved = false;
+
+    // 1. Enregistrement direct via REST API Supabase (avec récupération du UUID généré)
+    try {
+      const restRes = await fetch(`${sbUrl}/rest/v1/demandes_devis`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(quotePayload)
+      });
+      if (restRes.ok || restRes.status === 201) {
+        const savedData = await restRes.json();
+        if (savedData && savedData[0] && savedData[0].id) {
+          newDevis.id = savedData[0].id;
+        }
+        devisSaved = true;
+      }
+    } catch (_) {}
+
+    // 2. Repli Supabase JS Client
+    if (!devisSaved) {
+      const sb = getSb();
+      if (sb) {
+        try {
+          const { data, error } = await sb.from('demandes_devis').insert([quotePayload]).select();
+          if (!error) {
+            if (data && data[0] && data[0].id) newDevis.id = data[0].id;
+            devisSaved = true;
+          }
+        } catch (err) {
+          console.warn('[Supabase Insert Quote]', err);
+        }
       }
     }
 
+    // 3. Repli Backend Express API (/api/devis)
+    if (!devisSaved) {
+      try {
+        const apiRes = await fetch('/api/devis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom: clientNom,
+            societe: clientSociete,
+            telephone: clientPhone,
+            email: clientEmail,
+            services: [service],
+            localite: site,
+            message: newDevis.message
+          })
+        });
+        if (apiRes.ok) devisSaved = true;
+      } catch (_) {}
+    }
+
+    // 4. Notification en temps réel à l'administration dans le chat
+    try {
+      const notifCanal = clientEmail ? ('client_' + clientEmail) : 'general';
+      await fetch(`${sbUrl}/rest/v1/messages_chat`, {
+        method: 'POST',
+        headers: {
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          canal_type: notifCanal,
+          expediteur_id: session?.id || clientEmail || 'client-quote',
+          expediteur_nom: clientNom,
+          expediteur_avatar: 'CLI',
+          section_nom: 'Devis & Cotations',
+          message: `📋 [NOUVELLE DEMANDE DE DEVIS]\nClient : ${clientNom} (${clientSociete})\nPrestation : ${service}\nSite / Localité : ${site}\nCahier des charges : "${desc}"`,
+          created_at: new Date().toISOString()
+        })
+      });
+    } catch (_) {}
+
+    // 5. Sauvegarde cache local pour réactivité immédiate
     let list = [];
     try {
       const stored = localStorage.getItem('JBF_DEVIS_LOCAL');
@@ -672,6 +899,9 @@
     }
 
     window.clientCore.closeModal('newQuoteModal');
+    loadClientQuotes();
+    window.clientCore.showToast('Votre demande de devis a été transmise à la Direction JBF.', 'success');
+  }
     loadClientQuotes();
     window.clientCore.showToast('Votre demande de devis a été enregistrée avec succès.', 'success');
   }

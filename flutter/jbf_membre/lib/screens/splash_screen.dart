@@ -17,31 +17,38 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.65, curve: Curves.easeIn)),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    _scaleAnimation = Tween<double>(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.75, curve: Curves.easeOutBack)),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.7, 1.0, curve: Curves.easeInOut)),
     );
 
     _controller.forward();
 
-    // Redirection systématique vers l'écran de connexion
-    Timer(const Duration(milliseconds: 2200), () {
+    // Redirection fluide vers l'écran de connexion après animation
+    Timer(const Duration(milliseconds: 2300), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => LoginScreen(authService: widget.authService),
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 400),
+          pageBuilder: (_, __, ___) => LoginScreen(authService: widget.authService),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
         ),
       );
     });
@@ -56,78 +63,118 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConfig.blackText,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 105,
-                  height: 105,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppConfig.brandPink.withOpacity(0.4),
-                        blurRadius: 30,
-                        spreadRadius: 6,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Logo Animé avec effet de pulsation & ombre rose premium
+                    AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) => Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: child,
                       ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Image.asset(
-                    'assets/logo.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.badge_outlined,
-                      size: 52,
-                      color: AppConfig.brandPink,
+                      child: Container(
+                        width: 110,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.grey.shade100, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConfig.brandPink.withOpacity(0.18),
+                              blurRadius: 32,
+                              spreadRadius: 6,
+                              offset: const Offset(0, 6),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(18),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.badge,
+                            size: 52,
+                            color: AppConfig.brandPink,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 32),
+
+                    // Nom & Titre Officiel (Fonds Blanc - Typographie Executive Sombre)
+                    const Text(
+                      'JBF COLLABORATEURS',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppConfig.blackText,
+                        fontSize: 23,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Badge Pastille Sous-titre
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppConfig.brandPinkTint,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppConfig.brandPink.withOpacity(0.2)),
+                      ),
+                      child: const Text(
+                        'PORTAIL RH, MISSIONS & CHANTIERS RDC',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppConfig.brandPink,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+
+                    // Indicateur de Chargement Moderne avec Spinner Rose
+                    const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3.2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppConfig.brandPink),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    Text(
+                      'Initialisation de votre environnement de travail...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 28),
-                const Text(
-                  'JBF SERVICE SARL',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'ESPACE COLLABORATEURS & CHEFS DE SECTION',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                const SizedBox(
-                  width: 34,
-                  height: 34,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppConfig.brandPink),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Chargement des protocoles d\'exploitation RDC...',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

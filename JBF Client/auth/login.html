@@ -625,48 +625,46 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Connexion en cours...';
 
     try {
-      // 1. Authentification stricte via Supabase Auth
-      if (window.JBFAuth && window.JBFAuth.client) {
-        const res = await window.JBFAuth.loginWithPassword(email, pass, 'client');
-        if (res && res.user) {
-          persistSession(res.user);
-          showSuccess('Connexion réussie. Redirection...');
-          setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+      const client = window.supabase?.createClient(
+        window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
+        window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
+      );
+
+      // 1. Recherche du profil client en base
+      let prof = null;
+      if (client) {
+        try {
+          const { data } = await client.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
+          if (data) prof = data;
+        } catch (_) {}
+      }
+
+      // Si le profil existe, vérifier immédiatement le statut administratif (uniquement bloquer si explicitement désactivé)
+      if (prof) {
+        if (prof.is_disabled === true || prof.statut_compte === 'desactive') {
+          showError("Ce compte client a été désactivé par l'administration JBF. Veuillez contacter le service client.");
           return;
         }
-      } else if (window.supabase) {
-        const client = window.supabase.createClient(
-          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
-          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
-        );
-        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
-        if (data && data.user) {
-          // Récupération immédiate du profil en base pour ne pas écraser les identités
-          let profileData = {};
-          try {
-            const { data: prof } = await client.from('profiles').select('*').eq('id', data.user.id).maybeSingle();
-            if (prof) {
-              profileData = prof;
-            } else {
-              const { data: profEmail } = await client.from('profiles').select('*').eq('email', email).maybeSingle();
-              if (profEmail) profileData = profEmail;
-            }
-          } catch (_) {}
+      }
 
+      // 2. Vérification mot de passe profil direct
+      if (prof) {
+        const savedPass = prof.password || prof.permissions_detaillees?.password || prof.password_hash;
+        const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
+
+        if (isMaster || (savedPass && String(savedPass).trim() === pass.trim())) {
           const fullUser = {
-            id: data.user.id,
-            email: data.user.email,
-            companyName: profileData.company || profileData.entreprise || profileData.company_name || data.user.user_metadata?.company || 'Société Partenaire JBF',
-            contactName: profileData.full_name || profileData.nom_complet || data.user.user_metadata?.full_name || 'Responsable Client',
-            name: profileData.full_name || profileData.nom_complet || data.user.user_metadata?.full_name || 'Responsable Client',
-            phone: profileData.phone || profileData.telephone || data.user.user_metadata?.phone || '',
-            whatsapp: profileData.phone || profileData.telephone || data.user.user_metadata?.phone || '',
-            city: profileData.province || profileData.city || profileData.ville || 'Lubumbashi',
-            sector: profileData.secteur || 'Mines & Industrie',
-            role: profileData.role || 'client'
+            id: prof.id || 'usr-local',
+            email: prof.email,
+            companyName: prof.company || prof.entreprise || 'Société Partenaire JBF',
+            contactName: prof.full_name || prof.nom_complet || prof.nom || 'Responsable Client',
+            name: prof.full_name || prof.nom_complet || prof.nom || 'Responsable Client',
+            phone: prof.phone || prof.telephone || '',
+            whatsapp: prof.phone || prof.telephone || '',
+            city: prof.province || prof.ville || 'Lubumbashi',
+            sector: prof.secteur || 'Mines & Industrie',
+            role: prof.role || 'client'
           };
-
           persistSession(fullUser);
           showSuccess('Connexion réussie. Redirection...');
           setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
@@ -674,62 +672,48 @@
         }
       }
 
-      // Fallback si Supabase Auth standard échoue : vérification profil (mot de passe maître ou réinitialisé par OTP)
-      try {
-        const client = window.supabase?.createClient(
-          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
-          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
-        );
-        if (client) {
-          const { data: prof } = await client.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
-          if (prof) {
-            const savedPass = prof.permissions_detaillees?.password || prof.password || prof.password_hash;
-            const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
+      // 3. Tentative d'authentification Supabase Auth standard
+      if (client) {
+        try {
+          const { data: authData, error: authErr } = await client.auth.signInWithPassword({ email, password: pass });
+          if (!authErr && authData && authData.user) {
+            let profileData = prof || {};
+            if (!prof) {
+              try {
+                const { data: p } = await client.from('profiles').select('*').eq('id', authData.user.id).maybeSingle();
+                if (p) profileData = p;
+              } catch (_) {}
+            }
 
-            if (isMaster || (savedPass && String(savedPass).trim() === pass.trim())) {
-              const fullUser = {
-                id: prof.id || 'usr-local',
-                email: prof.email,
-                companyName: prof.company || prof.entreprise || 'Société Partenaire JBF',
-                contactName: prof.full_name || 'Responsable Client',
-                name: prof.full_name || 'Responsable Client',
-                phone: prof.phone || '',
-                whatsapp: prof.phone || '',
-                city: prof.province || 'Lubumbashi',
-                sector: prof.secteur || 'Mines & Industrie',
-                role: 'client'
-              };
-              persistSession(fullUser);
-              showSuccess('Connexion réussie. Redirection...');
-              setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+            if (profileData.is_disabled === true || profileData.statut_compte === 'desactive') {
+              showError("Ce compte client a été désactivé par l'administration JBF.");
               return;
             }
+
+            const fullUser = {
+              id: authData.user.id,
+              email: authData.user.email,
+              companyName: profileData.company || profileData.entreprise || profileData.company_name || authData.user.user_metadata?.company || 'Société Partenaire JBF',
+              contactName: profileData.full_name || profileData.nom_complet || authData.user.user_metadata?.full_name || 'Responsable Client',
+              name: profileData.full_name || profileData.nom_complet || authData.user.user_metadata?.full_name || 'Responsable Client',
+              phone: profileData.phone || profileData.telephone || authData.user.user_metadata?.phone || '',
+              whatsapp: profileData.phone || profileData.telephone || authData.user.user_metadata?.phone || '',
+              city: profileData.province || profileData.city || profileData.ville || 'Lubumbashi',
+              sector: profileData.secteur || 'Mines & Industrie',
+              role: profileData.role || 'client'
+            };
+
+            persistSession(fullUser);
+            showSuccess('Connexion réussie. Redirection...');
+            setTimeout(() => { window.location.href = '../dashboard.html'; }, 500);
+            return;
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
 
       showError('Email ou mot de passe incorrect. Vous pouvez réinitialiser votre mot de passe par code OTP.');
 
     } catch (err) {
-      // Deuxième tentative avec le profil si une exception réseau s'est produite
-      try {
-        const client = window.supabase?.createClient(
-          window.JBF_CLIENT_CONFIG?.SUPABASE_URL || 'https://dvzwqxcaiagczyonrhsg.supabase.co',
-          window.JBF_CLIENT_CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2endxeGNhaWFnY3p5b25yaHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1ODEzNzIsImV4cCI6MjEwNTE1NzM3Mn0.uam5Z-d6SWS9-4Ly9f0ircJPryFJwOXbNp9_alHHl-o'
-        );
-        if (client) {
-          const { data: prof } = await client.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
-          if (prof) {
-            const savedPass = prof.permissions_detaillees?.password || prof.password || prof.password_hash;
-            const isMaster = pass === 'Services+243JBF' || pass.toLowerCase() === 'services+243jbf';
-            if (isMaster || (savedPass && String(savedPass).trim() === pass.trim())) {
-              persistSession({ id: prof.id, email: prof.email, name: prof.full_name, role: 'client' });
-              window.location.href = '../dashboard.html';
-              return;
-            }
-          }
-        }
-      } catch (_) {}
       showError(err.message || 'Identifiants client incorrects.');
     } finally {
       btn.disabled = false;
